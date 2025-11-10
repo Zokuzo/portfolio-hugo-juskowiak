@@ -3,8 +3,7 @@
 import { motion } from "framer-motion"
 import { useInView } from "react-intersection-observer"
 import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Github } from "lucide-react"
+
 
 const projects = [
   {
@@ -16,19 +15,19 @@ const projects = [
     featured: true,
   },
   {
-    title: "Fitness App Prototype",
-    description:
-      "Full-stack developer for a fitness application project. Designed comprehensive Figma models based on coach requirements and implemented the app prototype in FlutterFlow, delivering a mobile-first solution for fitness tracking and coaching.",
-    tags: ["FlutterFlow", "Figma", "UI/UX", "Mobile Development"],
-    image: "/fitness-app-workout-tracking.png",
-    featured: true,
-  },
-  {
     title: "Machining Data Management Interface",
     description:
       "Created a full-stack web interface at The Guill Corp to manage machining programming data. Designed and implemented the solution from scratch, streamlining data management workflows for manufacturing operations.",
     tags: ["Python", "Flask", "JavaScript", "SQL", "Figma"],
     image: "/industrial-data-management-dashboard-interface.jpg",
+    featured: true,
+  },
+  {
+    title: "Fitness App Prototype",
+    description:
+      "Full-stack developer for a fitness application project. Designed comprehensive Figma models based on coach requirements and implemented the app prototype in FlutterFlow, delivering a mobile-first solution for fitness tracking and coaching.",
+    tags: ["FlutterFlow", "Figma", "UI/UX", "Mobile Development"],
+    image: "/fitness-app-workout-tracking.png",
     featured: false,
   },
 ]
@@ -92,15 +91,7 @@ export function ProjectsSection() {
                       ))}
                     </div>
 
-                    <div className="flex gap-4">
-                      <Button
-                        variant="outline"
-                        className="border-primary text-primary hover:bg-primary/10 bg-transparent"
-                      >
-                        <Github className="mr-2 h-4 w-4" />
-                        View Details
-                      </Button>
-                    </div>
+                    {/* actions removed */}
                   </div>
                 </Card>
               </motion.div>

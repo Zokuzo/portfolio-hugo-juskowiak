@@ -50,7 +50,7 @@ export function HeroSection() {
             transition={{ duration: 0.8 }}
             className="mb-6"
           >
-            <span className="text-primary text-lg font-mono">Hello, I'm</span>
+            <span className="text-primary text-lg">Hello, I'm</span>
           </motion.div>
 
           <motion.h1
@@ -128,7 +128,7 @@ export function HeroSection() {
               <Github size={24} />
             </a>
             <a
-              href="https://www.linkedin.com/in/hugo-juskowiak-991900192/"
+              href="https://www.linkedin.com/in/hugo-juskowiak/"
               target="_blank"
               rel="noopener noreferrer"
               className="text-muted-foreground hover:text-primary transition-colors duration-300"

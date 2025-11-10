@@ -7,7 +7,7 @@ A modern, fast portfolio built with Next.js, TypeScript, Tailwind CSS v4, and sh
 - Development: `http://localhost:3000`
 - Production: `https://portfolio-hugo-juskowiak.vercel.app/`
 - GitHub: `https://github.com/Zokuzo`
-- LinkedIn: `https://www.linkedin.com/in/hugo-juskowiak-991900192/`
+- LinkedIn: `https://www.linkedin.com/in/hugo-juskowiak/`
 
 ### Tech Stack
 
@@ -54,7 +54,7 @@ npm start
 
 - Email: `mailto:hugo.jskpro@outlook.fr`
 - GitHub: `https://github.com/Zokuzo`
-- LinkedIn: `https://www.linkedin.com/in/hugo-juskowiak-991900192/`
+- LinkedIn: `https://www.linkedin.com/in/hugo-juskowiak/`
 
 ---
 

@@ -76,7 +76,7 @@ export function EducationSection() {
                     </div>
                     <div className="flex items-center gap-2 text-muted-foreground mt-2 md:mt-0 md:ml-4">
                       <Calendar className="h-4 w-4" />
-                      <span className="font-mono text-sm whitespace-nowrap">{edu.period}</span>
+                      <span className="text-sm whitespace-nowrap">{edu.period}</span>
                     </div>
                   </div>
 

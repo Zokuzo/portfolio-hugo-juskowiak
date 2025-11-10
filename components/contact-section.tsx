@@ -67,7 +67,7 @@ export function ContactSection() {
                   </a>
 
                   <a
-                    href="https://www.linkedin.com/in/hugo-juskowiak-991900192/"
+                    href="https://www.linkedin.com/in/hugo-juskowiak/"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-4 text-muted-foreground hover:text-primary transition-colors duration-300 group"
@@ -75,7 +75,7 @@ export function ContactSection() {
                     <div className="p-3 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
                       <Linkedin className="h-5 w-5 text-primary" />
                     </div>
-                    <span>linkedin.com/in/hugo-juskowiak-991900192</span>
+                    <span>linkedin.com/in/hugo-juskowiak</span>
                   </a>
                 </div>
               </Card>
