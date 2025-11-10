@@ -1,12 +1,11 @@
 "use client"
 
 import { motion } from "framer-motion"
+import * as React from "react"
 import { useInView } from "react-intersection-observer"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Github, Linkedin, Mail, Send } from "lucide-react"
+import { Github, Linkedin, Mail } from "lucide-react"
 
 export function ContactSection() {
   const [ref, inView] = useInView({
@@ -86,34 +85,23 @@ export function ContactSection() {
               animate={inView ? { opacity: 1, x: 0 } : {}}
               transition={{ duration: 0.8, delay: 0.4 }}
             >
-              <Card className="bg-card/50 backdrop-blur-sm border-border p-8">
-                <form className="space-y-6">
-                  <div>
-                    <Input placeholder="Your Name" className="bg-background/50 border-border focus:border-primary" />
+                <Card className="bg-card/50 backdrop-blur-sm border-border p-8">
+                  <div className="space-y-6">
+                    <Button
+                      asChild
+                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground glow-effect group"
+                    >
+                      <a
+                        href="https://www.linkedin.com/in/hugo-juskowiak/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Message on LinkedIn
+                        <Linkedin className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                      </a>
+                    </Button>
                   </div>
-                  <div>
-                    <Input
-                      type="email"
-                      placeholder="Your Email"
-                      className="bg-background/50 border-border focus:border-primary"
-                    />
-                  </div>
-                  <div>
-                    <Textarea
-                      placeholder="Your Message"
-                      rows={5}
-                      className="bg-background/50 border-border focus:border-primary resize-none"
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground glow-effect group"
-                  >
-                    Send Message
-                    <Send className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </form>
-              </Card>
+                </Card>
             </motion.div>
           </div>
         </motion.div>
