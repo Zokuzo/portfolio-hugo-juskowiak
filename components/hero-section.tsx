@@ -109,7 +109,9 @@ export function HeroSection() {
               variant="outline"
               className="border-primary text-primary hover:bg-primary/10 bg-transparent"
             >
-              Download Resume
+              <a href="/CV_Hugo_JUSKOWIAK_1.0.pdf" download>
+                Download Resume
+              </a>
             </Button>
           </motion.div>
 

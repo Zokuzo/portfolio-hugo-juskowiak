@@ -80,7 +80,7 @@ export function ExperienceSection() {
                     </div>
                     <div className="flex items-center gap-2 text-muted-foreground mt-2 md:mt-0">
                       <Calendar className="h-4 w-4" />
-                      <span className="font-mono text-sm">{exp.period}</span>
+                      <span className="text-sm">{exp.period}</span>
                     </div>
                   </div>
 
