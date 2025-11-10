@@ -55,7 +55,7 @@ export function ContactSection() {
                   </a>
 
                   <a
-                    href="https://github.com/hugojuskowiak"
+                    href="https://github.com/Zokuzo"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-4 text-muted-foreground hover:text-primary transition-colors duration-300 group"
@@ -63,11 +63,11 @@ export function ContactSection() {
                     <div className="p-3 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
                       <Github className="h-5 w-5 text-primary" />
                     </div>
-                    <span>github.com/hugojuskowiak</span>
+                    <span>github.com/Zokuzo</span>
                   </a>
 
                   <a
-                    href="https://linkedin.com/in/hugojuskowiak"
+                    href="https://www.linkedin.com/in/hugo-juskowiak-991900192/"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-4 text-muted-foreground hover:text-primary transition-colors duration-300 group"
@@ -75,7 +75,7 @@ export function ContactSection() {
                     <div className="p-3 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
                       <Linkedin className="h-5 w-5 text-primary" />
                     </div>
-                    <span>linkedin.com/in/hugojuskowiak</span>
+                    <span>linkedin.com/in/hugo-juskowiak-991900192</span>
                   </a>
                 </div>
               </Card>
