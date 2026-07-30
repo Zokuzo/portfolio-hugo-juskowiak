@@ -148,10 +148,13 @@ export function World() {
           backdrop de la page et la brume vire au blanc plein. */}
       <motion.div className="p-void" style={{ y: pVoid.y, scale: pVoid.scale }} />
 
-      {/* z46 — brume profonde : DEVANT l'atmosphère, DERRIÈRE les arcs */}
+      {/* z46 — brume profonde : DEVANT l'atmosphère, DERRIÈRE les arcs.
+          `drift-l`/`drift-r` ne sont pas décoratives : elles portent le
+          sens de la dérive, et le CSS n'ouvre la marge horizontale que de
+          ce côté-là. Retirer la classe retire l'animation ET la marge. */}
       <motion.div className="p-fog-deep" style={{ y: pFogDeep.y, scale: pFogDeep.scale, opacity: fogDeepO }}>
-        <div className="fog-sheet fog-lit" />
-        <div className="fog-sheet fog-occl" />
+        <div className="fog-sheet fog-lit drift-l" />
+        <div className="fog-sheet fog-occl drift-l" />
       </motion.div>
 
       {/* z30 — instrumentation, déjà mangée par la nappe précédente */}
@@ -174,8 +177,8 @@ export function World() {
       {/* z18 — brume médiane : deux échelles de rapport non entier en
           sens inverse, l'interférence détruit la périodicité */}
       <motion.div className="p-fog-mid" style={{ y: pFogMid.y, scale: pFogMid.scale, opacity: fogMidO }}>
-        <div className="fog-sheet fog-lit sheet-a" />
-        <div className="fog-sheet fog-occl sheet-b" />
+        <div className="fog-sheet fog-lit sheet-a drift-l" />
+        <div className="fog-sheet fog-occl sheet-b drift-r" />
       </motion.div>
 
       {/* z12 — LE SOL. Trois boîtes imbriquées : la perspective ne

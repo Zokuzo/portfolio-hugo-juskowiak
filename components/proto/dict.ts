@@ -42,18 +42,29 @@ const DICT = {
   },
 
   /* — mobilier d'affiche : la règle graduée du parcours —
-       [année, lieu]. L'index rouge se pose sur la dernière entrée. */
+       [date, lieu]. L'index rouge se pose sur la dernière entrée.
+       La date PORTE LA POSITION sur l'axe, donc elle peut être
+       fractionnaire : .2 = mars, .7 = septembre. Seule la partie entière
+       est affichée (plaque.tsx tronque).
+       Chaque étape est posée à son DÉBUT, pas à sa fin — MBDS à sept.
+       2024 et non au diplôme d'oct. 2025. Mesuré : au diplôme, MBDS
+       tombe à 95 % et son étiquette chevauche UPYOURBIZZ de 32px.
+       Les écarts d'ici sont 320 / 112 / 96 / 112 px sur la règle de
+       640px, pour des étiquettes de ~55px. Toute nouvelle entrée doit
+       être re-mesurée : c'est un axe, pas une liste. */
   timeline: {
     fr: [
       ["2022", "ESTIA"],
-      ["2024", "北海道"],
-      ["2025", "MBDS"],
+      ["2024.2", "北海道"],
+      ["2024.7", "MBDS"],
+      ["2025.3", "SOPHIA"],
       ["2026", "UPYOURBIZZ"],
     ],
     en: [
       ["2022", "ESTIA"],
-      ["2024", "HOKKAIDO"],
-      ["2025", "MBDS"],
+      ["2024.2", "HOKKAIDO"],
+      ["2024.7", "MBDS"],
+      ["2025.3", "SOPHIA"],
       ["2026", "UPYOURBIZZ"],
     ],
   },

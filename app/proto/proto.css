@@ -53,27 +53,17 @@
   --sig-glow: rgba(217, 31, 17, 0.55); /* box-shadow rayon <= 8px     */
   --sig-veil: rgba(200, 16, 46, 0.1); /* voile directionnel, 1/écran  */
 
-  /* — LE BLEU — LE PLAN.
-       Il n'y a pas de couleur nouvelle : c'est LA lampe du système,
-       pivotée sur la roue à saturation et luminosité constantes.
-         --sig-hot #d91f11  hsl(  4, 85%, 46%)    l'ÉTAT
-         --sod     #d97912  hsl( 31, 85%, 46%)    la LUMIÈRE
-         --plan-3  #123ce0  hsl(228, 85%, 47.5%)  le TRAIT
-       Les 1,5 point de luminosité du bleu ne sont pas un goût : c'est
-       la solution de l'équation d'isoluminance avec --line-3.
+  /* — MONO-ACCENT. Le système n'a qu'UNE teinte : le rouge ci-dessus.
+       Tout le reste est neutre — encre, papier, gris, filets, chrome.
 
-       LOI D'ENTRÉE — une teinte n'arrive jamais sur un pixel vide,
-       elle REMPLACE un filet nommé à |Δ ratio| <= 0,02 point. Le nom
-       d'un bleu EST le filet qu'il remplace. Il n'existe pas de
-       --plan-4 parce qu'il n'existe pas de --line-4 : la famille est
-       indexée sur une famille fermée, elle ne peut pas grandir avec
-       le contenu. Conséquence vérifiable d'une capture : en niveaux
-       de gris, la page est au pixel près celle d'avant.
-       Un trait, JAMAIS un glyphe : 2,62:1, sous le seuil de 3:1 de
-       WCAG 1.4.11, donc décoratif au sens de la norme. */
-  --plan-1: rgba(18, 60, 224, 0.32); /* 1,204:1 — jumeau de --line   (1,206) */
-  --plan-2: rgba(18, 60, 224, 0.55); /* 1,516:1 — jumeau de --line-2 (1,523) */
-  --plan-3: #123ce0; /*                 2,621:1 — jumeau de --line-3 (2,642) */
+       Une extension polychrome a existé (ultramarine --plan-1/2/3,
+       sodium --sod-*, cyan --mes), construite comme des substitutions
+       isoluminantes des filets neutres. Elle était juste au compas et
+       fausse à l'œil : trois familles de teintes diluent la seule
+       chose que le rouge sait faire, désigner l'état. Retirée le
+       2026-07-30 ; récupérable au commit f444a5b si le besoin revient.
+       N'AJOUTE PAS DE TEINTE ICI. Une couleur de plus se paie sur le
+       rouge, jamais sur le noir. */
 
   /* — états NON chromatiques (WCAG 1.4.1 : jamais la teinte seule) — */
   --focus: var(--paper);
@@ -325,29 +315,25 @@ body {
    ------------------------------------------------------------ */
 
 /* z100 — atmosphère opaque : socle du groupe d'isolation.
-   LA LUMIÈRE AU SODIUM. Il y a un lampadaire hors champ et on regarde
-   à travers de la matière en suspension : c'est l'heure et la nuit,
-   zéro information. Si on le supprime on ne perd rien de lisible, on
-   perd l'heure.
-   Les alphas ne sont pas choisies, elles sont RÉSOLUES : la pile
-   composite des deux lobes passe de #474748 à #693d0e, soit 2,161:1
-   à 2,164:1. La lueur d'horizon ne gagne ni ne perd un lumen, elle
-   change de température — la densité d'atmosphère validée n'est donc
-   pas touchée. C'est un PLAFOND : au-delà, la lumière acquiert un
-   bord et cesse d'être de la lumière pour devenir un objet orange.
-   Le sodium ne vit QUE sur ce sélecteur — le remonter sur
-   .proto-root en ferait une prise où tout le monde vient brancher. */
+   Il y a une source hors champ et on regarde à travers de la matière
+   en suspension : c'est l'heure et la nuit, zéro information. Si on le
+   supprime on ne perd rien de lisible, on perd l'heure.
+   Les deux lobes sont BLANCS. Ils ont porté du sodium orange un temps
+   (alphas .365 / .16, isoluminantes : composite #474748 → #693d0e,
+   2,161:1 → 2,164:1) ; retiré avec le reste de la polychromie. La
+   densité d'atmosphère est celle validée par le propriétaire — les
+   alphas .20 / .09 sont un PLAFOND : au-delà, la lumière acquiert un
+   bord et cesse d'être de la lumière pour devenir un objet. */
 .p-void {
-  --sod-core: rgba(217, 121, 18, 0.365); /* remplace le blanc .20 */
-  --sod-veil: rgba(217, 121, 18, 0.16); /*  remplace le blanc .09 */
   inset: 0;
-  /* Le 3e radial (blanc .05 en haut) est SUPPRIMÉ : deux sources ne
+  /* Le 3e radial (blanc .05 en haut) reste SUPPRIMÉ : deux sources ne
      partagent pas un ciel. Le champ haut passe de 1,083:1 à 1,000:1,
      donc --g-300 y gagne du contraste (7,75 → 8,393). Le retrait
-     améliore la lisibilité. */
+     améliore la lisibilité — c'est un gain de lisibilité, indépendant
+     de la teinte, donc il survit au retrait du sodium. */
   background:
-    radial-gradient(85% 42% at 50% 100%, var(--sod-core), transparent 70%),
-    radial-gradient(140% 70% at 50% 106%, var(--sod-veil), transparent 62%),
+    radial-gradient(85% 42% at 50% 100%, rgba(255, 255, 255, 0.2), transparent 70%),
+    radial-gradient(140% 70% at 50% 106%, rgba(255, 255, 255, 0.09), transparent 62%),
     var(--ink);
 }
 
@@ -355,18 +341,57 @@ body {
    brume fait deux choses opposées qu'un seul élément ne peut pas
    faire : .fog-lit (screen) AJOUTE de la lumière diffusée,
    .fog-occl (normal) RETIRE du contraste aux plans derrière.
-   Surdimensionnement obligatoire : un background répété ne déborde
-   pas de la padding-box, donc translater d'une tuile découvrirait le
-   bord de l'élément en pleine brume. */
+   Un surdimensionnement est obligatoire : un background répété ne
+   déborde pas de la padding-box, donc translater d'une tuile
+   découvrirait le bord de l'élément en pleine brume. Obligatoire ne
+   veut pas dire arbitraire — voir juste en dessous. */
+
+/* LA SURFACE EST LE BUDGET. Le coût d'un `mix-blend-mode` est
+   proportionnel à l'aire composée : le compositeur relit le fond sous
+   chaque pixel. Mesuré sur cette page, les nappes en `screen` faisaient
+   passer le p90 de la frame de 8,7ms à 16,3ms — elles doublaient le
+   budget à elles seules. Ces marges ne sont donc pas du confort, elles
+   se paient à chaque frame.
+   Elles étaient à -1100px / -900px sur les quatre côtés, soit 7,5× le
+   viewport par nappe. Recalibrées ci-dessous sur la course réelle.
+   AVANT D'AGRANDIR UNE MARGE ICI : va lire la course du plan dans le
+   modèle de caméra de world.tsx et calcule-la. */
 .fog-sheet {
   position: absolute;
-  left: -1100px;
-  right: -1100px;
-  top: -900px;
-  bottom: -900px;
+  /* Vertical : course de parallaxe de la nappe la plus rapide d'ici
+     (p-fog-mid, z=18 ⇒ 120·12/18 = 80px) plus sa croissance d'échelle
+     (3 % de 900px ⇒ 27px par côté). 140px couvre les deux. */
+  top: -140px;
+  bottom: -140px;
   background-repeat: repeat;
+  background-size: var(--tile) var(--tile);
   will-change: transform;
   backface-visibility: hidden;
+}
+/* La dérive vaut EXACTEMENT une tuile — d'où la boucle sans raccord —
+   donc la marge horizontale vaut une tuile, et UNIQUEMENT du côté vers
+   lequel la nappe part. Payer les deux côtés pour un mouvement qui n'en
+   use qu'un, c'était doubler la facture.
+   Les 40px sont la seule marge de confort : à t=0 l'échelle vaut
+   exactement 1 et le bord affleurerait le viewport au pixel.
+
+   Corrige deux défauts que la version en dur cachait :
+   — .sheet-a dérivait de 1400px sur une tuile de 900px (1400 mod 900 =
+     500) : un saut de 500px toutes les 150s, alors que le commentaire
+     du bloc @keyframes affirmait l'inverse ;
+   — la marge de 1100px était plus courte que la dérive de 1400px, donc
+     une bande de 300px se retrouvait sans brume à droite en fin de
+     cycle. Invisible seulement parce que l'opacité est basse.
+   Les deux disparaissent en liant marge, tuile et dérive à --tile. */
+.fog-sheet.drift-l {
+  left: -40px;
+  right: calc(-40px - var(--tile));
+  animation: fog-drift-l var(--drift) linear infinite;
+}
+.fog-sheet.drift-r {
+  left: calc(-40px - var(--tile));
+  right: -40px;
+  animation: fog-drift-r var(--drift) linear infinite;
 }
 .fog-lit {
   mix-blend-mode: screen;
@@ -382,9 +407,9 @@ body {
 }
 .p-fog-deep .fog-lit,
 .p-fog-deep .fog-occl {
+  --tile: 1400px;
+  --drift: 210s;
   background-image: var(--fog-body);
-  background-size: 1400px 1400px;
-  animation: fog-drift-l 210s linear infinite;
 }
 .p-fog-deep .fog-lit {
   opacity: 0.3;
@@ -431,28 +456,30 @@ body {
   opacity: 0.62;
 }
 .p-fog-mid .sheet-a {
+  --tile: 900px;
+  --drift: 150s;
   background-image: var(--fog-body);
-  background-size: 900px 900px;
   opacity: 0.34;
-  animation: fog-drift-l 150s linear infinite;
 }
 .p-fog-mid .sheet-b {
+  --tile: 520px;
+  --drift: 96s;
   background-image: var(--fog-wisp);
-  background-size: 520px 520px;
   opacity: 0.2;
-  animation: fog-drift-r 96s linear infinite;
 }
 
-/* Période de dérive = exactement une tuile ⇒ boucle sans raccord,
-   sur le compositeur, hors du thread principal, sans repaint. */
+/* Période de dérive = exactement une tuile ⇒ boucle sans raccord, sur le
+   compositeur, hors du thread principal, sans repaint. La distance vient
+   de --tile et non d'un littéral : c'est ce qui rend l'affirmation
+   ci-dessus vraie par construction plutôt que par vigilance. */
 @keyframes fog-drift-l {
   to {
-    transform: translate3d(-1400px, 0, 0);
+    transform: translate3d(calc(-1 * var(--tile)), 0, 0);
   }
 }
 @keyframes fog-drift-r {
   to {
-    transform: translate3d(520px, 0, 0);
+    transform: translate3d(var(--tile), 0, 0);
   }
 }
 
@@ -578,11 +605,19 @@ body {
 
 /* z1.4 — écharpe de brume qui passe l'objectif. C'est elle qui donne
    le sentiment de TRAVERSER plutôt que de glisser. */
+/* Marges asymétriques, et c'est voulu : ce plan MONTE (y va de 0 à
+   −1029px, soit 120·12/1,4) et il ne dérive pas horizontalement. Il faut
+   donc de la matière EN BAS, presque rien en haut, et rien sur les côtés
+   au-delà du confort — une échelle > 1 ajoute de la couverture, elle n'en
+   retire pas. Le carré de -900px des quatre côtés payait du `screen` sur
+   1800px de largeur qui ne sont jamais dévoilés.
+   L'invariant à tenir, si on y retouche : à tout instant du scroll, le
+   rectangle de cet élément contient le viewport. Il se mesure. */
 .p-fog-near {
-  left: -900px;
-  right: -900px;
-  top: -900px;
-  bottom: -900px;
+  left: -200px;
+  right: -200px;
+  top: -200px;
+  bottom: -1200px;
   background-image: var(--fog-body);
   background-size: 1500px 1500px;
   background-repeat: repeat;
@@ -600,9 +635,9 @@ body {
   top: -500px;
   bottom: -500px;
   opacity: 0.5;
-  /* La 2e couche de points sort : la poussière et la brume au sodium
-     disent la même chose — de la matière en suspension — et le halo
-     ambre le dit désormais mieux. */
+  /* La 2e couche de points est sortie : la poussière et la brume disent
+     la même chose — de la matière en suspension — et la brume le dit
+     mieux, pour moins de pixels peints. */
   background-image: radial-gradient(circle at 30% 40%, rgba(242, 240, 236, 0.5) 0 1px, transparent 1.7px);
   background-size: 240px 240px;
   will-change: transform;
@@ -875,22 +910,20 @@ body {
   margin-bottom: clamp(0.8rem, 1.8vh, 1.7rem);
   max-width: 640px;
 }
-/* L'image la plus juste du système entier : une règle BLEUE graduée
-   (l'instrument), des relevés GRIS posés dessus (les valeurs), et
-   l'index ROUGE qui glisse (l'état). Trois médiums sur un objet de
-   640px, aucune confusion possible.
-   Le réflexe suivant sera de bleuir aussi les graduations datées
-   « pour assortir » : refuser. La règle est l'instrument, une date
-   est un relevé — trois rôles sur le même objet, donc au plus une
-   teinte nouvelle. */
+/* Trois médiums sur un objet de 640px : la règle graduée est un FILET
+   (l'instrument), les relevés sont GRIS (les valeurs), l'index qui
+   glisse est ROUGE (l'état). Les trois rôles se lisent par la
+   graduation, le poids et le mouvement — la teinte n'en porte qu'un.
+   La règle a été bleue un temps ; le bleu ne disait rien que la
+   graduation ne disait déjà. */
 .scale-rule {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   height: 12px;
-  border-bottom: var(--rule) solid var(--plan-2);
-  background-image: repeating-linear-gradient(90deg, var(--plan-2) 0 var(--rule), transparent var(--rule) 3.125%);
+  border-bottom: var(--rule) solid var(--line-2);
+  background-image: repeating-linear-gradient(90deg, var(--line-2) 0 var(--rule), transparent var(--rule) 3.125%);
   background-size: 100% 5px;
   background-position: 0 100%;
   background-repeat: no-repeat;
@@ -962,14 +995,13 @@ body {
   gap: 0.9rem;
   margin-bottom: clamp(1rem, 2vw, 1.6rem);
 }
-/* Le second et dernier bleu solide du document : un trait purement
-   géométrique juste avant le nom. Même substitution isoluminante de
-   --line-3, donc pas de lit L4 — il n'y a aucun saut de luminance à
-   découper. C'est le coup de pigment qu'on voit. */
+/* Un trait purement géométrique juste avant le nom. Le filet le plus
+   franc de la famille (--line-3, 2,642:1) : assez présent pour être un
+   geste, trop faible pour porter un glyphe. */
 .plate-label .bar {
   flex: 0 0 clamp(38px, 7vw, 96px);
   height: var(--rule);
-  background: var(--plan-3);
+  background: var(--line-3);
 }
 
 /* Mire de repérage : vocabulaire d'imprimerie. Elle coûte 62 pixels
@@ -983,13 +1015,10 @@ body {
   height: 62px;
   opacity: 0.75;
 }
-/* La substitution la mieux calibrée du système : --line-3 2,642:1 →
-   ultramarine solide 2,621:1, delta 0,021. En niveaux de gris la mire
-   est identique au pixel près ; en couleur elle est franchement bleue.
-   On cible le <g> et non `.mire circle` : le point central vit HORS
+/* On cible le <g> et non `.mire circle` : le point central vit HORS
    du groupe et ne doit recevoir aucun stroke. */
 .mire g {
-  stroke: var(--plan-3);
+  stroke: var(--line-3);
 }
 
 /* le nom : condensé, massif, serré. Masse dominante absolue —
@@ -1482,21 +1511,20 @@ body {
 .wire.branch {
   stroke: var(--sig-hot);
 }
-/* LE GESTE CENTRAL DU TRACÉ. Le tracé complet en très faible
-   contraste devient un PLAN bleu, et ce qui se dessine par-dessus est
-   le bâti : la section dit littéralement « voici ce qui était prévu,
-   voici ce qui est construit ». Substitution de --line (1,206:1) par
-   --plan-1 (1,204:1) : aucun pixel ne gagne en luminance, l'entrée ne
-   se paie donc pas. */
+/* LE GESTE CENTRAL DU TRACÉ. Le tracé complet en très faible contraste
+   est le PLAN, et ce qui se dessine par-dessus est le bâti : la section
+   dit littéralement « voici ce qui était prévu, voici ce qui est
+   construit ». La distinction se joue sur la LUMINANCE (1,206:1 contre
+   le fil allumé) et sur le mouvement, pas sur la teinte. */
 .wire-bed {
   fill: none;
-  stroke: var(--plan-1);
+  stroke: var(--line);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
 /* Ce lit-ci reste rouge : ce n'est pas un plan, c'est l'organe
    optique imposé par la loi du lit sous le seul fil coloré du schéma.
-   Restaté ici pour être immunisé contre la règle bleue qui précède. */
+   Restaté ici pour être immunisé contre la règle qui précède. */
 .wire-bed .bed-branch {
   stroke: var(--sig-dim);
   stroke-width: 3;
@@ -1515,27 +1543,22 @@ body {
   stroke: var(--sig-hot);
   stroke-width: 2;
 }
-/* L'UNIQUE CYAN — la mesure. « Voici une valeur lue sur une échelle. »
-   C'est de la lumière ÉMISE par un tube, pas réfléchie par du papier :
-   canal rouge exactement à 0, saturation 100 %. C'est le seul
-   hors-famille du système, et c'est la marque de son privilège — la
-   seule teinte qui ait le droit d'écrire.
-   Ce n'est pas une entorse à la loi « on n'éclaircit jamais un accent
-   pour le rendre lisible » : rien n'est désaturé. Le rouge plafonne à
-   ~4:1 sur du noir parce que le canal rouge ne pèse que 0,2126 dans
-   la luminance ; le vert en pèse 0,7152. Le droit d'écrire est
-   physique, pas cosmétique. --g-500 5,127:1 → 7,428:1, AAA.
-   Le token est déclaré ICI et nulle part ailleurs : un <text> SVG n'a
-   pas d'enfant, la variable ne cascade sur rien.
-   VERROU : le compteur 000→100 ne devient JAMAIS cyan. Un chiffre qui
-   s'anime en néon sur du noir est le cliché n°1 du portfolio de dev ;
-   le cyan ne vit que sur une échelle gravée, immobile. */
+/* Les relevés de l'axe : une valeur lue sur une échelle. --g-300 est le
+   plancher documenté du texte de 9px (8,393:1) — pas un choix, la ligne
+   28 le fixe.
+   Un cyan #00aebd a vécu ici, argumenté comme « la seule teinte qui ait
+   le droit d'écrire » (le canal rouge ne pesant que 0,2126 dans la
+   luminance, le rouge plafonne à ~4:1 sur du noir). L'argument était
+   exact et le résultat était un néon sur du noir — le cliché n°1 du
+   portfolio de dev, exactement ce que le verrou d'en dessous
+   interdisait au compteur. Le gris lit mieux (8,393 contre 7,428).
+   VERROU MAINTENU : ni cet axe ni le compteur 000→100 ne prennent de
+   teinte. Une échelle gravée est grise. */
 .t-axis text {
-  --mes: #00aebd;
   font-family: var(--f-mono), monospace;
   font-size: 9px;
   letter-spacing: 0.14em;
-  fill: var(--mes);
+  fill: var(--g-300);
 }
 
 /* ------------------------------------------------------------
@@ -1595,11 +1618,6 @@ body {
     --rail-w: 3px;
     --line: rgba(226, 232, 240, 0.16);
     --line-2: rgba(226, 232, 240, 0.28);
-    /* Le bleu suit son jumeau, et seulement son jumeau : les alphas
-       sont re-résolues pour rester isoluminantes. --plan-3 ne bouge
-       pas parce que --line-3 ne bouge pas. La loi est mécanique. */
-    --plan-1: rgba(18, 60, 224, 0.5); /*  1,436:1 — jumeau de --line .16   (1,429) */
-    --plan-2: rgba(18, 60, 224, 0.84); /* 2,147:1 — jumeau de --line-2 .28 (2,141) */
   }
 }
 
@@ -1618,19 +1636,22 @@ body {
     --steel: Canvas;
     --focus: Highlight;
     --off: GrayText;
-    /* le bleu redevient ce qu'il a toujours été : un trait */
-    --plan-1: GrayText; /* le non-bâti reste atténué : .wire-bed */
-    --plan-2: CanvasText;
-    --plan-3: CanvasText;
+    /* Les filets DOIVENT être redéclarés : forced-colors force `color`,
+       `background-color` et `border-color`, mais PAS `stroke` ni `fill`.
+       Un rgba() laissé tel quel rend .wire-bed et .mire invisibles sur
+       le Canvas du système. --line reste atténué (le non-bâti du tracé
+       est encore du non-bâti), les deux autres deviennent du trait. */
+    --line: GrayText;
+    --line-2: CanvasText;
+    --line-3: CanvasText;
   }
-  /* CanvasText et non LinkText : le compteur d'un axe n'est pas un lien */
+  /* CanvasText et non LinkText : le relevé d'un axe n'est pas un lien */
   .t-axis text {
-    --mes: CanvasText;
+    fill: CanvasText;
   }
   /* la lumière disparaît — elle ne portait aucune information */
   .p-void {
-    --sod-core: transparent;
-    --sod-veil: transparent;
+    background: Canvas;
   }
 }
 
@@ -1658,15 +1679,15 @@ body {
   .p-fog-near {
     display: none;
   }
-  .fog-sheet {
-    left: -420px;
-    right: -420px;
-    top: -420px;
-    bottom: -420px;
-  }
+  /* Pas de redéclaration de marge ici : la course de parallaxe ne dépend
+     pas de la largeur du viewport, donc le calibrage du desktop tient
+     tel quel — et il est déjà plus serré que le -420px qu'on posait.
+     La tuile passe par --tile et JAMAIS par `background-size` en dur :
+     la dérive en dépend, et un littéral ici rétablirait le saut de
+     raccord de 1400px-sur-900px qu'on vient de supprimer. */
   .p-fog-mid .sheet-a {
-    background-size: 620px 620px;
-    animation-duration: 120s;
+    --tile: 620px;
+    --drift: 120s;
   }
   .p-rules {
     grid-template-columns: repeat(2, 1fr);
@@ -1699,11 +1720,18 @@ body {
     letter-spacing: 0.3em;
   }
   .scale {
-    height: 40px;
+    height: 52px;
   }
   /* les étiquettes de lieu se chevauchent sous 720px */
   .scale-stop em {
     display: none;
+  }
+  /* Le lieu masqué, il ne reste que l'année — et deux étapes de 2025
+     tombent à 42px d'écart pour ~45px de glyphes. On alterne donc la
+     ligne au lieu de rétrécir le texte : le trait reste à sa date,
+     seule l'étiquette descend d'un cran. */
+  .scale-stop[data-row="1"] .lbl {
+    top: 32px;
   }
   .foot-row {
     flex-direction: column;

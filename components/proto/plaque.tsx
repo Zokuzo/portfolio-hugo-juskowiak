@@ -163,15 +163,23 @@ export function Plaque({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => vo
               sémantique — « vous êtes ici » */}
           <motion.div className="scale" {...rise(0.24)} aria-label={t(lang, "timelineLabel")}>
             <div className="scale-rule" aria-hidden="true" />
-            {timeline.map(([year, place], i) => {
-              const x = ((Number(year) - AXIS_FROM) / (AXIS_TO - AXIS_FROM)) * 100
+            {timeline.map(([date, place], i) => {
+              const x = ((Number(date) - AXIS_FROM) / (AXIS_TO - AXIS_FROM)) * 100
               const last = i === timeline.length - 1
+              /* La date du dict est fractionnaire pour placer le trait au
+                 mois ; on n'affiche que l'année. Deux étapes de la même
+                 année sont donc deux traits distincts sous un même
+                 millésime — et sous 720px le lieu disparaît, d'où le
+                 décalage vertical alterné en CSS (sans quoi les deux
+                 « 2025 » se chevauchent à 42px d'écart). */
+              const year = date.split(".")[0]
               return (
                 <div
-                  key={year}
+                  key={date}
                   className={`scale-stop${last ? " now" : ""}`}
                   style={{ left: `${x}%` }}
                   data-align={i === 0 ? "start" : last ? "end" : "mid"}
+                  data-row={i % 2}
                 >
                   <i />
                   <span className="lbl">
