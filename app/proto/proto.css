@@ -2338,6 +2338,189 @@ body {
   }
 }
 
+/* ------------------------------------------------------------
+   06 — RÉVISIONS
+
+   Un cartouche de révisions est DENSE et RÉGLÉ : c'est un bloc de
+   tableau, pas une frise aérée. La tentation sera d'espacer les
+   lignes « pour respirer » — y céder ferait une timeline de portfolio,
+   c'est-à-dire exactement la forme qu'on évite. La densité EST le
+   registre.
+
+   BUDGET DE FRAME : aucun blend, aucun filter, aucun masque, aucun
+   plan fixe. Une seule animation de transform à l'entrée.
+   ------------------------------------------------------------ */
+
+.rev {
+  position: relative;
+  z-index: 1;
+  padding: clamp(4rem, 12vh, 9rem) var(--gutter);
+  max-width: 1360px;
+  margin-inline: auto;
+}
+.rev-rail {
+  position: absolute;
+  left: 0;
+  top: clamp(4rem, 12vh, 9rem);
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  letter-spacing: 0.28em;
+}
+
+.rev-head {
+  padding-bottom: clamp(1.2rem, 3vh, 2rem);
+}
+.rev-idx {
+  margin: 0 0 0.9rem;
+}
+.rev-titre {
+  margin: 0;
+  font-size: clamp(1.5rem, 3.4vw, 2.6rem);
+  font-weight: 700;
+  font-stretch: 88%;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  line-height: 1.02;
+}
+.rev-jp {
+  margin: 0.35rem 0 0;
+  font-size: var(--f-micro);
+}
+.rev-note {
+  margin: clamp(0.8rem, 2vh, 1.3rem) 0 0;
+  max-width: 56ch;
+  text-transform: none;
+  letter-spacing: 0.035em;
+  line-height: 1.7;
+}
+
+/* La grille de colonnes est déclarée UNE fois et partagée par
+   l'en-tête et les entrées : deux déclarations dériveraient au premier
+   réglage et les colonnes cesseraient de s'aligner. */
+.rev-cols,
+.rev-entree {
+  display: grid;
+  grid-template-columns: 2rem 7.5rem 10.5rem 1fr;
+  column-gap: clamp(0.8rem, 2vw, 1.6rem);
+  align-items: baseline;
+}
+.rev-cols {
+  padding: 0 0 0.7rem;
+  border-bottom: var(--rule) solid var(--line-2);
+}
+
+.rev-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.rev-entree {
+  padding: clamp(0.9rem, 2.2vh, 1.4rem) 0;
+  border-bottom: var(--rule) solid var(--line);
+}
+
+/* Bulle de révision — convention de dessin technique. `aspect-ratio`
+   plutôt qu'une hauteur en dur : la bulle suit la taille du chiffre. */
+.rev-bulle {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  aspect-ratio: 1;
+  border: var(--rule) solid var(--line-3);
+  border-radius: 50%;
+  color: var(--g-300);
+  letter-spacing: 0.04em;
+}
+.rev-zone {
+  color: var(--g-100);
+}
+.rev-periode {
+  white-space: nowrap;
+}
+
+.rev-corps {
+  min-width: 0;
+}
+.rev-organisme {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  font-weight: 700;
+  font-stretch: 88%;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.rev-fonction {
+  margin: 0.3rem 0 0;
+  text-transform: none;
+  letter-spacing: 0.06em;
+}
+.rev-modif {
+  margin: 0.55rem 0 0;
+  max-width: 72ch;
+  text-transform: none;
+  letter-spacing: 0.035em;
+  line-height: 1.7;
+}
+
+/* — LA RÉVISION COURANTE —
+   Anneau rouge, chiffre PAPIER : --sig-hot est à 3,962:1, sous le
+   seuil texte, il n'écrit jamais. La lampe repose sur sa braise, comme
+   l'index de la règle graduée et la voie lourde de la télémétrie.
+   Le rail de 2px double l'état par la géométrie : en niveaux de gris
+   la ligne courante reste la seule à porter une marque à gauche. */
+.rev-courante {
+  box-shadow: inset 2px 0 0 var(--sig-hot);
+  padding-left: 0.8rem;
+  margin-left: -0.8rem;
+}
+.rev-courante .rev-bulle {
+  border-color: var(--sig-hot);
+  color: var(--paper);
+  box-shadow: 0 0 0 2px var(--sig-ember);
+}
+.rev-courante .rev-zone {
+  color: var(--paper);
+}
+.rev-chip {
+  padding: 3px 7px;
+  background: var(--sig-ember);
+  border: var(--rule) solid var(--sig-rail);
+  color: var(--g-100);
+  letter-spacing: 0.2em;
+}
+
+@media (max-width: 860px) {
+  /* Sous 860px les quatre colonnes ne tiennent plus : la bulle, la
+     zone et la période passent sur une ligne d'en-tête d'entrée, le
+     corps dessous. Le cartouche reste un cartouche — on empile les
+     cellules, on ne les espace pas. */
+  .rev-cols {
+    display: none;
+  }
+  .rev-entree {
+    grid-template-columns: 2rem auto 1fr;
+    row-gap: 0.55rem;
+  }
+  .rev-periode {
+    justify-self: end;
+  }
+  .rev-corps {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 720px) {
+  /* Même règle que .tel-rail : sous 720px il n'y a plus de gouttière
+     pour l'accueillir. Deux sections voisines ne peuvent pas traiter
+     le même mobilier différemment. */
+  .rev-rail {
+    display: none;
+  }
+}
+
 /* Écran d'amorce de la route d'atelier — part avec elle. */
 .tel-amorce {
   height: 70svh;

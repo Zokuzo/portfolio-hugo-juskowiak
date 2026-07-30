@@ -284,6 +284,74 @@ const DICT = {
     fr: "Unité 05 — Télémétrie — Routage multi-modèle — OpenRouter — REF.0043-B / REV.2",
     en: "Unit 05 — Telemetry — Multi-model routing — OpenRouter — REF.0043-B / REV.2",
   },
+
+  /* — 06 RÉVISIONS : le parcours en cartouche de révisions —
+
+     TOUT VIENT DU CV, y compris les dates au mois. Rien n'est arrondi,
+     rien n'est ajouté. Les villes ne sont mentionnées que là où le CV
+     les donne : il les donne pour les emplois, pas pour les écoles.
+
+     La colonne ZONE est la seule invention, et elle est structurelle :
+     un cartouche de révisions porte toujours la zone du plan touchée
+     par la modification. Si la machine est l'ingénieur, chaque étape
+     révise une zone de la machine. C'est ce qui transforme une liste
+     de lignes de CV en historique d'un objet qui se construit.
+
+     [n°, zone, période, organisme, fonction, modification] */
+  revIndex: { fr: "06 — Révisions", en: "06 — Revisions" },
+  revTitle: { fr: "Historique de l'unité", en: "Unit history" },
+  revJp: { fr: "改訂履歴", en: "改訂履歴" },
+  revNote: {
+    fr: "Huit révisions depuis la mise en fabrication. Chacune touche une zone et une seule — c'est ce qui distingue une machine d'un empilement.",
+    en: "Eight revisions since first build. Each touches one zone and one only — that is what separates a machine from a pile.",
+  },
+  revCols: {
+    fr: ["Rév", "Zone", "Période", "Modification"],
+    en: ["Rev", "Zone", "Period", "Change"],
+  },
+  revEnCours: { fr: "En cours", en: "Current" },
+  revEntrees: {
+    fr: [
+      ["01", "Socle", "2020.09 → 2022.06", "Lycée Touchard-Washington", "Classe préparatoire TSI",
+        "Mise en fabrication. Mathématiques, physique, sciences de l'ingénieur."],
+      ["02", "Atelier", "2022.07 → 2022.08", "Legrand · Le Mans", "Opérateur industriel",
+        "Assemblage sur chaîne, tri de produits retournés pour recyclage, appui aux stocks. La machine passe par l'atelier avant le bureau d'études."],
+      ["03", "Structure", "2022.09 → 2025.10", "ESTIA", "Master d'ingénieur trilingue",
+        "Cycle ingénieur. Trois langues de travail."],
+      ["04", "Interface", "2023.02 → 2023.07", "The Guill Corp · Anglet", "Stagiaire ingénieur développement logiciel",
+        "Première mise en service logicielle : interface de gestion des données de programmation d'usinage (Python/Flask, JavaScript/jQuery, Ajax, SQL). Front-end et design appris en autonomie."],
+      ["05", "Étalonnage", "2024.03 → 2024.08", "Imperial University of Hokkaido · Japon", "Semestre d'échange",
+        "Information & Ingénierie. Un semestre à travailler dans une autre norme."],
+      ["06", "Calcul", "2024.09 → 2025.10", "Université Côte d'Azur", "Master en Data Science — MBDS MIAGE",
+        "Ajout du module data : modèles, pipelines, mise en production."],
+      ["07", "Mesure", "2025.04 → 2025.09", "Sophia Genetics · Bidart", "Stagiaire ingénieur développement logiciel",
+        "Machine learning en production : prédiction de l'usage mémoire par tâche sur pipelines bio-informatiques (XGBoost, LightGBM, CatBoost, Random Forest). Pipelines ETL, allocation de ressources en calcul distribué, CI/CD GitLab."],
+      ["08", "Commande", "2026.05 → présent", "UpYourBizz", "Ingénieur Full Stack & IA",
+        "Prospector : SaaS de prospection B2B multi-tenant en marque blanche, routage multi-modèle sur six types de tâches, orchestration de campagnes. Octo : segmentation d'exports DMS pour concessionnaires."],
+    ],
+    en: [
+      ["01", "Base", "2020.09 → 2022.06", "Lycée Touchard-Washington", "TSI preparatory class",
+        "First build. Mathematics, physics, engineering science."],
+      ["02", "Shop floor", "2022.07 → 2022.08", "Legrand · Le Mans", "Industrial operator",
+        "Production line assembly, sorting returns for recycling, stock support. The machine goes through the shop floor before the drawing office."],
+      ["03", "Structure", "2022.09 → 2025.10", "ESTIA", "Trilingual engineering master's",
+        "Engineering cycle. Three working languages."],
+      ["04", "Interface", "2023.02 → 2023.07", "The Guill Corp · Anglet", "Software engineering intern",
+        "First software commissioning: machining programme data management interface (Python/Flask, JavaScript/jQuery, Ajax, SQL). Front-end and design self-taught."],
+      ["05", "Calibration", "2024.03 → 2024.08", "Imperial University of Hokkaido · Japan", "Exchange semester",
+        "Information & Engineering. One semester working to another standard."],
+      ["06", "Compute", "2024.09 → 2025.10", "Université Côte d'Azur", "MSc Data Science — MBDS MIAGE",
+        "Data module added: models, pipelines, production."],
+      ["07", "Measurement", "2025.04 → 2025.09", "Sophia Genetics · Bidart", "Software engineering intern",
+        "Machine learning in production: per-task memory usage prediction on bioinformatics pipelines (XGBoost, LightGBM, CatBoost, Random Forest). ETL pipelines, distributed compute resource allocation, GitLab CI/CD."],
+      ["08", "Control", "2026.05 → present", "UpYourBizz", "Full Stack & AI Engineer",
+        "Prospector: multi-tenant white-label B2B prospecting SaaS, multi-model routing across six task types, campaign orchestration. Octo: DMS export segmentation for car dealers."],
+    ],
+  },
+  revRail: {
+    fr: "Unité 06 — Historique de révisions — 01 à 08 — REF.0043-B / REV.2",
+    en: "Unit 06 — Revision history — 01 to 08 — REF.0043-B / REV.2",
+  },
 } as const
 
 type Key = keyof typeof DICT
