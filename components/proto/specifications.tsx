@@ -43,6 +43,9 @@ export function Specifications({ lang }: { lang: Lang }) {
 
       <header className="fiche-head">
         <p className="mono mono-sm dim fiche-idx">{t(lang, "specIndex")}</p>
+        <span className="f-num chrome" aria-hidden="true">
+          {t(lang, "specNum")}
+        </span>
         <h2 id="fiche-titre" className="fiche-titre">
           {t(lang, "specTitle")}
         </h2>

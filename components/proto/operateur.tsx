@@ -21,13 +21,16 @@ export function Operateur({ lang }: { lang: Lang }) {
   const champs = t(lang, "opChamps") as unknown as [string, string][]
 
   return (
-    <section className="op" id="operateur" aria-labelledby="op-titre">
+    <section className="op" id="profil" aria-labelledby="op-titre">
       <div className="op-rail mono mono-xs dim" aria-hidden="true">
         {t(lang, "opRail")}
       </div>
 
       <header className="op-head">
         <p className="mono mono-sm dim op-idx">{t(lang, "opIndex")}</p>
+        <span className="f-num chrome" aria-hidden="true">
+          {t(lang, "opNum")}
+        </span>
         <h2 id="op-titre" className="op-titre">
           {t(lang, "opTitle")}
         </h2>

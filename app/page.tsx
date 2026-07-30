@@ -4,9 +4,11 @@ import { useState } from "react"
 import { Plaque } from "@/components/proto/plaque"
 import { IndexFeuilles } from "@/components/proto/index-feuilles"
 import { Trace } from "@/components/proto/trace"
+import { Experience } from "@/components/proto/experience"
+import { Etudes } from "@/components/proto/etudes"
+import { Atelier } from "@/components/proto/atelier"
 import { Telemetrie } from "@/components/proto/telemetrie"
 import { Ortho } from "@/components/proto/ortho"
-import { Revisions } from "@/components/proto/revisions"
 import { Specifications } from "@/components/proto/specifications"
 import { Operateur } from "@/components/proto/operateur"
 import { Cartouche } from "@/components/proto/cartouche"
@@ -14,21 +16,26 @@ import { Smooth } from "@/components/proto/smooth"
 import { World } from "@/components/proto/world"
 import type { Lang } from "@/components/proto/dict"
 
-/* LE JEU DE PLANS COMPLET — huit feuilles, numérotées sans trou.
+/* LE JEU DE PLANS COMPLET — dix feuilles, numérotées sans trou.
 
-   L'ordre raconte : le travail d'abord (01 la chaîne, 02 l'arbitrage
-   qui la rend intéressante), la machine comme objet ensuite (03, qui
-   est aussi la respiration entre deux feuilles denses), puis
-   l'histoire (04), les capacités (05), l'humain (06), et le cartouche
-   qui signe (07).
+   L'ORDRE RÉPOND À UNE QUESTION DE LECTEUR À LA FOIS :
+   01 comment il travaille — la seule chose qu'une liste de projets ne
+      peut pas dire ;
+   02 où il a travaillé, groupé par employeur ;
+   03 ce qu'il a étudié, et le double diplôme se VOIT ;
+   04 ce qu'il construit seul ;
+   05 une pièce en profondeur — le routeur multi-modèle ;
+   06 la planche de vues, respiration entre deux feuilles denses ;
+   07 les capacités ;
+   08 hors travail ;
+   09 le contact.
 
-   Mener avec 03 aurait été plus joli et moins juste : un recruteur qui
-   ne descend qu'un écran doit tomber sur du travail, pas sur une
-   métaphore.
+   Mener avec 05 ou 06 aurait été plus spectaculaire et moins utile :
+   un recruteur qui ne descend qu'un écran doit tomber sur du travail.
 
    La numérotation vit dans dict.ts (idxFeuilles) : l'index 00 la
    récite, il ne la redéclare pas. */
-export default function Proto() {
+export default function Page() {
   const [lang, setLang] = useState<Lang>("fr")
 
   return (
@@ -49,9 +56,11 @@ export default function Proto() {
       <Plaque lang={lang} setLang={setLang} />
       <IndexFeuilles lang={lang} />
       <Trace lang={lang} />
+      <Experience lang={lang} />
+      <Etudes lang={lang} />
+      <Atelier lang={lang} />
       <Telemetrie lang={lang} />
       <Ortho lang={lang} />
-      <Revisions lang={lang} />
       <Specifications lang={lang} />
       <Operateur lang={lang} />
       <Cartouche lang={lang} />

@@ -42,15 +42,22 @@ export function Ortho({ lang }: { lang: Lang }) {
   const views = t(lang, "ovViews") as unknown as [string, string, string][]
 
   return (
-    <section className="ov" id="vues" aria-label={t(lang, "ovTitle")}>
+    <section className="ov" id="vues" aria-labelledby="ov-titre">
       <div className="ov-rail mono mono-xs dim" aria-hidden="true">
         {t(lang, "ovRail")}
       </div>
+      {/* En-tête aligné sur les autres feuilles : ligne d'index, chiffre
+          en chrome, titre. La section portait un `aria-label` et aucun
+          titre — un lecteur d'écran ne pouvait pas la lister parmi les
+          autres. */}
       <header className="ov-head">
-        <p className="mono mono-sm dim ov-idx">
-          <span className="ov-mark">{t(lang, "ovIndex")}</span>
-          <span>{t(lang, "ovTitle")}</span>
-        </p>
+        <p className="mono mono-sm dim ov-idx">{t(lang, "ovLigne")}</p>
+        <span className="f-num chrome" aria-hidden="true">
+          {t(lang, "ovNum")}
+        </span>
+        <h2 id="ov-titre" className="ov-titre">
+          {t(lang, "ovTitle")}
+        </h2>
         <p className="jp dim ov-jp">{t(lang, "ovJp")}</p>
       </header>
 

@@ -125,17 +125,30 @@ const DICT = {
   ref: { fr: "REF.0043-B / REV.2 / 2026", en: "REF.0043-B / REV.2 / 2026" },
 
   /* — section tracé — */
-  /* Feuille 01. Le « 00 » d'origine contredisait `traceUnit` qui a
-     toujours dit « Unité 01 » — l'index et l'unité sont maintenant le
-     même nombre. Voir idxFeuilles pour la numérotation du jeu. */
-  traceIndex: { fr: "01 — Tracé", en: "01 — Trace" },
+  /* — 01 MÉTHODE —
+     Cette feuille décrivait la chaîne de Prospector. Elle décrit
+     maintenant la MANIÈRE DE TRAVAILLER : Prospector est un projet, il
+     a sa fiche ; ce qu'un recruteur ne peut pas déduire d'une liste de
+     projets, c'est comment on s'y prend.
+
+     À CONFIRMER AVEC LE PROPRIÉTAIRE. Les six étapes ne sont pas
+     inventées, elles sont DÉDUITES de ce que le CV démontre : router
+     chaque tâche vers le modèle le moins cher qui la tient (on arbitre
+     avant de dépenser), prédire l'usage mémoire pour éviter les échecs
+     (on mesure avant d'allouer), apprendre le front-end en autonomie,
+     construire une bibliothèque de composants interne (on factorise),
+     convertir le code généré par IA en leçons (on refuse de livrer ce
+     qu'on ne comprend pas). Si la formulation ne lui ressemble pas,
+     c'est ici qu'on la corrige — un seul endroit. */
+  traceIndex: { fr: "01 — Méthode", en: "01 — Method" },
+  traceNum: { fr: "01", en: "01" },
   traceTitle: {
-    fr: "Prospector — chaîne de traitement",
-    en: "Prospector — processing chain",
+    fr: "Manière de travailler",
+    en: "How I work",
   },
   traceNote: {
-    fr: "SaaS de prospection B2B multi-tenant, en marque blanche. Six types de tâches routés vers le modèle le plus adapté.",
-    en: "Multi-tenant white-label B2B prospecting SaaS. Six task types routed to the best-fitting model.",
+    fr: "Six étapes, dans cet ordre. Celle du milieu est la seule qui coûte du temps sans produire de code — c'est aussi la seule qui empêche d'en écrire pour rien.",
+    en: "Six steps, in this order. The middle one is the only one that costs time without producing code — and the only one that stops you writing code for nothing.",
   },
   traceUnit: { fr: "Unité 01", en: "Unit 01" },
   /* Le compteur d'étapes doit être NOMMÉ : sans libellé il s'affichait
@@ -144,34 +157,42 @@ const DICT = {
      la même grandeur. */
   traceEtape: { fr: "Étape", en: "Step" },
   traceRail: {
-    fr: "Unité 01 — Prospector — Chaîne de traitement — REF.0043-B / REV.2",
-    en: "Unit 01 — Prospector — Processing chain — REF.0043-B / REV.2",
+    fr: "Unité 01 — Méthode — Manière de travailler — REF.0043-B / REV.2",
+    en: "Unit 01 — Method — How I work — REF.0043-B / REV.2",
   },
+  traceJp: { fr: "仕事の進め方", en: "仕事の進め方" },
   /* Il n'y a PAS de légende d'états ici, et c'est délibéré : elle
      faisait doublon avec l'axe gradué pour trois marques colorées de
      plus. Décision prise avec le propriétaire — ne pas la réintroduire
      sans lui. Récupérable au commit f444a5b. */
   nodes: {
     fr: [
-      ["01", "Collecte", "Scrapy · Playwright"],
-      ["02", "Enrichissement", "Supabase"],
-      ["03", "Personas", "Depuis documents"],
-      ["04", "Routage", "6 tâches → n modèles"],
-      ["05", "Séquençage", "Lemlist · OAuth 365"],
-      ["06", "Envoi", "Mail · LinkedIn · WhatsApp"],
+      ["01", "Comprendre", "Le problème avant l'outil"],
+      ["02", "Cadrer", "Contraintes, budget, périmètre"],
+      ["03", "Prototyper", "La version la plus courte qui prouve"],
+      ["04", "Mesurer", "Ce qui n'est pas mesuré n'est pas su"],
+      ["05", "Livrer", "En production, pas en démo"],
+      ["06", "Itérer", "La suite sort de l'usage"],
     ],
     en: [
-      ["01", "Collect", "Scrapy · Playwright"],
-      ["02", "Enrich", "Supabase"],
-      ["03", "Personas", "From documents"],
-      ["04", "Routing", "6 tasks → n models"],
-      ["05", "Sequencing", "Lemlist · OAuth 365"],
-      ["06", "Dispatch", "Mail · LinkedIn · WhatsApp"],
+      ["01", "Understand", "The problem before the tool"],
+      ["02", "Frame", "Constraints, budget, scope"],
+      ["03", "Prototype", "The shortest version that proves it"],
+      ["04", "Measure", "What isn't measured isn't known"],
+      ["05", "Ship", "To production, not to a demo"],
+      ["06", "Iterate", "What comes next comes from use"],
     ],
   },
+  /* La dérivation part de MESURER : c'est l'étape qui a un outillage
+     propre, et la seule dont on peut être tenté de se passer. */
   pool: {
-    fr: ["Réservoir de modèles", "OpenRouter · coût / latence arbitrés par tâche"],
-    en: ["Model pool", "OpenRouter · cost / latency arbitrated per task"],
+    fr: ["Banc de mesure", "On ne règle pas ce qu'on n'a pas instrumenté"],
+    en: ["Measurement bench", "You cannot tune what you never instrumented"],
+  },
+  poolMark: { fr: "Banc", en: "Bench" },
+  poolChips: {
+    fr: ["profilage", "tests", "journaux"],
+    en: ["profiling", "tests", "logs"],
   },
 
   /* — planche de vues orthographiques —
@@ -182,7 +203,9 @@ const DICT = {
        direction. */
   ovTitle: { fr: "Planche de vues", en: "View plate" },
   ovJp: { fr: "正投影図", en: "正投影図" },
-  ovIndex: { fr: "03", en: "03" },
+  ovIndex: { fr: "06", en: "06" },
+  ovNum: { fr: "06", en: "06" },
+  ovLigne: { fr: "06 — Vues", en: "06 — Views" },
   /* [repère, nom de la vue, angle de prise] */
   ovViews: {
     fr: [
@@ -205,8 +228,8 @@ const DICT = {
     en: "Three standard projections and one material render. Continuous line carries the visible edge, dashed the hidden edge, chain-dotted the centre. The dimension is the plate's only assertion.",
   },
   ovRail: {
-    fr: "Unité 03 — Planche de vues — REF.0043-B / REV.2 — Éch. 1:1",
-    en: "Unit 03 — View plate — REF.0043-B / REV.2 — Scale 1:1",
+    fr: "Unité 06 — Planche de vues — REF.0043-B / REV.2 — Éch. 1:1",
+    en: "Unit 06 — View plate — REF.0043-B / REV.2 — Scale 1:1",
   },
 
   /* — 05 TÉLÉMÉTRIE : le routeur multi-modèle —
@@ -225,8 +248,8 @@ const DICT = {
      ajouter de chiffres ici sans les tenir de lui.
 
      [repère, nom, précision, palier 0|1|2] */
-  telIndex: { fr: "02 — Télémétrie", en: "02 — Telemetry" },
-  telNum: { fr: "02", en: "02" },
+  telIndex: { fr: "05 — Télémétrie", en: "05 — Telemetry" },
+  telNum: { fr: "05", en: "05" },
   telTitle: { fr: "Routage multi-modèle", en: "Multi-model routing" },
   telJp: { fr: "テレメトリ", en: "テレメトリ" },
   telNote: {
@@ -290,76 +313,57 @@ const DICT = {
     ],
   },
   telRail: {
-    fr: "Unité 02 — Télémétrie — Routage multi-modèle — OpenRouter — REF.0043-B / REV.2",
-    en: "Unit 02 — Telemetry — Multi-model routing — OpenRouter — REF.0043-B / REV.2",
+    fr: "Unité 05 — Télémétrie — Routage multi-modèle — OpenRouter — REF.0043-B / REV.2",
+    en: "Unit 05 — Telemetry — Multi-model routing — OpenRouter — REF.0043-B / REV.2",
   },
 
-  /* — 06 RÉVISIONS : le parcours en cartouche de révisions —
-
-     TOUT VIENT DU CV, y compris les dates au mois. Rien n'est arrondi,
-     rien n'est ajouté. Les villes ne sont mentionnées que là où le CV
-     les donne : il les donne pour les emplois, pas pour les écoles.
-
-     La colonne ZONE est la seule invention, et elle est structurelle :
-     un cartouche de révisions porte toujours la zone du plan touchée
-     par la modification. Si la machine est l'ingénieur, chaque étape
-     révise une zone de la machine. C'est ce qui transforme une liste
-     de lignes de CV en historique d'un objet qui se construit.
-
-     [n°, zone, période, organisme, fonction, modification] */
-  revIndex: { fr: "04 — Révisions", en: "04 — Revisions" },
-  revTitle: { fr: "Historique de l'unité", en: "Unit history" },
-  revJp: { fr: "改訂履歴", en: "改訂履歴" },
-  revNote: {
-    fr: "Huit révisions depuis la mise en fabrication. Chacune touche une zone et une seule — c'est ce qui distingue une machine d'un empilement.",
-    en: "Eight revisions since first build. Each touches one zone and one only — that is what separates a machine from a pile.",
+  /* — 02 EXPÉRIENCE : les projets, groupés par employeur —
+     Le contenu vit dans parcours.ts : ce sont des enregistrements
+     imbriqués, pas des chaînes. Ici, les étiquettes du gabarit. */
+  xpIndex: { fr: "02 — Expérience", en: "02 — Experience" },
+  xpNum: { fr: "02", en: "02" },
+  xpTitle: { fr: "Là où j'ai travaillé", en: "Where I have worked" },
+  xpJp: { fr: "職務経歴", en: "職務経歴" },
+  xpNote: {
+    fr: "Groupés par employeur et non par projet : quatre produits sur une même base technique, ce n'est pas quatre lignes de CV, c'est une contrainte d'architecture.",
+    en: "Grouped by employer rather than by project: four products on one technical base is not four résumé lines, it is an architectural constraint.",
   },
-  revCols: {
-    fr: ["Rév", "Zone", "Période", "Modification"],
-    en: ["Rev", "Zone", "Period", "Change"],
+  xpEnCours: { fr: "En poste", en: "Current" },
+  xpSchema: { fr: "Arborescence", en: "Tree" },
+  xpFiche: { fr: "Fiche détaillée", en: "Detailed file" },
+  xpRail: {
+    fr: "Unité 02 — Expérience — Projets par employeur — REF.0043-B / REV.2",
+    en: "Unit 02 — Experience — Projects by employer — REF.0043-B / REV.2",
   },
-  revEnCours: { fr: "En cours", en: "Current" },
-  revEntrees: {
-    fr: [
-      ["01", "Socle", "2020.09 → 2022.06", "Lycée Touchard-Washington", "Classe préparatoire TSI",
-        "Mise en fabrication. Mathématiques, physique, sciences de l'ingénieur."],
-      ["02", "Atelier", "2022.07 → 2022.08", "Legrand · Le Mans", "Opérateur industriel",
-        "Assemblage sur chaîne, tri de produits retournés pour recyclage, appui aux stocks. La machine passe par l'atelier avant le bureau d'études."],
-      ["03", "Structure", "2022.09 → 2025.10", "ESTIA", "Master d'ingénieur trilingue",
-        "Cycle ingénieur. Trois langues de travail."],
-      ["04", "Interface", "2023.02 → 2023.07", "The Guill Corp · Anglet", "Stagiaire ingénieur développement logiciel",
-        "Première mise en service logicielle : interface de gestion des données de programmation d'usinage (Python/Flask, JavaScript/jQuery, Ajax, SQL). Front-end et design appris en autonomie."],
-      ["05", "Étalonnage", "2024.03 → 2024.08", "Imperial University of Hokkaido · Japon", "Semestre d'échange",
-        "Information & Ingénierie. Un semestre à travailler dans une autre norme."],
-      ["06", "Calcul", "2024.09 → 2025.10", "Université Côte d'Azur", "Master en Data Science — MBDS MIAGE",
-        "Ajout du module data : modèles, pipelines, mise en production."],
-      ["07", "Mesure", "2025.04 → 2025.09", "Sophia Genetics · Bidart", "Stagiaire ingénieur développement logiciel",
-        "Machine learning en production : prédiction de l'usage mémoire par tâche sur pipelines bio-informatiques (XGBoost, LightGBM, CatBoost, Random Forest). Pipelines ETL, allocation de ressources en calcul distribué, CI/CD GitLab."],
-      ["08", "Commande", "2026.05 → présent", "UpYourBizz", "Ingénieur Full Stack & IA",
-        "Prospector : SaaS de prospection B2B multi-tenant en marque blanche, routage multi-modèle sur six types de tâches, orchestration de campagnes. Octo : segmentation d'exports DMS pour concessionnaires."],
-    ],
-    en: [
-      ["01", "Base", "2020.09 → 2022.06", "Lycée Touchard-Washington", "TSI preparatory class",
-        "First build. Mathematics, physics, engineering science."],
-      ["02", "Shop floor", "2022.07 → 2022.08", "Legrand · Le Mans", "Industrial operator",
-        "Production line assembly, sorting returns for recycling, stock support. The machine goes through the shop floor before the drawing office."],
-      ["03", "Structure", "2022.09 → 2025.10", "ESTIA", "Trilingual engineering master's",
-        "Engineering cycle. Three working languages."],
-      ["04", "Interface", "2023.02 → 2023.07", "The Guill Corp · Anglet", "Software engineering intern",
-        "First software commissioning: machining programme data management interface (Python/Flask, JavaScript/jQuery, Ajax, SQL). Front-end and design self-taught."],
-      ["05", "Calibration", "2024.03 → 2024.08", "Imperial University of Hokkaido · Japan", "Exchange semester",
-        "Information & Engineering. One semester working to another standard."],
-      ["06", "Compute", "2024.09 → 2025.10", "Université Côte d'Azur", "MSc Data Science — MBDS MIAGE",
-        "Data module added: models, pipelines, production."],
-      ["07", "Measurement", "2025.04 → 2025.09", "Sophia Genetics · Bidart", "Software engineering intern",
-        "Machine learning in production: per-task memory usage prediction on bioinformatics pipelines (XGBoost, LightGBM, CatBoost, Random Forest). ETL pipelines, distributed compute resource allocation, GitLab CI/CD."],
-      ["08", "Control", "2026.05 → present", "UpYourBizz", "Full Stack & AI Engineer",
-        "Prospector: multi-tenant white-label B2B prospecting SaaS, multi-model routing across six task types, campaign orchestration. Octo: DMS export segmentation for car dealers."],
-    ],
+
+  /* — 03 ÉTUDES : le parcours en rails parallèles — */
+  etuIndex: { fr: "03 — Études", en: "03 — Studies" },
+  etuNum: { fr: "03", en: "03" },
+  etuTitle: { fr: "Deux rails en parallèle", en: "Two rails in parallel" },
+  etuJp: { fr: "学歴", en: "学歴" },
+  etuNote: {
+    fr: "Un double diplôme n'est pas deux diplômes : ce sont deux cursus menés en même temps. Écrit en liste, ça se lit l'un après l'autre et l'information disparaît.",
+    en: "A double degree is not two degrees: it is two courses run at the same time. Written as a list, they read one after the other and the information is lost.",
   },
-  revRail: {
-    fr: "Unité 04 — Historique de révisions — 01 à 08 — REF.0043-B / REV.2",
-    en: "Unit 04 — Revision history — 01 to 08 — REF.0043-B / REV.2",
+  etuDouble: { fr: "Double diplôme — 13 mois", en: "Double degree — 13 months" },
+  etuRail: {
+    fr: "Unité 03 — Études — ESTIA · MBDS · Hokkaido — REF.0043-B / REV.2",
+    en: "Unit 03 — Studies — ESTIA · MBDS · Hokkaido — REF.0043-B / REV.2",
+  },
+
+  /* — 04 ATELIER : les projets personnels — */
+  atIndex: { fr: "04 — Atelier", en: "04 — Workshop" },
+  atNum: { fr: "04", en: "04" },
+  atTitle: { fr: "Ce que je construis à côté", en: "What I build on the side" },
+  atJp: { fr: "個人制作", en: "個人制作" },
+  atNote: {
+    fr: "Quatre projets, quatre formes différentes. Un cycle, une convergence avec vanne, un empilement, un tuyau — c'est la forme qui dit ce que le projet est.",
+    en: "Four projects, four different shapes. A cycle, a convergence with a valve, a stack, a pipe — the shape says what the project is.",
+  },
+  atPrive: { fr: "Dépôt privé", en: "Private repository" },
+  atRail: {
+    fr: "Unité 04 — Atelier — Projets personnels — REF.0043-B / REV.2",
+    en: "Unit 04 — Workshop — Personal projects — REF.0043-B / REV.2",
   },
 
   /* ================================================================
@@ -372,31 +376,36 @@ const DICT = {
      l'humain, et le cartouche qui ferme le document.
      ================================================================ */
   idxIndex: { fr: "00 — Index", en: "00 — Index" },
+  idxNum: { fr: "00", en: "00" },
   idxTitle: { fr: "Nomenclature des feuilles", en: "Sheet index" },
   idxJp: { fr: "図面目録", en: "図面目録" },
   idxNote: {
-    fr: "Huit feuilles. Le document se lit dans l'ordre, mais chaque feuille se tient seule — c'est la différence entre un plan et un récit.",
-    en: "Eight sheets. The document reads in order, but each sheet stands alone — that is the difference between a drawing and a story.",
+    fr: "Dix feuilles. Le document se lit dans l'ordre, mais chaque feuille se tient seule — c'est la différence entre un plan et un récit.",
+    en: "Ten sheets. The document reads in order, but each sheet stands alone — that is the difference between a drawing and a story.",
   },
   /* [numéro, ancre, titre, objet de la feuille] */
   idxFeuilles: {
     fr: [
-      ["01", "trace", "Tracé", "Prospector — chaîne de traitement, six étapes"],
-      ["02", "telemetrie", "Télémétrie", "Routage multi-modèle — l'arbitrage du coût"],
-      ["03", "vues", "Vues", "Projections orthographiques et rendu de matière"],
-      ["04", "revisions", "Révisions", "Historique de l'unité — huit révisions"],
-      ["05", "specifications", "Spécifications", "Caractéristiques et classes"],
-      ["06", "operateur", "Opérateur", "Conditions d'emploi"],
-      ["07", "contact", "Cartouche", "Références et prise de contact"],
+      ["01", "trace", "Méthode", "Manière de travailler — six étapes"],
+      ["02", "experience", "Expérience", "UpYourBizz · Sophia Genetics · Guill Corp · Legrand"],
+      ["03", "etudes", "Études", "ESTIA · double diplôme MBDS · Hokkaido"],
+      ["04", "atelier", "Atelier", "Eternal · Trading Agent · La Provence · bot"],
+      ["05", "telemetrie", "Télémétrie", "Routage multi-modèle — l'arbitrage du coût"],
+      ["06", "vues", "Vues", "Projections orthographiques et rendu de matière"],
+      ["07", "specifications", "Spécifications", "Caractéristiques et classes"],
+      ["08", "profil", "Profil", "Hors travail"],
+      ["09", "contact", "Contact", "Références et prise de contact"],
     ],
     en: [
-      ["01", "trace", "Trace", "Prospector — processing chain, six steps"],
-      ["02", "telemetrie", "Telemetry", "Multi-model routing — the cost arbitrage"],
-      ["03", "vues", "Views", "Orthographic projections and material render"],
-      ["04", "revisions", "Revisions", "Unit history — eight revisions"],
-      ["05", "specifications", "Specifications", "Characteristics and classes"],
-      ["06", "operateur", "Operator", "Conditions of use"],
-      ["07", "contact", "Title block", "References and contact"],
+      ["01", "trace", "Method", "How I work — six steps"],
+      ["02", "experience", "Experience", "UpYourBizz · Sophia Genetics · Guill Corp · Legrand"],
+      ["03", "etudes", "Studies", "ESTIA · MBDS double degree · Hokkaido"],
+      ["04", "atelier", "Workshop", "Eternal · Trading Agent · La Provence · bot"],
+      ["05", "telemetrie", "Telemetry", "Multi-model routing — the cost arbitrage"],
+      ["06", "vues", "Views", "Orthographic projections and material render"],
+      ["07", "specifications", "Specifications", "Characteristics and classes"],
+      ["08", "profil", "Profile", "Off duty"],
+      ["09", "contact", "Contact", "References and contact"],
     ],
   },
 
@@ -414,7 +423,8 @@ const DICT = {
      à une échelle de 100 % qui n'existe pas ; une classe écrite est ce
      qu'un dessin technique utilise, et c'est plus juste.
      [groupe, [[désignation, classe]]] */
-  specIndex: { fr: "05 — Spécifications", en: "05 — Specifications" },
+  specIndex: { fr: "07 — Spécifications", en: "07 — Specifications" },
+  specNum: { fr: "07", en: "07" },
   specTitle: { fr: "Caractéristiques", en: "Characteristics" },
   specJp: { fr: "仕様", en: "仕様" },
   specNote: {
@@ -471,8 +481,8 @@ const DICT = {
     ],
   },
   specRail: {
-    fr: "Unité 05 — Spécifications — Caractéristiques et classes — REF.0043-B / REV.2",
-    en: "Unit 05 — Specifications — Characteristics and classes — REF.0043-B / REV.2",
+    fr: "Unité 07 — Spécifications — Caractéristiques et classes — REF.0043-B / REV.2",
+    en: "Unit 07 — Specifications — Characteristics and classes — REF.0043-B / REV.2",
   },
 
   /* — 06 OPÉRATEUR —
@@ -481,12 +491,13 @@ const DICT = {
      machine ne se raconte pas dans un tableau. Une respiration avant
      le cartouche.
      Tout vient du CV, y compris l'encadrement. Rien n'est enjolivé. */
-  opIndex: { fr: "06 — Opérateur", en: "06 — Operator" },
-  opTitle: { fr: "Conditions d'emploi", en: "Conditions of use" },
-  opJp: { fr: "操作者", en: "操作者" },
+  opIndex: { fr: "08 — Profil", en: "08 — Profile" },
+  opNum: { fr: "08", en: "08" },
+  opTitle: { fr: "Hors travail", en: "Off duty" },
+  opJp: { fr: "余暇", en: "余暇" },
   opCorps: {
-    fr: "Hors service, la machine s'entraîne. Musculation et force athlétique, encadré par un champion du monde de powerlifting 2023 et un bodybuilder professionnel.",
-    en: "Off duty, the machine trains. Strength training and powerlifting, coached by a 2023 powerlifting world champion and a professional bodybuilder.",
+    fr: "En dehors du code, je soulève. Musculation et force athlétique, encadré par un champion du monde de powerlifting 2023 et un bodybuilder professionnel.",
+    en: "Away from the code, I lift. Strength training and powerlifting, coached by a 2023 powerlifting world champion and a professional bodybuilder.",
   },
   opChute: {
     fr: "Trois programmes de force conçus pour des pratiquants intermédiaires. Un programme d'entraînement est une spécification : une charge, une progression, une tolérance — et quelqu'un qui doit pouvoir l'exécuter sans vous.",
@@ -507,8 +518,8 @@ const DICT = {
     ],
   },
   opRail: {
-    fr: "Unité 06 — Opérateur — Conditions d'emploi — REF.0043-B / REV.2",
-    en: "Unit 06 — Operator — Conditions of use — REF.0043-B / REV.2",
+    fr: "Unité 08 — Profil — Hors travail — REF.0043-B / REV.2",
+    en: "Unit 08 — Profile — Off duty — REF.0043-B / REV.2",
   },
 
   /* — 07 CONTACT : LE CARTOUCHE —
@@ -521,12 +532,13 @@ const DICT = {
      e-mail et LinkedIn. Le CV porte aussi un numéro de téléphone ;
      il n'est PAS repris — publier un numéro sur une page ouverte est
      une décision qui appartient au propriétaire, pas au document. */
-  ctIndex: { fr: "07 — Cartouche", en: "07 — Title block" },
+  ctIndex: { fr: "09 — Contact", en: "09 — Contact" },
+  ctNum: { fr: "09", en: "09" },
   ctTitle: { fr: "Prise de contact", en: "Get in touch" },
   ctJp: { fr: "表題欄", en: "表題欄" },
   ctAccroche: {
-    fr: "Le document s'arrête ici. La machine, non.",
-    en: "The document ends here. The machine does not.",
+    fr: "Le document s'arrête ici. Le travail, non.",
+    en: "The document ends here. The work does not.",
   },
   ctChamps: {
     fr: [
@@ -537,7 +549,7 @@ const DICT = {
       ["Échelle", "1:1"],
       ["Référence", "REF.0043-B / REV.2"],
       ["Date", "2026"],
-      ["Feuilles", "00 à 07"],
+      ["Feuilles", "00 à 09"],
     ],
     en: [
       ["Title", "Portfolio — technical plate"],
@@ -547,7 +559,7 @@ const DICT = {
       ["Scale", "1:1"],
       ["Reference", "REF.0043-B / REV.2"],
       ["Date", "2026"],
-      ["Sheets", "00 to 07"],
+      ["Sheets", "00 to 09"],
     ],
   },
   ctLiens: {
@@ -563,8 +575,8 @@ const DICT = {
     ],
   },
   ctRail: {
-    fr: "Unité 07 — Cartouche — Fin du document — REF.0043-B / REV.2",
-    en: "Unit 07 — Title block — End of document — REF.0043-B / REV.2",
+    fr: "Unité 09 — Cartouche — Fin du document — REF.0043-B / REV.2",
+    en: "Unit 09 — Title block — End of document — REF.0043-B / REV.2",
   },
 
   /* — libellés des fiches d'unité (/work/[slug]) —
@@ -573,7 +585,7 @@ const DICT = {
      étiquettes du gabarit. */
   fpRetour: { fr: "Document", en: "Document" },
   fpRetourDocument: { fr: "Retour au document", en: "Back to the document" },
-  fpFiche: { fr: "Fiche d'unité", en: "Unit file" },
+  fpFiche: { fr: "Fiche projet", en: "Project file" },
   fpCadre: { fr: "Cadre", en: "Context" },
   fpPeriode: { fr: "Période", en: "Period" },
   fpEtat: { fr: "État", en: "Status" },
@@ -586,7 +598,7 @@ const DICT = {
   /* Annexes de l'index : les fiches d'unité ne sont pas des feuilles du
      jeu, ce sont des pièces détachées — d'où un bloc distinct et une
      référence en U-0n. */
-  idxAnnexes: { fr: "Annexes — fiches d'unité", en: "Annexes — unit files" },
+  idxAnnexes: { fr: "Annexes — fiches projet", en: "Annexes — project files" },
   idxAnnexesNote: {
     fr: "Cinq sous-ensembles documentés séparément : contexte, contraintes, décisions.",
     en: "Five sub-assemblies documented separately: background, constraints, decisions.",

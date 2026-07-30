@@ -35,6 +35,9 @@ export function Cartouche({ lang }: { lang: Lang }) {
 
       <header className="ct-head">
         <p className="mono mono-sm dim ct-idx">{t(lang, "ctIndex")}</p>
+        <span className="f-num chrome" aria-hidden="true">
+          {t(lang, "ctNum")}
+        </span>
         <h2 id="ct-titre" className="ct-titre">
           {t(lang, "ctTitle")}
         </h2>

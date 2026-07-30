@@ -68,7 +68,7 @@ export function Telemetrie({ lang }: { lang: Lang }) {
             plaque. Le chrome marque l'identité de la machine, il ne
             décore pas — c'est pour ça qu'il ne touche que des
             numéros et des noms, jamais du texte courant. */}
-        <span className="tel-num chrome" aria-hidden="true">
+        <span className="f-num chrome" aria-hidden="true">
           {t(lang, "telNum")}
         </span>
         <h2 id="tel-titre" className="tel-titre">

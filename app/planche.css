@@ -2108,7 +2108,9 @@ body {
 .nomen,
 .ov,
 .tel,
-.rev,
+.xp,
+.etu,
+.at,
 .fiche,
 .op,
 .ct {
@@ -2121,7 +2123,9 @@ body {
 
 .ov-rail,
 .tel-rail,
-.rev-rail,
+.xp-rail,
+.etu-rail,
+.at-rail,
 .fiche-rail,
 .op-rail,
 .ct-rail {
@@ -2135,7 +2139,9 @@ body {
 
 .nomen-idx,
 .tel-idx,
-.rev-idx,
+.xp-idx,
+.etu-idx,
+.at-idx,
 .fiche-idx,
 .op-idx,
 .ct-idx {
@@ -2144,7 +2150,10 @@ body {
 
 .nomen-titre,
 .tel-titre,
-.rev-titre,
+.xp-titre,
+.etu-titre,
+.at-titre,
+.ov-titre,
 .fiche-titre,
 .op-titre,
 .ct-titre {
@@ -2159,7 +2168,9 @@ body {
 
 .nomen-jp,
 .tel-jp,
-.rev-jp,
+.xp-jp,
+.etu-jp,
+.at-jp,
 .fiche-jp,
 .op-jp,
 .ct-jp {
@@ -2169,7 +2180,9 @@ body {
 
 .nomen-note,
 .tel-note,
-.rev-note,
+.xp-note,
+.etu-note,
+.at-note,
 .fiche-note {
   margin: clamp(0.8rem, 2vh, 1.3rem) 0 0;
   max-width: 56ch;
@@ -2178,11 +2191,58 @@ body {
   line-height: 1.7;
 }
 
+/* — EN-TÊTE DE FEUILLE, gabarit commun —
+   Ligne d'index en pleine largeur, puis le chiffre en chrome à gauche
+   et le titre à droite. Déclaré une fois pour les dix feuilles : le
+   chiffre doit tomber EXACTEMENT au même endroit d'une feuille à
+   l'autre, sinon il cesse d'être un repère et devient une décoration
+   qui bouge. */
+.nomen-head,
+.tel-head,
+.xp-head,
+.etu-head,
+.at-head,
+.ov-head,
+.fiche-head,
+.op-head,
+.ct-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: clamp(1rem, 3vw, 2.4rem);
+  align-items: start;
+}
+.nomen-idx,
+.tel-idx,
+.xp-idx,
+.etu-idx,
+.at-idx,
+.ov-idx,
+.fiche-idx,
+.op-idx,
+.ct-idx {
+  grid-column: 1 / -1;
+}
+
+/* LE CHIFFRE. Il est GRAND parce que la rampe de chrome est cyclique et
+   cotée en `em` : sous ~4rem sa période descend à 50px et le chrome
+   redevient une rayure. La taille n'est pas une emphase, c'est une
+   condition de lisibilité du matériau. Voir --chrome-ramp. */
+.f-num {
+  grid-row: 2 / -1;
+  font-size: clamp(4.4rem, 11vw, 9rem);
+  font-weight: 700;
+  font-stretch: 84%;
+  line-height: 0.78;
+  letter-spacing: -0.02em;
+}
+
 @media (max-width: 720px) {
   /* Sous 720px il n'y a plus de gouttière pour accueillir les rails. */
   .ov-rail,
   .tel-rail,
-  .rev-rail,
+  .xp-rail,
+  .etu-rail,
+  .at-rail,
   .fiche-rail,
   .op-rail,
   .ct-rail {
@@ -2756,27 +2816,8 @@ body {
    en chrome, le banc et le tableau — ce qui n'existe que sur cette
    feuille. */
 .tel-head {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: start;
-  column-gap: clamp(1rem, 3vw, 2.4rem);
   padding-bottom: clamp(1.4rem, 4vh, 2.6rem);
   border-bottom: var(--rule) solid var(--line-2);
-}
-.tel-idx {
-  grid-column: 1 / -1;
-}
-/* Le numéro en chrome. Il est GRAND parce que la rampe est cotée en
-   `em` : sous ~4rem la période descend à 50px et le chrome redevient
-   une rayure. La taille n'est pas une emphase, c'est une condition de
-   lisibilité du matériau. */
-.tel-num {
-  grid-row: 2 / span 3;
-  font-size: clamp(4.4rem, 11vw, 9rem);
-  font-weight: 700;
-  font-stretch: 84%;
-  line-height: 0.78;
-  letter-spacing: -0.02em;
 }
 .tel-banc {
   margin-top: clamp(1.2rem, 3vh, 2.2rem);
@@ -2930,12 +2971,24 @@ body {
 }
 
 @media (max-width: 720px) {
-  .tel-head {
-    grid-template-columns: 1fr;
+  /* Sous 720px le chiffre passe AU-DESSUS du titre au lieu d'être à sa
+     gauche : à 9rem il ne reste plus de largeur pour le titre à côté.
+     Règle unique pour les dix feuilles, comme le gabarit. */
+  .nomen-head,
+  .tel-head,
+  .xp-head,
+  .etu-head,
+  .at-head,
+  .ov-head,
+  .fiche-head,
+  .op-head,
+  .ct-head {
+    grid-template-columns: minmax(0, 1fr);
   }
-  .tel-num {
+  .f-num {
     grid-row: auto;
-    margin-bottom: 0.6rem;
+    margin-bottom: 0.4rem;
+    font-size: clamp(3.4rem, 20vw, 5.5rem);
   }
   /* Le motif est la colonne la plus longue et la moins nécessaire au
      coup d'œil : elle sort en premier quand la largeur manque. */
@@ -2945,144 +2998,6 @@ body {
   }
 }
 
-/* ------------------------------------------------------------
-   06 — RÉVISIONS
-
-   Un cartouche de révisions est DENSE et RÉGLÉ : c'est un bloc de
-   tableau, pas une frise aérée. La tentation sera d'espacer les
-   lignes « pour respirer » — y céder ferait une timeline de portfolio,
-   c'est-à-dire exactement la forme qu'on évite. La densité EST le
-   registre.
-
-   BUDGET DE FRAME : aucun blend, aucun filter, aucun masque, aucun
-   plan fixe. Une seule animation de transform à l'entrée.
-   ------------------------------------------------------------ */
-
-/* Gabarit, rail, index, titre, kana et chapeau viennent du mobilier
-   commun des feuilles, plus haut. */
-.rev-head {
-  padding-bottom: clamp(1.2rem, 3vh, 2rem);
-}
-
-/* La grille de colonnes est déclarée UNE fois et partagée par
-   l'en-tête et les entrées : deux déclarations dériveraient au premier
-   réglage et les colonnes cesseraient de s'aligner. */
-.rev-cols,
-.rev-entree {
-  display: grid;
-  grid-template-columns: 2rem 7.5rem 10.5rem 1fr;
-  column-gap: clamp(0.8rem, 2vw, 1.6rem);
-  align-items: baseline;
-}
-.rev-cols {
-  padding: 0 0 0.7rem;
-  border-bottom: var(--rule) solid var(--line-2);
-}
-
-.rev-liste {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.rev-entree {
-  padding: clamp(0.9rem, 2.2vh, 1.4rem) 0;
-  border-bottom: var(--rule) solid var(--line);
-}
-
-/* Bulle de révision — convention de dessin technique. `aspect-ratio`
-   plutôt qu'une hauteur en dur : la bulle suit la taille du chiffre. */
-.rev-bulle {
-  display: grid;
-  place-items: center;
-  width: 2rem;
-  aspect-ratio: 1;
-  border: var(--rule) solid var(--line-3);
-  border-radius: 50%;
-  color: var(--g-300);
-  letter-spacing: 0.04em;
-}
-.rev-zone {
-  color: var(--g-100);
-}
-.rev-periode {
-  white-space: nowrap;
-}
-
-.rev-corps {
-  min-width: 0;
-}
-.rev-organisme {
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  flex-wrap: wrap;
-  font-weight: 700;
-  font-stretch: 88%;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-}
-.rev-fonction {
-  margin: 0.3rem 0 0;
-  text-transform: none;
-  letter-spacing: 0.06em;
-}
-.rev-modif {
-  margin: 0.55rem 0 0;
-  max-width: 72ch;
-  text-transform: none;
-  letter-spacing: 0.035em;
-  line-height: 1.7;
-}
-
-/* — LA RÉVISION COURANTE —
-   Anneau rouge, chiffre PAPIER : --sig-hot est à 3,962:1, sous le
-   seuil texte, il n'écrit jamais. La lampe repose sur sa braise, comme
-   l'index de la règle graduée et la voie lourde de la télémétrie.
-   Le rail de 2px double l'état par la géométrie : en niveaux de gris
-   la ligne courante reste la seule à porter une marque à gauche. */
-.rev-courante {
-  box-shadow: inset 2px 0 0 var(--sig-hot);
-  padding-left: 0.8rem;
-  margin-left: -0.8rem;
-}
-.rev-courante .rev-bulle {
-  border-color: var(--sig-hot);
-  color: var(--paper);
-  box-shadow: 0 0 0 2px var(--sig-ember);
-}
-.rev-courante .rev-zone {
-  color: var(--paper);
-}
-.rev-chip {
-  padding: 3px 7px;
-  background: var(--sig-ember);
-  border: var(--rule) solid var(--sig-rail);
-  color: var(--g-100);
-  letter-spacing: 0.2em;
-}
-
-@media (max-width: 860px) {
-  /* Sous 860px les quatre colonnes ne tiennent plus : la bulle, la
-     zone et la période passent sur une ligne d'en-tête d'entrée, le
-     corps dessous. Le cartouche reste un cartouche — on empile les
-     cellules, on ne les espace pas. */
-  .rev-cols {
-    display: none;
-  }
-  .rev-entree {
-    grid-template-columns: 2rem auto 1fr;
-    row-gap: 0.55rem;
-  }
-  .rev-periode {
-    justify-self: end;
-  }
-  .rev-corps {
-    grid-column: 1 / -1;
-  }
-}
-
-
 @media (max-width: 720px) {
   /* Sous 720px la planche n'a plus qu'une colonne : l'angle de prise
      devient du bavardage sous un dessin qu'on voit en entier. */
@@ -3091,5 +3006,473 @@ body {
   }
   .ov-ref {
     margin-left: 0;
+  }
+}
+
+/* ------------------------------------------------------------
+   02 — EXPÉRIENCE
+
+   Chaque employeur = une fiche à gauche, son arborescence à droite.
+   L'arborescence n'est pas un ornement : à quatre produits on voit une
+   suite, à un seul on voit une mission. La forme dit la différence.
+   VERROU DE NOMMAGE : aucune règle `.xp-*` ne déclare width, height,
+   x, y ni r — plusieurs sont portées par des <rect>.
+   ------------------------------------------------------------ */
+
+.xp-head,
+.etu-head,
+.at-head {
+  padding-bottom: clamp(1.2rem, 3vh, 2rem);
+  border-bottom: var(--rule) solid var(--line-2);
+}
+
+.xp-liste {
+  display: grid;
+  gap: var(--rule);
+  margin-top: clamp(1.6rem, 4vh, 2.6rem);
+  background: var(--line);
+  border: var(--rule) solid var(--line-2);
+}
+.xp-employeur {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: clamp(1.4rem, 4vw, 3rem);
+  padding: clamp(1.4rem, 4vh, 2.4rem) clamp(1.1rem, 3vw, 2rem);
+  background: var(--ink-2);
+}
+/* L'employeur courant porte un rail, pas un fond : un aplat rouge
+   derrière du texte ferait de l'accent une surface. */
+.xp-courant {
+  box-shadow: inset 3px 0 0 var(--sig-hot);
+}
+
+.xp-nom {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  font-size: clamp(1.25rem, 2.6vw, 1.8rem);
+  font-weight: 700;
+  font-stretch: 86%;
+  letter-spacing: -0.005em;
+  text-transform: uppercase;
+}
+.xp-chip {
+  padding: 3px 7px;
+  background: var(--sig-ember);
+  border: var(--rule) solid var(--sig-rail);
+  color: var(--g-100);
+  letter-spacing: 0.2em;
+}
+.xp-fonction,
+.xp-periode {
+  margin: 0.35rem 0 0;
+  text-transform: none;
+  letter-spacing: 0.06em;
+}
+.xp-resume {
+  margin: clamp(0.8rem, 2vh, 1.2rem) 0 0;
+  max-width: 62ch;
+  text-transform: none;
+  letter-spacing: 0.035em;
+  line-height: 1.7;
+}
+
+.xp-produits {
+  list-style: none;
+  margin: clamp(1.2rem, 3vh, 1.8rem) 0 0;
+  padding: 0;
+}
+.xp-produit {
+  display: grid;
+  grid-template-columns: 2.2rem minmax(0, 1fr);
+  gap: 0 clamp(0.6rem, 1.6vw, 1rem);
+  padding: clamp(0.8rem, 2vh, 1.15rem) 0;
+  border-top: var(--rule) solid var(--line);
+}
+.xp-produit-nom {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  font-stretch: 90%;
+  color: var(--paper);
+}
+.xp-aka {
+  text-transform: none;
+  letter-spacing: 0.06em;
+}
+.xp-produit-texte {
+  margin: 0.4rem 0 0;
+  max-width: 68ch;
+  text-transform: none;
+  letter-spacing: 0.035em;
+  line-height: 1.72;
+}
+.xp-fiche-lien,
+.at-fiche-lien {
+  display: inline-block;
+  margin-top: 0.6rem;
+  color: var(--g-300);
+  text-decoration: none;
+  border-bottom: var(--rule) solid var(--line-3);
+  padding-bottom: 2px;
+  transition:
+    color 0.3s var(--ease),
+    border-color 0.3s var(--ease);
+}
+.xp-fiche-lien:hover,
+.xp-fiche-lien:focus-visible,
+.at-fiche-lien:hover,
+.at-fiche-lien:focus-visible {
+  color: var(--paper);
+  border-color: var(--paper);
+}
+
+.xp-parc,
+.at-liens {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: clamp(1rem, 2.5vh, 1.5rem) 0 0;
+  padding: 0;
+}
+.xp-piece {
+  padding: 4px 9px;
+  border: var(--rule) solid var(--line-2);
+  background: var(--ink);
+  color: var(--g-300);
+}
+
+.xp-schema {
+  align-self: start;
+  padding-left: clamp(1rem, 3vw, 2rem);
+  border-left: var(--rule) solid var(--line);
+}
+.xp-schema-titre {
+  margin: 0 0 0.8rem;
+}
+.xp-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.xp-bus,
+.xp-stub {
+  stroke: var(--line-3);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.xp-box {
+  fill: var(--ink);
+  stroke: var(--g-700);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+/* Carré vide = donnée manquante. Un point d'interrogation aurait dit
+   « on doute que ça existe » ; un carré à remplir dit « il manque une
+   description », ce qui est exact. */
+.xp-vide {
+  fill: none;
+  stroke: var(--off);
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+  vector-effect: non-scaling-stroke;
+}
+.xp-t {
+  font-family: var(--f-mono), monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+}
+.xp-t-code {
+  fill: var(--g-500);
+}
+.xp-t-nom {
+  fill: var(--g-100);
+}
+
+/* ------------------------------------------------------------
+   03 — ÉTUDES
+   ------------------------------------------------------------ */
+
+.etu-schema {
+  margin-top: clamp(1.6rem, 4vh, 2.6rem);
+  padding: clamp(1rem, 3vw, 2rem);
+  background: var(--ink-2);
+  border: var(--rule) solid var(--line-2);
+}
+.etu-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.etu-grad {
+  stroke: var(--line);
+  stroke-width: 1;
+  stroke-dasharray: 2 5;
+  vector-effect: non-scaling-stroke;
+}
+.etu-axe {
+  stroke: var(--line-3);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+/* Rail principal PLEIN, second rail en contour : la distinction se lit
+   par le remplissage, donc elle survit au niveau de gris. */
+.etu-barre {
+  fill: var(--g-300);
+  stroke: none;
+}
+.etu-barre-2 {
+  fill: var(--ink);
+  stroke: var(--g-100);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+.etu-barre-exc {
+  fill: var(--g-500);
+}
+/* L'excursion : deux obliques qui quittent le rail et y reviennent. */
+.etu-detour {
+  fill: none;
+  stroke: var(--g-700);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+  vector-effect: non-scaling-stroke;
+}
+/* LA COTE est le seul rouge du schéma : elle ne colore pas, elle
+   DÉSIGNE la période où les deux rails coexistent. */
+.etu-cote {
+  stroke: var(--sig-hot);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+.etu-cote-f {
+  fill: var(--sig-hot);
+  stroke: none;
+}
+.etu-attache {
+  stroke: var(--g-700);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.etu-t {
+  font-family: var(--f-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  fill: var(--g-300);
+}
+.etu-t-annee {
+  text-anchor: middle;
+  fill: var(--g-500);
+  font-size: 9px;
+}
+.etu-t-nom {
+  fill: var(--paper);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+/* Le libellé de cote reste PAPIER : --sig-hot est à 3,962:1, sous le
+   seuil texte — le rouge est dans le trait, pas dans le mot. */
+.etu-t-cote {
+  text-anchor: middle;
+  fill: var(--paper);
+  font-size: 9px;
+}
+
+.etu-liste {
+  list-style: none;
+  margin: clamp(1.6rem, 4vh, 2.6rem) 0 0;
+  padding: 0;
+}
+.etu-entree {
+  display: grid;
+  grid-template-columns: 2.4rem minmax(0, 1fr);
+  gap: 0 clamp(0.6rem, 1.6vw, 1.2rem);
+  padding: clamp(0.9rem, 2.2vh, 1.4rem) 0;
+  border-bottom: var(--rule) solid var(--line);
+}
+.etu-nom {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  font-stretch: 88%;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.etu-intitule {
+  margin: 0.3rem 0 0;
+  text-transform: none;
+  letter-spacing: 0.06em;
+}
+.etu-texte {
+  margin: 0.5rem 0 0;
+  max-width: 72ch;
+  text-transform: none;
+  letter-spacing: 0.035em;
+  line-height: 1.72;
+}
+
+/* ------------------------------------------------------------
+   04 — ATELIER
+   ------------------------------------------------------------ */
+
+.at-grille {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+  gap: var(--rule);
+  margin-top: clamp(1.6rem, 4vh, 2.6rem);
+  background: var(--line);
+  border: var(--rule) solid var(--line-2);
+}
+.at-projet {
+  display: flex;
+  flex-direction: column;
+  background: var(--ink-2);
+}
+.at-cadre {
+  padding: clamp(1rem, 3vw, 1.6rem);
+  border-bottom: var(--rule) solid var(--line);
+  background: var(--ink);
+}
+.at-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.at-fil {
+  fill: none;
+  stroke: var(--line-3);
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+}
+/* Le tronçon coupé : la vanne est fermée, l'argent réel n'est pas
+   branché. Tireté parce qu'un trait plein dirait le contraire. */
+.at-coupe {
+  stroke: var(--g-700);
+  stroke-dasharray: 4 4;
+}
+.at-tete {
+  fill: var(--line-3);
+  stroke: none;
+}
+.at-noeud {
+  fill: var(--ink-2);
+  stroke: var(--g-500);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.at-actif {
+  fill: var(--sig-ember);
+  stroke: var(--g-100);
+}
+.at-vanne,
+.at-filtre {
+  fill: none;
+  stroke: var(--sig-hot);
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+}
+.at-cote {
+  stroke: var(--g-700);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.at-t {
+  font-family: var(--f-mono), monospace;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  fill: var(--g-300);
+  text-anchor: middle;
+}
+.at-t-g {
+  text-anchor: start;
+}
+.at-t-d {
+  text-anchor: end;
+}
+
+.at-corps {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: clamp(1rem, 3vw, 1.6rem);
+}
+.at-ligne-code {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 0 0.7rem;
+}
+.at-etat {
+  color: var(--g-100);
+}
+.at-nom {
+  margin: 0;
+  font-size: clamp(1.15rem, 2.2vw, 1.5rem);
+  font-weight: 700;
+  font-stretch: 86%;
+  text-transform: uppercase;
+  letter-spacing: -0.005em;
+}
+.at-intitule {
+  margin: 0.3rem 0 0;
+  text-transform: none;
+  letter-spacing: 0.06em;
+}
+.at-texte {
+  margin: 0.7rem 0 0;
+  text-transform: none;
+  letter-spacing: 0.035em;
+  line-height: 1.72;
+}
+.at-liens {
+  margin-top: auto;
+  padding-top: 1rem;
+}
+.at-lien {
+  display: inline-block;
+  padding: 4px 9px;
+  border: var(--rule) solid var(--line-2);
+  background: var(--ink);
+  color: var(--g-100);
+  text-decoration: none;
+  transition:
+    border-color 0.3s var(--ease),
+    color 0.3s var(--ease);
+}
+.at-lien:hover,
+.at-lien:focus-visible {
+  border-color: var(--paper);
+  color: var(--paper);
+}
+/* Un projet sans dépôt public le DIT : sans cette ligne, l'absence de
+   lien se lit comme un oubli. */
+.at-prive {
+  margin: auto 0 0;
+  padding-top: 1rem;
+  text-transform: none;
+  letter-spacing: 0.06em;
+}
+
+@media (max-width: 900px) {
+  /* L'arborescence passe SOUS la fiche : à cette largeur, 300px de
+     colonne fixe étranglent le texte. */
+  .xp-employeur {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .xp-schema {
+    padding-left: 0;
+    padding-top: clamp(1rem, 3vh, 1.6rem);
+    border-left: 0;
+    border-top: var(--rule) solid var(--line);
+  }
+  .xp-svg {
+    max-width: 320px;
   }
 }

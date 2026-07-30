@@ -66,7 +66,6 @@ const COMPACT: Layout = (() => {
   }
 })()
 
-const MODELS = ["haiku", "sonnet", "opus"]
 
 /* 6 boîtes + 5 liens + dérivation + réservoir.
    Les rangs pairs allument une boîte, les impairs tirent un lien. */
@@ -95,6 +94,7 @@ export function Trace({ lang }: { lang: Lang }) {
 
   const nodes = t(lang, "nodes") as unknown as [string, string, string][]
   const pool = t(lang, "pool") as unknown as [string, string]
+  const chips = t(lang, "poolChips") as unknown as string[]
 
   /* Une seule étape ALLUMÉE à la fois : celle où l'on est. Les
      précédentes basculent en « épuisé » (--off), neutre et toujours
@@ -130,8 +130,13 @@ export function Trace({ lang }: { lang: Lang }) {
               <span className="count">{String(step).padStart(2, "0")}</span>
               <span>/ {String(nodes.length).padStart(2, "0")}</span>
             </span>
+            <span className="f-num chrome" aria-hidden="true">
+              {t(lang, "traceNum")}
+            </span>
             <h2>{t(lang, "traceTitle")}</h2>
-            <span className="jp">プロスペクター ／ 処理チェーン</span>
+            {/* Les kana passaient par une chaîne en dur — reliquat de
+                l'époque où cette feuille parlait de Prospector. */}
+            <span className="jp">{t(lang, "traceJp")}</span>
           </div>
           <p className="trace-note mono dim-2">{t(lang, "traceNote")}</p>
         </header>
@@ -220,12 +225,14 @@ export function Trace({ lang }: { lang: Lang }) {
               )
             })}
 
-            {/* réservoir de modèles */}
+            {/* La dérivation : l'outillage de l'étape MESURER. Elle part
+                du nœud d'index 3 — la seule étape qui a son propre
+                équipement, et la seule dont on est tenté de se passer. */}
             <Node state={stateOf(nodes.length)}>
               <rect x={L.pool.x} y={L.pool.y} width={L.pool.w} height={L.pool.h} />
               <rect className="n-rail" x={L.pool.x} y={L.pool.y} width={2} height={L.pool.h} />
               <text className="idx" x={L.pool.x + 16} y={L.pool.y + 22}>
-                POOL
+                {t(lang, "poolMark")}
               </text>
               <text className="lbl" x={L.pool.x + 16} y={L.pool.y + 48}>
                 {pool[0]}
@@ -233,7 +240,7 @@ export function Trace({ lang }: { lang: Lang }) {
               <text className="sub" x={L.pool.x + 16} y={L.pool.y + 66}>
                 {pool[1]}
               </text>
-              {MODELS.map((m, i) => {
+              {chips.map((m, i) => {
                 const g = L.model(i)
                 return (
                   <g key={m}>

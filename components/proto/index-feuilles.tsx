@@ -26,6 +26,9 @@ export function IndexFeuilles({ lang }: { lang: Lang }) {
     <section className="nomen" id="index" aria-labelledby="nomen-titre">
       <header className="nomen-head">
         <p className="mono mono-sm dim nomen-idx">{t(lang, "idxIndex")}</p>
+        <span className="f-num chrome" aria-hidden="true">
+          {t(lang, "idxNum")}
+        </span>
         <h2 id="nomen-titre" className="nomen-titre">
           {t(lang, "idxTitle")}
         </h2>

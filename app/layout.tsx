@@ -34,20 +34,15 @@ export const metadata: Metadata = {
   title: "Hugo Juskowiak | Ingénieur Full Stack & IA",
   description:
     "Planche technique d'un ingénieur full stack et IA : Prospector, routage multi-modèle, machine learning en production.",
+  /* La mire porte son propre fond d'encre : elle tient sur une barre
+     d'onglets claire comme sombre, donc plus de variantes par
+     `prefers-color-scheme` — deux fichiers identiques qui prétendaient
+     être différents. Le SVG passe en premier, les PNG sont le repli. */
   icons: {
     icon: [
-      {
-        url: "/icon-light-32x32.png",
-        media: "(prefers-color-scheme: light)",
-      },
-      {
-        url: "/icon-dark-32x32.png",
-        media: "(prefers-color-scheme: dark)",
-      },
-      {
-        url: "/icon.svg",
-        type: "image/svg+xml",
-      },
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icon-dark-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-192.png", sizes: "192x192", type: "image/png" },
     ],
     apple: "/apple-icon.png",
   },
