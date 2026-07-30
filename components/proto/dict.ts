@@ -139,23 +139,10 @@ const DICT = {
     fr: "Unité 01 — Prospector — Chaîne de traitement — REF.0043-B / REV.2",
     en: "Unit 01 — Prospector — Processing chain — REF.0043-B / REV.2",
   },
-  /* légende : [pastille, libellé]. La pastille dit l'état par la
-     géométrie (rail plein / contour vide / filet), jamais par la
-     seule teinte. */
-  legend: {
-    fr: [
-      ["on", "Étape atteinte"],
-      ["off", "En attente"],
-      ["wire", "Lien tiré"],
-      ["branch", "Dérivation"],
-    ],
-    en: [
-      ["on", "Step reached"],
-      ["off", "Pending"],
-      ["wire", "Link drawn"],
-      ["branch", "Branch"],
-    ],
-  },
+  /* Il n'y a PAS de légende d'états ici, et c'est délibéré : elle
+     faisait doublon avec l'axe gradué pour trois marques colorées de
+     plus. Décision prise avec le propriétaire — ne pas la réintroduire
+     sans lui. Récupérable au commit f444a5b. */
   nodes: {
     fr: [
       ["01", "Collecte", "Scrapy · Playwright"],
