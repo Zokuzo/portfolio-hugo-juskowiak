@@ -2090,6 +2090,259 @@ body {
   margin-left: auto;
 }
 
+/* ------------------------------------------------------------
+   05 — TÉLÉMÉTRIE
+
+   BUDGET DE FRAME : ce bloc n'introduit ni mix-blend-mode, ni filter,
+   ni mask, ni position:fixed. Le monde consomme déjà tout le budget
+   par frame — une section qui s'empile dessus doit être plate et
+   n'animer que des transforms, une seule fois à l'entrée.
+
+   VERROU DE NOMMAGE : aucune règle `.tel-*` ne déclare width, height,
+   x, y ni r. Plusieurs de ces classes sont portées par des <rect>, et
+   en SVG2 la propriété CSS bat l'attribut de présentation.
+   ------------------------------------------------------------ */
+
+.tel {
+  position: relative;
+  z-index: 1;
+  padding: clamp(4rem, 12vh, 9rem) var(--gutter);
+  max-width: 1360px;
+  margin-inline: auto;
+}
+
+/* Rail de gouttière, comme sur le tracé : il date et référence la
+   section sans occuper de largeur de lecture. */
+.tel-rail {
+  position: absolute;
+  left: 0;
+  top: clamp(4rem, 12vh, 9rem);
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  letter-spacing: 0.28em;
+}
+
+.tel-head {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  column-gap: clamp(1rem, 3vw, 2.4rem);
+  padding-bottom: clamp(1.4rem, 4vh, 2.6rem);
+  border-bottom: var(--rule) solid var(--line-2);
+}
+.tel-idx {
+  grid-column: 1 / -1;
+  margin: 0 0 0.9rem;
+}
+/* Le numéro en chrome. Il est GRAND parce que la rampe est cotée en
+   `em` : sous ~4rem la période descend à 50px et le chrome redevient
+   une rayure. La taille n'est pas une emphase, c'est une condition de
+   lisibilité du matériau. */
+.tel-num {
+  grid-row: 2 / span 3;
+  font-size: clamp(4.4rem, 11vw, 9rem);
+  font-weight: 700;
+  font-stretch: 84%;
+  line-height: 0.78;
+  letter-spacing: -0.02em;
+}
+.tel-titre {
+  margin: 0;
+  font-size: clamp(1.5rem, 3.4vw, 2.6rem);
+  font-weight: 700;
+  font-stretch: 88%;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  line-height: 1.02;
+}
+.tel-jp {
+  margin: 0.35rem 0 0;
+  font-size: var(--f-micro);
+}
+.tel-note {
+  margin: clamp(0.8rem, 2vh, 1.3rem) 0 0;
+  max-width: 54ch;
+  text-transform: none;
+  letter-spacing: 0.035em;
+  line-height: 1.7;
+}
+
+.tel-banc {
+  margin-top: clamp(1.2rem, 3vh, 2.2rem);
+}
+.tel-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Les bandes montent en clarté avec le palier : plus haut = plus cher.
+   L'escalier est faible (2,2 % → 7 %) parce qu'il sert de LIT, pas de
+   surface — il doit se sentir sans se voir. */
+.tel-bande {
+  stroke: none;
+}
+.tel-b0 {
+  fill: rgba(226, 232, 240, 0.022);
+}
+.tel-b1 {
+  fill: rgba(226, 232, 240, 0.045);
+}
+.tel-b2 {
+  fill: rgba(226, 232, 240, 0.07);
+}
+.tel-sep {
+  stroke: var(--line);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+/* La ligne de niveau porte la lecture : le sommet d'une voie s'y pose.
+   Tiretée pour se distinguer des séparateurs de bande, qui eux bornent.
+   Une ligne qui MESURE et une ligne qui BORNE ne peuvent pas avoir le
+   même trait — c'est la même loi que sur la planche de vues. */
+.tel-niveau {
+  stroke: var(--line-2);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+  vector-effect: non-scaling-stroke;
+}
+.tel-base {
+  stroke: var(--line-3);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+/* La voie EST la lecture : c'est l'élément le plus clair de la
+   section, et sa hauteur porte à elle seule l'information. En niveaux
+   de gris, le relevé se lit intégralement. */
+.tel-voie {
+  fill: var(--g-100);
+  /* fill-box + origine basse : sans ça, framer applique scaleY autour
+     de l'origine du viewBox et la barre part du haut de l'écran. */
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+/* La seule voie rouge du relevé, et le seul rouge de la section. Elle
+   ne colore pas, elle DÉSIGNE : « la facture passe ici ». */
+.tel-lourde {
+  fill: var(--sig-hot);
+}
+/* Loi du lit — la lampe ne touche jamais le noir directement. */
+.tel-lit {
+  fill: var(--sig-dim);
+  stroke: none;
+}
+
+.tel-t {
+  font-family: var(--f-mono), monospace;
+  font-size: 6px;
+  letter-spacing: 0.16em;
+  fill: var(--g-300);
+}
+.tel-t-palier {
+  text-anchor: end;
+  fill: var(--g-100);
+  text-transform: uppercase;
+}
+.tel-t-role {
+  text-anchor: end;
+  font-size: 5.4px;
+  fill: var(--g-500);
+}
+.tel-t-rep {
+  text-anchor: middle;
+  fill: var(--g-500);
+}
+
+.tel-lecture {
+  margin: clamp(1rem, 3vh, 1.8rem) 0 0;
+  max-width: 58ch;
+  text-transform: none;
+  letter-spacing: 0.035em;
+  line-height: 1.7;
+}
+
+/* — le tableau porte l'information réelle : le relevé n'en est que
+     l'illustration, et c'est lui qui est aria-hidden. — */
+.tel-table {
+  width: 100%;
+  margin-top: clamp(1.8rem, 5vh, 3.2rem);
+  border-collapse: collapse;
+  text-align: left;
+}
+.tel-caption {
+  text-align: left;
+  padding-bottom: 0.7rem;
+  border-bottom: var(--rule) solid var(--line-2);
+}
+.tel-table th {
+  padding: 0.9rem 1rem 0.7rem 0;
+  font-weight: 400;
+  border-bottom: var(--rule) solid var(--line);
+}
+.tel-table td {
+  padding: 0.85rem 1rem 0.85rem 0;
+  border-bottom: var(--rule) solid var(--line);
+  vertical-align: top;
+}
+.tel-nom {
+  display: block;
+  font-weight: 700;
+  font-stretch: 88%;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.tel-precision {
+  display: block;
+  margin-top: 0.25rem;
+  text-transform: none;
+  letter-spacing: 0.06em;
+}
+.tel-palier {
+  color: var(--g-100);
+  white-space: nowrap;
+}
+.tel-motif {
+  text-transform: none;
+  letter-spacing: 0.05em;
+  line-height: 1.6;
+}
+/* La ligne lourde est doublée par la GÉOMÉTRIE — un rail de 2px — et
+   non par une teinte de fond : un aplat rouge derrière du texte ferait
+   de l'accent une surface, ce que la loi du système interdit. */
+.tel-tr-lourde td:first-child {
+  box-shadow: inset 2px 0 0 var(--sig-hot);
+  padding-left: 0.7rem;
+}
+.tel-tr-lourde .tel-palier {
+  color: var(--paper);
+}
+
+@media (max-width: 720px) {
+  /* Le rail de gouttière n'a pas de gouttière sous 720px. */
+  .tel-rail {
+    display: none;
+  }
+  .tel-head {
+    grid-template-columns: 1fr;
+  }
+  .tel-num {
+    grid-row: auto;
+    margin-bottom: 0.6rem;
+  }
+  /* Le motif est la colonne la plus longue et la moins nécessaire au
+     coup d'œil : elle sort en premier quand la largeur manque. */
+  .tel-motif,
+  .tel-table th:last-child {
+    display: none;
+  }
+}
+
+/* Écran d'amorce de la route d'atelier — part avec elle. */
+.tel-amorce {
+  height: 70svh;
+}
+
 /* Bascule de langue de la route d'atelier — part avec elle. */
 .ov-lang {
   display: flex;

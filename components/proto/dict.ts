@@ -200,6 +200,90 @@ const DICT = {
     fr: "Planche de vues — PL.04 — REF.0043-B / REV.2 — Éch. 1:1",
     en: "View plate — PL.04 — REF.0043-B / REV.2 — Scale 1:1",
   },
+
+  /* — 05 TÉLÉMÉTRIE : le routeur multi-modèle —
+
+     CE QUI VIENT DU CV, donc sûr : « intégration de plusieurs LLM via
+     OpenRouter sur six types de tâches, avec optimisation du coût et
+     des performances en routant chaque tâche vers le modèle le plus
+     adapté ». Les six domaines listés ci-dessous sont tous traçables au
+     CV (extraction depuis documents, personas, séquençage multicanal,
+     chatbot agentique, rapports Octo).
+
+     À CONFIRMER AVEC LE PROPRIÉTAIRE — le découpage exact des six types
+     de tâches, et surtout le PALIER attribué à chacun. C'est une carte
+     de routage, pas un relevé : aucun chiffre de coût ni de latence
+     n'est affiché, précisément parce qu'on ne les a pas mesurés. Ne pas
+     ajouter de chiffres ici sans les tenir de lui.
+
+     [repère, nom, précision, palier 0|1|2] */
+  telIndex: { fr: "05 — Télémétrie", en: "05 — Telemetry" },
+  telTitle: { fr: "Routage multi-modèle", en: "Multi-model routing" },
+  telJp: { fr: "テレメトリ", en: "テレメトリ" },
+  telNote: {
+    fr: "Six types de tâches, un parc de modèles, une règle : prendre le moins cher qui tient la tâche. Le palier n'est pas un réglage de confort, c'est la facture.",
+    en: "Six task types, one model pool, one rule: take the cheapest that holds the task. The tier is not a comfort setting, it is the invoice.",
+  },
+  telRead: {
+    fr: "Chaque voie monte jusqu'au palier qu'elle exige. Une seule atteint le palier lourd — c'est là que passe le coût, et c'est la seule qui mérite de le coûter.",
+    en: "Each channel rises to the tier it demands. Only one reaches the heavy tier — that is where the cost goes, and the only one worth it.",
+  },
+  telTiers: {
+    fr: [
+      ["Haiku", "Économique"],
+      ["Sonnet", "Courant"],
+      ["Opus", "Lourd"],
+    ],
+    en: [
+      ["Haiku", "Economy"],
+      ["Sonnet", "Standard"],
+      ["Opus", "Heavy"],
+    ],
+  },
+  telVoies: {
+    fr: [
+      ["01", "Extraction", "Depuis documents", "0"],
+      ["02", "Classification", "Tri des retours", "0"],
+      ["03", "Personas", "Synthèse de cible", "1"],
+      ["04", "Rédaction", "Séquences multicanal", "1"],
+      ["05", "Conversation", "Chatbot agentique", "1"],
+      ["06", "Rapport", "Segmentation DMS", "2"],
+    ],
+    en: [
+      ["01", "Extraction", "From documents", "0"],
+      ["02", "Classification", "Reply triage", "0"],
+      ["03", "Personas", "Target synthesis", "1"],
+      ["04", "Drafting", "Multichannel sequences", "1"],
+      ["05", "Conversation", "Agentic chatbot", "1"],
+      ["06", "Report", "DMS segmentation", "2"],
+    ],
+  },
+  telCols: {
+    fr: ["Voie", "Tâche", "Palier", "Pourquoi ce palier"],
+    en: ["Channel", "Task", "Tier", "Why this tier"],
+  },
+  telWhy: {
+    fr: [
+      "Structure connue, sortie contrainte.",
+      "Décision binaire, volume élevé.",
+      "Synthèse ouverte à partir de sources hétérogènes.",
+      "La qualité du texte est le produit.",
+      "Multi-tours, l'état de session doit tenir.",
+      "Contexte long, agrégation, chiffres à ne pas inventer.",
+    ],
+    en: [
+      "Known structure, constrained output.",
+      "Binary decision, high volume.",
+      "Open synthesis from heterogeneous sources.",
+      "Text quality is the product.",
+      "Multi-turn, session state must hold.",
+      "Long context, aggregation, figures that must not be invented.",
+    ],
+  },
+  telRail: {
+    fr: "Unité 05 — Télémétrie — Routage multi-modèle — OpenRouter — REF.0043-B / REV.2",
+    en: "Unit 05 — Telemetry — Multi-model routing — OpenRouter — REF.0043-B / REV.2",
+  },
 } as const
 
 type Key = keyof typeof DICT
