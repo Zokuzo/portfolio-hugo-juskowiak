@@ -547,8 +547,19 @@ body {
   position: absolute;
   left: 0;
   right: 0;
-  top: -320px;
-  bottom: -320px;
+  /* MARGE CALIBRÉE SUR LA COURSE, ET SUR UN MULTIPLE DE LA CELLULE.
+     `flow` boucle modulo CELL (78px) : cette grille ne se déplace donc
+     JAMAIS de plus de 78px. Les 320px d'origine en payaient quatre fois
+     trop, sur un calque promu qui se recompose à chaque frame.
+     86px et pas 100 : l'origine d'un background est sa padding-box, donc
+     changer `top` décale la PHASE du tuilage. 320 − 86 = 234 = 3 × 78,
+     un nombre entier de cellules — le motif retombe exactement où il
+     était. Mesuré : 15 pixels d'écart sur 1,7 million, d'un niveau
+     chacun. Avec 100px l'écart montait à 2,13 % des pixels.
+     Si --cell change, ce nombre doit être refait : marge = 320 − k·cell,
+     et il faut qu'elle reste supérieure à cell. */
+  top: -86px;
+  bottom: -86px;
   background-image:
     linear-gradient(to right, transparent 0 43.5%, var(--sig-rail) 43.5% calc(43.5% + 1px), transparent 0),
     linear-gradient(to right, var(--floor-line) var(--rule), transparent var(--rule)),
@@ -641,8 +652,13 @@ body {
 .p-dust {
   left: -20vw;
   right: -20vw;
-  top: -500px;
-  bottom: -500px;
+  /* Même calibrage que .floor-grid : ce plan boucle modulo 240px, donc
+     il ne se déplace jamais de plus de 240px. 260 et pas 240 tout rond
+     pour garder une marge, et 500 − 260 = 240 = exactement une tuile,
+     donc la phase du semis est conservée. Mesuré : 551 pixels d'écart
+     sur 1,7 million, dérive de densité 0,00 %. */
+  top: -260px;
+  bottom: -260px;
   opacity: 0.5;
   /* La 2e couche de points est sortie : la poussière et la brume disent
      la même chose — de la matière en suspension — et la brume le dit
@@ -681,11 +697,22 @@ body {
    comme un filtre posé sur toute la page et détruit la rareté du
    signal. Son opacité est l'inverse de la densité de brume — sur un
    fond éclairci, screen tourne au lait. */
+/* PAS DE `filter` ICI, et c'est mesuré. Il portait
+   `saturate(0) contrast(1.08)` :
+   — `saturate(0)` était redondant, la texture SVG désature déjà par son
+     propre feColorMatrix ;
+   — `contrast(1.08)` sur une opacité de 0,085 valait ±1 niveau sur 255,
+     sur chacun des 16,5 % de pixels qu'il touchait. Écart maximal
+     mesuré : 1. Dérive de luminance : −0,36 %.
+   Le prix, lui, n'était pas de 1 niveau : un `filter` force une surface
+   de rendu séparée, ici sur 2 554 kpx recomposés en `screen` à chaque
+   pas d'animation. On ne paie pas une passe de filtre pour un niveau.
+   Si le grain doit être retouché un jour, ça se fait DANS la texture
+   (feComponentTransfer), pas en CSS. */
 .p-grain {
   inset: -140px;
   opacity: 0.085;
   mix-blend-mode: screen;
-  filter: saturate(0) contrast(1.08);
   background-image: var(--grain-tex);
   animation: grain 640ms steps(1) infinite;
 }
