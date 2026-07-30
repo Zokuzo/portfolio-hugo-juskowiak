@@ -1,0 +1,1752 @@
+/* ============================================================
+   PLANCHE TECHNIQUE — système visuel
+   ------------------------------------------------------------
+   COULEUR — ENCRE / LAMPE.
+   Un seul rouge, en deux états de matière aux substrats DISJOINTS :
+     --sig      l'ENCRE, elle ne vit que sur --paper
+     --sig-hot  la LAMPE, elle ne vit que sur --ink
+   Elles ne se touchent jamais (1,164:1 l'une contre l'autre : au
+   contact, la frontière se lit comme un bug de rendu).
+
+   LOI : SUR LE NOIR, LE ROUGE S'ALLUME — IL N'ÉCRIT JAMAIS.
+         POUR ÉCRIRE EN ROUGE, POSER D'ABORD DU PAPIER.
+
+   Corollaire appliqué partout : on n'éclaircit JAMAIS un accent
+   pour le rendre lisible — c'est ce réflexe qui produit les rouges
+   de framework (#FF3B30 est le systemRed d'iOS). Le texte coloré
+   n'existe que dans une seule configuration : accent saturé + papier.
+   ============================================================ */
+
+.proto-root {
+  /* — NEUTRES — le froid porte la machine, le chaud reste au papier.
+       Gris refroidis à ISO-LUMINANCE : écart <= 0,07 point de
+       contraste, donc aucun texte à re-vérifier. */
+  --ink: #07080b; /* L 0,002430 — fond global                    */
+  --ink-2: #0b0c11; /* L 0,003746 — second noir                    */
+  --paper: #f2f0ec; /* 17,596:1 — seul neutre chaud, inchangé      */
+  --g-100: #dcd9d3; /* 14,218:1                                    */
+  --g-300: #a3a8b2; /*  8,393:1 — plancher du texte de 9px         */
+  --g-500: #7c818c; /*  5,127:1 — plancher absolu du texte         */
+  --g-700: #33383f; /*  1,696:1 — FILET, jamais de glyphe          */
+  --g-800: #191c22; /*  1,174:1 — lit neutre                       */
+  --steel: #171b2e; /* bandes SOMBRES de .chrome uniquement        */
+
+  /* — FILETS — la structure passe au froid, alphas inchangés — */
+  --line: rgba(226, 232, 240, 0.1);
+  --line-2: rgba(226, 232, 240, 0.18);
+  --line-3: rgba(226, 232, 240, 0.34);
+
+  /* — LE ROUGE — deux états de matière, jamais un éclaircissement — */
+  --sig: #c8102e; /* ENCRE  — 5,169:1 sur --paper (AA).
+                       3,404:1 sur --ink : ne touche JAMAIS le noir. */
+  --sig-hot: #d91f11; /* LAMPE  — 3,962:1 sur --ink : conforme WCAG
+                       1.4.11 (composant non textuel). Ne porte ni
+                       ne reçoit jamais de texte (paper dessus =
+                       4,441:1, échec de justesse).                 */
+  --sig-dim: #5e1018; /* LIT    — escalier anti-vibration :
+                       ink->dim 1,491 puis dim->hot 2,658, au lieu
+                       d'un saut brut de x65 en luminance.          */
+  --sig-ember: #14060a; /* BRAISE — 1,011:1 : chaleur sans couleur.   */
+
+  /* — dérivés : un rôle par token, une épaisseur par rôle — */
+  --sig-rail: rgba(217, 31, 17, 0.3); /* 1px UNIQUEMENT, 2 usages max */
+  --sig-glow: rgba(217, 31, 17, 0.55); /* box-shadow rayon <= 8px     */
+  --sig-veil: rgba(200, 16, 46, 0.1); /* voile directionnel, 1/écran  */
+
+  /* — LE BLEU — LE PLAN.
+       Il n'y a pas de couleur nouvelle : c'est LA lampe du système,
+       pivotée sur la roue à saturation et luminosité constantes.
+         --sig-hot #d91f11  hsl(  4, 85%, 46%)    l'ÉTAT
+         --sod     #d97912  hsl( 31, 85%, 46%)    la LUMIÈRE
+         --plan-3  #123ce0  hsl(228, 85%, 47.5%)  le TRAIT
+       Les 1,5 point de luminosité du bleu ne sont pas un goût : c'est
+       la solution de l'équation d'isoluminance avec --line-3.
+
+       LOI D'ENTRÉE — une teinte n'arrive jamais sur un pixel vide,
+       elle REMPLACE un filet nommé à |Δ ratio| <= 0,02 point. Le nom
+       d'un bleu EST le filet qu'il remplace. Il n'existe pas de
+       --plan-4 parce qu'il n'existe pas de --line-4 : la famille est
+       indexée sur une famille fermée, elle ne peut pas grandir avec
+       le contenu. Conséquence vérifiable d'une capture : en niveaux
+       de gris, la page est au pixel près celle d'avant.
+       Un trait, JAMAIS un glyphe : 2,62:1, sous le seuil de 3:1 de
+       WCAG 1.4.11, donc décoratif au sens de la norme. */
+  --plan-1: rgba(18, 60, 224, 0.32); /* 1,204:1 — jumeau de --line   (1,206) */
+  --plan-2: rgba(18, 60, 224, 0.55); /* 1,516:1 — jumeau de --line-2 (1,523) */
+  --plan-3: #123ce0; /*                 2,621:1 — jumeau de --line-3 (2,642) */
+
+  /* — états NON chromatiques (WCAG 1.4.1 : jamais la teinte seule) — */
+  --focus: var(--paper);
+  --off: #4a4f57; /* 2,429:1 — désactivé, nommé et perceptible */
+  --rail-w: 2px; /* canal GÉOMÉTRIQUE de l'état allumé        */
+
+  /* — mesures — */
+  --gutter: clamp(1.25rem, 3.2vw, 3.5rem);
+  --rule: 1px;
+  --cell: 78px; /* pas de la grille du sol — DOIT égaler CELL dans world.tsx */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* — échelles du mobilier d'affiche —
+       plancher typographique double : 9px absolu, réservé aux gris
+       >= 8:1 avec interlettrage >= .2em ; 10px courant ; 12px max. */
+  --f-nano: 0.5625rem; /* 9px  */
+  --f-micro: 0.625rem; /* 10px */
+
+  /* — pointeur, alimenté en JS (−1 → 1) — */
+  --px: 0;
+  --py: 0;
+
+  /* `relative` donne aux cibles de useScroll un offsetParent
+     positionné — sans lui, framer mesure contre <body> statique et
+     prévient que les offsets peuvent être faux. `relative` ne
+     capture PAS le position:fixed du monde (seuls transform, filter,
+     perspective, contain et will-change le font). */
+  position: relative;
+
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--f-display), ui-sans-serif, system-ui, sans-serif;
+  font-synthesis-weight: none;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Le monde est en position:fixed : aucun ancêtre ne doit porter
+   transform, filter, perspective, will-change ni contain:paint,
+   sinon il devient le bloc conteneur et le monde se met à scroller. */
+html,
+body {
+  background: #07080b;
+}
+
+/* FOCUS — aucune couleur nouvelle, alias de --paper. C'est le seul
+   token vérifié contre TOUS les fonds du système : minimum 4,441:1
+   sur --sig-hot, contre un seuil de 3:1 (WCAG 2.4.11). L'anneau
+   reste donc lisible même posé sur un nœud allumé. */
+.proto-root :focus-visible {
+  outline: var(--rail-w) solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 1px;
+}
+.proto-root :focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* SELECTION — la seule occurrence gratuite de l'encre, et la
+   démonstration de la loi : un aplat de rouge portant du texte
+   papier, 5,169:1. Le navigateur l'enseigne avant qu'on l'écrive. */
+.proto-root ::selection {
+  background: var(--sig);
+  color: var(--paper);
+}
+
+/* ------------------------------------------------------------
+   PRIMITIVES TYPO
+   ------------------------------------------------------------ */
+
+.mono {
+  font-family: var(--f-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  line-height: 1.35;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+.mono-sm {
+  font-size: var(--f-micro);
+  letter-spacing: 0.18em;
+}
+
+.mono-xs {
+  font-size: var(--f-nano);
+  letter-spacing: 0.22em;
+}
+
+.jp {
+  font-family: var(--f-jp), var(--f-display), sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+}
+
+.dim {
+  color: var(--g-500);
+}
+.dim-2 {
+  color: var(--g-300);
+}
+
+/* ------------------------------------------------------------
+   CHROME
+   Un vrai chrome = un horizon réfléchi : bandes sombres et
+   spéculaires alternées. Le gradient est cyclique, donc on peut le
+   faire défiler à l'infini sans raccord — c'est la réflexion qui
+   bouge, pas la lettre.
+
+   Le chrome ne se réchauffe JAMAIS : aucun rouge, pas même la
+   braise, n'approche le titre. Seule la bande la plus sombre passe
+   à --steel (noir bleuté) — et ça le rend PLUS lisible : le rapport
+   bande claire / bande sombre monte de 15,059:1 à 17,036:1, soit
+   +13 % de déchirure pour zéro pixel de budget chromatique.
+   ------------------------------------------------------------ */
+
+.chrome {
+  --chrome-y: 0em;
+  --chrome-x: 0em;
+  background-image: repeating-linear-gradient(
+    178deg,
+    #8a8a90 0em,
+    #eeeef4 0.08em,
+    #ffffff 0.15em,
+    #b6b6bd 0.23em,
+    #4f4f55 0.31em,
+    var(--steel) 0.35em,
+    #6e6e75 0.4em,
+    #d8d8df 0.48em,
+    #ffffff 0.55em,
+    #bdbdc4 0.64em,
+    #74747b 0.72em,
+    #8a8a90 0.8em
+  );
+  background-position: var(--chrome-x) var(--chrome-y);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* l'arête qui accroche la lumière */
+  -webkit-text-stroke: 0.5px rgba(255, 255, 255, 0.22);
+}
+
+/* La chaleur monte du DESSOUS du titre et sort du cadre (centre à
+   118 %) : un feu arrière vu de derrière, pas un halo centré.
+   Recentré à 50% 50%, ce gradient redeviendrait exactement le glow
+   diffus générique qu'on s'interdit. Composite mesuré : 1,039:1 —
+   c'est une température, pas une lumière. */
+.chrome-bed {
+  position: relative;
+}
+.chrome-bed::before {
+  content: "";
+  position: absolute;
+  inset: -18% -6%;
+  background:
+    radial-gradient(120% 70% at 50% 118%, var(--sig-veil) 0%, transparent 62%),
+    radial-gradient(60% 70% at 50% 52%, rgba(226, 232, 240, 0.055), transparent 72%);
+  filter: blur(28px);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ============================================================
+   LE MONDE — décor fixe, 11 plans, brume volumétrique
+   ------------------------------------------------------------
+   Le décor ne vit plus DANS les sections : il est monté une fois,
+   en position:fixed, et piloté par la progression du document. Les
+   sections flottent au-dessus, transparentes. La caméra ne se
+   réinitialise donc jamais : la continuité entre sections est
+   acquise par construction, pas simulée par un fondu.
+
+   La brume est INTERLEAVÉE, pas superposée : une nappe est un plan
+   comme un autre, insérée ENTRE les plans de décor. Les arcs sont
+   physiquement masqués par de la matière. C'est l'occultation qui
+   crée la distance — un plan lointain simplement plus sombre reste
+   lu comme « un plan sombre ».
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   Assets de brume — rasterisés une fois, jamais recalculés.
+   feTurbulence n'est JAMAIS animé : il se ré-exécute par frame à la
+   taille raster complète, en CPU. Il est ici cuit dans un bitmap que
+   le navigateur met en cache ; le mouvement est un transform de
+   période exactement une tuile.
+   feColorMatrix force RGB = blanc pur et écrit la luminance du bruit
+   dans l'alpha : aucune teinte résiduelle n'est structurellement
+   possible. Après le feTurbulence, uniquement des opérations
+   PONCTUELLES — un feGaussianBlur échantillonnerait hors tuile et
+   détruirait la couture de stitchTiles.
+   ------------------------------------------------------------ */
+
+.proto-root {
+  /* nappe « corps » : basse fréquence anisotrope (x < y ⇒ blobs
+     étirés horizontalement = bancs de brume), 2 octaves = douceur
+     sans flou runtime. */
+  --fog-body: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='700' height='700'%3E%3Cfilter id='a' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.0032 0.0055' numOctaves='2' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 .34 .34 .34 0 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='table' tableValues='0 0 .06 .3 .72 1'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='700' height='700' filter='url(%23a)'/%3E%3C/svg%3E");
+
+  /* nappe « filaments » : fréquence moyenne, 4 octaves, table alpha
+     seuillée ⇒ traînées éparses au lieu d'une bouillie uniforme. */
+  --fog-wisp: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='700' height='700'%3E%3Cfilter id='b' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.011 0.02' numOctaves='4' seed='29' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 .34 .34 .34 0 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='table' tableValues='0 0 0 .12 .45 1'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='700' height='700' filter='url(%23b)'/%3E%3C/svg%3E");
+
+  --grain-tex: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+
+  /* transmittance par plan : vis(z) = exp(−z/26).
+     Ce n'est pas un réglage esthétique, c'est l'extinction. */
+  --vis-arcs: 0.32;
+  --vis-floor: 0.63;
+  --vis-marks: 0.74;
+  --vis-rules: 0.82;
+  --vis-struts: 0.9;
+}
+
+/* isolation:isolate ⇒ les mix-blend-mode:screen des nappes se
+   résolvent contre .p-void (encre opaque) et non contre le backdrop
+   de la page — sinon la brume vire au blanc plein.
+   contain:strict est légitime ici : .world EST l'élément fixed, il
+   ne devient le bloc conteneur de rien d'autre. */
+.world {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  isolation: isolate;
+  contain: strict;
+  background: var(--ink);
+}
+
+.world > * {
+  position: absolute;
+  pointer-events: none;
+}
+
+/* Le contenu des sections passe devant le monde. */
+.plaque,
+.trace-wrap {
+  position: relative;
+  z-index: 1;
+  background: transparent;
+}
+
+/* ------------------------------------------------------------
+   PLANS — du plus lointain au plus proche.
+   Aucun de ces éléments ne porte de `transform` en CSS :
+   framer-motion écrit `transform` en inline et l'écraserait
+   intégralement (la perspective et le centrage disparaîtraient).
+   Les décalages statiques passent donc par la propriété `translate`,
+   indépendante de `transform` dans l'ordre de rendu.
+   ------------------------------------------------------------ */
+
+/* z100 — atmosphère opaque : socle du groupe d'isolation.
+   LA LUMIÈRE AU SODIUM. Il y a un lampadaire hors champ et on regarde
+   à travers de la matière en suspension : c'est l'heure et la nuit,
+   zéro information. Si on le supprime on ne perd rien de lisible, on
+   perd l'heure.
+   Les alphas ne sont pas choisies, elles sont RÉSOLUES : la pile
+   composite des deux lobes passe de #474748 à #693d0e, soit 2,161:1
+   à 2,164:1. La lueur d'horizon ne gagne ni ne perd un lumen, elle
+   change de température — la densité d'atmosphère validée n'est donc
+   pas touchée. C'est un PLAFOND : au-delà, la lumière acquiert un
+   bord et cesse d'être de la lumière pour devenir un objet orange.
+   Le sodium ne vit QUE sur ce sélecteur — le remonter sur
+   .proto-root en ferait une prise où tout le monde vient brancher. */
+.p-void {
+  --sod-core: rgba(217, 121, 18, 0.365); /* remplace le blanc .20 */
+  --sod-veil: rgba(217, 121, 18, 0.16); /*  remplace le blanc .09 */
+  inset: 0;
+  /* Le 3e radial (blanc .05 en haut) est SUPPRIMÉ : deux sources ne
+     partagent pas un ciel. Le champ haut passe de 1,083:1 à 1,000:1,
+     donc --g-300 y gagne du contraste (7,75 → 8,393). Le retrait
+     améliore la lisibilité. */
+  background:
+    radial-gradient(85% 42% at 50% 100%, var(--sod-core), transparent 70%),
+    radial-gradient(140% 70% at 50% 106%, var(--sod-veil), transparent 62%),
+    var(--ink);
+}
+
+/* Chaque nappe = un conteneur parallaxé + deux enfants, parce qu'une
+   brume fait deux choses opposées qu'un seul élément ne peut pas
+   faire : .fog-lit (screen) AJOUTE de la lumière diffusée,
+   .fog-occl (normal) RETIRE du contraste aux plans derrière.
+   Surdimensionnement obligatoire : un background répété ne déborde
+   pas de la padding-box, donc translater d'une tuile découvrirait le
+   bord de l'élément en pleine brume. */
+.fog-sheet {
+  position: absolute;
+  left: -1100px;
+  right: -1100px;
+  top: -900px;
+  bottom: -900px;
+  background-repeat: repeat;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+.fog-lit {
+  mix-blend-mode: screen;
+}
+.fog-occl {
+  mix-blend-mode: normal;
+}
+
+/* z46 — brume profonde : devant l'atmosphère, DERRIÈRE les arcs */
+.p-fog-deep {
+  inset: 0;
+  opacity: 0.55; /* repli sans JS ; framer écrit `opacity` inline */
+}
+.p-fog-deep .fog-lit,
+.p-fog-deep .fog-occl {
+  background-image: var(--fog-body);
+  background-size: 1400px 1400px;
+  animation: fog-drift-l 210s linear infinite;
+}
+.p-fog-deep .fog-lit {
+  opacity: 0.3;
+}
+.p-fog-deep .fog-occl {
+  opacity: 0.34;
+}
+
+/* z30 — instrumentation circulaire, déjà mangée par la nappe */
+.p-arcs {
+  left: 50%;
+  top: 46%;
+  width: min(148vh, 132vw);
+  aspect-ratio: 1;
+  translate: calc(-50% + var(--px) * 22px) calc(-50% + var(--py) * 14px);
+  opacity: var(--vis-arcs);
+}
+.p-arcs .spin-slow {
+  transform-origin: 50% 50%;
+  animation: spin 200s linear infinite;
+}
+.p-arcs .spin-rev {
+  transform-origin: 50% 50%;
+  animation: spin 320s linear infinite reverse;
+}
+/* 2/2 des occurrences de --sig-rail admises dans le décor */
+.p-arcs .ring-sig {
+  stroke: var(--sig-rail);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* z18 — brume médiane. LE plan qui vend l'effet : deux échelles de
+   rapport non entier (900 / 520) dérivant en sens inverse.
+   L'interférence des deux périodes détruit toute lecture de tuilage —
+   une seule nappe tuilée se lit comme du papier peint, deux se lisent
+   comme de la brume. Insérée devant les arcs : elle les mange. */
+.p-fog-mid {
+  inset: 0;
+  opacity: 0.62;
+}
+.p-fog-mid .sheet-a {
+  background-image: var(--fog-body);
+  background-size: 900px 900px;
+  opacity: 0.34;
+  animation: fog-drift-l 150s linear infinite;
+}
+.p-fog-mid .sheet-b {
+  background-image: var(--fog-wisp);
+  background-size: 520px 520px;
+  opacity: 0.2;
+  animation: fog-drift-r 96s linear infinite;
+}
+
+/* Période de dérive = exactement une tuile ⇒ boucle sans raccord,
+   sur le compositeur, hors du thread principal, sans repaint. */
+@keyframes fog-drift-l {
+  to {
+    transform: translate3d(-1400px, 0, 0);
+  }
+}
+@keyframes fog-drift-r {
+  to {
+    transform: translate3d(520px, 0, 0);
+  }
+}
+
+/* z12 — LE SOL, plan de référence.
+   Pile obligatoire en trois boîtes : la perspective ne doit JAMAIS
+   cohabiter avec les transforms de parallaxe de framer.
+   `transform: perspective()` utilise le transform-origin de
+   l'élément ; la propriété `perspective` utilise le
+   perspective-origin du PARENT — d'où l'origine reportée à
+   50% 100%, qui reproduit exactement la projection d'origine. */
+.p-floor {
+  left: 50%;
+  bottom: -1%;
+  width: 260vw;
+  /* Hauteur projetée bornée par height·cos(62°) ≈ 0,469·h :
+     150vh ⇒ ~70vh de sol. Raccourcir écrase tout en un filet. */
+  height: 150vh;
+  translate: calc(-50% + var(--px) * 12px) 0;
+  opacity: var(--vis-floor);
+}
+.floor-cam {
+  position: absolute;
+  inset: 0;
+  perspective: 1400px;
+  perspective-origin: 50% 100%;
+}
+.floor-plane {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 100%;
+  transform: rotateX(62deg);
+  overflow: hidden;
+  /* mask-repeat:no-repeat OBLIGATOIRE — par défaut un mask-image se
+     répète, et le dégradé de fondu vers l'horizon se met à tuiler en
+     une série de bandes. */
+  -webkit-mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.25) 0%, #000 8%, rgba(0, 0, 0, 0.3) 34%, transparent 62%);
+  mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.25) 0%, #000 8%, rgba(0, 0, 0, 0.3) 34%, transparent 62%);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+}
+/* Enfant aplati dans le plan du parent : son translateY est une
+   avance AU SOL, pas un glissement d'écran. Et c'est un transform
+   composité — animer background-position sur 260vw × 150vh
+   repeindrait la couche entière à chaque frame.
+   La première couche est 1/2 des occurrences de --sig-rail : un rail
+   unique, décalé de la médiane pour ne pas se lire comme un axe de
+   symétrie. Ce n'est pas de l'information, c'est de la construction. */
+.floor-grid {
+  /* Le plan porte déjà sa transmittance (opacity .63) et la brume
+     passe par-dessus : un filet en --g-700 (1,7:1) disparaît
+     complètement. On compense en amont pour retomber sur la densité
+     visée après extinction. */
+  --floor-line: rgba(226, 232, 240, 0.42);
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -320px;
+  bottom: -320px;
+  background-image:
+    linear-gradient(to right, transparent 0 43.5%, var(--sig-rail) 43.5% calc(43.5% + 1px), transparent 0),
+    linear-gradient(to right, var(--floor-line) var(--rule), transparent var(--rule)),
+    linear-gradient(to bottom, var(--floor-line) var(--rule), transparent var(--rule));
+  background-size:
+    100% 100%,
+    var(--cell) var(--cell),
+    var(--cell) var(--cell);
+  background-repeat: no-repeat, repeat, repeat;
+  will-change: transform;
+}
+
+/* z8 — repères d'horizon. Décor muet : il ne parle pas, il gradue. */
+.p-marks {
+  left: 0;
+  right: 0;
+  top: 61%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.7rem, 2.4vw, 2.2rem);
+  opacity: var(--vis-marks);
+}
+.p-marks i {
+  display: block;
+  width: var(--rule);
+  height: 9px;
+  background: var(--line-2);
+}
+.p-marks i.key {
+  height: 17px;
+  background: var(--line-3);
+}
+
+/* z5 — grille de construction */
+.p-rules {
+  inset: 0;
+  padding-inline: var(--gutter);
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  translate: calc(var(--px) * -5px) 0;
+  opacity: var(--vis-rules);
+}
+.p-rules span {
+  border-left: var(--rule) solid var(--line);
+}
+.p-rules span:last-child {
+  border-right: var(--rule) solid var(--line);
+}
+
+/* z2.6 — entretoises proches, tuilées à 240px */
+.p-struts {
+  left: -10vw;
+  right: -10vw;
+  top: -400px;
+  bottom: -400px;
+  opacity: calc(var(--vis-struts) * 0.5);
+  background-image:
+    repeating-linear-gradient(90deg, var(--line) 0 var(--rule), transparent var(--rule) 33.333vw),
+    repeating-linear-gradient(180deg, var(--line-2) 0 var(--rule), transparent var(--rule) 240px);
+  will-change: transform;
+}
+
+/* z1.4 — écharpe de brume qui passe l'objectif. C'est elle qui donne
+   le sentiment de TRAVERSER plutôt que de glisser. */
+.p-fog-near {
+  left: -900px;
+  right: -900px;
+  top: -900px;
+  bottom: -900px;
+  background-image: var(--fog-body);
+  background-size: 1500px 1500px;
+  background-repeat: repeat;
+  mix-blend-mode: screen;
+  opacity: 0.07;
+  will-change: transform;
+}
+
+/* z1 — poussière. Tuiles 240 et 120 : diviseur commun, donc un seul
+   modulo suffit. Positions déterministes issues du tuilage — aucun
+   Math.random, donc aucun mismatch d'hydratation. */
+.p-dust {
+  left: -20vw;
+  right: -20vw;
+  top: -500px;
+  bottom: -500px;
+  opacity: 0.5;
+  /* La 2e couche de points sort : la poussière et la brume au sodium
+     disent la même chose — de la matière en suspension — et le halo
+     ambre le dit désormais mieux. */
+  background-image: radial-gradient(circle at 30% 40%, rgba(242, 240, 236, 0.5) 0 1px, transparent 1.7px);
+  background-size: 240px 240px;
+  will-change: transform;
+}
+
+/* ------------------------------------------------------------
+   OBJECTIF — solidaire de la caméra, jamais parallaxé
+   ------------------------------------------------------------ */
+
+/* Sans ce voile, la brume additive derrière le texte fait passer
+   --g-500 sous le seuil : blanc à alpha 0,22 sur --ink donne un fond
+   de luminance 0,048 où --g-500 tombe à 2,70:1. Le scrim ramène la
+   zone de texte sous 0,06 d'alpha effectif. */
+.p-scrim {
+  inset: 0;
+  background: radial-gradient(72% 58% at 50% 50%, rgb(7 8 11 / 0.92) 0%, rgb(7 8 11 / 0.55) 55%, transparent 88%);
+  opacity: 0.1;
+}
+
+/* Le balayage inter-sections : UN filet de 1px, pas une lueur. */
+.p-sweep {
+  left: 0;
+  right: 0;
+  height: 1px;
+  top: 0;
+  background: linear-gradient(90deg, transparent, var(--sig-dim) 22%, var(--sig-hot) 50%, var(--sig-dim) 78%, transparent);
+  opacity: 0;
+}
+
+/* Le grain reste strictement achromatique : dès qu'une teinte existe
+   dans le système, un grain même faiblement coloré en screen se lit
+   comme un filtre posé sur toute la page et détruit la rareté du
+   signal. Son opacité est l'inverse de la densité de brume — sur un
+   fond éclairci, screen tourne au lait. */
+.p-grain {
+  inset: -140px;
+  opacity: 0.085;
+  mix-blend-mode: screen;
+  filter: saturate(0) contrast(1.08);
+  background-image: var(--grain-tex);
+  animation: grain 640ms steps(1) infinite;
+}
+
+@keyframes grain {
+  0% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(-32px, 18px);
+  }
+  50% {
+    transform: translate(24px, -26px);
+  }
+  75% {
+    transform: translate(-14px, -12px);
+  }
+}
+
+/* L'ombre périphérique n'est plus noire mais noir-rouge. À 1,011:1
+   contre --ink rien n'est perceptible comme couleur, mais les bords
+   cessent d'être neutres et le centre paraît plus incandescent par
+   contraste simultané — sans un pixel de budget dépensé. */
+.p-vignette {
+  inset: 0;
+  background: radial-gradient(126% 104% at 50% 42%, transparent 46%, var(--sig-ember) 100%);
+}
+
+/* ------------------------------------------------------------
+   CADRE / REPÈRES
+   ------------------------------------------------------------ */
+
+.frame {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+}
+.frame .tick {
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  border: var(--rule) solid var(--line-3);
+}
+.frame .tl {
+  top: 14px;
+  left: 14px;
+  border-right: 0;
+  border-bottom: 0;
+}
+.frame .tr {
+  top: 14px;
+  right: 14px;
+  border-left: 0;
+  border-bottom: 0;
+}
+.frame .bl {
+  bottom: 14px;
+  left: 14px;
+  border-right: 0;
+  border-top: 0;
+}
+.frame .br {
+  bottom: 14px;
+  right: 14px;
+  border-left: 0;
+  border-top: 0;
+}
+
+/* ------------------------------------------------------------
+   PLAQUE (hero)
+   ------------------------------------------------------------ */
+
+.plaque {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  isolation: isolate;
+}
+
+/* `display: contents` retire la boîte : transform, opacity et filter
+   ne s'appliqueraient à rien. Il faut une vraie boîte pour que
+   l'enfoncement de la plaque existe. */
+.plaque-body {
+  position: relative;
+  z-index: 10;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Le tout premier pixel de la planche est un liseret allumé — le
+   filet de carrosserie, la bande de marge d'un plan coté. 2px sur
+   toute la largeur : le poste le plus lourd du budget et le seul
+   aplat pleine largeur autorisé. Il signe la page avant qu'un mot
+   soit lu, puis disparaît au scroll et ne revient jamais. */
+.topbar {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  border-top: var(--rail-w) solid var(--sig-hot);
+  padding: 1.15rem var(--gutter) 0;
+}
+.topbar .id {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+}
+.topbar .sep {
+  color: var(--g-700);
+}
+
+/* Tampon d'en-service : un cadre, pas un mot rouge. La lampe dessine
+   le contour, le texte reste au gris. */
+.stamp {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  padding: 0.28rem 0.5rem;
+  border: var(--rule) solid var(--sig-hot);
+  background: var(--sig-ember);
+  color: var(--g-100);
+  white-space: nowrap;
+}
+.stamp b {
+  font-weight: 500;
+  color: var(--g-300);
+}
+
+.langtoggle {
+  display: inline-flex;
+  border: var(--rule) solid var(--line-2);
+}
+.langtoggle button {
+  appearance: none;
+  background: none;
+  border: 0;
+  color: var(--g-500);
+  padding: 0.4rem 0.62rem;
+  cursor: pointer;
+  transition:
+    color 0.35s var(--ease),
+    background-color 0.35s var(--ease);
+}
+.langtoggle button + button {
+  border-left: var(--rule) solid var(--line-2);
+}
+.langtoggle button[data-on="true"] {
+  color: var(--ink);
+  background: var(--paper);
+}
+.langtoggle button:hover {
+  color: var(--paper);
+}
+.langtoggle button[data-on="true"]:hover {
+  color: var(--ink);
+}
+
+/* — le corps de la plaque — */
+.plate {
+  position: relative;
+  z-index: 10;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(1.2rem, 2.4vh, 2.4rem) var(--gutter);
+  max-width: 1560px;
+  width: 100%;
+  margin-inline: auto;
+  /* La lueur de .chrome-bed::before est calée en pourcentage sur un
+     élément pleine largeur : elle déborde de 34px et ouvrait une
+     barre de défilement horizontale. `clip` la borne sans créer de
+     conteneur de défilement — et, contrairement à transform/filter,
+     sans capturer le position:fixed du monde. */
+  overflow: clip;
+}
+
+/* ------------------------------------------------------------
+   MOBILIER D'AFFICHE
+   LOI DE LA COURONNE : le mobilier occupe les gouttières, les
+   angles, l'en-tête et le pied. La bande optique centrale
+   (règle → plate-label → nom → subline) ne reçoit aucun nouveau
+   texte. Si l'affiche doit devenir plus dense, elle grossit par les
+   bords — c'est le vide du centre qui fait tenir la charge des
+   marges.
+   ------------------------------------------------------------ */
+
+/* Rails de gouttière : texte vertical, lu en dernier, coût de
+   hiérarchie nul. Ils referment la composition par les côtés et
+   donnent au nom une butée. */
+.rail {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: var(--gutter);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--g-300);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 11;
+}
+.rail span {
+  writing-mode: vertical-rl;
+  font-size: var(--f-nano);
+  letter-spacing: 0.24em;
+}
+.rail-l {
+  left: 0;
+}
+.rail-l span {
+  rotate: 180deg;
+}
+.rail-r {
+  right: 0;
+}
+
+/* La règle graduée : elle transforme une biographie en axe mesuré.
+   C'est ce qui donne à la plaque son air d'instrument plutôt que
+   d'affiche — et ça justifie la première apparition du rouge par une
+   sémantique (« vous êtes ici ») plutôt que par de la décoration. */
+.scale {
+  position: relative;
+  height: 46px;
+  margin-bottom: clamp(0.8rem, 1.8vh, 1.7rem);
+  max-width: 640px;
+}
+/* L'image la plus juste du système entier : une règle BLEUE graduée
+   (l'instrument), des relevés GRIS posés dessus (les valeurs), et
+   l'index ROUGE qui glisse (l'état). Trois médiums sur un objet de
+   640px, aucune confusion possible.
+   Le réflexe suivant sera de bleuir aussi les graduations datées
+   « pour assortir » : refuser. La règle est l'instrument, une date
+   est un relevé — trois rôles sur le même objet, donc au plus une
+   teinte nouvelle. */
+.scale-rule {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 12px;
+  border-bottom: var(--rule) solid var(--plan-2);
+  background-image: repeating-linear-gradient(90deg, var(--plan-2) 0 var(--rule), transparent var(--rule) 3.125%);
+  background-size: 100% 5px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+}
+/* Largeur nulle : la graduation est POSÉE à sa date. Un bloc à
+   largeur de contenu recalé par translate déplacerait aussi le trait,
+   et le repère ne serait plus à sa position sur l'axe. */
+.scale-stop {
+  position: absolute;
+  top: 0;
+  width: 0;
+}
+.scale-stop i {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--rule);
+  height: 12px;
+  background: var(--line-3);
+}
+.scale-stop .lbl {
+  position: absolute;
+  top: 19px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  white-space: nowrap;
+  font-family: var(--f-mono), monospace;
+  font-size: var(--f-nano);
+}
+/* seuls les libellés se recalent — jamais le trait */
+.scale-stop[data-align="start"] .lbl {
+  left: 0;
+}
+.scale-stop[data-align="mid"] .lbl {
+  left: 0;
+  translate: -50% 0;
+}
+.scale-stop[data-align="end"] .lbl {
+  right: 0;
+}
+.scale-stop b {
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  color: var(--g-300);
+}
+.scale-stop em {
+  font-style: normal;
+  letter-spacing: 0.14em;
+  color: var(--g-500);
+}
+/* L'index « maintenant ». Loi du lit : la lampe de 2px ne touche
+   jamais le noir directement, elle repose sur sa braise. */
+.scale-stop.now i {
+  width: var(--rail-w);
+  height: 21px;
+  background: var(--sig-hot);
+  box-shadow:
+    -2px 0 0 var(--sig-dim),
+    2px 0 0 var(--sig-dim);
+}
+.scale-stop.now b {
+  color: var(--g-100);
+}
+
+.plate-label {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-bottom: clamp(1rem, 2vw, 1.6rem);
+}
+/* Le second et dernier bleu solide du document : un trait purement
+   géométrique juste avant le nom. Même substitution isoluminante de
+   --line-3, donc pas de lit L4 — il n'y a aucun saut de luminance à
+   découper. C'est le coup de pigment qu'on voit. */
+.plate-label .bar {
+  flex: 0 0 clamp(38px, 7vw, 96px);
+  height: var(--rule);
+  background: var(--plan-3);
+}
+
+/* Mire de repérage : vocabulaire d'imprimerie. Elle coûte 62 pixels
+   et elle date le document d'une époque où on calait des couleurs à
+   la main. Visiblement décorative, donc honnête. */
+.mire {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 62px;
+  height: 62px;
+  opacity: 0.75;
+}
+/* La substitution la mieux calibrée du système : --line-3 2,642:1 →
+   ultramarine solide 2,621:1, delta 0,021. En niveaux de gris la mire
+   est identique au pixel près ; en couleur elle est franchement bleue.
+   On cible le <g> et non `.mire circle` : le point central vit HORS
+   du groupe et ne doit recevoir aucun stroke. */
+.mire g {
+  stroke: var(--plan-3);
+}
+
+/* le nom : condensé, massif, serré. Masse dominante absolue —
+   le mobilier plafonne à 15px, soit un rapport minimum de 3,6:1 sur
+   le plus petit écran où les deux coexistent. */
+.name {
+  font-size: clamp(3.4rem, 15.5vw, 15rem);
+  font-weight: 800;
+  font-stretch: 78%;
+  line-height: 0.82;
+  letter-spacing: -0.028em;
+  margin: 0;
+  text-transform: uppercase;
+}
+.name .given {
+  display: block;
+  font-size: 0.291em;
+  font-weight: 500;
+  font-stretch: 96%;
+  letter-spacing: 0.42em;
+  line-height: 1;
+  margin-bottom: 0.5em;
+  margin-left: 0.14em;
+  color: var(--g-300);
+}
+
+.subline {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(0.9rem, 2.4vw, 2.2rem);
+  flex-wrap: wrap;
+  /* rythme vertical calé sur la HAUTEUR de fenêtre : sur un écran
+     bas, la plaque se resserre au lieu de pousser son pied hors du
+     cadre. */
+  margin-top: clamp(0.8rem, 1.7vh, 2rem);
+  padding-top: clamp(0.8rem, 1.6vh, 1.8rem);
+  border-top: var(--rule) solid var(--line-2);
+}
+.subline .role {
+  font-size: clamp(0.95rem, 1.9vw, 1.6rem);
+  font-weight: 600;
+  font-stretch: 88%;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.subline .role-jp {
+  font-size: clamp(0.7rem, 1.15vw, 0.95rem);
+  color: var(--g-500);
+}
+
+/* — fiche d'identification — */
+.spec {
+  margin: clamp(1rem, 2vh, 2.4rem) 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+  border-top: var(--rule) solid var(--line-2);
+}
+.spec > div {
+  padding: clamp(0.5rem, 1.1vh, 0.8rem) 0.95rem clamp(0.5rem, 1.1vh, 0.8rem) 0;
+  border-bottom: var(--rule) solid var(--line);
+}
+.spec dt {
+  color: var(--g-500);
+  margin-bottom: 0.45rem;
+}
+.spec dd {
+  margin: 0;
+  color: var(--g-100);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+}
+
+/* Blocs satellites. Deux côte à côte font une colonne, un seul fait
+   un accident : le second est délibérément une marche en dessous
+   pour que la paire ait une direction de lecture. */
+.plate-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: clamp(1rem, 3vw, 2.6rem);
+  margin-top: clamp(0.9rem, 1.8vh, 1.9rem);
+}
+.aside-block {
+  border-top: var(--rule) solid var(--line-2);
+  padding-top: clamp(0.5rem, 1.1vh, 0.75rem);
+}
+.aside-block > span {
+  display: block;
+  font-family: var(--f-mono), monospace;
+  font-size: var(--f-nano);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--g-500);
+}
+.aside-block h2 {
+  margin: 0.5rem 0 0.35rem;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  font-stretch: 84%;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--paper);
+}
+.aside-block.offduty h2 {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--g-100);
+}
+.aside-block p {
+  margin: 0;
+  font-family: var(--f-mono), monospace;
+  font-size: var(--f-micro);
+  letter-spacing: 0.06em;
+  line-height: 1.6;
+  color: var(--g-300);
+}
+.aside-block p + p {
+  margin-top: 0.35rem;
+}
+
+/* — pied de plaque — */
+.plate-foot {
+  position: relative;
+  z-index: 10;
+  padding: 0 var(--gutter) 1.1rem;
+}
+.foot-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.scrollcue {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.scrollcue .track {
+  width: 68px;
+  height: var(--rule);
+  background: var(--line-2);
+  overflow: hidden;
+}
+.scrollcue .track i {
+  display: block;
+  height: 100%;
+  width: 34%;
+  background: var(--paper);
+  animation: cue 2.6s var(--ease) infinite;
+}
+
+@keyframes cue {
+  0% {
+    transform: translateX(-100%);
+  }
+  60%,
+  100% {
+    transform: translateX(300%);
+  }
+}
+
+/* code-barres — dessiné, pas une image. Une seule barre allumée, à
+   une position non centrée : la barre de contrôle d'une planche
+   d'imprimerie, une anomalie de fabrication, pas un ornement. */
+.barcode {
+  display: flex;
+  align-items: flex-end;
+  gap: 1.5px;
+  height: 22px;
+}
+.barcode i {
+  display: block;
+  width: 1.5px;
+  height: 100%;
+  background: var(--g-500);
+}
+.barcode i.w {
+  width: 3.5px;
+}
+.barcode i.t {
+  height: 62%;
+}
+.barcode i.key {
+  width: 2px;
+  height: 100%;
+  background: var(--sig-hot);
+  box-shadow: -1.5px 0 0 var(--sig-dim), 1.5px 0 0 var(--sig-dim);
+}
+
+/* LE CARTOUCHE — 1/2. Démonstration littérale de la loi : pour
+   écrire en rouge, on pose d'abord du papier. 5,169:1, AA à toute
+   taille. C'est exactement la grammaire des affiches — katakana
+   rouge sur blanc — jamais du rouge sur noir.
+   Plafond volontaire de DEUX cartouches dans tout le document : au
+   delà, les rectangles blancs deviennent des îlots de mode clair et
+   le noir cesse de lire comme un fond continu. */
+.ref {
+  background: var(--paper);
+  color: var(--sig);
+  font-family: var(--f-mono), monospace;
+  font-size: var(--f-micro);
+  letter-spacing: 0.14em;
+  padding: 3px 7px;
+  white-space: nowrap;
+}
+
+/* Un peigne de chevrons : une flèche qui ne dit pas où aller. Il
+   donne du mouvement au pied sans ajouter un mot. */
+.chevrons {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.chevrons i {
+  width: 4px;
+  height: 4px;
+  border-top: var(--rule) solid var(--g-500);
+  border-right: var(--rule) solid var(--g-500);
+  rotate: 45deg;
+}
+
+/* Le sceau de fin : les affiches denses se terminent toujours par
+   une ligne de mentions minuscules qui ferme la composition. */
+.legal {
+  margin-top: 0.9rem;
+  padding-top: 0.6rem;
+  border-top: var(--rule) solid var(--line);
+  font-family: var(--f-mono), monospace;
+  font-size: var(--f-nano);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--g-500);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ------------------------------------------------------------
+   TRACÉ (schéma qui se dessine au scroll)
+   ------------------------------------------------------------ */
+
+.trace-wrap {
+  height: 300svh;
+}
+
+.trace-pin {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Le même rail que sur la plaque : c'est ce qui dit que ce sont deux
+   planches du même dossier. Sans lui, le tracé est une page ; avec
+   lui, c'est une planche numérotée. */
+.trace-rail {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: var(--gutter);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 11;
+  pointer-events: none;
+}
+.trace-rail span {
+  writing-mode: vertical-rl;
+  rotate: 180deg;
+  font-family: var(--f-mono), monospace;
+  font-size: var(--f-nano);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--g-300);
+  white-space: nowrap;
+}
+
+.trace-head {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: clamp(1.5rem, 3.4vw, 2.6rem) var(--gutter) 1rem;
+  border-bottom: var(--rule) solid var(--line);
+}
+.trace-head h2 {
+  margin: 0.6rem 0 0;
+  font-size: clamp(1.35rem, 3.6vw, 3rem);
+  font-weight: 700;
+  font-stretch: 82%;
+  letter-spacing: -0.012em;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+.trace-head .jp {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--g-500);
+  margin-top: 0.5rem;
+}
+.trace-index {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+/* LE CARTOUCHE — 2/2. L'étape courante est imprimée sur papier, le
+   total reste gris à l'extérieur : la séparation libellé-gris /
+   valeur-encre héritée de la cote de plan. Il est en ENCRE et non en
+   LAMPE parce qu'il reste visible pendant tout le défilement — deux
+   lampes simultanées casseraient la règle du singleton allumé, deux
+   matières différentes non. */
+.count {
+  background: var(--paper);
+  color: var(--sig);
+  font-family: var(--f-mono), monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
+  padding: 2px 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.trace-stage {
+  position: relative;
+  z-index: 10;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem var(--gutter);
+  min-height: 0;
+}
+.trace-stage svg {
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  overflow: visible;
+}
+
+.trace-foot {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0 var(--gutter) clamp(1.2rem, 2.6vw, 2rem);
+}
+/* Le seul élément rouge qui BOUGE du site, et le seul à porter la
+   lueur. Le lit anti-vibration court sur toute la longueur : la tête
+   ne frange donc pas en mouvement. Rayon 6px — au-delà de 8 on
+   retombe dans le glow générique. */
+.progress {
+  flex: 1;
+  max-width: 340px;
+  height: 2px;
+  background: var(--sig-dim);
+}
+.progress i {
+  display: block;
+  height: 100%;
+  background: var(--sig-hot);
+  box-shadow: 0 0 6px -1px var(--sig-glow);
+  transform-origin: 0 50%;
+}
+
+/* — nœuds du schéma —
+   Le remplissage --sig-ember est à 1,011:1, donc mathématiquement
+   invisible : il ne peut pas porter l'état à lui seul. L'état allumé
+   est porté par TROIS canaux — un rail de 2px absent au repos
+   (géométrie), la graisse de .idx (typographie), et la lampe
+   (teinte). En niveaux de gris, en deutéranopie et en forced-colors,
+   l'information survit sans la couleur.
+   Aucun texte de CONTENU ne passe jamais au rouge : un recruteur lit
+   du blanc sur noir. */
+.node rect {
+  fill: var(--ink-2);
+  stroke: var(--g-700);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.node .n-rail {
+  fill: transparent;
+  stroke: none;
+}
+.node .idx {
+  font-family: var(--f-mono), monospace;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  fill: var(--g-500);
+}
+.node .lbl {
+  font-family: var(--f-display), sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  font-stretch: 84%;
+  letter-spacing: 0.02em;
+  fill: var(--paper);
+  text-transform: uppercase;
+}
+.node .sub {
+  font-family: var(--f-mono), monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  fill: var(--g-300);
+}
+.node .corner {
+  stroke: var(--g-500);
+  stroke-width: 1;
+}
+.node .chip {
+  fill: rgba(226, 232, 240, 0.08);
+  stroke: none;
+}
+/* La boîte allumée ne s'entoure PAS de rouge : un contour de 470px
+   autour du réservoir ferait de l'accent une surface. C'est le rail
+   de 2px qui porte la lampe ; le cadre, lui, s'éclaircit. */
+.node.on rect {
+  fill: var(--sig-ember);
+  stroke: rgba(226, 232, 240, 0.62);
+}
+/* stroke:none explicite — `.node.on rect` (0,2,1) l'emporterait
+   sinon sur `.node .n-rail` (0,2,0) et doublerait l'épaisseur du rail */
+.node.on .n-rail {
+  fill: var(--sig-hot);
+  stroke: none;
+}
+.node.on .idx {
+  fill: var(--paper); /* la lampe n'écrit pas : 3,962:1 < 4,5 */
+  font-weight: 700;
+}
+.node.on .corner {
+  stroke: var(--paper);
+}
+/* LOI DE RETRAIT : un enfant n'hérite jamais de l'accent de son
+   parent allumé — c'est par là que le budget fuit. */
+.node.on .chip {
+  fill: rgba(226, 232, 240, 0.16);
+}
+
+/* ÉPUISÉ — l'étape est franchie. --off est à 2,429:1 : sous le seuil
+   texte, donc il ne porte jamais un mot, mais assez perceptible pour
+   ne pas disparaître sur un écran non calibré. L'état reste doublé
+   par la géométrie (le rail existe, mais neutre) et le contenu reste
+   pleinement lisible : un recruteur lit toute la chaîne. */
+.node.done rect {
+  fill: var(--ink-2);
+  stroke: var(--off);
+}
+.node.done .n-rail {
+  fill: var(--off);
+  stroke: none;
+}
+.node.done .idx {
+  fill: var(--g-300);
+}
+.node.done .corner {
+  stroke: var(--off);
+}
+
+.trace-note {
+  max-width: 30ch;
+  margin: 0;
+  text-transform: none;
+  letter-spacing: 0.035em;
+  line-height: 1.65;
+  text-align: right;
+}
+
+/* Les fils de la chaîne sont de la STRUCTURE, pas un état : l'événement,
+   c'est qu'ils se dessinent. Ils restent donc blancs — six longues
+   lignes rouges feraient du signal une texture, et la rareté serait
+   perdue exactement là où elle compte.
+   Seule la DÉRIVATION vers le réservoir s'allume : c'est le fait
+   remarquable de l'architecture, et c'est la justification sémantique
+   du rouge sur cet écran. Loi du lit : 1px de lampe sur 3px de braise
+   — c'est aussi ce que montre l'affiche « blur », une traînée rouge
+   floue sur du quasi-noir, jamais un trait saturé posé sur du vide. */
+.wire {
+  fill: none;
+  stroke: var(--paper);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.wire.branch {
+  stroke: var(--sig-hot);
+}
+/* LE GESTE CENTRAL DU TRACÉ. Le tracé complet en très faible
+   contraste devient un PLAN bleu, et ce qui se dessine par-dessus est
+   le bâti : la section dit littéralement « voici ce qui était prévu,
+   voici ce qui est construit ». Substitution de --line (1,206:1) par
+   --plan-1 (1,204:1) : aucun pixel ne gagne en luminance, l'entrée ne
+   se paie donc pas. */
+.wire-bed {
+  fill: none;
+  stroke: var(--plan-1);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+/* Ce lit-ci reste rouge : ce n'est pas un plan, c'est l'organe
+   optique imposé par la loi du lit sous le seul fil coloré du schéma.
+   Restaté ici pour être immunisé contre la règle bleue qui précède. */
+.wire-bed .bed-branch {
+  stroke: var(--sig-dim);
+  stroke-width: 3;
+}
+
+/* Axe gradué : un diagramme flottant est un dessin, un diagramme
+   posé sur un axe est une mesure. Le segment allumé sous l'étape 04
+   donne au rouge sa dernière justification sémantique du site —
+   c'est là que la chaîne se ramifie. */
+.t-axis line {
+  stroke: var(--line-2);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.t-axis line.branch {
+  stroke: var(--sig-hot);
+  stroke-width: 2;
+}
+/* L'UNIQUE CYAN — la mesure. « Voici une valeur lue sur une échelle. »
+   C'est de la lumière ÉMISE par un tube, pas réfléchie par du papier :
+   canal rouge exactement à 0, saturation 100 %. C'est le seul
+   hors-famille du système, et c'est la marque de son privilège — la
+   seule teinte qui ait le droit d'écrire.
+   Ce n'est pas une entorse à la loi « on n'éclaircit jamais un accent
+   pour le rendre lisible » : rien n'est désaturé. Le rouge plafonne à
+   ~4:1 sur du noir parce que le canal rouge ne pèse que 0,2126 dans
+   la luminance ; le vert en pèse 0,7152. Le droit d'écrire est
+   physique, pas cosmétique. --g-500 5,127:1 → 7,428:1, AAA.
+   Le token est déclaré ICI et nulle part ailleurs : un <text> SVG n'a
+   pas d'enfant, la variable ne cascade sur rien.
+   VERROU : le compteur 000→100 ne devient JAMAIS cyan. Un chiffre qui
+   s'anime en néon sur du noir est le cliché n°1 du portfolio de dev ;
+   le cyan ne vit que sur une échelle gravée, immobile. */
+.t-axis text {
+  --mes: #00aebd;
+  font-family: var(--f-mono), monospace;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  fill: var(--mes);
+}
+
+/* ------------------------------------------------------------
+   ACCESSIBILITÉ
+   ------------------------------------------------------------ */
+
+/* On ne remet pas la scène à plat : la profondeur est une
+   information (hiérarchie, structure, orientation), seul le
+   mouvement est un effet. On fige une image composée, brume à
+   densité MOYENNE — figée à t=0 la scène paraîtrait vide. */
+@media (prefers-reduced-motion: reduce) {
+  .proto-root *,
+  .proto-root *::before,
+  .proto-root *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .fog-sheet,
+  .p-fog-near,
+  .p-dust,
+  .p-struts,
+  .floor-grid {
+    animation: none !important;
+    will-change: auto; /* rien ne bouge ⇒ aucune couche promue */
+  }
+  .p-grain {
+    animation: none;
+    opacity: 0.07;
+  }
+  .p-fog-deep {
+    opacity: 0.5;
+  }
+  .p-fog-mid {
+    opacity: 0.6;
+  }
+  .p-scrim {
+    opacity: 0.34;
+  }
+  /* un filet coloré immobile en travers de l'écran serait un
+     artefact, pas une version calme de l'effet */
+  .p-sweep {
+    display: none;
+  }
+  .progress i {
+    box-shadow: none;
+  }
+}
+
+/* On épaissit et on éclaircit les NEUTRES ; on ne touche jamais à la
+   saturation des deux rouges. */
+@media (prefers-contrast: more) {
+  .proto-root {
+    --g-500: #8f949e;
+    --off: #6a707a;
+    --sig-rail: rgba(217, 31, 17, 0.46);
+    --rail-w: 3px;
+    --line: rgba(226, 232, 240, 0.16);
+    --line-2: rgba(226, 232, 240, 0.28);
+    /* Le bleu suit son jumeau, et seulement son jumeau : les alphas
+       sont re-résolues pour rester isoluminantes. --plan-3 ne bouge
+       pas parce que --line-3 ne bouge pas. La loi est mécanique. */
+    --plan-1: rgba(18, 60, 224, 0.5); /*  1,436:1 — jumeau de --line .16   (1,429) */
+    --plan-2: rgba(18, 60, 224, 0.84); /* 2,147:1 — jumeau de --line-2 .28 (2,141) */
+  }
+}
+
+/* La teinte n'est plus un canal fiable : on rend la main au système.
+   Le canal géométrique survit seul — c'est exactement pourquoi il
+   existe. */
+@media (forced-colors: active) {
+  .proto-root {
+    --sig: CanvasText;
+    --sig-hot: Highlight;
+    --sig-dim: GrayText;
+    --sig-ember: Canvas;
+    --sig-rail: GrayText;
+    --sig-glow: transparent;
+    --sig-veil: transparent;
+    --steel: Canvas;
+    --focus: Highlight;
+    --off: GrayText;
+    /* le bleu redevient ce qu'il a toujours été : un trait */
+    --plan-1: GrayText; /* le non-bâti reste atténué : .wire-bed */
+    --plan-2: CanvasText;
+    --plan-3: CanvasText;
+  }
+  /* CanvasText et non LinkText : le compteur d'un axe n'est pas un lien */
+  .t-axis text {
+    --mes: CanvasText;
+  }
+  /* la lumière disparaît — elle ne portait aucune information */
+  .p-void {
+    --sod-core: transparent;
+    --sod-veil: transparent;
+  }
+}
+
+@media (prefers-reduced-data: reduce) {
+  .fog-sheet,
+  .p-fog-near {
+    animation: none;
+  }
+}
+
+/* ------------------------------------------------------------
+   PETITS ÉCRANS
+   11 plans sur un GPU mobile = trop de couches promues, et une
+   affiche dense à 375px devient une bouillie. On tombe à 5 plans,
+   une seule nappe, et le mobilier de gouttière disparaît.
+   ------------------------------------------------------------ */
+
+@media (max-width: 720px) {
+  .proto-root {
+    --gutter: 1.15rem;
+  }
+  .p-fog-mid .sheet-b,
+  .p-struts,
+  .p-dust,
+  .p-fog-near {
+    display: none;
+  }
+  .fog-sheet {
+    left: -420px;
+    right: -420px;
+    top: -420px;
+    bottom: -420px;
+  }
+  .p-fog-mid .sheet-a {
+    background-size: 620px 620px;
+    animation-duration: 120s;
+  }
+  .p-rules {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .p-floor {
+    width: 340vw;
+  }
+  .p-marks {
+    gap: 0.55rem;
+  }
+  .frame,
+  .rail,
+  .trace-rail,
+  .mire {
+    display: none;
+  }
+  .topbar {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  /* le rôle est déjà sous le nom : inutile de le répéter en barre */
+  .topbar .id:first-child .sep,
+  .topbar .id:first-child .dim {
+    display: none;
+  }
+  .name {
+    font-size: clamp(3.4rem, 18vw, 15rem);
+  }
+  .name .given {
+    letter-spacing: 0.3em;
+  }
+  .scale {
+    height: 40px;
+  }
+  /* les étiquettes de lieu se chevauchent sous 720px */
+  .scale-stop em {
+    display: none;
+  }
+  .foot-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  /* Une affiche dense à 375px devient une bouillie : on garde ce qui
+     porte du sens (le cartouche, l'indice de scroll) et on jette le
+     mobilier purement graphique. Le code-barres passe à 1px de barre :
+     67 barres tiennent alors dans la gouttière. */
+  .chevrons,
+  .legal {
+    display: none;
+  }
+  .barcode {
+    gap: 1px;
+  }
+  .barcode i {
+    width: 1px;
+  }
+  .barcode i.w {
+    width: 2px;
+  }
+  .barcode i.key {
+    width: 1.5px;
+    box-shadow:
+      -1px 0 0 var(--sig-dim),
+      1px 0 0 var(--sig-dim);
+  }
+  .ref {
+    font-size: var(--f-nano);
+    letter-spacing: 0.08em;
+    padding: 3px 5px;
+  }
+  .trace-wrap {
+    height: 260svh;
+  }
+  .trace-head {
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+  .trace-note {
+    text-align: left;
+    max-width: none;
+  }
+}
