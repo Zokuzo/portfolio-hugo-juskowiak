@@ -42,7 +42,10 @@ export function Ortho({ lang }: { lang: Lang }) {
   const views = t(lang, "ovViews") as unknown as [string, string, string][]
 
   return (
-    <section className="ov" aria-label={t(lang, "ovTitle")}>
+    <section className="ov" id="vues" aria-label={t(lang, "ovTitle")}>
+      <div className="ov-rail mono mono-xs dim" aria-hidden="true">
+        {t(lang, "ovRail")}
+      </div>
       <header className="ov-head">
         <p className="mono mono-sm dim ov-idx">
           <span className="ov-mark">{t(lang, "ovIndex")}</span>

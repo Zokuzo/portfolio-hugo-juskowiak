@@ -106,7 +106,7 @@ export function Trace({ lang }: { lang: Lang }) {
   const step = Math.min(nodes.length, current + 1)
 
   return (
-    <div className="trace-wrap" ref={wrap}>
+    <div className="trace-wrap" id="trace" ref={wrap}>
       <div className="trace-pin">
         {/* le même rail que sur la plaque : deux planches du même
             dossier, pas deux pages */}
@@ -117,10 +117,18 @@ export function Trace({ lang }: { lang: Lang }) {
         <header className="trace-head">
           <div>
             <span className="trace-index mono mono-sm dim">
-              {/* cartouche 2/2 : la valeur est en encre sur papier, le
-                  total reste gris à l'extérieur — la cote de plan */}
+              {/* Le numéro de feuille d'abord, comme sur toutes les
+                  autres feuilles du jeu. Le compteur d'avancement vient
+                  ensuite et il est NOMMÉ : accolés sans libellé, « 01 /
+                  06 » et « 01 — Tracé » se lisaient comme une seule
+                  suite de nombres.
+                  cartouche 2/2 : la valeur est en encre sur papier, le
+                  total reste gris à l'extérieur — la cote de plan. */}
+              <span>{t(lang, "traceIndex")}</span>
+              <span aria-hidden="true">·</span>
+              <span>{t(lang, "traceEtape")}</span>
               <span className="count">{String(step).padStart(2, "0")}</span>
-              <span>/ {String(nodes.length).padStart(2, "0")} — {t(lang, "traceIndex")}</span>
+              <span>/ {String(nodes.length).padStart(2, "0")}</span>
             </span>
             <h2>{t(lang, "traceTitle")}</h2>
             <span className="jp">プロスペクター ／ 処理チェーン</span>

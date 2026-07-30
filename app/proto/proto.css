@@ -1827,14 +1827,8 @@ body {
    sont les seules exceptions, et ce sont les <svg> eux-mêmes.
    ------------------------------------------------------------ */
 
-.ov {
-  position: relative;
-  z-index: 1;
-  padding: clamp(3rem, 9vh, 7rem) var(--gutter);
-  max-width: 1360px;
-  margin-inline: auto;
-}
-
+/* Gabarit et rail viennent du mobilier commun des feuilles, plus haut :
+   la planche est une feuille du jeu, pas un encart. */
 .ov-head {
   display: flex;
   align-items: baseline;
@@ -2091,6 +2085,430 @@ body {
 }
 
 /* ------------------------------------------------------------
+   MOBILIER COMMUN DES FEUILLES
+
+   Six sections partagent le même encadrement : gabarit, rail de
+   gouttière, index, titre, kana, chapeau. Déclaré UNE fois et
+   partagé — dupliqué, il dériverait à la première retouche et les
+   feuilles cesseraient d'être des feuilles du même jeu.
+   Ce qui reste propre à chaque section est déclaré dans son bloc.
+
+   AVANT DE NOMMER LA RACINE D'UNE NOUVELLE FEUILLE : vérifier que la
+   classe n'existe pas déjà. Ce fichier a déjà produit deux collisions
+   de ce type. `.spec` appartient à la ligne de spécification de la
+   plaque (une grille de six colonnes) — une section nommée `.spec` en
+   héritait et voyait son en-tête passer à côté de son contenu ; elle
+   s'appelle `.fiche`. `.idx` appartient aux nœuds du tracé
+   (`.node .idx`) — l'index des feuilles s'appelle `.nomen`.
+   Le préfixe d'une section n'est pas décoratif, il est fonctionnel.
+   La variante SVG de ce piège est documentée au bloc de la planche
+   de vues : en SVG2 la propriété CSS bat l'attribut de présentation.
+   ------------------------------------------------------------ */
+
+.nomen,
+.ov,
+.tel,
+.rev,
+.fiche,
+.op,
+.ct {
+  position: relative;
+  z-index: 1;
+  padding: clamp(4rem, 12vh, 9rem) var(--gutter);
+  max-width: 1360px;
+  margin-inline: auto;
+}
+
+.ov-rail,
+.tel-rail,
+.rev-rail,
+.fiche-rail,
+.op-rail,
+.ct-rail {
+  position: absolute;
+  left: 0;
+  top: clamp(4rem, 12vh, 9rem);
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  letter-spacing: 0.28em;
+}
+
+.nomen-idx,
+.tel-idx,
+.rev-idx,
+.fiche-idx,
+.op-idx,
+.ct-idx {
+  margin: 0 0 0.9rem;
+}
+
+.nomen-titre,
+.tel-titre,
+.rev-titre,
+.fiche-titre,
+.op-titre,
+.ct-titre {
+  margin: 0;
+  font-size: clamp(1.5rem, 3.4vw, 2.6rem);
+  font-weight: 700;
+  font-stretch: 88%;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  line-height: 1.02;
+}
+
+.nomen-jp,
+.tel-jp,
+.rev-jp,
+.fiche-jp,
+.op-jp,
+.ct-jp {
+  margin: 0.35rem 0 0;
+  font-size: var(--f-micro);
+}
+
+.nomen-note,
+.tel-note,
+.rev-note,
+.fiche-note {
+  margin: clamp(0.8rem, 2vh, 1.3rem) 0 0;
+  max-width: 56ch;
+  text-transform: none;
+  letter-spacing: 0.035em;
+  line-height: 1.7;
+}
+
+@media (max-width: 720px) {
+  /* Sous 720px il n'y a plus de gouttière pour accueillir les rails. */
+  .ov-rail,
+  .tel-rail,
+  .rev-rail,
+  .fiche-rail,
+  .op-rail,
+  .ct-rail {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------------
+   00 — INDEX
+
+   La feuille la plus COURTE du document, et ça doit le rester : un
+   index qui se lit longtemps a échoué. Elle navigue aussi — les
+   numéros sont des ancres réelles.
+   ------------------------------------------------------------ */
+
+.nomen-head {
+  padding-bottom: clamp(1.2rem, 3vh, 2rem);
+  border-bottom: var(--rule) solid var(--line-2);
+}
+.nomen-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.nomen-lien {
+  display: grid;
+  grid-template-columns: 2.6rem auto 1fr auto;
+  align-items: baseline;
+  column-gap: clamp(0.7rem, 1.8vw, 1.4rem);
+  padding: clamp(0.7rem, 1.8vh, 1.05rem) 0;
+  border-bottom: var(--rule) solid var(--line);
+  color: inherit;
+  text-decoration: none;
+}
+.nomen-num {
+  color: var(--g-300);
+}
+.nomen-nom {
+  font-weight: 700;
+  font-stretch: 88%;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+/* Filet de conduite : convention de sommaire imprimé. Il occupe la
+   colonne élastique, donc il s'allonge exactement de ce dont le titre
+   n'a pas besoin — c'est lui qui relie le nom à son objet. */
+.nomen-conduite {
+  order: 3;
+  align-self: center;
+  height: var(--rule);
+  background-image: repeating-linear-gradient(90deg, var(--line-2) 0 2px, transparent 2px 6px);
+}
+.nomen-objet {
+  order: 4;
+  text-transform: none;
+  letter-spacing: 0.06em;
+  text-align: right;
+}
+/* La feuille visée s'allume au survol ET au focus clavier : un index
+   est d'abord un instrument de navigation. */
+.nomen-lien:hover .nomen-nom,
+.nomen-lien:focus-visible .nomen-nom {
+  color: var(--paper);
+}
+.nomen-lien:hover .nomen-num,
+.nomen-lien:focus-visible .nomen-num {
+  color: var(--sig-hot);
+}
+
+/* ------------------------------------------------------------
+   05 — SPÉCIFICATIONS
+   ------------------------------------------------------------ */
+
+.fiche-head {
+  padding-bottom: clamp(1.2rem, 3vh, 2rem);
+  border-bottom: var(--rule) solid var(--line-2);
+}
+.fiche-grille {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+  gap: clamp(1.6rem, 4vw, 3rem) clamp(1.6rem, 4vw, 3.4rem);
+  margin-top: clamp(1.6rem, 4vh, 2.6rem);
+}
+.fiche-groupe-titre {
+  margin: 0 0 0.7rem;
+  color: var(--paper);
+  font-weight: 400;
+}
+.fiche-cols,
+.fiche-ligne {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: 1rem;
+  align-items: baseline;
+}
+.fiche-cols {
+  padding-bottom: 0.45rem;
+  border-bottom: var(--rule) solid var(--line-2);
+}
+.fiche-lignes {
+  margin: 0;
+}
+.fiche-ligne {
+  padding: 0.55rem 0;
+  border-bottom: var(--rule) solid var(--line);
+}
+.fiche-designation {
+  margin: 0;
+  font-size: 0.9375rem;
+  letter-spacing: 0.01em;
+}
+.fiche-classe {
+  margin: 0;
+  color: var(--g-100);
+  text-align: right;
+  white-space: nowrap;
+}
+/* Case non renseignée : un tiret, pas un blanc. Un blanc se lit comme
+   un défaut de rendu ; un tiret se lit comme « non renseigné », ce qui
+   est exactement l'information. */
+.fiche-vide {
+  color: var(--g-700);
+}
+
+/* ------------------------------------------------------------
+   06 — OPÉRATEUR
+
+   LA FEUILLE LA PLUS AÉRÉE, et c'est structurel. Cinq feuilles denses
+   d'affilée fatiguent. Densifier celle-ci « pour harmoniser » ferait
+   perdre au document sa respiration juste avant sa signature.
+   ------------------------------------------------------------ */
+
+.op-head {
+  padding-bottom: clamp(1.4rem, 4vh, 2.4rem);
+}
+/* La déclaration à gauche, les conditions à droite. Un seul bloc de
+   texte au tiers gauche laissait les deux tiers droits vides à toutes
+   les positions de scroll : ça se lit comme une section inachevée, pas
+   comme de l'air. L'air de cette feuille vient de son INTERLIGNE et de
+   sa mesure courte, pas d'un vide horizontal. */
+.op-bloc {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: clamp(2rem, 6vw, 5rem);
+  align-items: start;
+}
+/* Le SEUL endroit du document où quelqu'un parle : display et non
+   mono, et une taille de titre. Partout ailleurs c'est un plan qui
+   énonce.
+   La mesure est posée ICI et non sur le parent : `ch` se calcule sur
+   la font-size de l'élément qui porte la propriété. Sur `.op-corps`
+   (16px) 34ch valait 272px, et le texte de 34px se brisait tous les
+   trois mots. */
+.op-texte {
+  margin: 0;
+  max-width: 24ch;
+  font-size: clamp(1.35rem, 2.9vw, 2.15rem);
+  font-weight: 400;
+  font-stretch: 92%;
+  line-height: 1.32;
+  letter-spacing: -0.005em;
+  color: var(--paper);
+}
+.op-chute {
+  margin: clamp(1.1rem, 3vh, 1.8rem) 0 0;
+  max-width: 52ch;
+  font-size: 1rem;
+  line-height: 1.68;
+  color: var(--g-300);
+}
+.op-champs {
+  display: grid;
+  gap: clamp(1rem, 2.4vh, 1.6rem);
+  margin: 0;
+  padding-top: 0.5rem;
+}
+.op-champ {
+  padding-bottom: clamp(1rem, 2.4vh, 1.6rem);
+  border-bottom: var(--rule) solid var(--line);
+}
+.op-champs .op-champ:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.op-champ dt {
+  margin-bottom: 0.4rem;
+}
+.op-valeur {
+  margin: 0;
+  color: var(--g-100);
+  text-transform: none;
+  letter-spacing: 0.06em;
+  line-height: 1.6;
+}
+
+/* ------------------------------------------------------------
+   07 — CARTOUCHE
+
+   Un dessin ne s'arrête pas, il SE SIGNE. D'où le bloc encadré : sur
+   un plan, le cartouche est la seule zone bordée de la feuille.
+   ------------------------------------------------------------ */
+
+.ct-head {
+  padding-bottom: clamp(1.2rem, 3vh, 2rem);
+}
+.ct-accroche {
+  margin: 0 0 clamp(1.8rem, 5vh, 3rem);
+  max-width: 22ch;
+  font-size: clamp(1.6rem, 4vw, 3rem);
+  font-weight: 700;
+  font-stretch: 86%;
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+  text-transform: uppercase;
+  color: var(--paper);
+}
+.ct-bloc {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: var(--rule);
+  background: var(--line-2);
+  border: var(--rule) solid var(--line-2);
+}
+.ct-liens,
+.ct-champs {
+  margin: 0;
+  padding: clamp(1.1rem, 3vw, 1.9rem);
+  background: var(--ink-2);
+}
+.ct-liens {
+  list-style: none;
+}
+.ct-lien {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 0.2rem 1rem;
+  padding: clamp(0.75rem, 2vh, 1.15rem) 0;
+  border-bottom: var(--rule) solid var(--line);
+  color: inherit;
+  text-decoration: none;
+}
+.ct-liens li:last-child .ct-lien {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.ct-role {
+  grid-column: 1;
+}
+.ct-libelle {
+  grid-column: 1;
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  font-weight: 700;
+  font-stretch: 90%;
+  letter-spacing: 0.005em;
+  overflow-wrap: anywhere;
+}
+/* La flèche avance de 4px : un déplacement, pas un changement de
+   couleur. Le rouge du document est réservé à ce qui DÉSIGNE, et un
+   survol ne désigne rien — il accuse réception. */
+.ct-fleche {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  align-self: center;
+  color: var(--g-500);
+  transition: transform 0.3s var(--ease), color 0.3s var(--ease);
+}
+.ct-lien:hover .ct-fleche,
+.ct-lien:focus-visible .ct-fleche {
+  transform: translateX(4px);
+  color: var(--paper);
+}
+.ct-champ {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: var(--rule) solid var(--line);
+}
+.ct-champs .ct-champ:last-child {
+  border-bottom: 0;
+}
+.ct-champ dt,
+.ct-champ dd {
+  margin: 0;
+}
+.ct-valeur {
+  color: var(--g-100);
+  text-align: right;
+}
+.ct-fin {
+  margin: clamp(2rem, 6vh, 3.5rem) 0 0;
+  text-align: center;
+  letter-spacing: 0.4em;
+}
+
+@media (max-width: 860px) {
+  .ct-bloc,
+  .op-bloc {
+    grid-template-columns: 1fr;
+  }
+  /* Empilées, les conditions retrouvent le filet du haut qui les
+     sépare de la déclaration. */
+  .op-champs {
+    padding-top: clamp(1.2rem, 3vh, 2rem);
+    border-top: var(--rule) solid var(--line-2);
+  }
+}
+
+@media (max-width: 620px) {
+  /* L'objet de la feuille passe sous son titre : à cette largeur, une
+     colonne alignée à droite se réduit à deux mots par ligne. */
+  .nomen-lien {
+    grid-template-columns: 2.6rem 1fr;
+    row-gap: 0.3rem;
+  }
+  .nomen-conduite {
+    display: none;
+  }
+  .nomen-objet {
+    grid-column: 2;
+    text-align: left;
+  }
+}
+
+/* ------------------------------------------------------------
    05 — TÉLÉMÉTRIE
 
    BUDGET DE FRAME : ce bloc n'introduit ni mix-blend-mode, ni filter,
@@ -2103,25 +2521,10 @@ body {
    en SVG2 la propriété CSS bat l'attribut de présentation.
    ------------------------------------------------------------ */
 
-.tel {
-  position: relative;
-  z-index: 1;
-  padding: clamp(4rem, 12vh, 9rem) var(--gutter);
-  max-width: 1360px;
-  margin-inline: auto;
-}
-
-/* Rail de gouttière, comme sur le tracé : il date et référence la
-   section sans occuper de largeur de lecture. */
-.tel-rail {
-  position: absolute;
-  left: 0;
-  top: clamp(4rem, 12vh, 9rem);
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  letter-spacing: 0.28em;
-}
-
+/* Gabarit, rail, index, titre, kana et chapeau viennent du mobilier
+   commun des feuilles, plus haut. Ne sont déclarés ici que le numéro
+   en chrome, le banc et le tableau — ce qui n'existe que sur cette
+   feuille. */
 .tel-head {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -2132,7 +2535,6 @@ body {
 }
 .tel-idx {
   grid-column: 1 / -1;
-  margin: 0 0 0.9rem;
 }
 /* Le numéro en chrome. Il est GRAND parce que la rampe est cotée en
    `em` : sous ~4rem la période descend à 50px et le chrome redevient
@@ -2146,27 +2548,6 @@ body {
   line-height: 0.78;
   letter-spacing: -0.02em;
 }
-.tel-titre {
-  margin: 0;
-  font-size: clamp(1.5rem, 3.4vw, 2.6rem);
-  font-weight: 700;
-  font-stretch: 88%;
-  letter-spacing: -0.01em;
-  text-transform: uppercase;
-  line-height: 1.02;
-}
-.tel-jp {
-  margin: 0.35rem 0 0;
-  font-size: var(--f-micro);
-}
-.tel-note {
-  margin: clamp(0.8rem, 2vh, 1.3rem) 0 0;
-  max-width: 54ch;
-  text-transform: none;
-  letter-spacing: 0.035em;
-  line-height: 1.7;
-}
-
 .tel-banc {
   margin-top: clamp(1.2rem, 3vh, 2.2rem);
 }
@@ -2319,10 +2700,6 @@ body {
 }
 
 @media (max-width: 720px) {
-  /* Le rail de gouttière n'a pas de gouttière sous 720px. */
-  .tel-rail {
-    display: none;
-  }
   .tel-head {
     grid-template-columns: 1fr;
   }
@@ -2351,47 +2728,10 @@ body {
    plan fixe. Une seule animation de transform à l'entrée.
    ------------------------------------------------------------ */
 
-.rev {
-  position: relative;
-  z-index: 1;
-  padding: clamp(4rem, 12vh, 9rem) var(--gutter);
-  max-width: 1360px;
-  margin-inline: auto;
-}
-.rev-rail {
-  position: absolute;
-  left: 0;
-  top: clamp(4rem, 12vh, 9rem);
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  letter-spacing: 0.28em;
-}
-
+/* Gabarit, rail, index, titre, kana et chapeau viennent du mobilier
+   commun des feuilles, plus haut. */
 .rev-head {
   padding-bottom: clamp(1.2rem, 3vh, 2rem);
-}
-.rev-idx {
-  margin: 0 0 0.9rem;
-}
-.rev-titre {
-  margin: 0;
-  font-size: clamp(1.5rem, 3.4vw, 2.6rem);
-  font-weight: 700;
-  font-stretch: 88%;
-  letter-spacing: -0.01em;
-  text-transform: uppercase;
-  line-height: 1.02;
-}
-.rev-jp {
-  margin: 0.35rem 0 0;
-  font-size: var(--f-micro);
-}
-.rev-note {
-  margin: clamp(0.8rem, 2vh, 1.3rem) 0 0;
-  max-width: 56ch;
-  text-transform: none;
-  letter-spacing: 0.035em;
-  line-height: 1.7;
 }
 
 /* La grille de colonnes est déclarée UNE fois et partagée par
@@ -2512,39 +2852,6 @@ body {
   }
 }
 
-@media (max-width: 720px) {
-  /* Même règle que .tel-rail : sous 720px il n'y a plus de gouttière
-     pour l'accueillir. Deux sections voisines ne peuvent pas traiter
-     le même mobilier différemment. */
-  .rev-rail {
-    display: none;
-  }
-}
-
-/* Écran d'amorce de la route d'atelier — part avec elle. */
-.tel-amorce {
-  height: 70svh;
-}
-
-/* Bascule de langue de la route d'atelier — part avec elle. */
-.ov-lang {
-  display: flex;
-  gap: var(--rule);
-  padding: var(--gutter) var(--gutter) 0;
-  max-width: 1360px;
-  margin-inline: auto;
-}
-.ov-lang button {
-  padding: 5px 11px;
-  border: var(--rule) solid var(--line-2);
-  background: transparent;
-  color: var(--g-500);
-  cursor: pointer;
-}
-.ov-lang button[aria-pressed="true"] {
-  background: rgba(226, 232, 240, 0.08);
-  color: var(--paper);
-}
 
 @media (max-width: 720px) {
   /* Sous 720px la planche n'a plus qu'une colonne : l'angle de prise

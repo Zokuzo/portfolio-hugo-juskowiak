@@ -34,7 +34,7 @@ export function Revisions({ lang }: { lang: Lang }) {
   const cols = t(lang, "revCols") as unknown as string[]
 
   return (
-    <section className="rev" aria-labelledby="rev-titre">
+    <section className="rev" id="revisions" aria-labelledby="rev-titre">
       <div className="rev-rail mono mono-xs dim" aria-hidden="true">
         {t(lang, "revRail")}
       </div>

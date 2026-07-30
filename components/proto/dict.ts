@@ -125,7 +125,10 @@ const DICT = {
   ref: { fr: "REF.0043-B / REV.2 / 2026", en: "REF.0043-B / REV.2 / 2026" },
 
   /* — section tracé — */
-  traceIndex: { fr: "00 — Tracé", en: "00 — Trace" },
+  /* Feuille 01. Le « 00 » d'origine contredisait `traceUnit` qui a
+     toujours dit « Unité 01 » — l'index et l'unité sont maintenant le
+     même nombre. Voir idxFeuilles pour la numérotation du jeu. */
+  traceIndex: { fr: "01 — Tracé", en: "01 — Trace" },
   traceTitle: {
     fr: "Prospector — chaîne de traitement",
     en: "Prospector — processing chain",
@@ -135,6 +138,11 @@ const DICT = {
     en: "Multi-tenant white-label B2B prospecting SaaS. Six task types routed to the best-fitting model.",
   },
   traceUnit: { fr: "Unité 01", en: "Unit 01" },
+  /* Le compteur d'étapes doit être NOMMÉ : sans libellé il s'affichait
+     « 01 / 06 — 01 — Tracé » et les deux nombres se lisaient comme un
+     seul. Un compteur d'avancement et un numéro de feuille ne sont pas
+     la même grandeur. */
+  traceEtape: { fr: "Étape", en: "Step" },
   traceRail: {
     fr: "Unité 01 — Prospector — Chaîne de traitement — REF.0043-B / REV.2",
     en: "Unit 01 — Prospector — Processing chain — REF.0043-B / REV.2",
@@ -174,7 +182,7 @@ const DICT = {
        direction. */
   ovTitle: { fr: "Planche de vues", en: "View plate" },
   ovJp: { fr: "正投影図", en: "正投影図" },
-  ovIndex: { fr: "PL.04", en: "PL.04" },
+  ovIndex: { fr: "03", en: "03" },
   /* [repère, nom de la vue, angle de prise] */
   ovViews: {
     fr: [
@@ -197,8 +205,8 @@ const DICT = {
     en: "Three standard projections and one material render. Continuous line carries the visible edge, dashed the hidden edge, chain-dotted the centre. The dimension is the plate's only assertion.",
   },
   ovRail: {
-    fr: "Planche de vues — PL.04 — REF.0043-B / REV.2 — Éch. 1:1",
-    en: "View plate — PL.04 — REF.0043-B / REV.2 — Scale 1:1",
+    fr: "Unité 03 — Planche de vues — REF.0043-B / REV.2 — Éch. 1:1",
+    en: "Unit 03 — View plate — REF.0043-B / REV.2 — Scale 1:1",
   },
 
   /* — 05 TÉLÉMÉTRIE : le routeur multi-modèle —
@@ -217,7 +225,8 @@ const DICT = {
      ajouter de chiffres ici sans les tenir de lui.
 
      [repère, nom, précision, palier 0|1|2] */
-  telIndex: { fr: "05 — Télémétrie", en: "05 — Telemetry" },
+  telIndex: { fr: "02 — Télémétrie", en: "02 — Telemetry" },
+  telNum: { fr: "02", en: "02" },
   telTitle: { fr: "Routage multi-modèle", en: "Multi-model routing" },
   telJp: { fr: "テレメトリ", en: "テレメトリ" },
   telNote: {
@@ -281,8 +290,8 @@ const DICT = {
     ],
   },
   telRail: {
-    fr: "Unité 05 — Télémétrie — Routage multi-modèle — OpenRouter — REF.0043-B / REV.2",
-    en: "Unit 05 — Telemetry — Multi-model routing — OpenRouter — REF.0043-B / REV.2",
+    fr: "Unité 02 — Télémétrie — Routage multi-modèle — OpenRouter — REF.0043-B / REV.2",
+    en: "Unit 02 — Telemetry — Multi-model routing — OpenRouter — REF.0043-B / REV.2",
   },
 
   /* — 06 RÉVISIONS : le parcours en cartouche de révisions —
@@ -298,7 +307,7 @@ const DICT = {
      de lignes de CV en historique d'un objet qui se construit.
 
      [n°, zone, période, organisme, fonction, modification] */
-  revIndex: { fr: "06 — Révisions", en: "06 — Revisions" },
+  revIndex: { fr: "04 — Révisions", en: "04 — Revisions" },
   revTitle: { fr: "Historique de l'unité", en: "Unit history" },
   revJp: { fr: "改訂履歴", en: "改訂履歴" },
   revNote: {
@@ -349,8 +358,213 @@ const DICT = {
     ],
   },
   revRail: {
-    fr: "Unité 06 — Historique de révisions — 01 à 08 — REF.0043-B / REV.2",
-    en: "Unit 06 — Revision history — 01 to 08 — REF.0043-B / REV.2",
+    fr: "Unité 04 — Historique de révisions — 01 à 08 — REF.0043-B / REV.2",
+    en: "Unit 04 — Revision history — 01 to 08 — REF.0043-B / REV.2",
+  },
+
+  /* ================================================================
+     NUMÉROTATION DES FEUILLES — source unique.
+     Un jeu de plans est numéroté SANS TROU : une feuille manquante est
+     une feuille perdue, pas une feuille réservée. L'ordre ci-dessous
+     est celui de la page, et l'index 00 le récite.
+     Il raconte : le travail d'abord (01, 02), la machine comme objet
+     ensuite (03, la respiration), puis l'histoire, les capacités,
+     l'humain, et le cartouche qui ferme le document.
+     ================================================================ */
+  idxIndex: { fr: "00 — Index", en: "00 — Index" },
+  idxTitle: { fr: "Nomenclature des feuilles", en: "Sheet index" },
+  idxJp: { fr: "図面目録", en: "図面目録" },
+  idxNote: {
+    fr: "Huit feuilles. Le document se lit dans l'ordre, mais chaque feuille se tient seule — c'est la différence entre un plan et un récit.",
+    en: "Eight sheets. The document reads in order, but each sheet stands alone — that is the difference between a drawing and a story.",
+  },
+  /* [numéro, ancre, titre, objet de la feuille] */
+  idxFeuilles: {
+    fr: [
+      ["01", "trace", "Tracé", "Prospector — chaîne de traitement, six étapes"],
+      ["02", "telemetrie", "Télémétrie", "Routage multi-modèle — l'arbitrage du coût"],
+      ["03", "vues", "Vues", "Projections orthographiques et rendu de matière"],
+      ["04", "revisions", "Révisions", "Historique de l'unité — huit révisions"],
+      ["05", "specifications", "Spécifications", "Caractéristiques et classes"],
+      ["06", "operateur", "Opérateur", "Conditions d'emploi"],
+      ["07", "contact", "Cartouche", "Références et prise de contact"],
+    ],
+    en: [
+      ["01", "trace", "Trace", "Prospector — processing chain, six steps"],
+      ["02", "telemetrie", "Telemetry", "Multi-model routing — the cost arbitrage"],
+      ["03", "vues", "Views", "Orthographic projections and material render"],
+      ["04", "revisions", "Revisions", "Unit history — eight revisions"],
+      ["05", "specifications", "Specifications", "Characteristics and classes"],
+      ["06", "operateur", "Operator", "Conditions of use"],
+      ["07", "contact", "Title block", "References and contact"],
+    ],
+  },
+
+  /* — 05 SPÉCIFICATIONS —
+     Forme : la fiche de caractéristiques. C'est la version dépliée de
+     la ligne de spécification de la plaque — même objet, plus de
+     détail — donc ce n'est pas une redite, c'est un zoom.
+
+     LA COLONNE CLASSE NE CONTIENT QUE CE QUE LE CV DÉCLARE. « Avancé »,
+     « Intermédiaire », « Natif », « Courant », « B2 », « Notions » sont
+     ses mots. Là où il n'annonce pas de niveau, la case reste VIDE —
+     on n'invente pas une classe, et une case vide sur une fiche
+     technique est une information honnête, pas un oubli.
+     Surtout : PAS DE BARRES DE COMPÉTENCE. Une barre invite à comparer
+     à une échelle de 100 % qui n'existe pas ; une classe écrite est ce
+     qu'un dessin technique utilise, et c'est plus juste.
+     [groupe, [[désignation, classe]]] */
+  specIndex: { fr: "05 — Spécifications", en: "05 — Specifications" },
+  specTitle: { fr: "Caractéristiques", en: "Characteristics" },
+  specJp: { fr: "仕様", en: "仕様" },
+  specNote: {
+    fr: "Les classes sont celles que la fiche déclare. Là où aucune classe n'est déclarée, la case reste vide.",
+    en: "Classes are those the sheet declares. Where none is declared, the cell stays empty.",
+  },
+  specCols: { fr: ["Désignation", "Classe"], en: ["Designation", "Class"] },
+  specGroupes: {
+    fr: [
+      ["Programmation", [
+        ["Python", "Avancé"], ["TypeScript / JavaScript", "Avancé"], ["SQL", "Avancé"],
+        ["HTML / CSS", "Avancé"], ["Java", "Intermédiaire"], ["C / C++", "Intermédiaire"],
+      ]],
+      ["Frameworks & outils", [
+        ["React", ""], ["React Native", ""], ["Node.js", ""], ["Flask", ""],
+        ["Pandas", ""], ["Git", ""], ["GitLab CI/CD", ""],
+      ]],
+      ["ML, IA & data", [
+        ["XGBoost", ""], ["LightGBM", ""], ["CatBoost", ""], ["Random Forest", ""],
+        ["Intégration de LLM & prompt engineering", "OpenRouter"],
+        ["Pipelines ETL", ""], ["Web scraping", "Scrapy · Playwright"],
+      ]],
+      ["Cloud & bases de données", [
+        ["AWS", ""], ["Azure", ""], ["Supabase / PostgreSQL", ""],
+        ["MongoDB", ""], ["ElasticSearch", ""], ["Systèmes distribués", ""],
+      ]],
+      ["Langues", [
+        ["Français", "Natif"], ["Anglais", "Courant · IELTS 2023"],
+        ["Espagnol", "B2"], ["Japonais", "Notions"],
+      ]],
+    ],
+    en: [
+      ["Programming", [
+        ["Python", "Advanced"], ["TypeScript / JavaScript", "Advanced"], ["SQL", "Advanced"],
+        ["HTML / CSS", "Advanced"], ["Java", "Intermediate"], ["C / C++", "Intermediate"],
+      ]],
+      ["Frameworks & tools", [
+        ["React", ""], ["React Native", ""], ["Node.js", ""], ["Flask", ""],
+        ["Pandas", ""], ["Git", ""], ["GitLab CI/CD", ""],
+      ]],
+      ["ML, AI & data", [
+        ["XGBoost", ""], ["LightGBM", ""], ["CatBoost", ""], ["Random Forest", ""],
+        ["LLM integration & prompt engineering", "OpenRouter"],
+        ["ETL pipelines", ""], ["Web scraping", "Scrapy · Playwright"],
+      ]],
+      ["Cloud & databases", [
+        ["AWS", ""], ["Azure", ""], ["Supabase / PostgreSQL", ""],
+        ["MongoDB", ""], ["ElasticSearch", ""], ["Distributed systems", ""],
+      ]],
+      ["Languages", [
+        ["French", "Native"], ["English", "Fluent · IELTS 2023"],
+        ["Spanish", "B2"], ["Japanese", "Basics"],
+      ]],
+    ],
+  },
+  specRail: {
+    fr: "Unité 05 — Spécifications — Caractéristiques et classes — REF.0043-B / REV.2",
+    en: "Unit 05 — Specifications — Characteristics and classes — REF.0043-B / REV.2",
+  },
+
+  /* — 06 OPÉRATEUR —
+     La section la plus AÉRÉE du document, et c'est structurel : cinq
+     feuilles denses d'affilée fatiguent, et l'humain derrière la
+     machine ne se raconte pas dans un tableau. Une respiration avant
+     le cartouche.
+     Tout vient du CV, y compris l'encadrement. Rien n'est enjolivé. */
+  opIndex: { fr: "06 — Opérateur", en: "06 — Operator" },
+  opTitle: { fr: "Conditions d'emploi", en: "Conditions of use" },
+  opJp: { fr: "操作者", en: "操作者" },
+  opCorps: {
+    fr: "Hors service, la machine s'entraîne. Musculation et force athlétique, encadré par un champion du monde de powerlifting 2023 et un bodybuilder professionnel.",
+    en: "Off duty, the machine trains. Strength training and powerlifting, coached by a 2023 powerlifting world champion and a professional bodybuilder.",
+  },
+  opChute: {
+    fr: "Trois programmes de force conçus pour des pratiquants intermédiaires. Un programme d'entraînement est une spécification : une charge, une progression, une tolérance — et quelqu'un qui doit pouvoir l'exécuter sans vous.",
+    en: "Three strength programmes written for intermediate lifters. A training programme is a specification: a load, a progression, a tolerance — and someone who has to run it without you.",
+  },
+  opChamps: {
+    fr: [
+      ["Qualification", "Musculation & force athlétique"],
+      ["Encadrement", "Champion du monde de powerlifting 2023 · Bodybuilder professionnel"],
+      ["Production", "3 programmes de force — pratiquants intermédiaires"],
+      ["Langues de travail", "FR · EN · ES · JP"],
+    ],
+    en: [
+      ["Qualification", "Strength training & powerlifting"],
+      ["Coaching", "2023 powerlifting world champion · Professional bodybuilder"],
+      ["Output", "3 strength programmes — intermediate lifters"],
+      ["Working languages", "FR · EN · ES · JP"],
+    ],
+  },
+  opRail: {
+    fr: "Unité 06 — Opérateur — Conditions d'emploi — REF.0043-B / REV.2",
+    en: "Unit 06 — Operator — Conditions of use — REF.0043-B / REV.2",
+  },
+
+  /* — 07 CONTACT : LE CARTOUCHE —
+     Tout dessin technique se termine par son cartouche : le bloc qui
+     porte le titre, l'échelle, la date, la référence et le nom du
+     dessinateur. C'est LA forme juste pour une page de contact ici —
+     le document ne s'arrête pas, il se signe.
+
+     Contacts alignés sur ce que le site de production expose déjà :
+     e-mail et LinkedIn. Le CV porte aussi un numéro de téléphone ;
+     il n'est PAS repris — publier un numéro sur une page ouverte est
+     une décision qui appartient au propriétaire, pas au document. */
+  ctIndex: { fr: "07 — Cartouche", en: "07 — Title block" },
+  ctTitle: { fr: "Prise de contact", en: "Get in touch" },
+  ctJp: { fr: "表題欄", en: "表題欄" },
+  ctAccroche: {
+    fr: "Le document s'arrête ici. La machine, non.",
+    en: "The document ends here. The machine does not.",
+  },
+  ctChamps: {
+    fr: [
+      ["Titre", "Portfolio — planche technique"],
+      ["Dessiné par", "Hugo Juskowiak"],
+      ["Fonction", "Ingénieur Full Stack & IA"],
+      ["Base", "France"],
+      ["Échelle", "1:1"],
+      ["Référence", "REF.0043-B / REV.2"],
+      ["Date", "2026"],
+      ["Feuilles", "00 à 07"],
+    ],
+    en: [
+      ["Title", "Portfolio — technical plate"],
+      ["Drawn by", "Hugo Juskowiak"],
+      ["Function", "Full Stack & AI Engineer"],
+      ["Base", "France"],
+      ["Scale", "1:1"],
+      ["Reference", "REF.0043-B / REV.2"],
+      ["Date", "2026"],
+      ["Sheets", "00 to 07"],
+    ],
+  },
+  ctLiens: {
+    fr: [
+      ["E-mail", "hugo.jskpro@outlook.fr", "mailto:hugo.jskpro@outlook.fr"],
+      ["LinkedIn", "linkedin.com/in/hugo-juskowiak", "https://www.linkedin.com/in/hugo-juskowiak/"],
+      ["Dossier", "CV — format PDF", "/CV_Hugo_JUSKOWIAK_1.0.pdf"],
+    ],
+    en: [
+      ["Email", "hugo.jskpro@outlook.fr", "mailto:hugo.jskpro@outlook.fr"],
+      ["LinkedIn", "linkedin.com/in/hugo-juskowiak", "https://www.linkedin.com/in/hugo-juskowiak/"],
+      ["File", "Résumé — PDF", "/CV_Hugo_JUSKOWIAK_1.0.pdf"],
+    ],
+  },
+  ctRail: {
+    fr: "Unité 07 — Cartouche — Fin du document — REF.0043-B / REV.2",
+    en: "Unit 07 — Title block — End of document — REF.0043-B / REV.2",
   },
 } as const
 

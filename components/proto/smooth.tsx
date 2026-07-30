@@ -18,10 +18,15 @@ export function Smooth() {
        le geste et l'image restent solidaires quelle que soit la
        cadence des événements. 0,085 est le compromis habituel : plus
        haut, on perd l'inertie ; plus bas, on décroche du doigt. */
+    /* `anchors` est INDISPENSABLE dès qu'un lien interne existe : un
+       saut natif sur #ancre déplace le scroll de la fenêtre, puis Lenis
+       ramène tout à sa cible interne et le saut est annulé. L'index des
+       feuilles ne fonctionnerait pas sans ça. */
     const lenis = new Lenis({
       lerp: 0.085,
       wheelMultiplier: 1,
       touchMultiplier: 1.7,
+      anchors: true,
     })
 
     // en dev seulement : permet de positionner le scroll depuis l'extérieur

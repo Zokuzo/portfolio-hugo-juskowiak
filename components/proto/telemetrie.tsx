@@ -57,7 +57,7 @@ export function Telemetrie({ lang }: { lang: Lang }) {
   const pourquoi = t(lang, "telWhy") as unknown as string[]
 
   return (
-    <section className="tel" aria-labelledby="tel-titre">
+    <section className="tel" id="telemetrie" aria-labelledby="tel-titre">
       <div className="tel-rail mono mono-xs dim" aria-hidden="true">
         {t(lang, "telRail")}
       </div>
@@ -69,7 +69,7 @@ export function Telemetrie({ lang }: { lang: Lang }) {
             décore pas — c'est pour ça qu'il ne touche que des
             numéros et des noms, jamais du texte courant. */}
         <span className="tel-num chrome" aria-hidden="true">
-          05
+          {t(lang, "telNum")}
         </span>
         <h2 id="tel-titre" className="tel-titre">
           {t(lang, "telTitle")}
