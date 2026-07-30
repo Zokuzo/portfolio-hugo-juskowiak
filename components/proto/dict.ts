@@ -178,6 +178,41 @@ const DICT = {
     fr: ["Réservoir de modèles", "OpenRouter · coût / latence arbitrés par tâche"],
     en: ["Model pool", "OpenRouter · cost / latency arbitrated per task"],
   },
+
+  /* — planche de vues orthographiques —
+       Vocabulaire de dessin technique, pas de décor : les quatre vues
+       sont les trois projections normalisées plus un rendu de matière.
+       Aucune référence littérale à un véhicule : l'objet est un volume
+       abstrait, et c'est la MÉTHODE de représentation qui porte la
+       direction. */
+  ovTitle: { fr: "Planche de vues", en: "View plate" },
+  ovJp: { fr: "正投影図", en: "正投影図" },
+  ovIndex: { fr: "PL.04", en: "PL.04" },
+  /* [repère, nom de la vue, angle de prise] */
+  ovViews: {
+    fr: [
+      ["A", "Dessus", "Projection horizontale"],
+      ["B", "Face", "Projection frontale"],
+      ["C", "Profil", "Projection latérale"],
+      ["D", "Matière", "Rendu — surface polie"],
+    ],
+    en: [
+      ["A", "Top", "Horizontal projection"],
+      ["B", "Front", "Frontal projection"],
+      ["C", "Side", "Lateral projection"],
+      ["D", "Material", "Render — polished surface"],
+    ],
+  },
+  ovScale: { fr: "Éch. 1:1", en: "Scale 1:1" },
+  ovSection: { fr: "Coupe A-A", en: "Section A-A" },
+  ovNote: {
+    fr: "Trois projections normalisées et un rendu de matière. Le trait continu porte l'arête vue, le tireté l'arête cachée, l'axe mixte le centre. La cote est la seule affirmation de la planche.",
+    en: "Three standard projections and one material render. Continuous line carries the visible edge, dashed the hidden edge, chain-dotted the centre. The dimension is the plate's only assertion.",
+  },
+  ovRail: {
+    fr: "Planche de vues — PL.04 — REF.0043-B / REV.2 — Éch. 1:1",
+    en: "View plate — PL.04 — REF.0043-B / REV.2 — Scale 1:1",
+  },
 } as const
 
 type Key = keyof typeof DICT

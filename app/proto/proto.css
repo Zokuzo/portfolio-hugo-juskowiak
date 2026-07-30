@@ -180,10 +180,13 @@ body {
    +13 % de déchirure pour zéro pixel de budget chromatique.
    ------------------------------------------------------------ */
 
-.chrome {
-  --chrome-y: 0em;
-  --chrome-x: 0em;
-  background-image: repeating-linear-gradient(
+/* La rampe est déclarée UNE fois et partagée : le titre et toute pièce
+   chromée doivent réfléchir le même horizon, sinon deux chromes
+   divergent au premier réglage. Les unités sont en `em`, donc la
+   largeur des bandes suit la font-size de l'élément — c'est le bouton
+   d'échelle du reflet. */
+.proto-root {
+  --chrome-ramp: repeating-linear-gradient(
     178deg,
     #8a8a90 0em,
     #eeeef4 0.08em,
@@ -198,6 +201,12 @@ body {
     #74747b 0.72em,
     #8a8a90 0.8em
   );
+}
+
+.chrome {
+  --chrome-y: 0em;
+  --chrome-x: 0em;
+  background-image: var(--chrome-ramp);
   background-position: var(--chrome-x) var(--chrome-y);
   -webkit-background-clip: text;
   background-clip: text;
@@ -1776,5 +1785,311 @@ body {
   .trace-note {
     text-align: left;
     max-width: none;
+  }
+}
+
+/* ------------------------------------------------------------
+   PLANCHE DE VUES ORTHOGRAPHIQUES
+
+   VERROU DE NOMMAGE — en SVG2 les propriétés CSS `width`, `height`,
+   `x`, `y` et `r` battent les attributs de présentation. Ce projet a
+   déjà perdu du temps sur une règle `.rail { width }` destinée à un
+   <div> qui réécrivait la largeur d'un <rect class="rail"> (2px rendus
+   à 46px). AUCUNE règle de ce bloc ne déclare ces cinq propriétés sur
+   une classe portée par un élément SVG. `.ov-svg` et `.ov-iso-bore`
+   sont les seules exceptions, et ce sont les <svg> eux-mêmes.
+   ------------------------------------------------------------ */
+
+.ov {
+  position: relative;
+  z-index: 1;
+  padding: clamp(3rem, 9vh, 7rem) var(--gutter);
+  max-width: 1360px;
+  margin-inline: auto;
+}
+
+.ov-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.7rem;
+  margin-bottom: clamp(1.2rem, 3vh, 2rem);
+  border-bottom: var(--rule) solid var(--line-2);
+}
+.ov-idx {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin: 0;
+}
+.ov-jp {
+  margin: 0;
+  font-size: var(--f-micro);
+}
+
+/* Le repère indexe la vue dans la planche : c'est de la nomenclature.
+   Un lit neutre à .08 et non un aplat rouge — le rouge de cette
+   planche est réservé au plan de coupe, qui est le seul impératif. */
+.ov-mark {
+  padding: 3px 6px;
+  background: rgba(226, 232, 240, 0.08);
+  color: var(--g-100);
+}
+
+.ov-grid {
+  display: grid;
+  /* auto-fit : la planche se réorganise seule de 4 colonnes à 1 sans
+     media query. Le minmax est le vrai réglage — sous 200px un dessin
+     coté n'est plus lisible, donc on préfère moins de colonnes. */
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--rule);
+  background: var(--line);
+  border: var(--rule) solid var(--line-2);
+}
+
+.ov-cell {
+  margin: 0;
+  background: var(--ink-2);
+}
+.ov-frame {
+  /* même rapport que le viewBox : les quatre vues sont à la même
+     échelle, ce qui est tout l'intérêt d'une planche */
+  aspect-ratio: 200 / 132;
+  overflow: hidden;
+}
+.ov-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.ov-cap {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  padding: 0.7rem 0.85rem 0.85rem;
+  border-top: var(--rule) solid var(--line);
+}
+.ov-name {
+  color: var(--paper);
+}
+.ov-angle {
+  flex: 1 0 100%;
+  text-transform: none;
+  letter-spacing: 0.06em;
+}
+
+/* — conventions de trait. Trois médiums, trois significations : elles
+     se lisent par le POINTILLÉ et l'épaisseur, jamais par la teinte,
+     donc la planche survit à une capture en niveaux de gris. — */
+.ov-edge {
+  fill: none;
+  stroke: var(--g-300);
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+}
+.ov-hidden {
+  fill: none;
+  stroke: var(--g-500);
+  stroke-width: 1;
+  stroke-dasharray: 5 3;
+  vector-effect: non-scaling-stroke;
+}
+/* axe mixte : la norme veut long-court-long. --g-700 est un FILET, il
+   ne porte jamais de glyphe — ici il ne porte que de la construction. */
+.ov-axis {
+  fill: none;
+  stroke: var(--g-700);
+  stroke-width: 1;
+  stroke-dasharray: 10 3 2 3;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Le plan de coupe est le seul rouge de la planche : il n'est pas
+   décoratif, il ORDONNE (« coupez ici »). Même loi que l'index de la
+   règle graduée — le rouge désigne, il ne colore pas. */
+.ov-cut {
+  fill: none;
+  stroke: var(--sig-hot);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+/* Flèche de sens d'observation : PLEINE. Un chevron ouvert se lit
+   comme un repère, un triangle plein se lit comme une direction. */
+.ov-cut-head {
+  fill: var(--sig-hot);
+  stroke: none;
+}
+/* Matière coupée : hachurée à 45°. Le vide des alésages est exclu par
+   fill-rule evenodd — une coupe qui hachure ses trous est illisible. */
+.ov-cut-face {
+  fill: url(#ov-hatch);
+  stroke: none;
+}
+.ov-hatch-line {
+  stroke: var(--g-700);
+  stroke-width: 1;
+}
+
+/* Cote et lignes d'attache : plus faibles que l'arête, parce qu'une
+   cote commente l'objet, elle n'en fait pas partie. */
+.ov-dim {
+  fill: var(--g-500);
+  stroke: var(--g-500);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.ov-witness {
+  stroke: var(--g-700);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Le texte SVG suit l'échelle du viewBox : à 200 unités de large rendu
+   sur ~318px, un `font-size: 9` sort à 14px et écrase le mono HTML de
+   la légende. 6 unités retombent sur ~9,5px rendus, soit le plancher
+   typographique du système. Si la largeur de cellule change beaucoup,
+   c'est ce nombre qu'il faut refaire — pas le CSS de la légende. */
+.ov-t {
+  font-family: var(--f-mono), monospace;
+  font-size: 6px;
+  letter-spacing: 0.16em;
+  fill: var(--g-300);
+  text-anchor: middle;
+}
+/* La lampe n'écrit pas : --sig-hot est à 3,962:1, sous le seuil texte.
+   Le libellé de coupe est donc PAPIER, et c'est le trait qui est rouge.
+   Même arbitrage que `.node.on .idx`. */
+.ov-t-cut {
+  fill: var(--paper);
+}
+.ov-t-dim {
+  fill: var(--g-300);
+}
+
+/* — LA PIÈCE. Trois faces, une seule rampe : celle du titre.
+     Un chrome est un horizon réfléchi ; deux faces d'orientation
+     différente ne peuvent pas réfléchir le même point de cet horizon,
+     sinon le volume s'aplatit. Le décalage de background-position par
+     face EST la troisième dimension — pas un dégradé d'ombre.
+     La font-size règle la largeur des bandes (la rampe est en `em`) :
+     2rem donne une période de 25,6px, soit ~7 bandes sur la face. — */
+.ov-iso {
+  position: relative;
+  aspect-ratio: 1;
+  height: 100%;
+  margin-inline: auto;
+}
+.ov-face {
+  position: absolute;
+  inset: 0;
+  /* LE RÉGLAGE CRITIQUE. La rampe est cyclique et cotée en `em` : sa
+     période vaut 0,8em. À 2rem (période 25px) une face de 180px montre
+     sept bandes identiques et lit comme un ZÈBRE, pas comme du métal.
+     Un chrome est un horizon : il faut MOINS d'une période par face,
+     pour qu'on y voie un sombre, un spéculaire et un sombre — pas une
+     répétition. 16rem donne une période de 205px, soit ~0,8 cycle sur
+     la face. Le titre, lui, peut rester serré : les contreformes des
+     lettres découpent déjà la rampe. */
+  font-size: 16rem;
+  background-image: var(--chrome-ramp);
+}
+/* Chaque face échantillonne un ENDROIT DIFFÉRENT de l'horizon — c'est
+   ce qui fait le volume. Des faces en phase aplatissent le cube. */
+.ov-top {
+  clip-path: polygon(50% 12%, 92% 33%, 50% 54%, 8% 33%);
+  background-position: 0 -0.06em;
+}
+.ov-left {
+  clip-path: polygon(8% 33%, 50% 54%, 50% 92%, 8% 71%);
+  background-position: 0 0.33em;
+}
+.ov-right {
+  clip-path: polygon(92% 33%, 50% 54%, 50% 92%, 92% 71%);
+  background-position: 0 0.15em;
+}
+.ov-iso-bore {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+/* L'alésage est du VIDE : il prend le noir du fond, pas une teinte. */
+.ov-bore-hole {
+  fill: var(--ink);
+  stroke: rgba(226, 232, 240, 0.34);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.ov-note {
+  max-width: 62ch;
+  margin: clamp(1.2rem, 3vh, 2rem) 0 0;
+  text-transform: none;
+  letter-spacing: 0.035em;
+  line-height: 1.7;
+}
+
+.ov-foot {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  flex-wrap: wrap;
+  margin-top: clamp(1.2rem, 3vh, 2rem);
+  padding-top: 0.8rem;
+  border-top: var(--rule) solid var(--line);
+}
+/* Code-barres : mobilier d'affiche, zéro information, aria-hidden côté
+   markup. Un repeating-linear-gradient et non 60 <i> — c'est le même
+   rendu pour un élément. */
+.ov-bars {
+  /* borné : étalé sur toute la largeur, un code-barres cesse d'être du
+     mobilier de cartouche et devient une bande décorative */
+  flex: 0 0 clamp(110px, 20vw, 240px);
+  height: 20px;
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--g-500) 0 1px,
+    transparent 1px 3px,
+    var(--g-500) 3px 5px,
+    transparent 5px 6px,
+    var(--g-500) 6px 7px,
+    transparent 7px 11px
+  );
+}
+.ov-ref {
+  margin-left: auto;
+}
+
+/* Bascule de langue de la route d'atelier — part avec elle. */
+.ov-lang {
+  display: flex;
+  gap: var(--rule);
+  padding: var(--gutter) var(--gutter) 0;
+  max-width: 1360px;
+  margin-inline: auto;
+}
+.ov-lang button {
+  padding: 5px 11px;
+  border: var(--rule) solid var(--line-2);
+  background: transparent;
+  color: var(--g-500);
+  cursor: pointer;
+}
+.ov-lang button[aria-pressed="true"] {
+  background: rgba(226, 232, 240, 0.08);
+  color: var(--paper);
+}
+
+@media (max-width: 720px) {
+  /* Sous 720px la planche n'a plus qu'une colonne : l'angle de prise
+     devient du bavardage sous un dessin qu'on voit en entier. */
+  .ov-angle {
+    display: none;
+  }
+  .ov-ref {
+    margin-left: 0;
   }
 }
