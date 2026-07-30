@@ -1,7 +1,9 @@
 "use client"
 
+import Link from "next/link"
 import { motion } from "framer-motion"
 import { t, type Lang } from "./dict"
+import { projets } from "./projets"
 
 /* ==================================================================
    00 — INDEX. La nomenclature des feuilles.
@@ -18,6 +20,7 @@ import { t, type Lang } from "./dict"
 
 export function IndexFeuilles({ lang }: { lang: Lang }) {
   const feuilles = t(lang, "idxFeuilles") as unknown as [string, string, string, string][]
+  const annexes = projets(lang)
 
   return (
     <section className="nomen" id="index" aria-labelledby="nomen-titre">
@@ -52,6 +55,33 @@ export function IndexFeuilles({ lang }: { lang: Lang }) {
           </motion.li>
         ))}
       </ol>
+
+      {/* Les fiches d'unité ne sont PAS des feuilles du jeu : ce sont
+          des pièces détachées, documentées à part et référencées en
+          U-0n. Les mêler à la nomenclature ferait passer le document de
+          huit à treize feuilles et casserait sa promesse de brièveté. */}
+      <div className="nomen-annexes">
+        <h3 className="mono mono-sm nomen-annexes-titre">{t(lang, "idxAnnexes")}</h3>
+        <p className="mono mono-xs dim nomen-annexes-note">{t(lang, "idxAnnexesNote")}</p>
+        <ul className="nomen-liste">
+          {annexes.map((p, i) => (
+            <motion.li
+              key={p.slug}
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.6 }}
+              transition={{ duration: 0.45, delay: 0.035 * i, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <Link href={`/work/${p.slug}`} className="nomen-lien">
+                <span className="mono mono-xs nomen-num">{p.unite}</span>
+                <span className="nomen-nom">{p.nom}</span>
+                <span className="mono mono-xs dim nomen-objet">{p.sousTitre}</span>
+                <span className="nomen-conduite" aria-hidden="true" />
+              </Link>
+            </motion.li>
+          ))}
+        </ul>
+      </div>
     </section>
   )
 }

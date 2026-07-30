@@ -566,6 +566,31 @@ const DICT = {
     fr: "Unité 07 — Cartouche — Fin du document — REF.0043-B / REV.2",
     en: "Unit 07 — Title block — End of document — REF.0043-B / REV.2",
   },
+
+  /* — libellés des fiches d'unité (/work/[slug]) —
+     Le contenu des fiches vit dans projets.ts : ce sont des
+     enregistrements, pas des chaînes. Ici ne restent que les
+     étiquettes du gabarit. */
+  fpRetour: { fr: "Document", en: "Document" },
+  fpRetourDocument: { fr: "Retour au document", en: "Back to the document" },
+  fpFiche: { fr: "Fiche d'unité", en: "Unit file" },
+  fpCadre: { fr: "Cadre", en: "Context" },
+  fpPeriode: { fr: "Période", en: "Period" },
+  fpEtat: { fr: "État", en: "Status" },
+  fpContexte: { fr: "Contexte", en: "Background" },
+  fpContraintes: { fr: "Contraintes", en: "Constraints" },
+  fpDecisions: { fr: "Décisions techniques", en: "Technical decisions" },
+  fpResultat: { fr: "Résultat", en: "Outcome" },
+  fpParc: { fr: "Parc", en: "Stack" },
+
+  /* Annexes de l'index : les fiches d'unité ne sont pas des feuilles du
+     jeu, ce sont des pièces détachées — d'où un bloc distinct et une
+     référence en U-0n. */
+  idxAnnexes: { fr: "Annexes — fiches d'unité", en: "Annexes — unit files" },
+  idxAnnexesNote: {
+    fr: "Cinq sous-ensembles documentés séparément : contexte, contraintes, décisions.",
+    en: "Five sub-assemblies documented separately: background, constraints, decisions.",
+  },
 } as const
 
 type Key = keyof typeof DICT
