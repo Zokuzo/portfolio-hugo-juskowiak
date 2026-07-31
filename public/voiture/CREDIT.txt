@@ -1,0 +1,27 @@
+Séquence 360° de la page d'accueil — 000.webp à 059.webp
+========================================================
+
+Les 60 images de ce dossier sont un rendu réalisé pour ce site à partir
+d'un modèle 3D tiers. Le modèle est sous licence Creative Commons
+Attribution, qui impose de créditer son auteur partout où le travail est
+partagé. C'est l'objet de ce fichier.
+
+Attribution requise par la licence
+----------------------------------
+This work is based on "Toyota GT86 3D Model (Free)"
+(https://sketchfab.com/3d-models/toyota-gt86-3d-model-free-ec05296ddf2f4c22a570512245d1fba0)
+by Mpgs.studio3DModels (https://sketchfab.com/mpgs.studio)
+licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+
+Fabrication
+-----------
+Rendu three.js dans Chrome headless, studio noir éclairé par dix bandes
+lumineuses, sans lumière diffuse ni ombre au sol. 60 images à 6°, caméra
+fixe, seule la voiture tourne. Rendu en 2000×2000 puis réduit à
+1000×1000, encodé en WebP avec alpha.
+
+Pour régénérer la séquence :
+    node tools/voiture/rendu.mjs <chemin>/scene.gltf --nb=60 --rendu=2000
+
+Toyota et GT86 sont des marques de Toyota Motor Corporation, citées ici
+à titre descriptif. Aucune affiliation.
