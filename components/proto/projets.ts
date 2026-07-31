@@ -162,10 +162,11 @@ const FR: Projet[] = [
     periode: "En cours",
     etat: "En cours",
     contexte:
-      "Le code écrit avec une IA part plus vite qu'il n'est compris. Eternal convertit ce code en leçons interactives, dans la forme d'un jeu vidéo 2D HD, pour ancrer la connaissance sans ralentir la livraison.",
+      "Le code écrit avec une IA part plus vite qu'il n'est compris. Eternal convertit ce code en leçons interactives, dans la forme d'un jeu vidéo 2D pixel HD, pour ancrer la connaissance sans ralentir la livraison.",
     contraintes: [
       "La leçon ne doit rien coûter au rythme de travail, sinon elle ne sera jamais lue.",
       "Apprendre après coup n'a d'intérêt que si la leçon porte sur le code réellement écrit.",
+      "Le jeu se joue au clavier sur grand écran : la démo en ligne est desktop uniquement, et l'assumer vaut mieux que servir une version tactile dégradée.",
     ],
     decisions: [
       {
@@ -175,7 +176,8 @@ const FR: Projet[] = [
       },
       {
         titre: "Forme de jeu, pas de cours",
-        texte: "Un jeu 2D HD plutôt qu'une liste d'articles — on revient dans un jeu, on ne revient pas dans un wiki.",
+        texte:
+          "Un jeu 2D pixel HD plutôt qu'une liste d'articles — on revient dans un jeu, on ne revient pas dans un wiki.",
       },
     ],
     parc: ["TypeScript", "Génération de contenu par LLM"],
@@ -337,10 +339,11 @@ const EN: Projet[] = [
     periode: "Ongoing",
     etat: "Ongoing",
     contexte:
-      "Code written with an AI ships faster than it is understood. Eternal turns that code into interactive lessons, shaped as a 2D HD video game, to anchor the knowledge without slowing delivery.",
+      "Code written with an AI ships faster than it is understood. Eternal turns that code into interactive lessons, shaped as a 2D pixel HD video game, to anchor the knowledge without slowing delivery.",
     contraintes: [
       "The lesson must cost nothing to the working rhythm, or it will never be read.",
       "Learning after the fact only matters if the lesson covers the code actually written.",
+      "The game is played on a keyboard and a large screen: the online demo is desktop only, and owning that beats serving a degraded touch version.",
     ],
     decisions: [
       {
@@ -349,7 +352,8 @@ const EN: Projet[] = [
       },
       {
         titre: "Game form, not course form",
-        texte: "A 2D HD game rather than a list of articles — people come back to a game, they do not come back to a wiki.",
+        texte:
+          "A 2D pixel HD game rather than a list of articles — people come back to a game, they do not come back to a wiki.",
       },
     ],
     parc: ["TypeScript", "LLM content generation"],

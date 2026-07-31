@@ -178,6 +178,13 @@ export function Atelier({ lang }: { lang: Lang }) {
                           {l.role}
                           <span aria-hidden="true"> ↗</span>
                         </a>
+                        {/* La réserve est COLLÉE au lien, pas renvoyée
+                            au paragraphe : on la lit avant de cliquer,
+                            pas après avoir ouvert une page inutilisable
+                            sur son téléphone. Elle est dans le <li>,
+                            donc un lecteur d'écran l'annonce avec le
+                            lien qu'elle qualifie. */}
+                        {l.note && <span className="mono mono-xs dim at-reserve">{l.note}</span>}
                       </li>
                     ))}
                   </ul>

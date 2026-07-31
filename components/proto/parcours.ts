@@ -22,7 +22,11 @@ import type { Lang } from "./dict"
    version qui fait foi.
    ================================================================== */
 
-export type Lien = { role: string; url: string }
+/* `note` porte une réserve sur le lien lui-même — « desktop
+   uniquement », par exemple. Elle vit ICI et pas dans le paragraphe :
+   quelqu'un qui scanne la page pour cliquer ne lit pas le texte avant,
+   il lit le bouton. Une réserve écrite ailleurs arrive trop tard. */
+export type Lien = { role: string; url: string; note?: string }
 
 export type Produit = {
   code: string
@@ -318,8 +322,8 @@ const PERSO_FR: ProjetPerso[] = [
     code: "A1", nom: "Eternal", fiche: "eternal", intitule: "Plateforme d'apprentissage gamifiée",
     etat: "En ligne",
     texte:
-      "Le code écrit avec une IA part plus vite qu'il n'est compris. Eternal le convertit en leçons interactives, dans la forme d'un jeu 2D HD, déclenchées par une commande depuis l'outil de travail.",
-    liens: [{ role: "Démo", url: "https://zokuzo.github.io/eternal/" }],
+      "Le code écrit avec une IA part plus vite qu'il n'est compris. Eternal le convertit en leçons interactives, dans la forme d'un jeu 2D pixel HD, déclenchées par une commande depuis l'outil de travail.",
+    liens: [{ role: "Démo", url: "https://zokuzo.github.io/eternal/", note: "Desktop uniquement" }],
   },
   {
     code: "A2", nom: "Trading Agent", fiche: "trading-agent", intitule: "Bot de trading multi-stratégie",
@@ -346,8 +350,8 @@ const PERSO_EN: ProjetPerso[] = [
     code: "A1", nom: "Eternal", fiche: "eternal", intitule: "Gamified learning platform",
     etat: "Live",
     texte:
-      "Code written with an AI ships faster than it is understood. Eternal turns it into interactive lessons, shaped as a 2D HD game, fired by a command from the working tool.",
-    liens: [{ role: "Demo", url: "https://zokuzo.github.io/eternal/" }],
+      "Code written with an AI ships faster than it is understood. Eternal turns it into interactive lessons, shaped as a 2D pixel HD game, fired by a command from the working tool.",
+    liens: [{ role: "Demo", url: "https://zokuzo.github.io/eternal/", note: "Desktop only" }],
   },
   {
     code: "A2", nom: "Trading Agent", fiche: "trading-agent", intitule: "Multi-strategy trading bot",

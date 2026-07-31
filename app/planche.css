@@ -3451,6 +3451,18 @@ body {
   border-color: var(--paper);
   color: var(--paper);
 }
+/* La réserve se pose SOUS son lien, pas à côté : à côté, elle se lirait
+   comme un second bouton. Le <li> passe donc en colonne. */
+.at-liens li {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+}
+.at-reserve {
+  text-transform: none;
+  letter-spacing: 0.08em;
+}
 /* Un projet sans dépôt public le DIT : sans cette ligne, l'absence de
    lien se lit comme un oubli. */
 .at-prive {
