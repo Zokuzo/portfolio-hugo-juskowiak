@@ -3490,16 +3490,17 @@ body {
 }
 
 /* ------------------------------------------------------------
-   VOITURE — la séquence derrière la plaque.
+   VOITURE — la séquence en tourbillon sur les trois premières feuilles.
 
-   Elle se pose SOUS le corps de plaque (z-index 10) et AU-DESSUS du
-   monde : c'est un objet du hero, pas un plan du décor. Aucun
+   Elle est FIXE et vit au niveau de la page, pas dans la plaque : son
+   trajet dépasse largement le hero. Elle se pose au-dessus du monde
+   (z-index 0, mais après lui dans le DOM) et SOUS toutes les sections
+   (z-index 1), donc le texte lui passe toujours devant. Aucun
    mix-blend-mode, aucun filter — le budget par frame est déjà pris.
 
-   Le cadre est une RÉGION, pas une taille : le composant dessine en
-   `contain` dedans, donc la voiture n'est jamais rognée quelle que soit
-   la proportion du rendu fourni. Changer ces marges la déplace sans
-   jamais la déformer.
+   Le cadre est un CARRÉ, pas une région : le composant dessine en
+   `contain` dedans, donc la voiture n'est jamais rognée ni déformée,
+   et le carré ne tourne pas de travers quand framer la fait vriller.
    ------------------------------------------------------------ */
 
 /* DEUX OPACITÉS, ET ELLES NE FONT PAS LA MÊME CHOSE.
@@ -3508,11 +3509,55 @@ body {
    toutes les deux sur le même élément ne les multiplierait pas : framer
    écraserait simplement la valeur CSS et le dosage disparaîtrait. */
 .voiture {
-  position: absolute;
-  inset: 10% 6% 26% 6%;
-  z-index: 1;
+  --taille: min(72vw, 78vh);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: var(--taille);
+  height: var(--taille);
+  /* Centrage par la propriété `translate`, PAS par `transform` : framer
+     réécrit `transform` à chaque image du trajet et écraserait un
+     translate(-50%, -50%) posé là. Les deux propriétés se composent —
+     `translate` s'applique avant — au lieu de se disputer la même case. */
+  translate: -50% -50%;
+  z-index: 0;
   pointer-events: none;
+  will-change: transform, opacity;
 }
+/* FLOTTAISON — le mouvement qui fait tenir l'illusion.
+
+   TROIS ANIMATIONS AUX PÉRIODES PREMIÈRES ENTRE ELLES (6,7 / 9,1 / 11,3
+   secondes) : le motif combiné ne se referme qu'au bout de dix minutes,
+   donc l'œil ne surprend jamais la boucle. Trois animations synchrones,
+   ou une seule, se liraient en quelques secondes comme un balancier —
+   et un balancier, ça ne flotte pas, ça pend.
+
+   Elles visent `translate` et `rotate`, propriétés CSS INDÉPENDANTES du
+   `transform` : c'est ce qui permet à trois animations de cohabiter sur
+   le même élément sans se réécrire l'une l'autre, et au parent de garder
+   son `transform` piloté au scroll. Amplitudes minuscules — 1,4 % et
+   1,2° — parce que le flottement doit se sentir sans se voir. */
+@keyframes voiture-derive {
+  0%, 100% { translate: 0 -1.4%; }
+  50%      { translate: 0 1.4%; }
+}
+@keyframes voiture-tangage {
+  0%, 100% { rotate: -1.2deg; }
+  50%      { rotate: 1.2deg; }
+}
+@keyframes voiture-respire {
+  0%, 100% { scale: 1; }
+  50%      { scale: 1.018; }
+}
+.voiture-flotte {
+  width: 100%;
+  height: 100%;
+  animation:
+    voiture-derive 6.7s ease-in-out infinite,
+    voiture-tangage 9.1s ease-in-out infinite,
+    voiture-respire 11.3s ease-in-out infinite;
+}
+
 .voiture-toile {
   display: block;
   width: 100%;
@@ -3526,9 +3571,23 @@ body {
   /* Sur un écran étroit, la plaque est déjà dense : la voiture recule
      encore pour ne pas concurrencer le nom sur 360px de large. */
   .voiture {
-    inset: 14% 2% 34% 2%;
+    --taille: min(88vw, 52vh);
   }
   .voiture-toile {
     opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Le composant coupe déjà le trajet et la rotation. La flottaison, elle,
+     est en CSS : le JavaScript ne peut pas l'éteindre, il faut le faire
+     ici. Sans cette règle, le seul mouvement qui resterait à l'écran
+     serait précisément celui d'un objet qui dérive en permanence — le
+     pire cas pour qui a demandé qu'on arrête de bouger. */
+  .voiture {
+    will-change: auto;
+  }
+  .voiture-flotte {
+    animation: none;
   }
 }

@@ -14,6 +14,7 @@ import { Operateur } from "@/components/proto/operateur"
 import { Cartouche } from "@/components/proto/cartouche"
 import { Smooth } from "@/components/proto/smooth"
 import { World } from "@/components/proto/world"
+import { Voiture } from "@/components/proto/voiture"
 import type { Lang } from "@/components/proto/dict"
 
 /* LE JEU DE PLANS COMPLET — dix feuilles, numérotées sans trou.
@@ -46,6 +47,14 @@ export default function Page() {
           will-change — sinon cet ancêtre devient le bloc conteneur
           du position:fixed et le monde se met à scroller. */}
       <World />
+      {/* La voiture est montée ICI, et pas dans la plaque, parce que son
+          tourbillon traverse les trois premières feuilles. Même règle que
+          le décor : aucun élément enveloppant, sinon un ancêtre portant
+          transform devient le bloc conteneur du `position: fixed` et la
+          voiture se remet à scroller avec la page. Sa place dans l'ordre
+          compte aussi — après <World />, elle passe devant lui à
+          z-index égal, et les sections (z-index 1) passent devant elle. */}
+      <Voiture />
       <div className="frame" aria-hidden="true">
         <span className="tick tl" />
         <span className="tick tr" />
