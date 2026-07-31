@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react"
 import { motion, useScroll, useTransform } from "framer-motion"
 import type { Lang } from "./dict"
 import { t } from "./dict"
+import { Voiture } from "./voiture"
 
 /* Le code-barres est décoratif : une suite de barres stable, pas un
    vrai EAN. Motif figé en dur pour qu'il soit identique serveur et
@@ -110,6 +111,12 @@ export function Plaque({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => vo
 
   return (
     <section className="plaque" ref={root}>
+      {/* La voiture est SŒUR de .plaque-body, pas dedans : le corps de
+          plaque porte un `filter: blur()` et un fondu, et la voiture ne
+          doit ni flouter avec le texte ni disparaître avec lui. Elle a
+          sa propre profondeur, plus lente — c'est ce qui crée le
+          décalage de parallaxe entre le nom et ce qu'il y a derrière. */}
+      <Voiture cible={root} />
       <motion.div className="plaque-body" style={{ y: depth, scale, opacity: fade, filter: blur }}>
         {/* — barre d'identification — */}
         <motion.header className="topbar" {...rise(0.15)}>

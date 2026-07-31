@@ -3488,3 +3488,47 @@ body {
     max-width: 320px;
   }
 }
+
+/* ------------------------------------------------------------
+   VOITURE — la séquence derrière la plaque.
+
+   Elle se pose SOUS le corps de plaque (z-index 10) et AU-DESSUS du
+   monde : c'est un objet du hero, pas un plan du décor. Aucun
+   mix-blend-mode, aucun filter — le budget par frame est déjà pris.
+
+   Le cadre est une RÉGION, pas une taille : le composant dessine en
+   `contain` dedans, donc la voiture n'est jamais rognée quelle que soit
+   la proportion du rendu fourni. Changer ces marges la déplace sans
+   jamais la déformer.
+   ------------------------------------------------------------ */
+
+/* DEUX OPACITÉS, ET ELLES NE FONT PAS LA MÊME CHOSE.
+   Le conteneur reçoit le FONDU DE PROFONDEUR, écrit en ligne par framer
+   au scroll. La toile porte le DOSAGE, fixe, décidé une fois. Les poser
+   toutes les deux sur le même élément ne les multiplierait pas : framer
+   écraserait simplement la valeur CSS et le dosage disparaîtrait. */
+.voiture {
+  position: absolute;
+  inset: 10% 6% 26% 6%;
+  z-index: 1;
+  pointer-events: none;
+}
+.voiture-toile {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* Le nom reste l'élément clair de la page : la voiture est en
+     retrait, pas en concurrence. C'est LE bouton de dosage. */
+  opacity: 0.72;
+}
+
+@media (max-width: 720px) {
+  /* Sur un écran étroit, la plaque est déjà dense : la voiture recule
+     encore pour ne pas concurrencer le nom sur 360px de large. */
+  .voiture {
+    inset: 14% 2% 34% 2%;
+  }
+  .voiture-toile {
+    opacity: 0.5;
+  }
+}

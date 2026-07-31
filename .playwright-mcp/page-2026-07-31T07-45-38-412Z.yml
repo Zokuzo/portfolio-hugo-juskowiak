@@ -1,0 +1,821 @@
+- main [ref=f4e3]:
+  - generic [ref=f4e5]:
+    - generic [ref=f4e6]:
+      - generic [ref=f4e7]:
+        - generic [ref=f4e8]: HUGO JUSKOWIAK
+        - generic [ref=f4e9]: /
+        - generic [ref=f4e10]: Ingénieur Full Stack & IA
+      - generic [ref=f4e11]:
+        - generic [ref=f4e12]:
+          - text: En service
+          - generic [ref=f4e13]: "2022"
+        - generic [ref=f4e14]: En poste · France
+        - group "Langue / Language" [ref=f4e15]:
+          - button "FR" [pressed] [ref=f4e16] [cursor=pointer]
+          - button "EN" [ref=f4e17] [cursor=pointer]
+    - generic: Hugo Juskowiak — Ingénieur Full Stack & IA — France — En service depuis 2022
+    - generic: FR · EN · ES · JP — ML · Data · Systèmes distribués — REF.0043-B
+    - generic [ref=f4e18]:
+      - generic "Parcours — 2022 / 2026" [ref=f4e24]:
+        - generic [ref=f4e27]:
+          - generic [ref=f4e28]: "2022"
+          - emphasis [ref=f4e29]: ESTIA
+        - generic [ref=f4e31]:
+          - generic [ref=f4e32]: "2024"
+          - emphasis [ref=f4e33]: 北海道
+        - generic [ref=f4e35]:
+          - generic [ref=f4e36]: "2024"
+          - emphasis [ref=f4e37]: MBDS
+        - generic [ref=f4e39]:
+          - generic [ref=f4e40]: "2025"
+          - emphasis [ref=f4e41]: SOPHIA
+        - generic [ref=f4e43]:
+          - generic [ref=f4e44]: "2026"
+          - emphasis [ref=f4e45]: UPYOURBIZZ
+      - generic [ref=f4e46]: Unité 001 — Plaque d'identification
+      - heading "HUGO JUSKOWIAK" [level=1] [ref=f4e49]:
+        - generic [ref=f4e50]: HUGO
+        - text: JUSKOWIAK
+      - generic [ref=f4e51]:
+        - generic [ref=f4e52]: Ingénieur Full Stack & IA
+        - generic [ref=f4e53]: フルスタック ＆ AI エンジニア
+      - generic [ref=f4e54]:
+        - generic [ref=f4e55]:
+          - term [ref=f4e56]: Désignation
+          - definition [ref=f4e57]: Hugo Juskowiak
+        - generic [ref=f4e58]:
+          - term [ref=f4e59]: Fonction
+          - definition [ref=f4e60]: Ingénieur Full Stack & IA
+        - generic [ref=f4e61]:
+          - term [ref=f4e62]: Base
+          - definition [ref=f4e63]: France
+        - generic [ref=f4e64]:
+          - term [ref=f4e65]: En service
+          - definition [ref=f4e66]: Depuis 2022
+        - generic [ref=f4e67]:
+          - term [ref=f4e68]: Domaines
+          - definition [ref=f4e69]: ML · Data · Systèmes distribués
+        - generic [ref=f4e70]:
+          - term [ref=f4e71]: Langues
+          - definition [ref=f4e72]: FR · EN · ES · JP
+      - generic [ref=f4e73]:
+        - generic [ref=f4e74]:
+          - generic [ref=f4e75]: Projet en vedette
+          - heading "Prospector" [level=2] [ref=f4e76]
+          - paragraph [ref=f4e77]: SaaS de prospection B2B multi-tenant, en marque blanche.
+          - paragraph [ref=f4e78]: 06 étapes · 3 canaux · n modèles
+        - generic [ref=f4e79]:
+          - generic [ref=f4e80]: Hors travail
+          - heading "Powerlifting · Multilingue" [level=2] [ref=f4e81]
+          - paragraph [ref=f4e82]: Disponibilité — sur demande.
+    - generic [ref=f4e83]:
+      - generic [ref=f4e84]:
+        - generic [ref=f4e85]: Défiler
+        - generic [ref=f4e89]: REF.0043-B / REV.2 / 2026
+      - paragraph [ref=f4e169]: Planche technique — document de présentation · Hugo Juskowiak · Ingénieur Full Stack & IA · France · FR/EN/ES/JP · REF.0043-B · REV.2 · 2026
+  - region [ref=f4e170]:
+    - generic [ref=f4e171]:
+      - paragraph [ref=f4e172]: 00 — Index
+      - generic [ref=f4e173]: "00"
+      - heading "Nomenclature des feuilles" [level=2] [ref=f4e174]
+      - paragraph [ref=f4e175]: 図面目録
+      - paragraph [ref=f4e176]: Dix feuilles. Le document se lit dans l'ordre, mais chaque feuille se tient seule — c'est la différence entre un plan et un récit.
+    - list [ref=f4e177]:
+      - listitem [ref=f4e178]:
+        - link "01 Méthode Manière de travailler — six étapes" [ref=f4e179] [cursor=pointer]:
+          - /url: "#trace"
+          - generic [ref=f4e180]: "01"
+          - generic [ref=f4e181]: Méthode
+          - generic [ref=f4e182]: Manière de travailler — six étapes
+      - listitem [ref=f4e184]:
+        - link "02 Expérience UpYourBizz · Sophia Genetics · Guill Corp · Legrand" [ref=f4e185] [cursor=pointer]:
+          - /url: "#experience"
+          - generic [ref=f4e186]: "02"
+          - generic [ref=f4e187]: Expérience
+          - generic [ref=f4e188]: UpYourBizz · Sophia Genetics · Guill Corp · Legrand
+      - listitem [ref=f4e190]:
+        - link "03 Études ESTIA · double diplôme MBDS · Hokkaido" [ref=f4e191] [cursor=pointer]:
+          - /url: "#etudes"
+          - generic [ref=f4e192]: "03"
+          - generic [ref=f4e193]: Études
+          - generic [ref=f4e194]: ESTIA · double diplôme MBDS · Hokkaido
+      - listitem [ref=f4e196]:
+        - link "04 Atelier Eternal · Trading Agent · La Provence · bot" [ref=f4e197] [cursor=pointer]:
+          - /url: "#atelier"
+          - generic [ref=f4e198]: "04"
+          - generic [ref=f4e199]: Atelier
+          - generic [ref=f4e200]: Eternal · Trading Agent · La Provence · bot
+      - listitem [ref=f4e202]:
+        - link "05 Télémétrie Routage multi-modèle — l'arbitrage du coût" [ref=f4e203] [cursor=pointer]:
+          - /url: "#telemetrie"
+          - generic [ref=f4e204]: "05"
+          - generic [ref=f4e205]: Télémétrie
+          - generic [ref=f4e206]: Routage multi-modèle — l'arbitrage du coût
+      - listitem [ref=f4e208]:
+        - link "06 Vues Projections orthographiques et rendu de matière" [ref=f4e209] [cursor=pointer]:
+          - /url: "#vues"
+          - generic [ref=f4e210]: "06"
+          - generic [ref=f4e211]: Vues
+          - generic [ref=f4e212]: Projections orthographiques et rendu de matière
+      - listitem [ref=f4e214]:
+        - link "07 Spécifications Caractéristiques et classes" [ref=f4e215] [cursor=pointer]:
+          - /url: "#specifications"
+          - generic [ref=f4e216]: "07"
+          - generic [ref=f4e217]: Spécifications
+          - generic [ref=f4e218]: Caractéristiques et classes
+      - listitem [ref=f4e220]:
+        - link "08 Profil Hors travail" [ref=f4e221] [cursor=pointer]:
+          - /url: "#profil"
+          - generic [ref=f4e222]: "08"
+          - generic [ref=f4e223]: Profil
+          - generic [ref=f4e224]: Hors travail
+      - listitem [ref=f4e226]:
+        - link "09 Contact Références et prise de contact" [ref=f4e227] [cursor=pointer]:
+          - /url: "#contact"
+          - generic [ref=f4e228]: "09"
+          - generic [ref=f4e229]: Contact
+          - generic [ref=f4e230]: Références et prise de contact
+    - generic [ref=f4e232]:
+      - heading "Annexes — fiches projet" [level=3] [ref=f4e233]
+      - paragraph [ref=f4e234]: "Cinq sous-ensembles documentés séparément : contexte, contraintes, décisions."
+      - list [ref=f4e235]:
+        - listitem [ref=f4e236]:
+          - link "U-01 Prospector SaaS de prospection B2B multi-tenant, en marque blanche" [ref=f4e237] [cursor=pointer]:
+            - /url: /work/prospector
+            - generic [ref=f4e238]: U-01
+            - generic [ref=f4e239]: Prospector
+            - generic [ref=f4e240]: SaaS de prospection B2B multi-tenant, en marque blanche
+        - listitem [ref=f4e242]:
+          - link "U-02 Octo Segmentation d'exports DMS pour concessionnaires automobiles" [ref=f4e243] [cursor=pointer]:
+            - /url: /work/octo
+            - generic [ref=f4e244]: U-02
+            - generic [ref=f4e245]: Octo
+            - generic [ref=f4e246]: Segmentation d'exports DMS pour concessionnaires automobiles
+        - listitem [ref=f4e248]:
+          - link "U-03 Prédiction d'usage mémoire Machine learning en production sur pipelines bio-informatiques" [ref=f4e249] [cursor=pointer]:
+            - /url: /work/prediction-memoire
+            - generic [ref=f4e250]: U-03
+            - generic [ref=f4e251]: Prédiction d'usage mémoire
+            - generic [ref=f4e252]: Machine learning en production sur pipelines bio-informatiques
+        - listitem [ref=f4e254]:
+          - link "U-04 Eternal Plateforme d'apprentissage gamifiée" [ref=f4e255] [cursor=pointer]:
+            - /url: /work/eternal
+            - generic [ref=f4e256]: U-04
+            - generic [ref=f4e257]: Eternal
+            - generic [ref=f4e258]: Plateforme d'apprentissage gamifiée
+        - listitem [ref=f4e260]:
+          - link "U-05 Trading Agent Bot de trading multi-stratégie en paper trading" [ref=f4e261] [cursor=pointer]:
+            - /url: /work/trading-agent
+            - generic [ref=f4e262]: U-05
+            - generic [ref=f4e263]: Trading Agent
+            - generic [ref=f4e264]: Bot de trading multi-stratégie en paper trading
+  - generic [ref=f4e267]:
+    - generic: Unité 01 — Méthode — Manière de travailler — REF.0043-B / REV.2
+    - generic [ref=f4e268]:
+      - generic [ref=f4e269]:
+        - generic [ref=f4e270]:
+          - generic [ref=f4e271]: 01 — Méthode
+          - generic [ref=f4e272]: ·
+          - generic [ref=f4e273]: Étape
+          - generic [ref=f4e274]: "01"
+          - generic [ref=f4e275]: / 06
+        - text: "01"
+        - heading "Manière de travailler" [level=2] [ref=f4e276]
+        - generic [ref=f4e277]: 仕事の進め方
+      - paragraph [ref=f4e278]: Six étapes, dans cet ordre. Celle du milieu est la seule qui coûte du temps sans produire de code — c'est aussi la seule qui empêche d'en écrire pour rien.
+    - img "Manière de travailler" [ref=f4e280]:
+      - generic [ref=f4e290]:
+        - generic [ref=f4e291]: "01"
+        - generic [ref=f4e293]: "02"
+        - generic [ref=f4e295]: "03"
+        - generic [ref=f4e297]: "04"
+        - generic [ref=f4e299]: "05"
+        - generic [ref=f4e301]: "06"
+      - generic [ref=f4e304]:
+        - generic [ref=f4e307]: "01"
+        - generic [ref=f4e308]: Comprendre
+        - generic [ref=f4e309]: Le problème avant l'outil
+      - generic [ref=f4e311]:
+        - generic [ref=f4e314]: "02"
+        - generic [ref=f4e315]: Cadrer
+        - generic [ref=f4e316]: Contraintes, budget, périmètre
+      - generic [ref=f4e318]:
+        - generic [ref=f4e321]: "03"
+        - generic [ref=f4e322]: Prototyper
+        - generic [ref=f4e323]: La version la plus courte qui prouve
+      - generic [ref=f4e325]:
+        - generic [ref=f4e328]: "04"
+        - generic [ref=f4e329]: Mesurer
+        - generic [ref=f4e330]: Ce qui n'est pas mesuré n'est pas su
+      - generic [ref=f4e332]:
+        - generic [ref=f4e335]: "05"
+        - generic [ref=f4e336]: Livrer
+        - generic [ref=f4e337]: En production, pas en démo
+      - generic [ref=f4e339]:
+        - generic [ref=f4e342]: "06"
+        - generic [ref=f4e343]: Itérer
+        - generic [ref=f4e344]: La suite sort de l'usage
+      - generic [ref=f4e346]:
+        - generic [ref=f4e349]: Banc
+        - generic [ref=f4e350]: Banc de mesure
+        - generic [ref=f4e351]: On ne règle pas ce qu'on n'a pas instrumenté
+        - generic [ref=f4e352]: profilage
+        - generic [ref=f4e355]: tests
+        - generic [ref=f4e358]: journaux
+    - generic [ref=f4e361]:
+      - generic [ref=f4e362]: Unité 01
+      - generic [ref=f4e364]: "000"
+  - region [ref=f4e365]:
+    - generic [ref=f4e366]: Unité 02 — Expérience — Projets par employeur — REF.0043-B / REV.2
+    - generic [ref=f4e367]:
+      - paragraph [ref=f4e368]: 02 — Expérience
+      - generic [ref=f4e369]: "02"
+      - heading "Là où j'ai travaillé" [level=2] [ref=f4e370]
+      - paragraph [ref=f4e371]: 職務経歴
+      - paragraph [ref=f4e372]: "Groupés par employeur et non par projet : quatre produits sur une même base technique, ce n'est pas quatre lignes de CV, c'est une contrainte d'architecture."
+    - generic [ref=f4e373]:
+      - article [ref=f4e374]:
+        - generic [ref=f4e375]:
+          - generic [ref=f4e376]:
+            - heading "UpYourBizz En poste" [level=3] [ref=f4e377]:
+              - text: UpYourBizz
+              - generic [ref=f4e378]: En poste
+            - paragraph [ref=f4e379]: Ingénieur Full Stack & IA · France
+            - paragraph [ref=f4e380]: 2026.05 → présent
+          - paragraph [ref=f4e381]: Quatre produits sur une même base technique. Le travail consiste autant à faire tenir les quatre ensemble qu'à en construire un.
+          - list [ref=f4e382]:
+            - listitem [ref=f4e383]:
+              - generic [ref=f4e384]: P1
+              - generic [ref=f4e385]:
+                - heading "reach_up — Prospector" [level=4] [ref=f4e386]:
+                  - text: reach_up
+                  - generic [ref=f4e387]: — Prospector
+                - paragraph [ref=f4e388]: SaaS de prospection B2B multi-tenant, en marque blanche. Routage multi-modèle sur six types de tâches, orchestration de campagnes sur canvas, séquençage multicanal e-mail / LinkedIn / WhatsApp, envoi par les comptes Office 365 des clients en OAuth, collecte automatisée en Scrapy et Playwright.
+                - link "Fiche détaillée" [ref=f4e389] [cursor=pointer]:
+                  - /url: /work/prospector
+                  - text: Fiche détaillée →
+            - listitem [ref=f4e390]:
+              - generic [ref=f4e391]: P2
+              - generic [ref=f4e392]:
+                - heading "Octo" [level=4] [ref=f4e393]
+                - paragraph [ref=f4e394]: Segmentation d'exports DMS pour concessionnaires automobiles. Trois populations lues séparément — clients, leads, après-vente — et une sortie en rapport plutôt qu'en tableau de bord.
+                - link "Fiche détaillée" [ref=f4e395] [cursor=pointer]:
+                  - /url: /work/octo
+                  - text: Fiche détaillée →
+            - listitem [ref=f4e396]:
+              - generic [ref=f4e397]: P3
+              - generic [ref=f4e398]:
+                - heading "UYB360" [level=4] [ref=f4e399]
+                - paragraph [ref=f4e400]: Produit de la suite UpYourBizz.
+            - listitem [ref=f4e401]:
+              - generic [ref=f4e402]: P4
+              - generic [ref=f4e403]:
+                - heading "UpYourAds" [level=4] [ref=f4e404]
+                - paragraph [ref=f4e405]: Volet publicitaire de la suite UpYourBizz.
+          - list [ref=f4e406]:
+            - listitem [ref=f4e407]: TypeScript
+            - listitem [ref=f4e408]: React
+            - listitem [ref=f4e409]: Supabase
+            - listitem [ref=f4e410]: OpenRouter
+            - listitem [ref=f4e411]: Lemlist
+            - listitem [ref=f4e412]: OAuth Office 365
+            - listitem [ref=f4e413]: Scrapy
+            - listitem [ref=f4e414]: Playwright
+        - generic [ref=f4e415]:
+          - paragraph [ref=f4e416]: Arborescence
+          - img [ref=f4e417]:
+            - generic [ref=f4e418]:
+              - generic [ref=f4e420]: P1
+              - generic [ref=f4e421]: reach_up
+            - generic [ref=f4e422]:
+              - generic [ref=f4e424]: P2
+              - generic [ref=f4e425]: Octo
+            - generic [ref=f4e426]:
+              - generic [ref=f4e428]: P3
+              - generic [ref=f4e429]: UYB360
+            - generic [ref=f4e431]:
+              - generic [ref=f4e433]: P4
+              - generic [ref=f4e434]: UpYourAds
+      - article [ref=f4e436]:
+        - generic [ref=f4e437]:
+          - generic [ref=f4e438]:
+            - heading "Sophia Genetics" [level=3] [ref=f4e439]
+            - paragraph [ref=f4e440]: Stagiaire ingénieur développement logiciel · Bidart
+            - paragraph [ref=f4e441]: 2025.04 → 2025.09
+          - paragraph [ref=f4e442]: Un pipeline bio-informatique demande une allocation mémoire avant de démarrer. Trop haut, on paie du cloud pour rien ; trop bas, la tâche échoue et repart de zéro.
+          - list [ref=f4e443]:
+            - listitem [ref=f4e444]:
+              - generic [ref=f4e445]: P1
+              - generic [ref=f4e446]:
+                - heading "Prédiction d'usage mémoire" [level=4] [ref=f4e447]
+                - paragraph [ref=f4e448]: Modèle prédisant la RAM consommée par tâche. XGBoost, LightGBM, CatBoost et Random Forest comparés ; chaîne ETL en Python et Pandas sur ElasticSearch et Azure Blob Storage ; mise en production par GitLab CI/CD.
+                - link "Fiche détaillée" [ref=f4e449] [cursor=pointer]:
+                  - /url: /work/prediction-memoire
+                  - text: Fiche détaillée →
+          - list [ref=f4e450]:
+            - listitem [ref=f4e451]: Python
+            - listitem [ref=f4e452]: Pandas
+            - listitem [ref=f4e453]: XGBoost
+            - listitem [ref=f4e454]: LightGBM
+            - listitem [ref=f4e455]: CatBoost
+            - listitem [ref=f4e456]: Random Forest
+            - listitem [ref=f4e457]: ElasticSearch
+            - listitem [ref=f4e458]: Azure
+            - listitem [ref=f4e459]: GitLab CI/CD
+        - generic [ref=f4e460]:
+          - paragraph [ref=f4e461]: Arborescence
+          - img [ref=f4e462]:
+            - generic [ref=f4e463]:
+              - generic [ref=f4e465]: P1
+              - generic [ref=f4e466]: Prédiction d'usage mémoire
+      - article [ref=f4e467]:
+        - generic [ref=f4e468]:
+          - generic [ref=f4e469]:
+            - heading "The Guill Corp" [level=3] [ref=f4e470]
+            - paragraph [ref=f4e471]: Stagiaire ingénieur développement logiciel · Anglet
+            - paragraph [ref=f4e472]: 2023.02 → 2023.07
+          - paragraph [ref=f4e473]: Aéronautique. Première mise en service logicielle, et le front-end appris en autonomie pour la tenir.
+          - list [ref=f4e474]:
+            - listitem [ref=f4e475]:
+              - generic [ref=f4e476]: P1
+              - generic [ref=f4e477]:
+                - heading "Filtrage de données d'aviation" [level=4] [ref=f4e478]
+                - paragraph [ref=f4e479]: Interface de consultation et de filtrage des données de vol. Back-end Python/Flask, front en JavaScript/jQuery et Ajax sur base SQL. Maquettage Figma appris pour l'occasion.
+          - list [ref=f4e480]:
+            - listitem [ref=f4e481]: Python
+            - listitem [ref=f4e482]: Flask
+            - listitem [ref=f4e483]: JavaScript
+            - listitem [ref=f4e484]: jQuery
+            - listitem [ref=f4e485]: Ajax
+            - listitem [ref=f4e486]: SQL
+            - listitem [ref=f4e487]: Figma
+        - generic [ref=f4e488]:
+          - paragraph [ref=f4e489]: Arborescence
+          - img [ref=f4e490]:
+            - generic [ref=f4e491]:
+              - generic [ref=f4e493]: P1
+              - generic [ref=f4e494]: Filtrage de données d'aviation
+      - article [ref=f4e495]:
+        - generic [ref=f4e496]:
+          - generic [ref=f4e497]:
+            - heading "Legrand" [level=3] [ref=f4e498]
+            - paragraph [ref=f4e499]: Opérateur industriel · Le Mans
+            - paragraph [ref=f4e500]: 2022.07 → 2022.08
+          - paragraph [ref=f4e501]: Deux mois en production. Assemblage sur chaîne, tri de retours pour recyclage, appui aux stocks.
+          - list [ref=f4e502]:
+            - listitem [ref=f4e503]:
+              - generic [ref=f4e504]: P1
+              - generic [ref=f4e505]:
+                - heading "Chaîne de production" [level=4] [ref=f4e506]
+                - paragraph [ref=f4e507]: "Le poste ne s'invente pas depuis un bureau : cadence imposée, geste répété, qualité contrôlée en sortie. On comprend autrement ce qu'est une contrainte de production après l'avoir tenue."
+          - list [ref=f4e508]:
+            - listitem [ref=f4e509]: Assemblage
+            - listitem [ref=f4e510]: Contrôle qualité
+            - listitem [ref=f4e511]: Logistique
+        - generic [ref=f4e512]:
+          - paragraph [ref=f4e513]: Arborescence
+          - img [ref=f4e514]:
+            - generic [ref=f4e515]:
+              - generic [ref=f4e517]: P1
+              - generic [ref=f4e518]: Chaîne de production
+  - region [ref=f4e519]:
+    - generic [ref=f4e520]: Unité 03 — Études — ESTIA · MBDS · Hokkaido — REF.0043-B / REV.2
+    - generic [ref=f4e521]:
+      - paragraph [ref=f4e522]: 03 — Études
+      - generic [ref=f4e523]: "03"
+      - heading "Deux rails en parallèle" [level=2] [ref=f4e524]
+      - paragraph [ref=f4e525]: 学歴
+      - paragraph [ref=f4e526]: "Un double diplôme n'est pas deux diplômes : ce sont deux cursus menés en même temps. Écrit en liste, ça se lit l'un après l'autre et l'information disparaît."
+    - img [ref=f4e528]:
+      - generic [ref=f4e529]: "2021"
+      - generic [ref=f4e531]: "2022"
+      - generic [ref=f4e533]: "2023"
+      - generic [ref=f4e535]: "2024"
+      - generic [ref=f4e537]: "2025"
+      - generic [ref=f4e539]: "2026"
+      - generic [ref=f4e541]: CPGE
+      - generic [ref=f4e544]: ESTIA
+      - generic [ref=f4e547]: Hokkaido
+      - generic [ref=f4e551]: MBDS
+      - generic [ref=f4e554]: Double diplôme — 13 mois
+    - list [ref=f4e558]:
+      - listitem [ref=f4e559]:
+        - generic [ref=f4e560]: E1
+        - generic [ref=f4e561]:
+          - heading "CPGE" [level=3] [ref=f4e562]
+          - paragraph [ref=f4e563]: Classe préparatoire TSI · Lycée Touchard-Washington
+          - paragraph [ref=f4e564]: Deux ans de mathématiques, physique et sciences de l'ingénieur avant toute ligne de code.
+      - listitem [ref=f4e565]:
+        - generic [ref=f4e566]: E2
+        - generic [ref=f4e567]:
+          - heading "ESTIA" [level=3] [ref=f4e568]
+          - paragraph [ref=f4e569]: Master d'ingénieur trilingue
+          - paragraph [ref=f4e570]: Cycle ingénieur mené en trois langues de travail. C'est le rail principal — il porte tout le reste.
+      - listitem [ref=f4e571]:
+        - generic [ref=f4e572]: E3
+        - generic [ref=f4e573]:
+          - heading "Hokkaido" [level=3] [ref=f4e574]
+          - paragraph [ref=f4e575]: Semestre d'échange — Information & Ingénierie · Imperial University of Hokkaido, Japon
+          - paragraph [ref=f4e576]: Un semestre à travailler dans une autre norme, une autre langue et un autre rapport au détail. On ne revient pas identique d'un pays qui documente autrement.
+      - listitem [ref=f4e577]:
+        - generic [ref=f4e578]: E4
+        - generic [ref=f4e579]:
+          - heading "MBDS" [level=3] [ref=f4e580]
+          - paragraph [ref=f4e581]: Master en Data Science — MBDS MIAGE · Université Côte d'Azur
+          - paragraph [ref=f4e582]: Second diplôme mené EN PARALLÈLE du cycle ingénieur, pas après. Les deux rails avancent ensemble de septembre 2024 à octobre 2025 — c'est ce que le schéma montre et ce qu'une liste ne dit pas.
+  - region [ref=f4e583]:
+    - generic [ref=f4e584]: Unité 04 — Atelier — Projets personnels — REF.0043-B / REV.2
+    - generic [ref=f4e585]:
+      - paragraph [ref=f4e586]: 04 — Atelier
+      - generic [ref=f4e587]: "04"
+      - heading "Ce que je construis à côté" [level=2] [ref=f4e588]
+      - paragraph [ref=f4e589]: 個人制作
+      - paragraph [ref=f4e590]: Quatre projets, quatre formes différentes. Un cycle, une convergence avec vanne, un empilement, un tuyau — c'est la forme qui dit ce que le projet est.
+    - generic [ref=f4e591]:
+      - article [ref=f4e592]:
+        - img [ref=f4e594]:
+          - generic [ref=f4e601]: code
+          - generic [ref=f4e602]: leçon
+          - generic [ref=f4e603]: travail
+        - generic [ref=f4e604]:
+          - paragraph [ref=f4e605]:
+            - generic [ref=f4e606]: A1
+            - generic [ref=f4e607]: En ligne
+          - heading "Eternal" [level=3] [ref=f4e608]
+          - paragraph [ref=f4e609]: Plateforme d'apprentissage gamifiée
+          - paragraph [ref=f4e610]: Le code écrit avec une IA part plus vite qu'il n'est compris. Eternal le convertit en leçons interactives, dans la forme d'un jeu 2D pixel HD, déclenchées par une commande depuis l'outil de travail.
+          - link "Fiche détaillée" [ref=f4e611] [cursor=pointer]:
+            - /url: /work/eternal
+            - text: Fiche détaillée →
+          - list [ref=f4e612]:
+            - listitem [ref=f4e613]:
+              - link "Démo" [ref=f4e614] [cursor=pointer]:
+                - /url: https://zokuzo.github.io/eternal/
+                - text: Démo ↗
+              - generic [ref=f4e615]: Desktop uniquement
+      - article [ref=f4e616]:
+        - img [ref=f4e618]:
+          - generic [ref=f4e622]: cockpit
+          - generic [ref=f4e623]: report
+          - generic [ref=f4e624]: stratégies
+          - generic [ref=f4e625]: réel
+        - generic [ref=f4e626]:
+          - paragraph [ref=f4e627]:
+            - generic [ref=f4e628]: A2
+            - generic [ref=f4e629]: Paper trading
+          - heading "Trading Agent" [level=3] [ref=f4e630]
+          - paragraph [ref=f4e631]: Bot de trading multi-stratégie
+          - paragraph [ref=f4e632]: Plusieurs stratégies exécutées en parallèle sur de l'argent fictif via Alpaca et TradingView, avec un cockpit de reporting qui dit ce que chacune a fait. Le passage à l'argent réel se fait par IBKR, séparément et volontairement.
+          - link "Fiche détaillée" [ref=f4e633] [cursor=pointer]:
+            - /url: /work/trading-agent
+            - text: Fiche détaillée →
+          - paragraph [ref=f4e634]: Dépôt privé
+      - article [ref=f4e635]:
+        - generic [ref=f4e643]:
+          - paragraph [ref=f4e644]:
+            - generic [ref=f4e645]: A3
+            - generic [ref=f4e646]: Livré
+          - heading "La Provence" [level=3] [ref=f4e647]
+          - paragraph [ref=f4e648]: Site vitrine — savonnerie artisanale, Montpellier
+          - paragraph [ref=f4e649]: Site vitrine pour une savonnerie artisanale. Commande réelle, contraintes réelles, dépôt public.
+          - list [ref=f4e650]:
+            - listitem [ref=f4e651]:
+              - link "Dépôt" [ref=f4e652] [cursor=pointer]:
+                - /url: https://github.com/Zokuzo/la-provence-montpellier
+                - text: Dépôt ↗
+      - article [ref=f4e653]:
+        - img [ref=f4e655]:
+          - generic [ref=f4e661]: file
+          - generic [ref=f4e662]: envoi
+        - generic [ref=f4e663]:
+          - paragraph [ref=f4e664]:
+            - generic [ref=f4e665]: A4
+            - generic [ref=f4e666]: En cours
+          - heading "Bot de candidature" [level=3] [ref=f4e667]
+          - paragraph [ref=f4e668]: Automatisation de recherche d'emploi
+          - paragraph [ref=f4e669]: Automatisation du dépôt et du suivi de candidatures.
+          - paragraph [ref=f4e670]: Dépôt privé
+  - region [ref=f4e671]:
+    - generic [ref=f4e672]: Unité 05 — Télémétrie — Routage multi-modèle — OpenRouter — REF.0043-B / REV.2
+    - generic [ref=f4e673]:
+      - paragraph [ref=f4e674]: 05 — Télémétrie
+      - generic [ref=f4e675]: "05"
+      - heading "Routage multi-modèle" [level=2] [ref=f4e676]
+      - paragraph [ref=f4e677]: テレメトリ
+      - paragraph [ref=f4e678]: "Six types de tâches, un parc de modèles, une règle : prendre le moins cher qui tient la tâche. Le palier n'est pas un réglage de confort, c'est la facture."
+    - img [ref=f4e680]:
+      - generic [ref=f4e681]:
+        - generic [ref=f4e683]: Haiku
+        - generic [ref=f4e684]: Économique
+      - generic [ref=f4e685]:
+        - generic [ref=f4e687]: Sonnet
+        - generic [ref=f4e688]: Courant
+      - generic [ref=f4e689]:
+        - generic [ref=f4e691]: Opus
+        - generic [ref=f4e692]: Lourd
+      - generic [ref=f4e693]: "01"
+      - generic [ref=f4e695]: "02"
+      - generic [ref=f4e697]: "03"
+      - generic [ref=f4e699]: "04"
+      - generic [ref=f4e701]: "05"
+      - generic [ref=f4e703]: "06"
+    - paragraph [ref=f4e706]: Chaque voie monte jusqu'au palier qu'elle exige. Une seule atteint le palier lourd — c'est là que passe le coût, et c'est la seule qui mérite de le coûter.
+    - table [ref=f4e707]:
+      - caption [ref=f4e708]: Routage multi-modèle
+      - rowgroup [ref=f4e709]:
+        - row [ref=f4e710]:
+          - columnheader "Voie" [ref=f4e711]
+          - columnheader "Tâche" [ref=f4e712]
+          - columnheader "Palier" [ref=f4e713]
+          - columnheader "Pourquoi ce palier" [ref=f4e714]
+      - rowgroup [ref=f4e715]:
+        - row [ref=f4e716]:
+          - cell "01" [ref=f4e717]
+          - cell "Extraction Depuis documents" [ref=f4e718]:
+            - generic [ref=f4e719]: Extraction
+            - generic [ref=f4e720]: Depuis documents
+          - cell "Haiku" [ref=f4e721]
+          - cell "Structure connue, sortie contrainte." [ref=f4e722]
+        - row [ref=f4e723]:
+          - cell "02" [ref=f4e724]
+          - cell "Classification Tri des retours" [ref=f4e725]:
+            - generic [ref=f4e726]: Classification
+            - generic [ref=f4e727]: Tri des retours
+          - cell "Haiku" [ref=f4e728]
+          - cell "Décision binaire, volume élevé." [ref=f4e729]
+        - row [ref=f4e730]:
+          - cell "03" [ref=f4e731]
+          - cell "Personas Synthèse de cible" [ref=f4e732]:
+            - generic [ref=f4e733]: Personas
+            - generic [ref=f4e734]: Synthèse de cible
+          - cell "Sonnet" [ref=f4e735]
+          - cell "Synthèse ouverte à partir de sources hétérogènes." [ref=f4e736]
+        - row [ref=f4e737]:
+          - cell "04" [ref=f4e738]
+          - cell "Rédaction Séquences multicanal" [ref=f4e739]:
+            - generic [ref=f4e740]: Rédaction
+            - generic [ref=f4e741]: Séquences multicanal
+          - cell "Sonnet" [ref=f4e742]
+          - cell "La qualité du texte est le produit." [ref=f4e743]
+        - row [ref=f4e744]:
+          - cell "05" [ref=f4e745]
+          - cell "Conversation Chatbot agentique" [ref=f4e746]:
+            - generic [ref=f4e747]: Conversation
+            - generic [ref=f4e748]: Chatbot agentique
+          - cell "Sonnet" [ref=f4e749]
+          - cell "Multi-tours, l'état de session doit tenir." [ref=f4e750]
+        - row [ref=f4e751]:
+          - cell "06" [ref=f4e752]
+          - cell "Rapport Segmentation DMS" [ref=f4e753]:
+            - generic [ref=f4e754]: Rapport
+            - generic [ref=f4e755]: Segmentation DMS
+          - cell "Opus" [ref=f4e756]
+          - cell "Contexte long, agrégation, chiffres à ne pas inventer." [ref=f4e757]
+  - region [ref=f4e758]:
+    - generic [ref=f4e759]: Unité 06 — Planche de vues — REF.0043-B / REV.2 — Éch. 1:1
+    - generic [ref=f4e760]:
+      - paragraph [ref=f4e761]: 06 — Vues
+      - generic [ref=f4e762]: "06"
+      - heading "Planche de vues" [level=2] [ref=f4e763]
+      - paragraph [ref=f4e764]: 正投影図
+    - generic [ref=f4e765]:
+      - figure "A Dessus Projection horizontale" [ref=f4e766]:
+        - img [ref=f4e768]:
+          - generic [ref=f4e776]: A
+          - generic [ref=f4e777]: A
+          - generic [ref=f4e780]: "120"
+        - generic [ref=f4e781]:
+          - generic [ref=f4e782]: A
+          - generic [ref=f4e783]: Dessus
+          - generic [ref=f4e784]: Projection horizontale
+      - figure "B Face Projection frontale" [ref=f4e785]:
+        - img [ref=f4e787]:
+          - generic [ref=f4e795]: "40"
+        - generic [ref=f4e796]:
+          - generic [ref=f4e797]: B
+          - generic [ref=f4e798]: Face
+          - generic [ref=f4e799]: Projection frontale
+      - figure "C Profil Projection latérale" [ref=f4e800]:
+        - img [ref=f4e802]:
+          - generic [ref=f4e806]: Coupe A-A
+        - generic [ref=f4e807]:
+          - generic [ref=f4e808]: C
+          - generic [ref=f4e809]: Profil
+          - generic [ref=f4e810]: Projection latérale
+      - figure "D Matière Rendu — surface polie" [ref=f4e811]:
+        - generic [ref=f4e819]:
+          - generic [ref=f4e820]: D
+          - generic [ref=f4e821]: Matière
+          - generic [ref=f4e822]: Rendu — surface polie
+    - paragraph [ref=f4e823]: Trois projections normalisées et un rendu de matière. Le trait continu porte l'arête vue, le tireté l'arête cachée, l'axe mixte le centre. La cote est la seule affirmation de la planche.
+    - generic [ref=f4e824]:
+      - generic [ref=f4e826]: Éch. 1:1
+      - generic [ref=f4e827]: CE
+      - generic [ref=f4e828]: REF.0043-B / REV.2
+  - region [ref=f4e829]:
+    - generic [ref=f4e830]: Unité 07 — Spécifications — Caractéristiques et classes — REF.0043-B / REV.2
+    - generic [ref=f4e831]:
+      - paragraph [ref=f4e832]: 07 — Spécifications
+      - generic [ref=f4e833]: "07"
+      - heading "Caractéristiques" [level=2] [ref=f4e834]
+      - paragraph [ref=f4e835]: 仕様
+      - paragraph [ref=f4e836]: Les classes sont celles que la fiche déclare. Là où aucune classe n'est déclarée, la case reste vide.
+    - generic [ref=f4e837]:
+      - region "Programmation" [ref=f4e838]:
+        - heading "Programmation" [level=3] [ref=f4e839]
+        - generic [ref=f4e840]:
+          - generic [ref=f4e841]: Désignation
+          - generic [ref=f4e842]: Classe
+        - generic [ref=f4e843]:
+          - generic [ref=f4e844]:
+            - term [ref=f4e845]: Python
+            - definition [ref=f4e846]: Avancé
+          - generic [ref=f4e847]:
+            - term [ref=f4e848]: TypeScript / JavaScript
+            - definition [ref=f4e849]: Avancé
+          - generic [ref=f4e850]:
+            - term [ref=f4e851]: SQL
+            - definition [ref=f4e852]: Avancé
+          - generic [ref=f4e853]:
+            - term [ref=f4e854]: HTML / CSS
+            - definition [ref=f4e855]: Avancé
+          - generic [ref=f4e856]:
+            - term [ref=f4e857]: Java
+            - definition [ref=f4e858]: Intermédiaire
+          - generic [ref=f4e859]:
+            - term [ref=f4e860]: C / C++
+            - definition [ref=f4e861]: Intermédiaire
+      - region "Frameworks & outils" [ref=f4e862]:
+        - heading "Frameworks & outils" [level=3] [ref=f4e863]
+        - generic [ref=f4e864]:
+          - generic [ref=f4e865]: Désignation
+          - generic [ref=f4e866]: Classe
+        - generic [ref=f4e867]:
+          - generic [ref=f4e868]:
+            - term [ref=f4e869]: React
+            - definition [ref=f4e870]: —
+          - generic [ref=f4e871]:
+            - term [ref=f4e872]: React Native
+            - definition [ref=f4e873]: —
+          - generic [ref=f4e874]:
+            - term [ref=f4e875]: Node.js
+            - definition [ref=f4e876]: —
+          - generic [ref=f4e877]:
+            - term [ref=f4e878]: Flask
+            - definition [ref=f4e879]: —
+          - generic [ref=f4e880]:
+            - term [ref=f4e881]: Pandas
+            - definition [ref=f4e882]: —
+          - generic [ref=f4e883]:
+            - term [ref=f4e884]: Git
+            - definition [ref=f4e885]: —
+          - generic [ref=f4e886]:
+            - term [ref=f4e887]: GitLab CI/CD
+            - definition [ref=f4e888]: —
+      - region "ML, IA & data" [ref=f4e889]:
+        - heading "ML, IA & data" [level=3] [ref=f4e890]
+        - generic [ref=f4e891]:
+          - generic [ref=f4e892]: Désignation
+          - generic [ref=f4e893]: Classe
+        - generic [ref=f4e894]:
+          - generic [ref=f4e895]:
+            - term [ref=f4e896]: XGBoost
+            - definition [ref=f4e897]: —
+          - generic [ref=f4e898]:
+            - term [ref=f4e899]: LightGBM
+            - definition [ref=f4e900]: —
+          - generic [ref=f4e901]:
+            - term [ref=f4e902]: CatBoost
+            - definition [ref=f4e903]: —
+          - generic [ref=f4e904]:
+            - term [ref=f4e905]: Random Forest
+            - definition [ref=f4e906]: —
+          - generic [ref=f4e907]:
+            - term [ref=f4e908]: Intégration de LLM & prompt engineering
+            - definition [ref=f4e909]: OpenRouter
+          - generic [ref=f4e910]:
+            - term [ref=f4e911]: Pipelines ETL
+            - definition [ref=f4e912]: —
+          - generic [ref=f4e913]:
+            - term [ref=f4e914]: Web scraping
+            - definition [ref=f4e915]: Scrapy · Playwright
+      - region "Cloud & bases de données" [ref=f4e916]:
+        - heading "Cloud & bases de données" [level=3] [ref=f4e917]
+        - generic [ref=f4e918]:
+          - generic [ref=f4e919]: Désignation
+          - generic [ref=f4e920]: Classe
+        - generic [ref=f4e921]:
+          - generic [ref=f4e922]:
+            - term [ref=f4e923]: AWS
+            - definition [ref=f4e924]: —
+          - generic [ref=f4e925]:
+            - term [ref=f4e926]: Azure
+            - definition [ref=f4e927]: —
+          - generic [ref=f4e928]:
+            - term [ref=f4e929]: Supabase / PostgreSQL
+            - definition [ref=f4e930]: —
+          - generic [ref=f4e931]:
+            - term [ref=f4e932]: MongoDB
+            - definition [ref=f4e933]: —
+          - generic [ref=f4e934]:
+            - term [ref=f4e935]: ElasticSearch
+            - definition [ref=f4e936]: —
+          - generic [ref=f4e937]:
+            - term [ref=f4e938]: Systèmes distribués
+            - definition [ref=f4e939]: —
+      - region "Langues" [ref=f4e940]:
+        - heading "Langues" [level=3] [ref=f4e941]
+        - generic [ref=f4e942]:
+          - generic [ref=f4e943]: Désignation
+          - generic [ref=f4e944]: Classe
+        - generic [ref=f4e945]:
+          - generic [ref=f4e946]:
+            - term [ref=f4e947]: Français
+            - definition [ref=f4e948]: Natif
+          - generic [ref=f4e949]:
+            - term [ref=f4e950]: Anglais
+            - definition [ref=f4e951]: Courant · IELTS 2023
+          - generic [ref=f4e952]:
+            - term [ref=f4e953]: Espagnol
+            - definition [ref=f4e954]: B2
+          - generic [ref=f4e955]:
+            - term [ref=f4e956]: Japonais
+            - definition [ref=f4e957]: Notions
+  - region [ref=f4e958]:
+    - generic [ref=f4e959]: Unité 08 — Profil — Hors travail — REF.0043-B / REV.2
+    - generic [ref=f4e960]:
+      - paragraph [ref=f4e961]: 08 — Profil
+      - generic [ref=f4e962]: "08"
+      - heading "Hors travail" [level=2] [ref=f4e963]
+      - paragraph [ref=f4e964]: 余暇
+    - generic [ref=f4e965]:
+      - generic [ref=f4e966]:
+        - paragraph [ref=f4e967]: En dehors du code, je soulève. Musculation et force athlétique, encadré par un champion du monde de powerlifting 2023 et un bodybuilder professionnel.
+        - paragraph [ref=f4e968]: "Trois programmes de force conçus pour des pratiquants intermédiaires. Un programme d'entraînement est une spécification : une charge, une progression, une tolérance — et quelqu'un qui doit pouvoir l'exécuter sans vous."
+      - generic [ref=f4e969]:
+        - generic [ref=f4e970]:
+          - term [ref=f4e971]: Qualification
+          - definition [ref=f4e972]: Musculation & force athlétique
+        - generic [ref=f4e973]:
+          - term [ref=f4e974]: Encadrement
+          - definition [ref=f4e975]: Champion du monde de powerlifting 2023 · Bodybuilder professionnel
+        - generic [ref=f4e976]:
+          - term [ref=f4e977]: Production
+          - definition [ref=f4e978]: 3 programmes de force — pratiquants intermédiaires
+        - generic [ref=f4e979]:
+          - term [ref=f4e980]: Langues de travail
+          - definition [ref=f4e981]: FR · EN · ES · JP
+  - region [ref=f4e982]:
+    - generic [ref=f4e983]: Unité 09 — Cartouche — Fin du document — REF.0043-B / REV.2
+    - generic [ref=f4e984]:
+      - paragraph [ref=f4e985]: 09 — Contact
+      - generic [ref=f4e986]: "09"
+      - heading "Prise de contact" [level=2] [ref=f4e987]
+      - paragraph [ref=f4e988]: 表題欄
+    - paragraph [ref=f4e989]: Le document s'arrête ici. Le travail, non.
+    - generic [ref=f4e990]:
+      - list [ref=f4e991]:
+        - listitem [ref=f4e992]:
+          - link "E-mail hugo.jskpro@outlook.fr" [ref=f4e993] [cursor=pointer]:
+            - /url: mailto:hugo.jskpro@outlook.fr
+            - generic [ref=f4e994]: E-mail
+            - generic [ref=f4e995]: hugo.jskpro@outlook.fr
+            - generic [ref=f4e996]: →
+        - listitem [ref=f4e997]:
+          - link "LinkedIn linkedin.com/in/hugo-juskowiak" [ref=f4e998] [cursor=pointer]:
+            - /url: https://www.linkedin.com/in/hugo-juskowiak/
+            - generic [ref=f4e999]: LinkedIn
+            - generic [ref=f4e1000]: linkedin.com/in/hugo-juskowiak
+            - generic [ref=f4e1001]: →
+        - listitem [ref=f4e1002]:
+          - link "Dossier CV — format PDF" [ref=f4e1003] [cursor=pointer]:
+            - /url: /CV_Hugo_JUSKOWIAK_1.0.pdf
+            - generic [ref=f4e1004]: Dossier
+            - generic [ref=f4e1005]: CV — format PDF
+            - generic [ref=f4e1006]: →
+      - generic [ref=f4e1007]:
+        - generic [ref=f4e1008]:
+          - term [ref=f4e1009]: Titre
+          - definition [ref=f4e1010]: Portfolio — planche technique
+        - generic [ref=f4e1011]:
+          - term [ref=f4e1012]: Dessiné par
+          - definition [ref=f4e1013]: Hugo Juskowiak
+        - generic [ref=f4e1014]:
+          - term [ref=f4e1015]: Fonction
+          - definition [ref=f4e1016]: Ingénieur Full Stack & IA
+        - generic [ref=f4e1017]:
+          - term [ref=f4e1018]: Base
+          - definition [ref=f4e1019]: France
+        - generic [ref=f4e1020]:
+          - term [ref=f4e1021]: Échelle
+          - definition [ref=f4e1022]: 1:1
+        - generic [ref=f4e1023]:
+          - term [ref=f4e1024]: Référence
+          - definition [ref=f4e1025]: REF.0043-B / REV.2
+        - generic [ref=f4e1026]:
+          - term [ref=f4e1027]: Date
+          - definition [ref=f4e1028]: "2026"
+        - generic [ref=f4e1029]:
+          - term [ref=f4e1030]: Feuilles
+          - definition [ref=f4e1031]: 00 à 09
+    - paragraph [ref=f4e1032]: — fin —
