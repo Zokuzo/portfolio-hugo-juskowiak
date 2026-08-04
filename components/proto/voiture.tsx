@@ -19,8 +19,10 @@ import { motion, useMotionValue, useMotionValueEvent, useReducedMotion, useScrol
    pouvoir se poser sur une image précise. Des fichiers, pas un flux.
 
    CONTRAT D'INTÉGRATION — les images vivent dans /public/voiture/ et
-   se nomment 000.webp à 119.webp, fond transparent. Si la première
-   manque, le composant ne rend RIEN et la page est intacte.
+   se nomment 000.webp à 119.webp, fond transparent. Le composant n'en
+   demande QU'UN ARC — voir POSE plus bas — et c'est l'absence de son
+   image centrale, pas de la 000, qui le fait renoncer : il ne rend
+   alors RIEN et la page est intacte.
 
    BUDGET : aucun mix-blend-mode, aucun filter, aucun masque. Un seul
    canvas, redessiné uniquement quand l'index change. Le tourbillon,
@@ -39,7 +41,6 @@ import { motion, useMotionValue, useMotionValueEvent, useReducedMotion, useScrol
    ───────────────────────────────────────────────────────────────── */
 const SEQUENCE_LIVREE = true
 
-const NB = 120
 const SRC = (i: number) => `/voiture/${String(i).padStart(3, "0")}.webp`
 
 /* Le canvas est plafonné à 1,5× le CSS et non au devicePixelRatio réel :
@@ -57,30 +58,44 @@ const DPR_MAX = 1.5
    ancêtre est exactement ce qui casse un `position: fixed` dès qu'il
    porte un transform — page.tsx prévient déjà du piège pour le décor.
 
-   La spirale fait 1,5 tour quand la voiture, elle, n'en fait qu'UN sur
-   son axe. Deux vitesses différentes : c'est le décalage entre l'orbite
-   et la rotation propre qui se lit comme un tourbillon plutôt que comme
-   un manège.
-
-   L'ASSIETTE VIENT DE LA RÉFÉRENCE : sur la photo, l'axe de la voiture
-   va du nez en bas à gauche à l'aileron en haut à droite, presque
-   debout. Et elle ne s'en écarte plus que d'un BALANCEMENT : lui faire
-   accumuler deux cents degrés de vrille, comme dans la première
-   version, la sortait de cette pose au bout d'un écran et il ne restait
-   rien de la référence.
-
-   CE CHIFFRE NE VAUT QUE POUR DES IMAGES RENDUES À 30° D'ÉLÉVATION.
-   L'inclinaison à l'écran et l'angle de prise de vue se lisent ensemble :
-   la même assiette sur une vue plongeante donne une silhouette ramassée
-   qui n'évoque plus rien. Changer l'élévation dans tools/voiture impose
-   de revenir revoir cette constante.
+   La spirale fait 1,5 tour, et le LACET de la voiture la suit — mais en
+   quadrature, sur un cosinus là où l'orbite est un sinus. Les deux
+   mouvements ne se referment donc jamais au même moment : c'est ce
+   décalage qui se lit comme un tourbillon plutôt que comme un manège.
    ───────────────────────────────────────────────────────────────── */
 const TOURS = 1.5        // tours de la spirale
 const DEPART = -105      // angle de sortie du centre, en degrés
 const RAYON_X = 30       // amplitude horizontale, en vw
 const RAYON_Y = 22       // amplitude verticale, en vh
-const INCLINAISON = -65  // assiette, relevée de la photo de référence
-const BALANCE = 17       // amplitude du balancement autour de l'assiette
+
+/* ── LA POSE ──────────────────────────────────────────────────────
+   La séquence fait un tour complet — 120 images à 3° — mais on n'en
+   garde qu'un ARC. Balayer les 360° faisait passer la voiture par le
+   profil puis par l'arrière : deux vues où une silhouette noire sur
+   fond clair n'est plus qu'une tache. L'image 000 elle-même, celle du
+   haut de page, est une plongée de face : le toit, et rien d'autre.
+
+   L'image 105 (azimut 315°) est LA vue : trois-quarts avant, pare-chocs
+   avant en bas à gauche, arrière en haut à droite, capot, flanc et les
+   quatre roues lisibles d'un coup. Tout le trajet se joue autour d'elle,
+   à ±18° de lacet — assez pour que le volume tourne, pas assez pour
+   qu'il quitte la pose.
+
+   L'ASSIETTE S'AJOUTE À LA POSE, elle ne la remplace pas. L'image 105
+   porte déjà sa diagonale naturelle, environ 28° sur l'horizontale ;
+   ces -12° la redressent à 40°, plus franche. C'est pour ça que le
+   chiffre est petit là où il valait -65 du temps où l'image de départ
+   était une plongée de face qu'il fallait coucher entièrement.
+
+   CES DEUX CHIFFRES SONT SOLIDAIRES DU RENDU. Changer l'élévation ou le
+   `--depart` dans tools/voiture décale l'azimut de chaque image : POSE
+   ne désignerait plus la même vue, et l'assiette ne compenserait plus
+   la bonne diagonale. Les revoir ensemble, jamais l'un sans l'autre.
+   ───────────────────────────────────────────────────────────────── */
+const POSE = 105         // image du trois-quarts avant, nez en bas à gauche
+const ARC = 6            // débattement de part et d'autre, soit ±18° de lacet
+const INCLINAISON = -12  // assiette : redresse la diagonale de l'image à 40°
+const BALANCE = 8        // amplitude du balancement autour de l'assiette
 
 export function Voiture() {
   const canvas = useRef<HTMLCanvasElement>(null)
@@ -135,14 +150,21 @@ export function Voiture() {
     }
   }, [p, scrollY])
 
-  const index = useTransform(p, (v) => Math.min(NB - 1, Math.max(0, Math.round(v * (NB - 1)))))
-
   /* Rayon en puissance 0,75 : la voiture quitte le centre franchement
      puis ralentit son éloignement. Une progression linéaire la ferait
      décoller mollement du nom, ce qui se lit comme une dérive et non
      comme un objet aspiré. */
   const orbite = (v: number) => ((DEPART + v * TOURS * 360) * Math.PI) / 180
   const ampleur = (v: number) => Math.pow(v, 0.75)
+
+  /* Le lacet OSCILLE autour de la pose au lieu de défiler. Une rampe
+     linéaire, même courte, arrive forcément à un bout de l'arc et y
+     reste : la voiture finirait son trajet de travers. Un cosinus la
+     ramène, et comme l'orbite et l'assiette sont des sinus, il tombe en
+     quadrature des deux — le volume tourne quand la trajectoire est
+     droite, et l'inverse. C'est ce qui empêche le tout de battre la
+     mesure. */
+  const index = useTransform(p, (v) => Math.round(POSE + Math.cos(orbite(v)) * ARC))
 
   const x = useTransform(p, (v) => `${(ampleur(v) * RAYON_X * Math.cos(orbite(v))).toFixed(2)}vw`)
   const y = useTransform(p, (v) => `${(ampleur(v) * RAYON_Y * Math.sin(orbite(v))).toFixed(2)}vh`)
@@ -177,15 +199,23 @@ export function Voiture() {
 
      `createImageBitmap` décode HORS du fil principal et rend un objet
      déjà décodé : le drawImage qui suit ne peut plus bloquer. On ne les
-     garde pas tous — 120 bitmaps de 1000×1000 feraient 480 Mo — mais une
-     FENÊTRE glissante autour de la tête de lecture, refermée derrière.
-     ───────────────────────────────────────────────────────────────── */
+     garde pas tous — 120 bitmaps de 1000×1000 feraient 480 Mo — mais les
+     13 de l'arc, soit une cinquantaine de mégaoctets.
+
+     C'est l'arc qui a supprimé la fenêtre glissante d'avant, et non
+     l'inverse : une fenêtre n'avait de sens que pour une tête de lecture
+     qui AVANCE. Le lacet, lui, oscille — elle aurait refermé derrière
+     elle des images que le cosinus redemandait à l'aller suivant. */
   const bitmaps = useRef<(ImageBitmap | undefined)[]>([])
   const enVol = useRef<Set<number>>(new Set())
+  // Les 404 avérés. Sans cette liste, `chargeArc` rejoué à chaque
+  // changement d'index redemandait indéfiniment un fichier qui n'existe
+  // pas — onze requêtes pour la même image sur une seule descente.
+  const perdues = useRef<Set<number>>(new Set())
   const vivant = useRef(true)
 
   const charge = (i: number) => {
-    if (bitmaps.current[i] || enVol.current.has(i)) return
+    if (bitmaps.current[i] || enVol.current.has(i) || perdues.current.has(i)) return
     enVol.current.add(i)
     fetch(SRC(i))
       .then((r) => (r.ok ? r.blob() : Promise.reject(new Error("404"))))
@@ -193,32 +223,48 @@ export function Voiture() {
       .then((bm) => {
         if (!vivant.current) return bm.close()
         bitmaps.current[i] = bm
-        // L'image attendue vient d'arriver : on redessine, sinon elle
-        // n'apparaîtrait qu'au prochain mouvement de scroll.
-        if (i === dernier.current) peindre(i, true)
+        /* DEUX RAISONS DE REPEINDRE, et il faut les deux.
+
+           L'image voulue vient d'arriver — sans ça elle n'apparaîtrait
+           qu'au prochain mouvement de scroll.
+
+           Ou bien RIEN n'a encore été peint. Comparer au seul index voulu
+           suspendait le premier pixel à une image précise : si celle-là
+           traînait ou tombait, les douze autres pouvaient être décodées
+           sans que la toile s'allume. Et en mouvement réduit, où l'on ne
+           repeint plus jamais ensuite, la voiture ne serait tout
+           simplement jamais apparue. On repeint donc l'index VOULU, pas
+           `i` : `disponible` sait se rabattre sur la voisine qui vient
+           d'arriver, et c'est ce qui rend vraie la promesse d'afficher
+           dès la première image reçue. */
+        if (i === index.get() || dernier.current < 0) peindre(index.get(), true)
       })
-      .catch(() => { if (i === 0 && vivant.current) setAbsente(true) })
+      /* SEUL UN 404 VEUT DIRE « SÉQUENCE ABSENTE ». Couper sur n'importe
+         quelle erreur confondait le contrat d'intégration avec un
+         hoquet réseau : une seule requête tombée sur treize démontait
+         toute la voiture, alors que les douze autres étaient là. Une
+         erreur de transport se retente ; un fichier qui n'existe pas,
+         jamais — d'où la mise au rebut, qui borne du même coup les
+         reprises de `chargeArc`. */
+      .catch((e) => {
+        if (!vivant.current) return
+        if (e?.message !== "404") return
+        perdues.current.add(i)
+        if (i === POSE) setAbsente(true)
+      })
       .finally(() => enVol.current.delete(i))
   }
 
-  /* La fenêtre est asymétrique : large DEVANT, courte derrière. On
-     descend la page bien plus souvent qu'on ne la remonte, et une image
-     déjà dépassée ne resservira qu'en cas de retour en arrière. */
-  const AVANT = 20
-  const ARRIERE = 5
+  /* L'arc entier, d'un coup : 13 images d'une trentaine de kilooctets.
+     C'est MOINS que ce que demandait la fenêtre glissante — elle en
+     amorçait 26 au chargement, dont la moitié pour des vues de profil
+     et d'arrière qu'on ne montre plus.
 
-  const veille = (i: number) => {
-    for (let d = -ARRIERE; d <= AVANT; d++) charge((i + d + NB) % NB)
-    for (let k = 0; k < NB; k++) {
-      const bm = bitmaps.current[k]
-      if (!bm) continue
-      const devant = (k - i + NB) % NB
-      const derriere = (i - k + NB) % NB
-      // Fermer explicitement : un ImageBitmap détient de la mémoire
-      // graphique que le ramasse-miettes ne rend pas de lui-même.
-      if (devant > AVANT && derriere > ARRIERE) { bm.close(); bitmaps.current[k] = undefined }
-    }
-  }
+     `charge` ignorant ce qu'il a déjà, rappeler ceci ne coûte rien et
+     RATTRAPE : une requête tombée sur une coupure réseau laisserait
+     sinon un trou définitif dans l'arc, là où l'ancienne fenêtre,
+     rejouée à chaque image, réessayait sans qu'on y pense. */
+  const chargeArc = () => { for (let i = POSE - ARC; i <= POSE + ARC; i++) charge(i) }
 
   useEffect(() => {
     if (!SEQUENCE_LIVREE) {
@@ -226,11 +272,11 @@ export function Voiture() {
       return
     }
     vivant.current = true
-    /* On affiche dès la première image, sans attendre les autres : à 120
-       images, exiger la séquence complète imposerait 3 Mo avant le
-       premier pixel. */
+    /* On affiche dès la première image arrivée, sans attendre les
+       autres : `disponible` sait se rabattre, et rien ne justifie de
+       retenir le premier pixel jusqu'à la treizième requête. */
     setPretes(true)
-    veille(0)
+    chargeArc()
     return () => {
       vivant.current = false
       for (const bm of bitmaps.current) bm?.close()
@@ -239,16 +285,18 @@ export function Voiture() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  /* Repli : tant que la fenêtre se remplit, on affiche le bitmap
-     disponible le plus proche EN ARRIÈRE plutôt que rien. Reculer et non
-     avancer, parce que les images arrivent dans l'ordre du trajet : la
-     précédente est presque toujours là, la suivante presque jamais.
+  /* Repli : tant que l'arc se remplit, on affiche le bitmap le plus
+     proche PAR L'ÉCART DE LACET, des deux côtés. L'ancienne version ne
+     reculait que dans un sens, ce qui se tenait quand la tête de lecture
+     avançait toujours ; avec un arc, reculer depuis 99 sortait de la
+     plage et faisait tout le tour pour retomber sur 111 — l'image la
+     plus éloignée, un quart de tour de travers.
      Ce repli est ce qui garantit qu'un scroll rapide SAUTE des images au
-     lieu d'attendre — la rotation se fait grossière une seconde, elle ne
+     lieu d'attendre : la rotation se fait grossière une seconde, elle ne
      bloque jamais le fil principal. */
   const disponible = (i: number) => {
-    for (let d = 0; d < NB; d++) {
-      const bm = bitmaps.current[(i - d + NB) % NB]
+    for (let d = 0; d <= ARC * 2; d++) {
+      const bm = bitmaps.current[i - d] ?? bitmaps.current[i + d]
       if (bm) return bm
     }
     return null
@@ -293,18 +341,15 @@ export function Voiture() {
      l'index change. Le scroll émet en continu ; sans ce garde, on
      repeindrait la même image des dizaines de fois par seconde. */
   useMotionValueEvent(index as MotionValue<number>, "change", (i) => {
-    /* `prefers-reduced-motion` fige la voiture sur sa première image :
+    /* `prefers-reduced-motion` fige la voiture sur la pose de départ :
        une rotation liée au scroll est exactement le genre de mouvement
        que ce réglage demande d'éteindre. Le volume reste, il ne tourne
-       plus — et le tourbillon ne démarre pas non plus. */
+       plus — et le tourbillon ne démarre pas non plus. Ce que ce réglage
+       laisse voir est désormais un trois-quarts avant et non la plongée
+       de face de l'image 000 : la vue figée est enfin lisible. */
     if (reduit || !pretes) return
     peindre(i)
-    /* La fenêtre suit la tête de lecture. C'est ce qui rend le décodage
-       gratuit : au moment où le scroll atteint une image, elle est déjà
-       décodée depuis une vingtaine d'index. Sans cet appel, la fenêtre
-       resterait figée sur le départ et on retomberait sur un décodage
-       synchrone dès la 21e image. */
-    veille(i)
+    chargeArc()
   })
 
   if (absente) return null
@@ -314,7 +359,23 @@ export function Voiture() {
       className="voiture"
       aria-hidden="true"
       data-fige={reduit ? "1" : undefined}
-      style={reduit ? undefined : { x, y, scale: echelle, rotate: vrille, opacity: fondu }}
+      /* EN MOUVEMENT RÉDUIT, LE FONDU RESTE — c'est la seule chose qui
+         range la voiture. Ne rien lier du tout, comme on le faisait,
+         débranche `fondu` avec le reste : la toile est `position: fixed`,
+         donc la voiture se retrouvait épinglée au centre de l'écran,
+         pleine taille et pleine opacité, sur les onze mille pixels de
+         page qui suivent le tracé — par-dessus huit feuilles de texte.
+         Le réglage censé calmer la page la rendait plus envahissante que
+         l'animation qu'il éteint.
+
+         Un fondu n'est pas un mouvement : rien ne se déplace, ne tourne
+         ni ne change de taille, et c'est précisément le remplacement que
+         les recommandations d'accessibilité proposent à la place d'une
+         animation. Ce qu'on retire ici, c'est l'orbite, le balancement
+         et le zoom. L'assiette, elle, est une valeur FIXE — une pose,
+         pas une animation — donc elle reste, sinon la voiture retombe
+         sur la diagonale brute de l'image. */
+      style={reduit ? { rotate: INCLINAISON, opacity: fondu } : { x, y, scale: echelle, rotate: vrille, opacity: fondu }}
     >
       {/* La flottaison est une couche À PART, et en CSS. À part, parce
           que framer réécrit le `transform` du parent à chaque frame de
