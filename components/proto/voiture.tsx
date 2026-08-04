@@ -1,10 +1,11 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { motion, useMotionValue, useMotionValueEvent, useReducedMotion, useScroll, useTransform, type MotionValue } from "framer-motion"
+import { motion, useMotionValue, useMotionValueEvent, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from "framer-motion"
 
 /* ==================================================================
-   VOITURE — séquence d'images pilotée par le scroll, en tourbillon.
+   VOITURE — séquence d'images pilotée par le scroll, en rotation sur
+   son axe. Elle ne se déplace PAS : elle tourne sur place, au centre.
 
    POURQUOI PAS DE 3D TEMPS RÉEL. Le décor consomme déjà la totalité du
    budget par frame : mesuré en production, p90 16,7ms avec le monde
@@ -19,16 +20,14 @@ import { motion, useMotionValue, useMotionValueEvent, useReducedMotion, useScrol
    pouvoir se poser sur une image précise. Des fichiers, pas un flux.
 
    CONTRAT D'INTÉGRATION — les images vivent dans /public/voiture/ et
-   se nomment 000.webp à 119.webp, fond transparent. Le composant n'en
-   demande QU'UN ARC — voir POSE plus bas — et c'est l'absence de son
-   image centrale, pas de la 000, qui le fait renoncer : il ne rend
-   alors RIEN et la page est intacte.
+   se nomment 000.webp à 119.webp, fond transparent. La rotation en
+   parcourt la TOTALITÉ ; c'est l'absence de l'image de départ qui fait
+   renoncer le composant : il ne rend alors RIEN et la page est intacte.
 
    BUDGET : aucun mix-blend-mode, aucun filter, aucun masque. Un seul
-   canvas, redessiné uniquement quand l'index change. Le tourbillon,
-   lui, ne touche jamais au canvas : il ne bouge que `transform` et
-   `opacity`, les deux seules propriétés que le compositeur anime sans
-   repeindre. C'est ce qui rend un trajet de cinq écrans gratuit.
+   canvas, redessiné uniquement quand l'index change. Le reste ne touche
+   jamais au canvas : seuls `transform` et `opacity` bougent, les deux
+   seules propriétés que le compositeur anime sans repeindre.
    ================================================================== */
 
 /* ── INTERRUPTEUR ─────────────────────────────────────────────────
@@ -58,44 +57,60 @@ const DPR_MAX = 1.5
    ancêtre est exactement ce qui casse un `position: fixed` dès qu'il
    porte un transform — page.tsx prévient déjà du piège pour le décor.
 
-   La spirale fait 1,5 tour, et le LACET de la voiture la suit — mais en
-   quadrature, sur un cosinus là où l'orbite est un sinus. Les deux
-   mouvements ne se referment donc jamais au même moment : c'est ce
-   décalage qui se lit comme un tourbillon plutôt que comme un manège.
+   ELLE NE SE DÉPLACE PLUS. La spirale d'avant — orbite en vw/vh,
+   éloignement en puissance, balancement accroché à l'angle d'orbite —
+   est retirée : il ne reste qu'une rotation sur l'axe, au centre. Une
+   chose qui tourne sur place se lit d'un coup d'œil ; la même chose
+   qui tourne EN se déplaçant demande à l'œil de suivre deux mouvements
+   à la fois, et c'est ce qui donnait l'impression de tourbillon.
    ───────────────────────────────────────────────────────────────── */
-const TOURS = 1.5        // tours de la spirale
-const DEPART = -105      // angle de sortie du centre, en degrés
-const RAYON_X = 30       // amplitude horizontale, en vw
-const RAYON_Y = 22       // amplitude verticale, en vh
+const NB = 120           // images de la séquence, une tous les 3°
+const TOURS = 1          // tours complets sur l'axe pendant le trajet
 
-/* ── LA POSE ──────────────────────────────────────────────────────
-   La séquence fait un tour complet — 120 images à 3° — mais on n'en
-   garde qu'un ARC. Balayer les 360° faisait passer la voiture par le
-   profil puis par l'arrière : deux vues où une silhouette noire sur
-   fond clair n'est plus qu'une tache. L'image 000 elle-même, celle du
-   haut de page, est une plongée de face : le toit, et rien d'autre.
+/* ── LA POSE DE DÉPART ────────────────────────────────────────────
+   Le tour est COMPLET, mais il ne commence pas n'importe où. L'image
+   000 est une plongée de face — le toit, et rien d'autre : ouvrir la
+   page dessus, c'est ouvrir sur la plus mauvaise vue de la séquence.
 
-   L'image 105 (azimut 315°) est LA vue : trois-quarts avant, pare-chocs
-   avant en bas à gauche, arrière en haut à droite, capot, flanc et les
-   quatre roues lisibles d'un coup. Tout le trajet se joue autour d'elle,
-   à ±18° de lacet — assez pour que le volume tourne, pas assez pour
-   qu'il quitte la pose.
+   L'image 105 (azimut 315°) est la meilleure : trois-quarts avant,
+   pare-chocs avant en bas à gauche, arrière en haut à droite, capot,
+   flanc et les quatre roues lisibles d'un coup. Le tour part donc
+   d'elle et, faisant exactement 360°, y revient à la fin.
 
-   L'ASSIETTE S'AJOUTE À LA POSE, elle ne la remplace pas. L'image 105
-   porte déjà sa diagonale naturelle, environ 28° sur l'horizontale ;
-   ces -12° la redressent à 40°, plus franche. C'est pour ça que le
-   chiffre est petit là où il valait -65 du temps où l'image de départ
-   était une plongée de face qu'il fallait coucher entièrement.
+   L'ASSIETTE est désormais FIXE. Elle valait -65° du temps où l'image
+   de départ était une plongée qu'il fallait coucher, puis elle
+   balançait autour de l'orbite ; sans orbite, il n'y a plus rien à
+   balancer. Ces -12° redressent la diagonale naturelle de l'image de
+   départ, environ 28° sur l'horizontale, à 40° plus franche.
 
-   CES DEUX CHIFFRES SONT SOLIDAIRES DU RENDU. Changer l'élévation ou le
+   CES CHIFFRES SONT SOLIDAIRES DU RENDU. Changer l'élévation ou le
    `--depart` dans tools/voiture décale l'azimut de chaque image : POSE
    ne désignerait plus la même vue, et l'assiette ne compenserait plus
    la bonne diagonale. Les revoir ensemble, jamais l'un sans l'autre.
    ───────────────────────────────────────────────────────────────── */
-const POSE = 105         // image du trois-quarts avant, nez en bas à gauche
-const ARC = 6            // débattement de part et d'autre, soit ±18° de lacet
-const INCLINAISON = -12  // assiette : redresse la diagonale de l'image à 40°
-const BALANCE = 8        // amplitude du balancement autour de l'assiette
+const POSE = 105         // image de départ : le trois-quarts avant
+const INCLINAISON = -12  // assiette fixe : redresse la diagonale à 40°
+
+/* ── LE RESSORT ───────────────────────────────────────────────────
+   La progression n'attaque plus la rotation en direct. Un scroll n'est
+   pas lisse : molette crantée, trackpad par à-coups, barre d'espace
+   qui saute un écran. Branché tel quel, chaque secousse devenait une
+   secousse de la voiture, et sur une séquence d'images le défaut est
+   deux fois visible puisque le volume saute d'un cran de 3° d'un coup.
+
+   Le ressort absorbe ça : il POURSUIT la valeur du scroll au lieu de
+   l'épouser.
+
+   RÉGLÉ AU CRITIQUE, ζ = 1,04. C'est le seul point du domaine où la
+   valeur rejoint sa cible au plus vite SANS la dépasser — donc sans
+   rebond, ce qu'une voiture qui tourne ne pardonnerait pas. Le premier
+   jet était à ζ = 2,32 : sur-amorti d'un facteur deux, il mettait deux
+   secondes et demie à converger et la rotation traînait visiblement
+   derrière le doigt. Ici ω = 22 rad/s donne environ 175 ms.
+
+   ζ = amortissement / (2·√(raideur × masse)). Les trois nombres se
+   tiennent : en changer un seul déplace l'amortissement réel. */
+const RESSORT = { stiffness: 170, damping: 16, mass: 0.35, restDelta: 0.0002 }
 
 export function Voiture() {
   const canvas = useRef<HTMLCanvasElement>(null)
@@ -119,6 +134,13 @@ export function Voiture() {
      apporterait rien. */
   const p = useMotionValue(0)
 
+  /* Tout ce qui suit part du ressort, PAS de `p` : mélanger les deux
+     désynchroniserait la rotation et le fondu, et on verrait la voiture
+     finir de tourner après s'être effacée.
+
+     Déclaré AVANT l'effet de mesure, qui en a besoin — voir `saut`. */
+  const lisse = useSpring(p, RESSORT)
+
   useEffect(() => {
     const avance = () => {
       const f = fin.current
@@ -127,7 +149,24 @@ export function Voiture() {
       // et la voiture disparaîtrait sans la moindre erreur en console.
       p.set(f > 0 ? Math.min(1, Math.max(0, window.scrollY / f)) : 0)
     }
-    const mesure = () => {
+    /* `saut` DIT AU RESSORT DE NE PAS ANIMER, et c'est indispensable.
+
+       `useSpring` naît à `p.get()` pendant le RENDU, où `p` vaut encore 0
+       puisqu'il n'est renseigné qu'ici, dans un effet qui s'exécute après.
+       Sans ce saut, toute page ouverte ailleurs qu'en haut — un F5 à
+       mi-page, un retour depuis une fiche projet, un lien profond — faisait
+       rattraper au ressort la totalité de la course : mesuré, l'opacité
+       partait de 1 et restait au-dessus de 0,05 pendant 1,5 s, la voiture
+       traversait 223° toute seule alors que le scroll ne bougeait pas d'un
+       pixel, et `veille` téléchargeait 128 images pour un objet que
+       personne ne devait voir. C'est très exactement le défaut que le
+       commentaire de `p` ci-dessus dit vouloir empêcher, restitué au
+       ralenti et donc bien plus visible.
+
+       Les mesures de MISE EN PAGE sautent — montage, polices, pin du
+       tracé, redimensionnement : rien n'a bougé pour le visiteur, il n'y a
+       donc rien à animer. Seul le SCROLL passe par le ressort. */
+    const mesure = (saut = false) => {
       const t = document.querySelector("#trace")
       if (!t) return
       const bas = t.getBoundingClientRect().bottom + window.scrollY
@@ -136,44 +175,34 @@ export function Voiture() {
       // suivante entre, pas trois écrans plus tôt.
       fin.current = Math.max(1, bas - window.innerHeight)
       avance()
+      if (saut) lisse.jump(p.get())
     }
-    mesure()
+    const remesure = () => mesure(true)
+    mesure(true)
     const stop = scrollY.on("change", avance)
-    window.addEventListener("resize", mesure)
+    window.addEventListener("resize", remesure)
     // Les polices et le pin du tracé décalent la mise en page après
     // coup ; une seconde mesure évite une course figée trop courte.
-    const t = setTimeout(mesure, 1200)
+    const t = setTimeout(remesure, 1200)
     return () => {
       stop()
-      window.removeEventListener("resize", mesure)
+      window.removeEventListener("resize", remesure)
       clearTimeout(t)
     }
-  }, [p, scrollY])
+  }, [p, lisse, scrollY])
 
-  /* Rayon en puissance 0,75 : la voiture quitte le centre franchement
-     puis ralentit son éloignement. Une progression linéaire la ferait
-     décoller mollement du nom, ce qui se lit comme une dérive et non
-     comme un objet aspiré. */
-  const orbite = (v: number) => ((DEPART + v * TOURS * 360) * Math.PI) / 180
-  const ampleur = (v: number) => Math.pow(v, 0.75)
+  /* Un tour complet, à partir de la pose de départ.
 
-  /* Le lacet OSCILLE autour de la pose au lieu de défiler. Une rampe
-     linéaire, même courte, arrive forcément à un bout de l'arc et y
-     reste : la voiture finirait son trajet de travers. Un cosinus la
-     ramène, et comme l'orbite et l'assiette sont des sinus, il tombe en
-     quadrature des deux — le volume tourne quand la trajectoire est
-     droite, et l'inverse. C'est ce qui empêche le tout de battre la
-     mesure. */
-  const index = useTransform(p, (v) => Math.round(POSE + Math.cos(orbite(v)) * ARC))
+     LE MODULO N'EST PAS DÉFENSIF, IL EST STRUCTUREL : partir de POSE=105
+     et ajouter jusqu'à 120 donne 225, très au-delà de la dernière image.
+     Boucler est ici le comportement JUSTE, l'image 119 et l'image 000
+     étant voisines de 3°. Le second `+ NB` couvre le cas d'une valeur
+     négative, que le `%` de JavaScript propagerait — le ressort étant
+     sur-amorti il ne dépasse pas, mais un index négatif rendrait
+     `undefined` en silence et figerait la toile, ce qui ne vaut pas
+     l'économie d'une addition. */
+  const index = useTransform(lisse, (v) => ((POSE + Math.round(v * TOURS * NB)) % NB + NB) % NB)
 
-  const x = useTransform(p, (v) => `${(ampleur(v) * RAYON_X * Math.cos(orbite(v))).toFixed(2)}vw`)
-  const y = useTransform(p, (v) => `${(ampleur(v) * RAYON_Y * Math.sin(orbite(v))).toFixed(2)}vh`)
-  const echelle = useTransform(p, [0, 1], [1, 0.5])
-  /* Le balancement suit l'orbite plutôt que la progression : la voiture
-     se couche vers l'extérieur du virage, comme un objet emporté. Une
-     rampe linéaire lui aurait donné une rotation d'horloge, régulière et
-     morte — exactement ce qu'on ne veut pas d'une chose qui flotte. */
-  const vrille = useTransform(p, (v) => INCLINAISON + Math.sin(orbite(v)) * BALANCE)
   /* Elle s'efface tard et par paliers : au-dessus de la nomenclature et
      du tracé, deux feuilles denses, elle doit rester lisible SANS
      concurrencer le texte qu'elle traverse.
@@ -182,7 +211,7 @@ export function Voiture() {
      déjà son dosage de 0,72 en CSS et les deux se multiplient. Partir de
      0,72 ici sortirait la voiture à 0,52 dans le hero, soit un tiers plus
      pâle qu'avant sans que personne l'ait demandé. */
-  const fondu = useTransform(p, [0, 0.5, 0.9, 1], [1, 0.64, 0.42, 0])
+  const fondu = useTransform(lisse, [0, 0.5, 0.9, 1], [1, 0.64, 0.42, 0])
 
   /* ── POURQUOI DES ImageBitmap ET PAS DES BALISES IMAGE ────────────
      MESURÉ, sur build de production, trois essais alternés dans le même
@@ -199,26 +228,40 @@ export function Voiture() {
 
      `createImageBitmap` décode HORS du fil principal et rend un objet
      déjà décodé : le drawImage qui suit ne peut plus bloquer. On ne les
-     garde pas tous — 120 bitmaps de 1000×1000 feraient 480 Mo — mais les
-     13 de l'arc, soit une cinquantaine de mégaoctets.
+     garde pas tous — 120 bitmaps de 1000×1000 feraient 480 Mo — mais une
+     FENÊTRE glissante autour de la tête de lecture, refermée derrière.
 
-     C'est l'arc qui a supprimé la fenêtre glissante d'avant, et non
-     l'inverse : une fenêtre n'avait de sens que pour une tête de lecture
-     qui AVANCE. Le lacet, lui, oscille — elle aurait refermé derrière
-     elle des images que le cosinus redemandait à l'aller suivant. */
+     La fenêtre revient AVEC le tour complet, et c'est la même raison qui
+     l'avait fait partir : elle suppose une tête de lecture qui AVANCE.
+     Un lacet qui oscille sur un arc étroit refermait derrière lui des
+     images redemandées à l'aller suivant, et charger l'arc entier coûtait
+     moins. Une rotation de 360° reparcourt les 120 : les garder toutes
+     ferait un demi-gigaoctet, la fenêtre redevient le bon outil. */
   const bitmaps = useRef<(ImageBitmap | undefined)[]>([])
   const enVol = useRef<Set<number>>(new Set())
-  // Les 404 avérés. Sans cette liste, `chargeArc` rejoué à chaque
-  // changement d'index redemandait indéfiniment un fichier qui n'existe
-  // pas — onze requêtes pour la même image sur une seule descente.
+  /* LES IMAGES ABANDONNÉES, et le compte des échecs qui y mène.
+
+     `veille` est rejouée à chaque changement d'index. Sans mémoire des
+     échecs, elle redemandait sans fin ce qui ne répond pas : mesuré,
+     1 422 requêtes sur une descente au lieu de 120 quand le réseau tombe.
+     Mais abandonner au PREMIER échec est l'excès inverse — un hoquet
+     serveur condamnait l'image pour toute la session. D'où un compte :
+     trois essais, puis on laisse tomber cette image-là. */
   const perdues = useRef<Set<number>>(new Set())
+  const echecs = useRef<Map<number, number>>(new Map())
+  const ESSAIS = 3
   const vivant = useRef(true)
 
   const charge = (i: number) => {
     if (bitmaps.current[i] || enVol.current.has(i) || perdues.current.has(i)) return
     enVol.current.add(i)
     fetch(SRC(i))
-      .then((r) => (r.ok ? r.blob() : Promise.reject(new Error("404"))))
+      /* On distingue « le fichier n'existe pas » de « ça n'a pas marché ».
+         Rejeter tout statut non-ok sous le même nom faisait traiter un 503
+         — un redémarrage de serveur, une purge de CDN — comme un 404 : la
+         voiture disparaissait définitivement de la page sur un incident
+         d'une seconde. */
+      .then((r) => (r.ok ? r.blob() : Promise.reject(new Error(r.status === 404 || r.status === 410 ? "404" : "hoquet " + r.status))))
       .then(createImageBitmap)
       .then((bm) => {
         if (!vivant.current) return bm.close()
@@ -240,31 +283,52 @@ export function Voiture() {
         if (i === index.get() || dernier.current < 0) peindre(index.get(), true)
       })
       /* SEUL UN 404 VEUT DIRE « SÉQUENCE ABSENTE ». Couper sur n'importe
-         quelle erreur confondait le contrat d'intégration avec un
-         hoquet réseau : une seule requête tombée sur treize démontait
-         toute la voiture, alors que les douze autres étaient là. Une
-         erreur de transport se retente ; un fichier qui n'existe pas,
-         jamais — d'où la mise au rebut, qui borne du même coup les
-         reprises de `chargeArc`. */
+         quelle erreur confondait le contrat d'intégration avec un hoquet
+         réseau : une seule requête tombée démontait toute la voiture,
+         alors que les autres étaient là.
+
+         Un fichier qui n'existe pas est abandonné tout de suite et lui
+         seul déclenche le renoncement. Tout le reste — transport, 5xx,
+         décodage — a droit à trois essais, après quoi on abandonne cette
+         image sans toucher au composant : `disponible` se rabattra sur sa
+         voisine, ce qui est très préférable à une voiture qui s'évapore. */
       .catch((e) => {
         if (!vivant.current) return
-        if (e?.message !== "404") return
-        perdues.current.add(i)
-        if (i === POSE) setAbsente(true)
+        if (e?.message === "404") {
+          perdues.current.add(i)
+          if (i === POSE) setAbsente(true)
+          return
+        }
+        const n = (echecs.current.get(i) ?? 0) + 1
+        echecs.current.set(i, n)
+        if (n >= ESSAIS) perdues.current.add(i)
       })
       .finally(() => enVol.current.delete(i))
   }
 
-  /* L'arc entier, d'un coup : 13 images d'une trentaine de kilooctets.
-     C'est MOINS que ce que demandait la fenêtre glissante — elle en
-     amorçait 26 au chargement, dont la moitié pour des vues de profil
-     et d'arrière qu'on ne montre plus.
+  /* La fenêtre est asymétrique : large DEVANT, courte derrière. On
+     descend la page bien plus souvent qu'on ne la remonte, et une image
+     déjà dépassée ne resservira qu'en cas de retour en arrière.
 
-     `charge` ignorant ce qu'il a déjà, rappeler ceci ne coûte rien et
-     RATTRAPE : une requête tombée sur une coupure réseau laisserait
-     sinon un trou définitif dans l'arc, là où l'ancienne fenêtre,
-     rejouée à chaque image, réessayait sans qu'on y pense. */
-  const chargeArc = () => { for (let i = POSE - ARC; i <= POSE + ARC; i++) charge(i) }
+     Rejouée à chaque changement d'index, elle RATTRAPE au passage : une
+     requête tombée sur une coupure réseau serait sinon un trou définitif
+     dans le tour. Les 404 avérés, eux, ne sont pas retentés — c'est
+     `perdues` qui borne la reprise. */
+  const AVANT = 20
+  const ARRIERE = 5
+
+  const veille = (i: number) => {
+    for (let d = -ARRIERE; d <= AVANT; d++) charge((i + d + NB) % NB)
+    for (let k = 0; k < NB; k++) {
+      const bm = bitmaps.current[k]
+      if (!bm) continue
+      const devant = (k - i + NB) % NB
+      const derriere = (i - k + NB) % NB
+      // Fermer explicitement : un ImageBitmap détient de la mémoire
+      // graphique que le ramasse-miettes ne rend pas de lui-même.
+      if (devant > AVANT && derriere > ARRIERE) { bm.close(); bitmaps.current[k] = undefined }
+    }
+  }
 
   useEffect(() => {
     if (!SEQUENCE_LIVREE) {
@@ -273,10 +337,20 @@ export function Voiture() {
     }
     vivant.current = true
     /* On affiche dès la première image arrivée, sans attendre les
-       autres : `disponible` sait se rabattre, et rien ne justifie de
-       retenir le premier pixel jusqu'à la treizième requête. */
+       autres : à 120 images, exiger la séquence complète imposerait
+       3 Mo avant le premier pixel.
+
+       La veille part de l'index VOULU et non de zéro : le tour commence
+       à la pose de départ, et amorcer la fenêtre ailleurs téléchargerait
+       vingt images qu'on ne montrera qu'à la fin du trajet.
+
+       EN MOUVEMENT RÉDUIT, une seule. La voiture ne tournera jamais, donc
+       les vingt-cinq voisines de la fenêtre ne serviront à rien : les
+       télécharger serait faire payer six cents kilooctets à quelqu'un qui
+       a précisément demandé qu'on lui en fasse moins. */
     setPretes(true)
-    chargeArc()
+    if (reduit) charge(index.get())
+    else veille(index.get())
     return () => {
       vivant.current = false
       for (const bm of bitmaps.current) bm?.close()
@@ -285,18 +359,27 @@ export function Voiture() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  /* Repli : tant que l'arc se remplit, on affiche le bitmap le plus
-     proche PAR L'ÉCART DE LACET, des deux côtés. L'ancienne version ne
-     reculait que dans un sens, ce qui se tenait quand la tête de lecture
-     avançait toujours ; avec un arc, reculer depuis 99 sortait de la
-     plage et faisait tout le tour pour retomber sur 111 — l'image la
-     plus éloignée, un quart de tour de travers.
-     Ce repli est ce qui garantit qu'un scroll rapide SAUTE des images au
-     lieu d'attendre : la rotation se fait grossière une seconde, elle ne
-     bloque jamais le fil principal. */
+  /* Repli : tant que la fenêtre se remplit, on affiche le bitmap le plus
+     proche plutôt que rien. Le parcours est modulo, comme la rotation
+     qu'il sert : chercher autour de l'image 002 doit pouvoir trouver la
+     119, sa voisine de 3°, et non sortir de la plage.
+
+     ON CHERCHE DES DEUX CÔTÉS, et l'écart croît d'un cran à la fois. Ne
+     reculer que d'un seul côté paraissait suffisant — les images arrivent
+     dans l'ordre du tour, la précédente est presque toujours là. C'est
+     vrai EN DESCENTE seulement. À la remontée, le sens de marche n'a plus
+     que les cinq images d'ARRIERE devant lui ; passé ces cinq, le parcours
+     arrière faisait le tour complet et retombait sur le bord AVANT de la
+     fenêtre, à vingt images de là. Mesuré : 12 peintures sur 130 à 60° de
+     la bonne, alternant avec les bonnes — un stroboscope, pas un repli
+     grossier. En descente, zéro sur 109.
+
+     Le `??` garde la préférence pour l'arrière à écart égal, ce qui reste
+     le bon pari ; il BORNE simplement l'erreur à l'image réellement la
+     plus proche au lieu de la laisser courir sur toute la fenêtre. */
   const disponible = (i: number) => {
-    for (let d = 0; d <= ARC * 2; d++) {
-      const bm = bitmaps.current[i - d] ?? bitmaps.current[i + d]
+    for (let d = 0; d < NB; d++) {
+      const bm = bitmaps.current[(i - d + NB) % NB] ?? bitmaps.current[(i + d) % NB]
       if (bm) return bm
     }
     return null
@@ -344,12 +427,15 @@ export function Voiture() {
     /* `prefers-reduced-motion` fige la voiture sur la pose de départ :
        une rotation liée au scroll est exactement le genre de mouvement
        que ce réglage demande d'éteindre. Le volume reste, il ne tourne
-       plus — et le tourbillon ne démarre pas non plus. Ce que ce réglage
-       laisse voir est désormais un trois-quarts avant et non la plongée
-       de face de l'image 000 : la vue figée est enfin lisible. */
+       plus. Ce que ce réglage laisse voir est le trois-quarts avant et
+       non la plongée de face de l'image 000 : la vue figée est lisible.
+
+       On sort AVANT la veille, et c'est voulu : ne jamais tourner, c'est
+       ne jamais avoir besoin des 119 autres images. Une seule requête au
+       montage au lieu de cent vingt. */
     if (reduit || !pretes) return
     peindre(i)
-    chargeArc()
+    veille(i)
   })
 
   if (absente) return null
@@ -358,24 +444,31 @@ export function Voiture() {
     <motion.div
       className="voiture"
       aria-hidden="true"
-      data-fige={reduit ? "1" : undefined}
-      /* EN MOUVEMENT RÉDUIT, LE FONDU RESTE — c'est la seule chose qui
-         range la voiture. Ne rien lier du tout, comme on le faisait,
-         débranche `fondu` avec le reste : la toile est `position: fixed`,
-         donc la voiture se retrouvait épinglée au centre de l'écran,
-         pleine taille et pleine opacité, sur les onze mille pixels de
-         page qui suivent le tracé — par-dessus huit feuilles de texte.
-         Le réglage censé calmer la page la rendait plus envahissante que
-         l'animation qu'il éteint.
+      /* PLUS DE BRANCHE SUR `reduit` ICI, et c'est la suppression de la
+         spirale qui l'a rendue inutile. Il ne reste que deux valeurs :
+         une assiette FIXE — une pose, pas une animation — et le fondu.
+         Ni l'une ni l'autre n'est un mouvement, donc les deux valent
+         dans les deux modes. Toute la différence tient désormais au
+         canvas : en mouvement réduit il n'est repeint qu'une fois, donc
+         la voiture ne tourne pas.
 
-         Un fondu n'est pas un mouvement : rien ne se déplace, ne tourne
-         ni ne change de taille, et c'est précisément le remplacement que
-         les recommandations d'accessibilité proposent à la place d'une
-         animation. Ce qu'on retire ici, c'est l'orbite, le balancement
-         et le zoom. L'assiette, elle, est une valeur FIXE — une pose,
-         pas une animation — donc elle reste, sinon la voiture retombe
-         sur la diagonale brute de l'image. */
-      style={reduit ? { rotate: INCLINAISON, opacity: fondu } : { x, y, scale: echelle, rotate: vrille, opacity: fondu }}
+         LE FONDU DOIT RESTER LIÉ DANS LES DEUX CAS. La version d'avant
+         ne liait rien du tout en mouvement réduit, ce qui débranchait
+         `fondu` avec le reste : la toile étant `position: fixed`, la
+         voiture restait épinglée au centre de l'écran, pleine taille et
+         pleine opacité, sur les onze mille pixels de page qui suivent le
+         tracé — par-dessus huit feuilles de texte. Le réglage censé
+         calmer la page la rendait plus envahissante que l'animation
+         qu'il éteint.
+
+         Accessoirement, un objet de style unique supprime l'écart
+         d'hydratation : le serveur et le client écrivent la même chose,
+         quel que soit le réglage du visiteur. Un `data-fige` traînait ici,
+         qui promettait d'exposer l'état au CSS ; il ne l'a jamais fait —
+         `matchMedia` n'existant pas au rendu serveur, l'attribut était
+         toujours absent du HTML et React ne réconcilie pas les attributs
+         à l'hydratation. Aucune règle ne le ciblait, il est parti. */
+      style={{ rotate: INCLINAISON, opacity: fondu }}
     >
       {/* La flottaison est une couche À PART, et en CSS. À part, parce
           que framer réécrit le `transform` du parent à chaque frame de
