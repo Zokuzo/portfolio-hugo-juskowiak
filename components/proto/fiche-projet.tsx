@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, ViewTransition } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { Smooth } from "./smooth"
@@ -57,44 +57,50 @@ export function FicheProjet({ slug }: { slug: string }) {
           {p.unite} — {p.nom} — {p.cadre} — REF.0043-B / REV.2
         </div>
 
-        <header className="fp-head">
-          <div className="fp-barre">
-            <Link href="/#index" className="mono mono-xs dim fp-retour">
-              <span aria-hidden="true">←</span> {t(lang, "fpRetour")}
-            </Link>
-            <div className="fp-lang">
-              <button type="button" className="mono mono-xs" aria-pressed={lang === "fr"} onClick={() => setLang("fr")}>
-                FR
-              </button>
-              <button type="button" className="mono mono-xs" aria-pressed={lang === "en"} onClick={() => setLang("en")}>
-                EN
-              </button>
+        {/* L'en-tête porte le nom de transition : la card cliquée sur une
+            feuille et cet en-tête sont LE MÊME objet pour le navigateur,
+            qui anime position et taille entre les deux. Sans support
+            View Transitions, la navigation reste une navigation. */}
+        <ViewTransition name={`fiche-${p.slug}`} share="morph" default="none">
+          <header className="fp-head">
+            <div className="fp-barre">
+              <Link href="/#index" className="mono mono-xs dim fp-retour">
+                <span aria-hidden="true">←</span> {t(lang, "fpRetour")}
+              </Link>
+              <div className="fp-lang">
+                <button type="button" className="mono mono-xs" aria-pressed={lang === "fr"} onClick={() => setLang("fr")}>
+                  FR
+                </button>
+                <button type="button" className="mono mono-xs" aria-pressed={lang === "en"} onClick={() => setLang("en")}>
+                  EN
+                </button>
+              </div>
             </div>
-          </div>
 
-          <p className="mono mono-sm dim fp-unite">
-            <span className="fp-mark">{p.unite}</span>
-            <span>{t(lang, "fpFiche")}</span>
-          </p>
-          <h1 className="fp-nom">{p.nom}</h1>
-          <p className="jp dim fp-jp">{p.jp}</p>
-          <p className="fp-soustitre">{p.sousTitre}</p>
+            <p className="mono mono-sm dim fp-unite">
+              <span className="fp-mark">{p.unite}</span>
+              <span>{t(lang, "fpFiche")}</span>
+            </p>
+            <h1 className="fp-nom">{p.nom}</h1>
+            <p className="jp dim fp-jp">{p.jp}</p>
+            <p className="fp-soustitre">{p.sousTitre}</p>
 
-          <dl className="fp-meta mono mono-xs">
-            <div>
-              <dt className="dim">{t(lang, "fpCadre")}</dt>
-              <dd>{p.cadre}</dd>
-            </div>
-            <div>
-              <dt className="dim">{t(lang, "fpPeriode")}</dt>
-              <dd>{p.periode}</dd>
-            </div>
-            <div>
-              <dt className="dim">{t(lang, "fpEtat")}</dt>
-              <dd className="fp-etat">{p.etat}</dd>
-            </div>
-          </dl>
-        </header>
+            <dl className="fp-meta mono mono-xs">
+              <div>
+                <dt className="dim">{t(lang, "fpCadre")}</dt>
+                <dd>{p.cadre}</dd>
+              </div>
+              <div>
+                <dt className="dim">{t(lang, "fpPeriode")}</dt>
+                <dd>{p.periode}</dd>
+              </div>
+              <div>
+                <dt className="dim">{t(lang, "fpEtat")}</dt>
+                <dd className="fp-etat">{p.etat}</dd>
+              </div>
+            </dl>
+          </header>
+        </ViewTransition>
 
         <motion.section className="fp-bloc" aria-labelledby="fp-ctx" {...monte(0)}>
           <h2 id="fp-ctx" className="mono mono-sm fp-bloc-titre">

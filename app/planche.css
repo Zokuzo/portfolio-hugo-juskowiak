@@ -3591,3 +3591,39 @@ body {
     animation: none;
   }
 }
+
+/* ------------------------------------------------------------
+   TRANSITIONS DE VUE — le morph card → fiche
+   La card nommée sur une feuille et l'en-tête de la fiche portent
+   le même nom de transition : le navigateur anime position et
+   taille, aller et retour. Sans support, navigation normale —
+   aucun code de repli à écrire.
+   ------------------------------------------------------------ */
+
+/* L'overlay de transition gobe les clics pendant l'animation :
+   on le rend transparent aux événements, la page reste vivante. */
+::view-transition {
+  pointer-events: none;
+}
+::view-transition-group(.morph) {
+  animation-duration: 400ms;
+  animation-timing-function: var(--ease);
+}
+/* Le flou en vol masque l'interpolation de pixels entre deux
+   compositions très différentes — recette du guide Next embarqué. */
+::view-transition-image-pair(.morph) {
+  animation-name: vt-flou;
+}
+@keyframes vt-flou {
+  30% {
+    filter: blur(3px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
