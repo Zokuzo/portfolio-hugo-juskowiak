@@ -796,6 +796,14 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
+  /* Promotion STABLE, et c'est le remède principal au scintillement du
+     titre sous Firefox : la plaque anime y/scale/opacity/filter à
+     chaque frame de scroll, et sans couche dédiée Firefox re-rasterise
+     à chaque frame un titre en background-clip:text — les glyphes
+     clignotent. Promue, la texture est en cache et le compositeur ne
+     fait que la déplacer ; seuls le pas de flou (4 par sortie) et le
+     pas de reflet (40) repeignent encore. */
+  will-change: transform, opacity, filter;
 }
 
 /* Le tout premier pixel de la planche est un liseret allumé — le

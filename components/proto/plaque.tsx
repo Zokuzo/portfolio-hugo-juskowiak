@@ -43,8 +43,17 @@ export function Plaque({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => vo
   const blur = useTransform(scrollYProgress, (v) => `blur(${Math.round(v * 4)}px)`)
 
   /* La réflexion du chrome suit le scroll ET le pointeur.
-     1,6em = deux cycles du motif : l'horizon traverse deux fois. */
-  const chromeY = useTransform(scrollYProgress, [0, 1], ["0em", "1.6em"])
+     1,6em = deux cycles du motif : l'horizon traverse deux fois.
+
+     PAR PAS DE 0,04em, et c'est le remède au scintillement du titre
+     sous Firefox : chaque changement de --chrome-y repeint le dégradé
+     À TRAVERS les glyphes (background-clip: text), un des rares coûts
+     que la promotion de .plaque-body ne peut pas absorber. En continu,
+     ça repeignait à chaque frame de scroll ; par pas, quarante fois
+     sur toute la sortie de plaque — 5 % de la période du motif par
+     pas, sous le seuil visible. */
+  const chromeYBrut = useTransform(scrollYProgress, [0, 1], [0, 1.6])
+  const chromeY = useTransform(chromeYBrut, (v) => (Math.round(v * 25) / 25).toFixed(2) + "em")
 
   useEffect(() => {
     const el = root.current
@@ -77,13 +86,21 @@ export function Plaque({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => vo
       cx += (tx - cx) * 0.06
       cy += (ty - cy) * 0.06
       // le monde est en position:fixed, hors de la plaque : les
-      // variables de pointeur vivent donc sur la racine du document
+      // variables de pointeur vivent donc sur la racine du document.
+      // PAR PAS DE 0,02, et seulement SI la valeur change : une custom
+      // property écrite sur la racine invalide le style de tout ce qui
+      // la consomme (sol, arcs), et --chrome-x repeint le dégradé du
+      // titre à travers ses glyphes. Écrire quatre décimales par frame
+      // de souris salissait tout ça pour des déplacements sub-pixel.
       const rootStyle = document.documentElement.style
-      rootStyle.setProperty("--px", cx.toFixed(4))
-      rootStyle.setProperty("--py", cy.toFixed(4))
+      const qx = (Math.round(cx * 50) / 50).toFixed(2)
+      const qy = (Math.round(cy * 50) / 50).toFixed(2)
+      if (rootStyle.getPropertyValue("--px") !== qx) rootStyle.setProperty("--px", qx)
+      if (rootStyle.getPropertyValue("--py") !== qy) rootStyle.setProperty("--py", qy)
       // le pointeur incline la réflexion latéralement, comme une
       // surface courbe — celle-ci reste locale à la plaque
-      el.style.setProperty("--chrome-x", (cx * 0.22).toFixed(4) + "em")
+      const qcx = (Math.round(cx * 0.22 * 100) / 100).toFixed(2) + "em"
+      if (el.style.getPropertyValue("--chrome-x") !== qcx) el.style.setProperty("--chrome-x", qcx)
 
       // convergé à moins d'un demi-millième : plus rien à écrire
       if (Math.abs(tx - cx) < 0.0005 && Math.abs(ty - cy) < 0.0005) {
