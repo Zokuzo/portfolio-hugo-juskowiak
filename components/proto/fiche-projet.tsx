@@ -34,6 +34,15 @@ export function FicheProjet({ slug }: { slug: string }) {
   // fiche présente dans une langue et pas dans l'autre.
   if (!p) return null
 
+  /* Une fiche formation garde le mobilier mais change de grille de
+     lecture : programme au lieu de contraintes, travaux au lieu de
+     décisions, compétences au lieu de parc. Les clés sont figées en
+     `as const` pour rester dans l'union des clés du dictionnaire. */
+  const libelles =
+    p.genre === "formation"
+      ? ({ fiche: "fpFicheFormation", bloc2: "fpProgramme", bloc3: "fpTravaux", parc: "fpCompetences" } as const)
+      : ({ fiche: "fpFiche", bloc2: "fpContraintes", bloc3: "fpDecisions", parc: "fpParc" } as const)
+
   const monte = (i: number) => ({
     initial: { opacity: 0, y: 12 },
     whileInView: { opacity: 1, y: 0 },
@@ -79,7 +88,7 @@ export function FicheProjet({ slug }: { slug: string }) {
 
             <p className="mono mono-sm dim fp-unite">
               <span className="fp-mark">{p.unite}</span>
-              <span>{t(lang, "fpFiche")}</span>
+              <span>{t(lang, libelles.fiche)}</span>
             </p>
             <h1 className="fp-nom">{p.nom}</h1>
             <p className="jp dim fp-jp">{p.jp}</p>
@@ -113,7 +122,7 @@ export function FicheProjet({ slug }: { slug: string }) {
             rien dire sans ce qu'elle avait à tenir. */}
         <motion.section className="fp-bloc" aria-labelledby="fp-ctr" {...monte(1)}>
           <h2 id="fp-ctr" className="mono mono-sm fp-bloc-titre">
-            {t(lang, "fpContraintes")}
+            {t(lang, libelles.bloc2)}
           </h2>
           <ul className="fp-contraintes">
             {p.contraintes.map((c, i) => (
@@ -127,7 +136,7 @@ export function FicheProjet({ slug }: { slug: string }) {
 
         <motion.section className="fp-bloc" aria-labelledby="fp-dec" {...monte(2)}>
           <h2 id="fp-dec" className="mono mono-sm fp-bloc-titre">
-            {t(lang, "fpDecisions")}
+            {t(lang, libelles.bloc3)}
           </h2>
           <ol className="fp-decisions">
             {p.decisions.map((d, i) => (
@@ -153,7 +162,7 @@ export function FicheProjet({ slug }: { slug: string }) {
 
         <motion.section className="fp-bloc" aria-labelledby="fp-parc" {...monte(4)}>
           <h2 id="fp-parc" className="mono mono-sm fp-bloc-titre">
-            {t(lang, "fpParc")}
+            {t(lang, libelles.parc)}
           </h2>
           <ul className="fp-parc">
             {p.parc.map((x) => (

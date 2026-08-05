@@ -2,9 +2,9 @@ import { notFound } from "next/navigation"
 import { FicheProjet } from "@/components/proto/fiche-projet"
 import { SLUGS } from "@/components/proto/projets"
 
-/* Les cinq fiches sont connues à la compilation : elles sortent en
-   statique, comme le reste du document. Aucune donnée n'arrive d'un
-   serveur à l'exécution. */
+/* Toutes les fiches sont connues à la compilation : elles sortent
+   en statique, comme le reste du document. Aucune donnée n'arrive
+   d'un serveur à l'exécution. */
 export function generateStaticParams() {
   return SLUGS.map((slug) => ({ slug }))
 }

@@ -600,13 +600,21 @@ const DICT = {
   fpResultat: { fr: "Résultat", en: "Outcome" },
   fpParc: { fr: "Parc", en: "Stack" },
 
+  /* Les fiches formation partagent le gabarit des fiches projet
+     mais pas leur grille de lecture : un cursus n'a ni contraintes
+     ni décisions techniques. Mêmes emplacements, autres mots. */
+  fpFicheFormation: { fr: "Fiche formation", en: "Education file" },
+  fpProgramme: { fr: "Programme", en: "Curriculum" },
+  fpTravaux: { fr: "Travaux marquants", en: "Notable work" },
+  fpCompetences: { fr: "Compétences & outils", en: "Skills & tools" },
+
   /* Annexes de l'index : les fiches d'unité ne sont pas des feuilles du
      jeu, ce sont des pièces détachées — d'où un bloc distinct et une
      référence en U-0n. */
-  idxAnnexes: { fr: "Annexes — fiches projet", en: "Annexes — project files" },
+  idxAnnexes: { fr: "Annexes — fiches détaillées", en: "Annexes — detailed files" },
   idxAnnexesNote: {
-    fr: "Cinq sous-ensembles documentés séparément : contexte, contraintes, décisions.",
-    en: "Five sub-assemblies documented separately: background, constraints, decisions.",
+    fr: "Neuf pièces documentées séparément — cinq projets, quatre cursus.",
+    en: "Nine pieces documented separately — five projects, four programmes.",
   },
 } as const
 
