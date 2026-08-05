@@ -149,7 +149,7 @@ export function Atelier({ lang }: { lang: Lang }) {
             <motion.article
               key={p.code}
               className={`at-projet${p.fiche ? " at-a-fiche" : ""}`}
-              initial={{ opacity: 0, y: 12 }}
+              initial={p.fiche ? false : { opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.25 }}
               transition={{ duration: 0.5, delay: 0.05 * i, ease: [0.22, 1, 0.36, 1] }}
