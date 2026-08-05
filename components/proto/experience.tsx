@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { motion } from "framer-motion"
+import { ViewTransition } from "react"
 import { t, type Lang } from "./dict"
 import { employeurs, type Employeur } from "./parcours"
 
@@ -111,25 +112,34 @@ export function Experience({ lang }: { lang: Lang }) {
               <p className="mono mono-sm dim-2 xp-resume">{e.resume}</p>
 
               <ol className="xp-produits">
-                {e.produits.map((p) => (
-                  <li key={p.code} className="xp-produit">
-                    <span className="mono mono-xs dim xp-code">{p.code}</span>
-                    <div>
-                      <h4 className="xp-produit-nom">
-                        {p.nom}
-                        {p.aka && <span className="mono mono-xs dim xp-aka">— {p.aka}</span>}
-                      </h4>
-                      <p className="mono mono-sm dim-2 xp-produit-texte">{p.texte}</p>
-                      {/* Le lien n apparait que si la fiche existe : un
-                          renvoi vers une page vide est pire qu absence. */}
-                      {p.fiche && (
-                        <Link href={`/work/${p.fiche}`} className="mono mono-xs xp-fiche-lien">
-                          {t(lang, "xpFiche")} <span aria-hidden="true">→</span>
-                        </Link>
-                      )}
-                    </div>
-                  </li>
-                ))}
+                {e.produits.map((p) => {
+                  const ligne = (
+                    <li key={p.code} className="xp-produit">
+                      <span className="mono mono-xs dim xp-code">{p.code}</span>
+                      <div>
+                        <h4 className="xp-produit-nom">
+                          {p.nom}
+                          {p.aka && <span className="mono mono-xs dim xp-aka">— {p.aka}</span>}
+                        </h4>
+                        <p className="mono mono-sm dim-2 xp-produit-texte">{p.texte}</p>
+                        {/* Le lien n apparait que si la fiche existe : un
+                            renvoi vers une page vide est pire qu absence. */}
+                        {p.fiche && (
+                          <Link href={`/work/${p.fiche}`} className="mono mono-xs xp-fiche-lien">
+                            {t(lang, "xpFiche")} <span aria-hidden="true">→</span>
+                          </Link>
+                        )}
+                      </div>
+                    </li>
+                  )
+                  return p.fiche ? (
+                    <ViewTransition key={p.code} name={`fiche-${p.fiche}`} share="morph" default="none">
+                      {ligne}
+                    </ViewTransition>
+                  ) : (
+                    ligne
+                  )
+                })}
               </ol>
 
               <ul className="xp-parc">

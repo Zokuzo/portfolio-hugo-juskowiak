@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { motion } from "framer-motion"
+import { ViewTransition } from "react"
 import { t, type Lang } from "./dict"
 import { perso, type ProjetPerso } from "./parcours"
 
@@ -144,10 +145,10 @@ export function Atelier({ lang }: { lang: Lang }) {
       <div className="at-grille">
         {liste.map((p: ProjetPerso, i) => {
           const Schema = SCHEMAS[p.code]
-          return (
+          const carte = (
             <motion.article
               key={p.code}
-              className="at-projet"
+              className={`at-projet${p.fiche ? " at-a-fiche" : ""}`}
               initial={{ opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.25 }}
@@ -194,6 +195,15 @@ export function Atelier({ lang }: { lang: Lang }) {
                 {!p.liens && <p className="mono mono-xs dim at-prive">{t(lang, "atPrive")}</p>}
               </div>
             </motion.article>
+          )
+          /* Seules les cards à fiche portent un nom de transition : nommer
+             les autres créerait des paires fantômes sans destination. */
+          return p.fiche ? (
+            <ViewTransition key={p.code} name={`fiche-${p.fiche}`} share="morph" default="none">
+              {carte}
+            </ViewTransition>
+          ) : (
+            carte
           )
         })}
       </div>
