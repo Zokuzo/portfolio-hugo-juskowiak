@@ -307,6 +307,15 @@ body {
 .world > * {
   position: absolute;
   pointer-events: none;
+  /* Promotion STABLE de chaque plan, et c'est le remède au flash
+     sombre d'une frame que montrait la capture de production : une
+     couche en blend qui se re-crée (dé-promotion puis re-promotion au
+     moindre mouvement) perd sa contribution lumineuse pendant une
+     frame. Promue en permanence, elle ne churne jamais ; les y
+     quantifiés (world.tsx) font que la plupart des frames ne la
+     touchent même pas. Le coût mémoire est celui d'une texture par
+     plan — le prix d'un décor en couches. */
+  will-change: transform, opacity;
 }
 
 /* Le contenu des sections passe devant le monde. */
@@ -378,6 +387,7 @@ body {
   background-repeat: repeat;
   background-size: var(--tile) var(--tile);
   backface-visibility: hidden;
+  will-change: transform;
 }
 /* La dérive vaut EXACTEMENT une tuile — d'où la boucle sans raccord —
    donc la marge horizontale vaut une tuile, et UNIQUEMENT du côté vers
@@ -394,19 +404,31 @@ body {
      une bande de 300px se retrouvait sans brume à droite en fin de
      cycle. Invisible seulement parce que l'opacité est basse.
    Les deux disparaissent en liant marge, tuile et dérive à --tile. */
-/* PAS D'ANIMATION CSS ICI, et c'est mesuré : une animation `infinite`
-   — même en `steps()` — garde la nappe promue en texture séparée que
-   chaque frame de scroll doit remélanger (33 ms/frame pour les quatre
-   nappes, compositeur logiciel). La dérive est écrite par world.tsx,
-   par pas de ~700 ms, à partir des variables --tile/--drift ci-dessous :
-   entre deux pas, la couche se dé-promeut et le monde s'aplatit. */
+/* Dérive CONTINUE sur couche PROMUE en permanence — l'aller-retour a
+   été payé pour le savoir. Version par pas de 700 ms en JS : chaque
+   pas re-créait la couche et le blend flashait une frame (mesuré sur
+   capture : luminance 34 → 21 → 34, à la période exacte des pas).
+   Depuis que la texture est un bitmap cuit, l'animation linéaire ne
+   re-rasterise rien : le compositeur déplace une texture en cache. */
 .fog-sheet.drift-l {
   left: -40px;
   right: calc(-40px - var(--tile));
+  animation: fog-drift-l var(--drift) linear infinite;
 }
 .fog-sheet.drift-r {
   left: calc(-40px - var(--tile));
   right: -40px;
+  animation: fog-drift-r var(--drift) linear infinite;
+}
+@keyframes fog-drift-l {
+  to {
+    transform: translate3d(calc(-1 * var(--tile)), 0, 0);
+  }
+}
+@keyframes fog-drift-r {
+  to {
+    transform: translate3d(var(--tile), 0, 0);
+  }
 }
 .fog-lit {
   mix-blend-mode: screen;
@@ -443,11 +465,12 @@ body {
   opacity: var(--vis-arcs);
 }
 /* Les trois SVG empilés du composant : deux qui tournent, un immobile.
-   La rotation est écrite par world.tsx toutes les ~700 ms sur les
-   <svg> RACINES — Firefox met alors le rendu en cache et composite la
-   rotation, alors qu'un <g> interne qui tourne re-rasterise tout le
-   SVG à chaque pas. Les origines restent ici : le JS n'écrit que
-   `transform`. */
+   La rotation vit sur les <svg> RACINES et non sur des <g> internes —
+   Firefox met en cache le rendu d'un SVG et composite sa rotation,
+   mais re-rasterise tout SVG dont un groupe interne tourne (mesuré :
+   p50 750 → 33 ms/frame). Continue et sur couche promue : une rotation
+   par pas re-créait la couche et flashait une frame — même leçon que
+   les nappes de brume. */
 .arcs-c {
   position: absolute;
   inset: 0;
@@ -457,6 +480,18 @@ body {
 .arcs-lent,
 .arcs-inverse {
   transform-origin: 50% 50%;
+  will-change: transform;
+}
+.arcs-lent {
+  animation: spin 200s linear infinite;
+}
+.arcs-inverse {
+  animation: spin 320s linear infinite reverse;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 /* 2/2 des occurrences de --sig-rail admises dans le décor */
 .p-arcs .ring-sig {
@@ -567,6 +602,9 @@ body {
     var(--cell) var(--cell),
     var(--cell) var(--cell);
   background-repeat: no-repeat, repeat, repeat;
+  /* Promue en permanence : `flow` la déplace à chaque frame de scroll,
+     et une couche qui churne flashe — même règle que les nappes. */
+  will-change: transform;
 }
 
 /* z8 — repères d'horizon. Décor muet : il ne parle pas, il gradue. */

@@ -93,46 +93,20 @@ export function World() {
     gate.set(reduce ? 0 : 1)
   }, [reduce, gate])
 
-  /* DÉRIVES ET ROTATION PAR PAS, EN JS — pas en animation CSS.
-     Une animation CSS `infinite`, même en `steps()`, garde son élément
-     PROMU en texture de compositeur séparée pour toute sa durée de vie.
-     Mesuré (compositeur logiciel, throttle ×4) : les quatre nappes en
-     dérive coûtaient 33 ms/frame et le spin des arcs 17 ms — non pas en
-     peinture, mais parce que chaque frame de scroll remélangeait autant
-     de textures vivantes. Écrit en JS toutes les ~700 ms, le mouvement
-     est le même à l'œil (6 px sur du bruit flou, 0,45° sur des cercles
-     à 0,13 d'opacité) et les couches se dé-promeuvent entre deux pas :
-     le monde s'aplatit en une texture que le scroll recompose pour
-     rien. Les périodes restent celles des variables CSS --drift. */
-  useEffect(() => {
-    if (reduce) return
-    const t0 = performance.now()
-    const PAS_MS = 700
-    const nappes = Array.from(document.querySelectorAll<HTMLElement>(".world .fog-sheet")).map((el) => ({
-      el,
-      tile: parseFloat(getComputedStyle(el).getPropertyValue("--tile")) || 900,
-      drift: (parseFloat(getComputedStyle(el).getPropertyValue("--drift")) || 180) * 1000,
-      sens: el.classList.contains("drift-r") ? 1 : -1,
-    }))
-    const arcs = Array.from(document.querySelectorAll<SVGSVGElement>(".world .arcs-lent, .world .arcs-inverse")).map((el) => ({
-      el,
-      periode: (el.classList.contains("arcs-inverse") ? -320 : 200) * 1000,
-    }))
-    const pas = () => {
-      const t = performance.now() - t0
-      for (const n of nappes) {
-        const off = ((t % n.drift) / n.drift) * n.tile * n.sens
-        n.el.style.transform = `translate3d(${Math.round(off / 6) * 6}px, 0, 0)`
-      }
-      for (const a of arcs) {
-        const deg = ((t % Math.abs(a.periode)) / a.periode) * 360
-        a.el.style.transform = `rotate(${(Math.round(deg / 0.45) * 0.45).toFixed(2)}deg)`
-      }
-    }
-    pas()
-    const id = setInterval(pas, PAS_MS)
-    return () => clearInterval(id)
-  }, [reduce])
+  /* PLUS DE SYSTÈME DE PAS EN JS, ET C'EST UN RETOUR MESURÉ. Une
+     première version écrivait dérives et rotation toutes les ~700 ms
+     pour laisser les couches se dé-promouvoir entre deux pas. Sur la
+     capture de production, chaque pas produisait un FLASH sombre d'une
+     frame — luminance moyenne 34 → 21 → 34 — à la période exacte des
+     700 ms : en se re-créant, la couche en mix-blend-mode perd sa
+     contribution pendant une frame. C'était le « flickering ».
+
+     L'architecture finale est l'inverse : couches promues EN
+     PERMANENCE (will-change, voir planche.css) et animations continues
+     du compositeur. Depuis que les textures sont des bitmaps cuits et
+     que la rotation des arcs vit sur les <svg> racines, une animation
+     `linear infinite` sur ces couches ne re-rasterise rien : elle ne
+     coûte qu'une composition, et ne churne jamais. */
 
   /* Lenis (config actuelle) scrolle réellement la fenêtre, donc
      useScroll() sans target voit tout. S'il passait un jour en mode
