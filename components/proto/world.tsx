@@ -114,9 +114,9 @@ export function World() {
       drift: (parseFloat(getComputedStyle(el).getPropertyValue("--drift")) || 180) * 1000,
       sens: el.classList.contains("drift-r") ? 1 : -1,
     }))
-    const arcs = Array.from(document.querySelectorAll<SVGGElement>(".world .spin-slow, .world .spin-rev")).map((el) => ({
+    const arcs = Array.from(document.querySelectorAll<SVGSVGElement>(".world .arcs-lent, .world .arcs-inverse")).map((el) => ({
       el,
-      periode: (el.classList.contains("spin-rev") ? -320 : 200) * 1000,
+      periode: (el.classList.contains("arcs-inverse") ? -320 : 200) * 1000,
     }))
     const pas = () => {
       const t = performance.now() - t0
@@ -224,22 +224,33 @@ export function World() {
         <div className="fog-sheet fog-occl drift-l" />
       </motion.div>
 
-      {/* z30 — instrumentation, déjà mangée par la nappe précédente */}
-      <motion.svg className="p-arcs" viewBox="0 0 100 100" style={{ y: pArcs.y }}>
-        <g className="spin-slow" fill="none" stroke="rgba(226,232,240,0.16)" strokeWidth="0.09">
-          <circle cx="50" cy="50" r="49" strokeDasharray="0.6 2.4" />
-          <circle cx="50" cy="50" r="41" strokeDasharray="14 5 2 5" />
-          <circle cx="50" cy="50" r="26.5" />
-        </g>
-        <g className="spin-rev" fill="none" stroke="rgba(226,232,240,0.13)" strokeWidth="0.09">
-          <circle cx="50" cy="50" r="34" strokeDasharray="40 8" />
-          <circle className="ring-sig" cx="50" cy="50" r="18" strokeDasharray="1 3" />
-        </g>
-        <g stroke="rgba(226,232,240,0.1)" strokeWidth="0.09">
-          <line x1="50" y1="0.5" x2="50" y2="99.5" strokeDasharray="2 4" />
-          <line x1="0.5" y1="50" x2="99.5" y2="50" strokeDasharray="2 4" />
-        </g>
-      </motion.svg>
+      {/* z30 — instrumentation, déjà mangée par la nappe précédente.
+          TROIS SVG EMPILÉS, pas un seul : Firefox re-rasterise le SVG
+          entier dès qu'un <g> INTERNE tourne (mesuré : p50 750 ms/frame
+          en scroll, 33 sans les arcs), mais met en cache un SVG dont
+          c'est l'élément RACINE qui tourne. La rotation par pas écrite
+          plus haut vise donc les <svg> eux-mêmes. */}
+      <motion.div className="p-arcs" style={{ y: pArcs.y }}>
+        <svg className="arcs-c arcs-lent" viewBox="0 0 100 100">
+          <g fill="none" stroke="rgba(226,232,240,0.16)" strokeWidth="0.09">
+            <circle cx="50" cy="50" r="49" strokeDasharray="0.6 2.4" />
+            <circle cx="50" cy="50" r="41" strokeDasharray="14 5 2 5" />
+            <circle cx="50" cy="50" r="26.5" />
+          </g>
+        </svg>
+        <svg className="arcs-c arcs-inverse" viewBox="0 0 100 100">
+          <g fill="none" stroke="rgba(226,232,240,0.13)" strokeWidth="0.09">
+            <circle cx="50" cy="50" r="34" strokeDasharray="40 8" />
+            <circle className="ring-sig" cx="50" cy="50" r="18" strokeDasharray="1 3" />
+          </g>
+        </svg>
+        <svg className="arcs-c" viewBox="0 0 100 100">
+          <g stroke="rgba(226,232,240,0.1)" strokeWidth="0.09">
+            <line x1="50" y1="0.5" x2="50" y2="99.5" strokeDasharray="2 4" />
+            <line x1="0.5" y1="50" x2="99.5" y2="50" strokeDasharray="2 4" />
+          </g>
+        </svg>
+      </motion.div>
 
       {/* z18 — brume médiane : deux échelles de rapport non entier en
           sens inverse, l'interférence détruit la périodicité */}

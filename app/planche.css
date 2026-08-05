@@ -265,16 +265,19 @@ body {
    ------------------------------------------------------------ */
 
 .proto-root {
-  /* nappe « corps » : basse fréquence anisotrope (x < y ⇒ blobs
-     étirés horizontalement = bancs de brume), 2 octaves = douceur
-     sans flou runtime. */
-  --fog-body: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='700' height='700'%3E%3Cfilter id='a' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.0032 0.0055' numOctaves='2' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 .34 .34 .34 0 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='table' tableValues='0 0 .06 .3 .72 1'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='700' height='700' filter='url(%23a)'/%3E%3C/svg%3E");
-
-  /* nappe « filaments » : fréquence moyenne, 4 octaves, table alpha
-     seuillée ⇒ traînées éparses au lieu d'une bouillie uniforme. */
-  --fog-wisp: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='700' height='700'%3E%3Cfilter id='b' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.011 0.02' numOctaves='4' seed='29' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 .34 .34 .34 0 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='table' tableValues='0 0 0 .12 .45 1'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='700' height='700' filter='url(%23b)'/%3E%3C/svg%3E");
-
-  --grain-tex: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* LES BRUITS SONT CUITS EN WebP, ET C'EST MESURÉ. Les versions
+     feTurbulence d'origine (conservées dans tools/monde/cuire.md avec
+     leurs fréquences) coûtaient à Firefox des rasterisations de
+     centaines de ms à chaque fois qu'une couche les portant devait se
+     repeindre — le filtre est recalculé, pas mis en cache comme le
+     fait Chromium. Une image se décode UNE fois. Mêmes pixels :
+     cuits depuis les SVG exacts ci-dessous, 700×700 et 200×200.
+     — corps : basse fréquence anisotrope (blobs étirés = bancs) ;
+     — volutes : fréquence moyenne, alpha seuillé = traînées éparses ;
+     — grain : bruit achromatique fin. */
+  --fog-body: url("/monde/brume-corps.webp");
+  --fog-wisp: url("/monde/brume-volutes.webp");
+  --grain-tex: url("/monde/grain.webp");
 
   /* transmittance par plan : vis(z) = exp(−z/26).
      Ce n'est pas un réglage esthétique, c'est l'extinction. */
@@ -439,16 +442,20 @@ body {
   translate: calc(-50% + var(--px) * 22px) calc(-50% + var(--py) * 14px);
   opacity: var(--vis-arcs);
 }
-/* Même règle que les dérives de brume : pas d'animation CSS, la
-   rotation est écrite par world.tsx toutes les ~700 ms (pas de 0,45°
-   sur des cercles à 0,13-0,16 d'opacité — sous le seuil). Une
-   animation `infinite` garderait ce SVG plein cadre promu en texture
-   séparée à remélanger à chaque frame de scroll (17 ms mesurées).
-   Les origines restent ici : le JS n'écrit que `transform`. */
-.p-arcs .spin-slow {
-  transform-origin: 50% 50%;
+/* Les trois SVG empilés du composant : deux qui tournent, un immobile.
+   La rotation est écrite par world.tsx toutes les ~700 ms sur les
+   <svg> RACINES — Firefox met alors le rendu en cache et composite la
+   rotation, alors qu'un <g> interne qui tourne re-rasterise tout le
+   SVG à chaque pas. Les origines restent ici : le JS n'écrit que
+   `transform`. */
+.arcs-c {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
-.p-arcs .spin-rev {
+.arcs-lent,
+.arcs-inverse {
   transform-origin: 50% 50%;
 }
 /* 2/2 des occurrences de --sig-rail admises dans le décor */
