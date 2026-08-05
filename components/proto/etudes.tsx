@@ -1,6 +1,8 @@
 "use client"
 
+import Link from "next/link"
 import { motion } from "framer-motion"
+import { ViewTransition } from "react"
 import { t, type Lang } from "./dict"
 import { etudes } from "./parcours"
 
@@ -147,26 +149,43 @@ export function Etudes({ lang }: { lang: Lang }) {
         {liste
           .slice()
           .sort((a, b) => a.debut - b.debut)
-          .map((e, i) => (
-            <motion.li
-              key={e.code}
-              className="etu-entree"
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.5 }}
-              transition={{ duration: 0.45, delay: 0.04 * i, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <span className="mono mono-xs dim etu-code">{e.code}</span>
-              <div>
-                <h3 className="etu-nom">{e.nom}</h3>
-                <p className="mono mono-xs dim etu-intitule">
-                  {e.intitule}
-                  {e.lieu ? ` · ${e.lieu}` : ""}
-                </p>
-                <p className="mono mono-sm dim-2 etu-texte">{e.texte}</p>
-              </div>
-            </motion.li>
-          ))}
+          .map((e, i) => {
+            const entree = (
+              <motion.li
+                key={e.code}
+                className={`etu-entree${e.fiche ? " etu-a-fiche" : ""}`}
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.5 }}
+                transition={{ duration: 0.45, delay: 0.04 * i, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <span className="mono mono-xs dim etu-code">{e.code}</span>
+                <div>
+                  <h3 className="etu-nom">{e.nom}</h3>
+                  <p className="mono mono-xs dim etu-intitule">
+                    {e.intitule}
+                    {e.lieu ? ` · ${e.lieu}` : ""}
+                  </p>
+                  <p className="mono mono-sm dim-2 etu-texte">{e.texte}</p>
+                  {/* Le lien n'apparaît que si la fiche existe — même règle
+                      que la feuille 02 : un renvoi vers une page vide est
+                      pire qu'une absence. */}
+                  {e.fiche && (
+                    <Link href={`/work/${e.fiche}`} className="mono mono-xs etu-fiche-lien">
+                      {t(lang, "xpFiche")} <span aria-hidden="true">→</span>
+                    </Link>
+                  )}
+                </div>
+              </motion.li>
+            )
+            return e.fiche ? (
+              <ViewTransition key={e.code} name={`fiche-${e.fiche}`} share="morph" default="none">
+                {entree}
+              </ViewTransition>
+            ) : (
+              entree
+            )
+          })}
       </ol>
     </section>
   )

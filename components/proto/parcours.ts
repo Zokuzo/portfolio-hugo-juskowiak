@@ -63,6 +63,9 @@ export type Etude = {
   rail: 0 | 1 // 0 = rail principal, 1 = second rail (double diplôme)
   excursion?: boolean
   texte: string
+  /* Slug de la fiche détaillée en /work/[slug] — même mécanique que
+     les produits et l'atelier. */
+  fiche?: string
 }
 
 export type ProjetPerso = {
@@ -268,23 +271,23 @@ const EMPLOYEURS_EN: Employeur[] = [
 const ETUDES_FR: Etude[] = [
   {
     code: "E1", nom: "CPGE", intitule: "Classe préparatoire TSI",
-    lieu: "Lycée Touchard-Washington", debut: 2020.7, fin: 2022.5, rail: 0,
+    lieu: "Lycée Touchard-Washington", debut: 2020.7, fin: 2022.5, rail: 0, fiche: "cpge",
     texte: "Deux ans de mathématiques, physique et sciences de l'ingénieur avant toute ligne de code.",
   },
   {
     code: "E2", nom: "ESTIA", intitule: "Master d'ingénieur trilingue",
-    debut: 2022.7, fin: 2025.8, rail: 0,
+    debut: 2022.7, fin: 2025.8, rail: 0, fiche: "estia",
     texte: "Cycle ingénieur mené en trois langues de travail. C'est le rail principal — il porte tout le reste.",
   },
   {
     code: "E3", nom: "Hokkaido", intitule: "Semestre d'échange — Information & Ingénierie",
-    lieu: "Imperial University of Hokkaido, Japon", debut: 2024.2, fin: 2024.6, rail: 0, excursion: true,
+    lieu: "Imperial University of Hokkaido, Japon", debut: 2024.2, fin: 2024.6, rail: 0, excursion: true, fiche: "hokkaido",
     texte:
       "Un semestre à travailler dans une autre norme, une autre langue et un autre rapport au détail. On ne revient pas identique d'un pays qui documente autrement.",
   },
   {
     code: "E4", nom: "MBDS", intitule: "Master en Data Science — MBDS MIAGE",
-    lieu: "Université Côte d'Azur", debut: 2024.7, fin: 2025.8, rail: 1,
+    lieu: "Université Côte d'Azur", debut: 2024.7, fin: 2025.8, rail: 1, fiche: "mbds",
     texte:
       "Second diplôme mené EN PARALLÈLE du cycle ingénieur, pas après. Les deux rails avancent ensemble de septembre 2024 à octobre 2025 — c'est ce que le schéma montre et ce qu'une liste ne dit pas.",
   },
@@ -293,23 +296,23 @@ const ETUDES_FR: Etude[] = [
 const ETUDES_EN: Etude[] = [
   {
     code: "E1", nom: "CPGE", intitule: "TSI preparatory class",
-    lieu: "Lycée Touchard-Washington", debut: 2020.7, fin: 2022.5, rail: 0,
+    lieu: "Lycée Touchard-Washington", debut: 2020.7, fin: 2022.5, rail: 0, fiche: "cpge",
     texte: "Two years of mathematics, physics and engineering science before a single line of code.",
   },
   {
     code: "E2", nom: "ESTIA", intitule: "Trilingual engineering master's",
-    debut: 2022.7, fin: 2025.8, rail: 0,
+    debut: 2022.7, fin: 2025.8, rail: 0, fiche: "estia",
     texte: "Engineering cycle run in three working languages. This is the main rail — it carries everything else.",
   },
   {
     code: "E3", nom: "Hokkaido", intitule: "Exchange semester — Information & Engineering",
-    lieu: "Imperial University of Hokkaido, Japan", debut: 2024.2, fin: 2024.6, rail: 0, excursion: true,
+    lieu: "Imperial University of Hokkaido, Japan", debut: 2024.2, fin: 2024.6, rail: 0, excursion: true, fiche: "hokkaido",
     texte:
       "A semester working to another standard, another language and another relationship with detail. You do not come back the same from a country that documents differently.",
   },
   {
     code: "E4", nom: "MBDS", intitule: "MSc Data Science — MBDS MIAGE",
-    lieu: "Université Côte d'Azur", debut: 2024.7, fin: 2025.8, rail: 1,
+    lieu: "Université Côte d'Azur", debut: 2024.7, fin: 2025.8, rail: 1, fiche: "mbds",
     texte:
       "A second degree run IN PARALLEL with the engineering cycle, not after it. Both rails advance together from September 2024 to October 2025 — that is what the diagram shows and what a list cannot say.",
   },

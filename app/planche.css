@@ -3114,7 +3114,8 @@ body {
   line-height: 1.72;
 }
 .xp-fiche-lien,
-.at-fiche-lien {
+.at-fiche-lien,
+.etu-fiche-lien {
   display: inline-block;
   margin-top: 0.6rem;
   color: var(--g-300);
@@ -3126,20 +3127,25 @@ body {
     border-color 0.3s var(--ease);
 }
 .xp-fiche-lien span,
-.at-fiche-lien span {
+.at-fiche-lien span,
+.etu-fiche-lien span {
   display: inline-block;
   transition: transform 0.3s var(--ease);
 }
 .xp-fiche-lien:hover,
 .xp-fiche-lien:focus-visible,
 .at-fiche-lien:hover,
-.at-fiche-lien:focus-visible {
+.at-fiche-lien:focus-visible,
+.etu-fiche-lien:hover,
+.etu-fiche-lien:focus-visible {
   color: var(--paper);
   border-color: var(--paper);
 }
 .xp-fiche-lien:hover span,
 .at-fiche-lien:hover span,
-.at-a-fiche:hover .at-fiche-lien span {
+.etu-fiche-lien:hover span,
+.at-a-fiche:hover .at-fiche-lien span,
+.etu-a-fiche:hover .etu-fiche-lien span {
   transform: translateX(4px);
 }
 
@@ -3306,6 +3312,23 @@ body {
   gap: 0 clamp(0.6rem, 1.6vw, 1.2rem);
   padding: clamp(0.9rem, 2.2vh, 1.4rem) 0;
   border-bottom: var(--rule) solid var(--line);
+  /* Ancre du lien étiré, comme .at-projet. */
+  position: relative;
+}
+/* L'entrée à fiche se clique PARTOUT — même motif que la feuille 04. */
+.etu-a-fiche .etu-fiche-lien::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.etu-a-fiche:hover,
+.etu-a-fiche:focus-within {
+  background: rgba(226, 232, 240, 0.03);
+}
+.etu-a-fiche:hover .etu-fiche-lien,
+.etu-a-fiche:focus-within .etu-fiche-lien {
+  color: var(--paper);
+  border-color: var(--paper);
 }
 .etu-nom {
   margin: 0;
