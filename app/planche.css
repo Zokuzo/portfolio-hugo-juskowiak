@@ -374,7 +374,6 @@ body {
   bottom: -140px;
   background-repeat: repeat;
   background-size: var(--tile) var(--tile);
-  will-change: transform;
   backface-visibility: hidden;
 }
 /* La dérive vaut EXACTEMENT une tuile — d'où la boucle sans raccord —
@@ -392,15 +391,19 @@ body {
      une bande de 300px se retrouvait sans brume à droite en fin de
      cycle. Invisible seulement parce que l'opacité est basse.
    Les deux disparaissent en liant marge, tuile et dérive à --tile. */
+/* PAS D'ANIMATION CSS ICI, et c'est mesuré : une animation `infinite`
+   — même en `steps()` — garde la nappe promue en texture séparée que
+   chaque frame de scroll doit remélanger (33 ms/frame pour les quatre
+   nappes, compositeur logiciel). La dérive est écrite par world.tsx,
+   par pas de ~700 ms, à partir des variables --tile/--drift ci-dessous :
+   entre deux pas, la couche se dé-promeut et le monde s'aplatit. */
 .fog-sheet.drift-l {
   left: -40px;
   right: calc(-40px - var(--tile));
-  animation: fog-drift-l var(--drift) linear infinite;
 }
 .fog-sheet.drift-r {
   left: calc(-40px - var(--tile));
   right: -40px;
-  animation: fog-drift-r var(--drift) linear infinite;
 }
 .fog-lit {
   mix-blend-mode: screen;
@@ -436,23 +439,21 @@ body {
   translate: calc(-50% + var(--px) * 22px) calc(-50% + var(--py) * 14px);
   opacity: var(--vis-arcs);
 }
+/* Même règle que les dérives de brume : pas d'animation CSS, la
+   rotation est écrite par world.tsx toutes les ~700 ms (pas de 0,45°
+   sur des cercles à 0,13-0,16 d'opacité — sous le seuil). Une
+   animation `infinite` garderait ce SVG plein cadre promu en texture
+   séparée à remélanger à chaque frame de scroll (17 ms mesurées).
+   Les origines restent ici : le JS n'écrit que `transform`. */
 .p-arcs .spin-slow {
   transform-origin: 50% 50%;
-  animation: spin 200s linear infinite;
 }
 .p-arcs .spin-rev {
   transform-origin: 50% 50%;
-  animation: spin 320s linear infinite reverse;
 }
 /* 2/2 des occurrences de --sig-rail admises dans le décor */
 .p-arcs .ring-sig {
   stroke: var(--sig-rail);
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 /* z18 — brume médiane. LE plan qui vend l'effet : deux échelles de
@@ -481,16 +482,6 @@ body {
    compositeur, hors du thread principal, sans repaint. La distance vient
    de --tile et non d'un littéral : c'est ce qui rend l'affirmation
    ci-dessus vraie par construction plutôt que par vigilance. */
-@keyframes fog-drift-l {
-  to {
-    transform: translate3d(calc(-1 * var(--tile)), 0, 0);
-  }
-}
-@keyframes fog-drift-r {
-  to {
-    transform: translate3d(var(--tile), 0, 0);
-  }
-}
 
 /* z12 — LE SOL, plan de référence.
    Pile obligatoire en trois boîtes : la perspective ne doit JAMAIS
@@ -569,7 +560,6 @@ body {
     var(--cell) var(--cell),
     var(--cell) var(--cell);
   background-repeat: no-repeat, repeat, repeat;
-  will-change: transform;
 }
 
 /* z8 — repères d'horizon. Décor muet : il ne parle pas, il gradue. */
@@ -620,7 +610,6 @@ body {
   background-image:
     repeating-linear-gradient(90deg, var(--line) 0 var(--rule), transparent var(--rule) 33.333vw),
     repeating-linear-gradient(180deg, var(--line-2) 0 var(--rule), transparent var(--rule) 240px);
-  will-change: transform;
 }
 
 /* z1.4 — écharpe de brume qui passe l'objectif. C'est elle qui donne
@@ -643,7 +632,6 @@ body {
   background-repeat: repeat;
   mix-blend-mode: screen;
   opacity: 0.07;
-  will-change: transform;
 }
 
 /* z1 — poussière. Tuiles 240 et 120 : diviseur commun, donc un seul
@@ -665,7 +653,6 @@ body {
      mieux, pour moins de pixels peints. */
   background-image: radial-gradient(circle at 30% 40%, rgba(242, 240, 236, 0.5) 0 1px, transparent 1.7px);
   background-size: 240px 240px;
-  will-change: transform;
 }
 
 /* ------------------------------------------------------------
