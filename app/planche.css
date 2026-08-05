@@ -3125,12 +3125,22 @@ body {
     color 0.3s var(--ease),
     border-color 0.3s var(--ease);
 }
+.xp-fiche-lien span,
+.at-fiche-lien span {
+  display: inline-block;
+  transition: transform 0.3s var(--ease);
+}
 .xp-fiche-lien:hover,
 .xp-fiche-lien:focus-visible,
 .at-fiche-lien:hover,
 .at-fiche-lien:focus-visible {
   color: var(--paper);
   border-color: var(--paper);
+}
+.xp-fiche-lien:hover span,
+.at-fiche-lien:hover span,
+.at-a-fiche:hover .at-fiche-lien span {
+  transform: translateX(4px);
 }
 
 .xp-parc,
@@ -3334,6 +3344,33 @@ body {
   display: flex;
   flex-direction: column;
   background: var(--ink-2);
+  /* Ancre du lien étiré : le ::after du lien fiche se cale sur la
+     card entière, pas sur le lien. */
+  position: relative;
+}
+/* La card à fiche est cliquable PARTOUT : le lien « fiche
+   détaillée » s'étire sur toute la card par son ::after. Le lien
+   lui-même reste non positionné, sinon l'::after se calerait sur
+   lui au lieu de la card. */
+.at-a-fiche .at-fiche-lien::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+/* « Bordure vers --paper, léger lift » dit la spec. La bordure y
+   est ; le lift, non : framer-motion laisse un transform inline sur
+   la card après son entrée, un translate CSS au hover perdrait.
+   L'outline + les couleurs suffisent à dire « cliquable ». */
+.at-a-fiche:hover,
+.at-a-fiche:focus-within {
+  outline: var(--rule) solid var(--paper);
+  outline-offset: calc(-1 * var(--rule));
+}
+.at-a-fiche:hover .at-fiche-lien,
+.at-a-fiche:focus-within .at-fiche-lien {
+  color: var(--paper);
+  border-color: var(--paper);
 }
 .at-cadre {
   padding: clamp(1rem, 3vw, 1.6rem);
@@ -3366,6 +3403,7 @@ body {
   stroke: var(--g-500);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
+  transition: fill 0.3s var(--ease);
 }
 .at-actif {
   fill: var(--sig-ember);
@@ -3396,6 +3434,38 @@ body {
 .at-t-d {
   text-anchor: end;
 }
+/* Au survol, chaque schéma joue SA forme : le flux circule sur les
+   fils, la vanne et le filtre pulsent, le nœud actif s'allume. Le
+   tronçon coupé ne bouge JAMAIS : la vanne est fermée, un flux qui
+   y circulerait dirait le contraire de la fiche. */
+.at-projet:hover .at-fil:not(.at-coupe) {
+  stroke-dasharray: 6 4;
+  animation: at-flux 1.1s linear infinite;
+}
+@keyframes at-flux {
+  to {
+    stroke-dashoffset: -10;
+  }
+}
+.at-projet:hover .at-vanne,
+.at-projet:hover .at-filtre {
+  animation: at-pulse 1.6s var(--ease) infinite;
+}
+@keyframes at-pulse {
+  50% {
+    stroke-width: 2.4;
+  }
+}
+.at-projet:hover .at-actif {
+  fill: var(--sig-hot);
+}
+@media (prefers-reduced-motion: reduce) {
+  .at-projet:hover .at-fil:not(.at-coupe),
+  .at-projet:hover .at-vanne,
+  .at-projet:hover .at-filtre {
+    animation: none;
+  }
+}
 
 .at-corps {
   display: flex;
@@ -3406,15 +3476,23 @@ body {
 .at-ligne-code {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 1rem;
-  margin: 0 0 0.7rem;
+  margin: 0 0 0.9rem;
+}
+/* Le code en cartouche : une référence de plan se lit comme une
+   plaque, pas comme un mot du paragraphe. Même fond que .fp-mark. */
+.at-code {
+  padding: 2px 6px;
+  background: rgba(226, 232, 240, 0.08);
+  color: var(--g-100);
 }
 .at-etat {
   color: var(--g-100);
 }
 .at-nom {
   margin: 0;
-  font-size: clamp(1.15rem, 2.2vw, 1.5rem);
+  font-size: clamp(1.25rem, 2.4vw, 1.7rem);
   font-weight: 700;
   font-stretch: 86%;
   text-transform: uppercase;
@@ -3431,9 +3509,13 @@ body {
   letter-spacing: 0.035em;
   line-height: 1.72;
 }
+/* Les liens dépôts et leur réserve repassent AU-DESSUS du lien
+   étiré : sans ça, la card avalerait leurs clics. */
 .at-liens {
   margin-top: auto;
   padding-top: 1rem;
+  position: relative;
+  z-index: 2;
 }
 .at-lien {
   display: inline-block;
