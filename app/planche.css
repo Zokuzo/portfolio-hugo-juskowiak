@@ -236,7 +236,7 @@ body {
 }
 
 /* ============================================================
-   LE MONDE — décor fixe, 11 plans, brume volumétrique
+   LE MONDE — décor fixe, 8 plans
    ------------------------------------------------------------
    Le décor ne vit plus DANS les sections : il est monté une fois,
    en position:fixed, et piloté par la progression du document. Les
@@ -244,39 +244,20 @@ body {
    réinitialise donc jamais : la continuité entre sections est
    acquise par construction, pas simulée par un fondu.
 
-   La brume est INTERLEAVÉE, pas superposée : une nappe est un plan
-   comme un autre, insérée ENTRE les plans de décor. Les arcs sont
-   physiquement masqués par de la matière. C'est l'occultation qui
-   crée la distance — un plan lointain simplement plus sombre reste
-   lu comme « un plan sombre ».
    ============================================================ */
 
 /* ------------------------------------------------------------
-   Assets de brume — rasterisés une fois, jamais recalculés.
-   feTurbulence n'est JAMAIS animé : il se ré-exécute par frame à la
-   taille raster complète, en CPU. Il est ici cuit dans un bitmap que
-   le navigateur met en cache ; le mouvement est un transform de
-   période exactement une tuile.
-   feColorMatrix force RGB = blanc pur et écrit la luminance du bruit
-   dans l'alpha : aucune teinte résiduelle n'est structurellement
-   possible. Après le feTurbulence, uniquement des opérations
-   PONCTUELLES — un feGaussianBlur échantillonnerait hors tuile et
-   détruirait la couture de stitchTiles.
+   Grain — rasterisé une fois, jamais recalculé. feTurbulence n'est
+   JAMAIS utilisé en direct : recalculé par frame à taille raster
+   complète, en CPU. Le bruit est cuit dans un bitmap mis en cache.
    ------------------------------------------------------------ */
 
 .proto-root {
-  /* LES BRUITS SONT CUITS EN WebP, ET C'EST MESURÉ. Les versions
-     feTurbulence d'origine (conservées dans tools/monde/cuire.md avec
-     leurs fréquences) coûtaient à Firefox des rasterisations de
-     centaines de ms à chaque fois qu'une couche les portant devait se
-     repeindre — le filtre est recalculé, pas mis en cache comme le
-     fait Chromium. Une image se décode UNE fois. Mêmes pixels :
-     cuits depuis les SVG exacts ci-dessous, 700×700 et 200×200.
-     — corps : basse fréquence anisotrope (blobs étirés = bancs) ;
-     — volutes : fréquence moyenne, alpha seuillé = traînées éparses ;
-     — grain : bruit achromatique fin. */
-  --fog-body: url("/monde/brume-corps.webp");
-  --fog-wisp: url("/monde/brume-volutes.webp");
+  /* LE BRUIT EST CUIT EN WebP, ET C'EST MESURÉ : la version
+     feTurbulence d'origine (conservée dans tools/monde/cuire.md)
+     coûtait à Firefox des rasterisations de centaines de ms à chaque
+     repeinte — le filtre est recalculé, pas mis en cache comme le
+     fait Chromium. Une image se décode UNE fois. */
   --grain-tex: url("/monde/grain.webp");
 
   /* transmittance par plan : vis(z) = exp(−z/26).
@@ -288,9 +269,9 @@ body {
   --vis-struts: 0.9;
 }
 
-/* isolation:isolate ⇒ les mix-blend-mode:screen des nappes se
-   résolvent contre .p-void (encre opaque) et non contre le backdrop
-   de la page — sinon la brume vire au blanc plein.
+/* isolation:isolate ⇒ les mix-blend-mode:screen (grain, poussière)
+   se résolvent contre .p-void (encre opaque) et non contre le
+   backdrop de la page — sinon ils virent au blanc plein.
    contain:strict est légitime ici : .world EST l'élément fixed, il
    ne devient le bloc conteneur de rien d'autre. */
 .world {
@@ -358,104 +339,7 @@ body {
     var(--ink);
 }
 
-/* Chaque nappe = un conteneur parallaxé + deux enfants, parce qu'une
-   brume fait deux choses opposées qu'un seul élément ne peut pas
-   faire : .fog-lit (screen) AJOUTE de la lumière diffusée,
-   .fog-occl (normal) RETIRE du contraste aux plans derrière.
-   Un surdimensionnement est obligatoire : un background répété ne
-   déborde pas de la padding-box, donc translater d'une tuile
-   découvrirait le bord de l'élément en pleine brume. Obligatoire ne
-   veut pas dire arbitraire — voir juste en dessous. */
-
-/* LA SURFACE EST LE BUDGET. Le coût d'un `mix-blend-mode` est
-   proportionnel à l'aire composée : le compositeur relit le fond sous
-   chaque pixel. Mesuré sur cette page, les nappes en `screen` faisaient
-   passer le p90 de la frame de 8,7ms à 16,3ms — elles doublaient le
-   budget à elles seules. Ces marges ne sont donc pas du confort, elles
-   se paient à chaque frame.
-   Elles étaient à -1100px / -900px sur les quatre côtés, soit 7,5× le
-   viewport par nappe. Recalibrées ci-dessous sur la course réelle.
-   AVANT D'AGRANDIR UNE MARGE ICI : va lire la course du plan dans le
-   modèle de caméra de world.tsx et calcule-la. */
-.fog-sheet {
-  position: absolute;
-  /* Vertical : course de parallaxe de la nappe la plus rapide d'ici
-     (p-fog-mid, z=18 ⇒ 120·12/18 = 80px) plus sa croissance d'échelle
-     (3 % de 900px ⇒ 27px par côté). 140px couvre les deux. */
-  top: -140px;
-  bottom: -140px;
-  background-repeat: repeat;
-  background-size: var(--tile) var(--tile);
-  backface-visibility: hidden;
-  will-change: transform;
-}
-/* La dérive vaut EXACTEMENT une tuile — d'où la boucle sans raccord —
-   donc la marge horizontale vaut une tuile, et UNIQUEMENT du côté vers
-   lequel la nappe part. Payer les deux côtés pour un mouvement qui n'en
-   use qu'un, c'était doubler la facture.
-   Les 40px sont la seule marge de confort : à t=0 l'échelle vaut
-   exactement 1 et le bord affleurerait le viewport au pixel.
-
-   Corrige deux défauts que la version en dur cachait :
-   — .sheet-a dérivait de 1400px sur une tuile de 900px (1400 mod 900 =
-     500) : un saut de 500px toutes les 150s, alors que le commentaire
-     du bloc @keyframes affirmait l'inverse ;
-   — la marge de 1100px était plus courte que la dérive de 1400px, donc
-     une bande de 300px se retrouvait sans brume à droite en fin de
-     cycle. Invisible seulement parce que l'opacité est basse.
-   Les deux disparaissent en liant marge, tuile et dérive à --tile. */
-/* Dérive CONTINUE sur couche PROMUE en permanence — l'aller-retour a
-   été payé pour le savoir. Version par pas de 700 ms en JS : chaque
-   pas re-créait la couche et le blend flashait une frame (mesuré sur
-   capture : luminance 34 → 21 → 34, à la période exacte des pas).
-   Depuis que la texture est un bitmap cuit, l'animation linéaire ne
-   re-rasterise rien : le compositeur déplace une texture en cache. */
-.fog-sheet.drift-l {
-  left: -40px;
-  right: calc(-40px - var(--tile));
-  animation: fog-drift-l var(--drift) linear infinite;
-}
-.fog-sheet.drift-r {
-  left: calc(-40px - var(--tile));
-  right: -40px;
-  animation: fog-drift-r var(--drift) linear infinite;
-}
-@keyframes fog-drift-l {
-  to {
-    transform: translate3d(calc(-1 * var(--tile)), 0, 0);
-  }
-}
-@keyframes fog-drift-r {
-  to {
-    transform: translate3d(var(--tile), 0, 0);
-  }
-}
-.fog-lit {
-  mix-blend-mode: screen;
-}
-.fog-occl {
-  mix-blend-mode: normal;
-}
-
-/* z46 — brume profonde : devant l'atmosphère, DERRIÈRE les arcs */
-.p-fog-deep {
-  inset: 0;
-  opacity: 0.55; /* repli sans JS ; framer écrit `opacity` inline */
-}
-.p-fog-deep .fog-lit,
-.p-fog-deep .fog-occl {
-  --tile: 1400px;
-  --drift: 210s;
-  background-image: var(--fog-body);
-}
-.p-fog-deep .fog-lit {
-  opacity: 0.3;
-}
-.p-fog-deep .fog-occl {
-  opacity: 0.34;
-}
-
-/* z30 — instrumentation circulaire, déjà mangée par la nappe */
+/* z30 — instrumentation circulaire */
 .p-arcs {
   left: 50%;
   top: 46%;
@@ -469,8 +353,8 @@ body {
    Firefox met en cache le rendu d'un SVG et composite sa rotation,
    mais re-rasterise tout SVG dont un groupe interne tourne (mesuré :
    p50 750 → 33 ms/frame). Continue et sur couche promue : une rotation
-   par pas re-créait la couche et flashait une frame — même leçon que
-   les nappes de brume. */
+   par pas re-créait la couche et flashait une frame — une couche en
+   blend qui churne perd sa contribution le temps d'une frame. */
 .arcs-c {
   position: absolute;
   inset: 0;
@@ -497,33 +381,6 @@ body {
 .p-arcs .ring-sig {
   stroke: var(--sig-rail);
 }
-
-/* z18 — brume médiane. LE plan qui vend l'effet : deux échelles de
-   rapport non entier (900 / 520) dérivant en sens inverse.
-   L'interférence des deux périodes détruit toute lecture de tuilage —
-   une seule nappe tuilée se lit comme du papier peint, deux se lisent
-   comme de la brume. Insérée devant les arcs : elle les mange. */
-.p-fog-mid {
-  inset: 0;
-  opacity: 0.62;
-}
-.p-fog-mid .sheet-a {
-  --tile: 900px;
-  --drift: 150s;
-  background-image: var(--fog-body);
-  opacity: 0.34;
-}
-.p-fog-mid .sheet-b {
-  --tile: 520px;
-  --drift: 96s;
-  background-image: var(--fog-wisp);
-  opacity: 0.2;
-}
-
-/* Période de dérive = exactement une tuile ⇒ boucle sans raccord, sur le
-   compositeur, hors du thread principal, sans repaint. La distance vient
-   de --tile et non d'un littéral : c'est ce qui rend l'affirmation
-   ci-dessus vraie par construction plutôt que par vigilance. */
 
 /* z12 — LE SOL, plan de référence.
    Pile obligatoire en trois boîtes : la perspective ne doit JAMAIS
@@ -572,10 +429,9 @@ body {
    unique, décalé de la médiane pour ne pas se lire comme un axe de
    symétrie. Ce n'est pas de l'information, c'est de la construction. */
 .floor-grid {
-  /* Le plan porte déjà sa transmittance (opacity .63) et la brume
-     passe par-dessus : un filet en --g-700 (1,7:1) disparaît
-     complètement. On compense en amont pour retomber sur la densité
-     visée après extinction. */
+  /* Le plan porte déjà sa transmittance (opacity .63) : un filet en
+     --g-700 (1,7:1) disparaîtrait. On compense en amont pour retomber
+     sur la densité visée après extinction. */
   --floor-line: rgba(226, 232, 240, 0.42);
   position: absolute;
   left: 0;
@@ -603,7 +459,7 @@ body {
     var(--cell) var(--cell);
   background-repeat: no-repeat, repeat, repeat;
   /* Promue en permanence : `flow` la déplace à chaque frame de scroll,
-     et une couche qui churne flashe — même règle que les nappes. */
+     et une couche qui churne flashe une frame. */
   will-change: transform;
 }
 
@@ -657,28 +513,6 @@ body {
     repeating-linear-gradient(180deg, var(--line-2) 0 var(--rule), transparent var(--rule) 240px);
 }
 
-/* z1.4 — écharpe de brume qui passe l'objectif. C'est elle qui donne
-   le sentiment de TRAVERSER plutôt que de glisser. */
-/* Marges asymétriques, et c'est voulu : ce plan MONTE (y va de 0 à
-   −1029px, soit 120·12/1,4) et il ne dérive pas horizontalement. Il faut
-   donc de la matière EN BAS, presque rien en haut, et rien sur les côtés
-   au-delà du confort — une échelle > 1 ajoute de la couverture, elle n'en
-   retire pas. Le carré de -900px des quatre côtés payait du `screen` sur
-   1800px de largeur qui ne sont jamais dévoilés.
-   L'invariant à tenir, si on y retouche : à tout instant du scroll, le
-   rectangle de cet élément contient le viewport. Il se mesure. */
-.p-fog-near {
-  left: -200px;
-  right: -200px;
-  top: -200px;
-  bottom: -1200px;
-  background-image: var(--fog-body);
-  background-size: 1500px 1500px;
-  background-repeat: repeat;
-  mix-blend-mode: screen;
-  opacity: 0.07;
-}
-
 /* z1 — poussière. Tuiles 240 et 120 : diviseur commun, donc un seul
    modulo suffit. Positions déterministes issues du tuilage — aucun
    Math.random, donc aucun mismatch d'hydratation. */
@@ -693,9 +527,8 @@ body {
   top: -260px;
   bottom: -260px;
   opacity: 0.5;
-  /* La 2e couche de points est sortie : la poussière et la brume disent
-     la même chose — de la matière en suspension — et la brume le dit
-     mieux, pour moins de pixels peints. */
+  /* Une seule couche de points : c'est elle qui dit la matière en
+     suspension. */
   background-image: radial-gradient(circle at 30% 40%, rgba(242, 240, 236, 0.5) 0 1px, transparent 1.7px);
   background-size: 240px 240px;
 }
@@ -704,10 +537,8 @@ body {
    OBJECTIF — solidaire de la caméra, jamais parallaxé
    ------------------------------------------------------------ */
 
-/* Sans ce voile, la brume additive derrière le texte fait passer
-   --g-500 sous le seuil : blanc à alpha 0,22 sur --ink donne un fond
-   de luminance 0,048 où --g-500 tombe à 2,70:1. Le scrim ramène la
-   zone de texte sous 0,06 d'alpha effectif. */
+/* Le voile assoit le plancher de contraste du texte au-dessus du
+   décor (grain et poussière en screen éclaircissent le fond). */
 .p-scrim {
   inset: 0;
   background: radial-gradient(72% 58% at 50% 50%, rgb(7 8 11 / 0.92) 0%, rgb(7 8 11 / 0.55) 55%, transparent 88%);
@@ -727,8 +558,8 @@ body {
 /* Le grain reste strictement achromatique : dès qu'une teinte existe
    dans le système, un grain même faiblement coloré en screen se lit
    comme un filtre posé sur toute la page et détruit la rareté du
-   signal. Son opacité est l'inverse de la densité de brume — sur un
-   fond éclairci, screen tourne au lait. */
+   signal. Son opacité est une CONSTANTE d'ici : elle ne variait que
+   pour compenser la brume, retirée depuis. */
 /* PAS DE `filter` ICI, et c'est mesuré. Il portait
    `saturate(0) contrast(1.08)` :
    — `saturate(0)` était redondant, la texture SVG désature déjà par son
@@ -1643,8 +1474,7 @@ body {
 
 /* On ne remet pas la scène à plat : la profondeur est une
    information (hiérarchie, structure, orientation), seul le
-   mouvement est un effet. On fige une image composée, brume à
-   densité MOYENNE — figée à t=0 la scène paraîtrait vide. */
+   mouvement est un effet. On fige une image composée. */
 @media (prefers-reduced-motion: reduce) {
   .proto-root *,
   .proto-root *::before,
@@ -1653,8 +1483,6 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
-  .fog-sheet,
-  .p-fog-near,
   .p-dust,
   .p-struts,
   .floor-grid {
@@ -1664,12 +1492,6 @@ body {
   .p-grain {
     animation: none;
     opacity: 0.07;
-  }
-  .p-fog-deep {
-    opacity: 0.5;
-  }
-  .p-fog-mid {
-    opacity: 0.6;
   }
   .p-scrim {
     opacity: 0.34;
@@ -1731,39 +1553,21 @@ body {
   }
 }
 
-@media (prefers-reduced-data: reduce) {
-  .fog-sheet,
-  .p-fog-near {
-    animation: none;
-  }
-}
 
 /* ------------------------------------------------------------
    PETITS ÉCRANS
-   11 plans sur un GPU mobile = trop de couches promues, et une
-   affiche dense à 375px devient une bouillie. On tombe à 5 plans,
-   une seule nappe, et le mobilier de gouttière disparaît.
+   8 plans sur un GPU mobile = trop de couches promues, et une
+   affiche dense à 375px devient une bouillie. On tombe à 4 plans,
+   et le mobilier de gouttière disparaît.
    ------------------------------------------------------------ */
 
 @media (max-width: 720px) {
   .proto-root {
     --gutter: 1.15rem;
   }
-  .p-fog-mid .sheet-b,
   .p-struts,
-  .p-dust,
-  .p-fog-near {
+  .p-dust {
     display: none;
-  }
-  /* Pas de redéclaration de marge ici : la course de parallaxe ne dépend
-     pas de la largeur du viewport, donc le calibrage du desktop tient
-     tel quel — et il est déjà plus serré que le -420px qu'on posait.
-     La tuile passe par --tile et JAMAIS par `background-size` en dur :
-     la dérive en dépend, et un littéral ici rétablirait le saut de
-     raccord de 1400px-sur-900px qu'on vient de supprimer. */
-  .p-fog-mid .sheet-a {
-    --tile: 620px;
-    --drift: 120s;
   }
   .p-rules {
     grid-template-columns: repeat(2, 1fr);

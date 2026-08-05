@@ -18,19 +18,10 @@ le grain (fin). Écrire dans `public/monde/`.
 
 ## Sources
 
-brume-corps.webp — 700×700 — basse fréquence anisotrope (x < y ⇒ blobs
-étirés horizontalement = bancs), 2 octaves :
-
-```
-data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='700' height='700'%3E%3Cfilter id='a' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.0032 0.0055' numOctaves='2' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 .34 .34 .34 0 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='table' tableValues='0 0 .06 .3 .72 1'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='700' height='700' filter='url(%23a)'/%3E%3C/svg%3E
-```
-
-brume-volutes.webp — 700×700 — fréquence moyenne, 4 octaves, table alpha
-seuillée ⇒ traînées éparses :
-
-```
-data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='700' height='700'%3E%3Cfilter id='b' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.011 0.02' numOctaves='4' seed='29' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 .34 .34 .34 0 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='table' tableValues='0 0 0 .12 .45 1'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='700' height='700' filter='url(%23b)'/%3E%3C/svg%3E
-```
+Seul le grain est encore servi. Les deux textures de brume
+(brume-corps.webp, brume-volutes.webp) ont été retirées avec la brume
+elle-même — leurs recettes restent dans l'historique git de ce fichier
+si la brume revient un jour.
 
 grain.webp — 200×200 — bruit achromatique fin :
 

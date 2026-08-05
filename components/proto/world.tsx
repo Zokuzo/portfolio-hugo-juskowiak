@@ -23,23 +23,24 @@ import {
 
    Les vitesses ne sont pas choisies au doigt mouillé : elles sortent
    d'une profondeur déclarée. Idem pour l'opacité de chaque plan, qui
-   est sa transmittance exp(−z/26) — l'extinction dans la brume.
+   est sa transmittance exp(−z/26) — l'extinction atmosphérique.
 
    PLUS DE scale(t), ET TOUT EST QUANTIFIÉ. Mesuré sur build de
    production, compositeur logiciel : p50 183 ms/frame en scroll,
    33 ms une fois le monde figé, fil principal à 73 % d'inactivité —
    le coût n'était ni le JS ni la peinture d'un plan, mais la
    RECOMPOSITION : dès qu'UNE valeur change d'un sous-pixel, le groupe
-   isolé `.world` perd son cache et ses onze couches — cinq en blend —
+   isolé `.world` perd son cache et ses couches — plusieurs en blend —
    se remélangent plein écran. Soixante fois par seconde, pour des
    déplacements invisibles.
 
    D'où deux règles, solidaires du CSS :
    — les y de plan et le flow s'arrondissent AU PIXEL, les opacités
-     au centième : une valeur qui ne change pas n'est pas réécrite,
-     et le cache du groupe survit à la plupart des frames ;
-   — les animations infinies du CSS (dérives de brume, rotation des
-     arcs) passent par `steps()` pour la même raison — voir planche.css.
+     au centième : une valeur qui ne change pas n'est pas réécrite ;
+   — chaque plan est promu en couche PERMANENTE (will-change, voir
+     planche.css) : une couche stable ne churne pas, et les animations
+     continues du compositeur (rotation des arcs) n'y coûtent qu'une
+     composition.
 
    Le scale(t) d'origine (« on traverse ») est supprimé, pas quantifié :
    c'était le plus faible des indices de traversée, et un scale même
@@ -114,7 +115,7 @@ export function World() {
      ici — sinon la scène se fige sans lever d'erreur. */
   const { scrollY, scrollYProgress } = useScroll()
 
-  /* UN seul spring pour toute la scène : les onze plans en dérivent.
+  /* UN seul spring pour toute la scène : les huit plans en dérivent.
      Les MotionValues écrivent directement dans le DOM, donc zéro
      re-rendu React au scroll quel que soit le nombre de plans.
 
@@ -126,41 +127,29 @@ export function World() {
   const smooth = useSpring(scrollYProgress, { stiffness: 112, damping: 30, mass: 0.42 })
   const cam = useTransform([smooth, gate] as MotionValue<number>[], ([s, g]) => (s as number) * (g as number))
 
-  /* Densité de brume — la continuité inter-sections.
-     On ne fait pas un fondu, on traverse des bancs : la densité monte
-     pendant que la plaque recule, puis redescend quand le tracé
-     arrive. On ressort de l'autre côté et le schéma se résout. */
-  const fogD = useTransform(scrollYProgress, [0, 0.1, 0.22, 0.34, 0.52, 0.72, 1], [0.5, 0.78, 1.18, 0.72, 1.05, 0.62, 0.5])
+  /* PLUS DE BRUME. Les trois nappes (profonde, médiane, écharpe) et
+     leur système de densité sont retirés sur demande : le décor se lit
+     à nu — grille, arcs, repères, poussière, grain. Le grain, dont
+     l'opacité compensait l'éclaircissement de la brume, redevient une
+     constante en CSS. */
 
   /* Opacités au CENTIÈME, même logique que l'arrondi des y : un fondu
-     qui varie de 0,0003 par frame salit la couche pour rien. Le pas de
-     0,01 est sous le seuil perceptible sur des nappes à 0,3-0,6. */
+     qui varie de 0,0003 par frame salit la couche pour rien. */
   const cent = (x: number) => Math.round(x * 100) / 100
-  const fogDeepO = useTransform(fogD, (d) => cent(0.5 * d))
-  const fogMidO = useTransform(fogD, (d) => cent(0.58 * d))
-  const fogNearO = useTransform(fogD, (d) => cent(0.07 * d))
-
-  /* Le grain est en screen : dès que la brume éclaircit le fond il
-     tourne au lait. Son opacité est donc l'inverse de la densité. */
-  const grainBrut = useTransform(fogD, [0.5, 1.25], [0.095, 0.04])
-  const grainO = useTransform(grainBrut, cent)
 
   /* Le scrim restaure le plancher de contraste sous le texte. Faible
      sur la plaque (fond quasi nu), fort sur le tracé où le schéma
-     doit se lire à travers la brume. */
+     doit rester lisible sous le contenu. */
   const scrimBrut = useTransform(scrollYProgress, [0, 0.18, 0.3, 1], [0.1, 0.28, 0.66, 0.6])
   const scrimO = useTransform(scrimBrut, cent)
 
   /* wrapAt = période de tuilage. 0 = contenu unique, pas de bouclage. */
   const pVoid = usePlane(cam, 100)
-  const pFogDeep = usePlane(cam, 46, 1400)
   const pArcs = usePlane(cam, 30)
-  const pFogMid = usePlane(cam, 18)
   const pFloor = usePlane(cam, 12)
   const pMarks = usePlane(cam, 8)
   const pRules = usePlane(cam, 5)
   const pStruts = usePlane(cam, 2.6, 240)
-  const pFogNear = usePlane(cam, 1.4, 1500)
   const pDust = usePlane(cam, 1, 240)
 
   /* Avance au sol : défilement de base + anticipation couplée à la
@@ -185,20 +174,11 @@ export function World() {
   return (
     <div className="world" aria-hidden="true">
       {/* z100 — atmosphère opaque : socle du groupe d'isolation. Sans
-          elle, les mix-blend-mode:screen se composent contre le
-          backdrop de la page et la brume vire au blanc plein. */}
+          elle, les mix-blend-mode:screen (grain, poussière) se
+          composent contre le backdrop de la page et virent au blanc. */}
       <motion.div className="p-void" style={{ y: pVoid.y }} />
 
-      {/* z46 — brume profonde : DEVANT l'atmosphère, DERRIÈRE les arcs.
-          `drift-l`/`drift-r` ne sont pas décoratives : elles portent le
-          sens de la dérive, et le CSS n'ouvre la marge horizontale que de
-          ce côté-là. Retirer la classe retire l'animation ET la marge. */}
-      <motion.div className="p-fog-deep" style={{ y: pFogDeep.y, opacity: fogDeepO }}>
-        <div className="fog-sheet fog-lit drift-l" />
-        <div className="fog-sheet fog-occl drift-l" />
-      </motion.div>
-
-      {/* z30 — instrumentation, déjà mangée par la nappe précédente.
+      {/* z30 — instrumentation.
           TROIS SVG EMPILÉS, pas un seul : Firefox re-rasterise le SVG
           entier dès qu'un <g> INTERNE tourne (mesuré : p50 750 ms/frame
           en scroll, 33 sans les arcs), mais met en cache un SVG dont
@@ -224,13 +204,6 @@ export function World() {
             <line x1="0.5" y1="50" x2="99.5" y2="50" strokeDasharray="2 4" />
           </g>
         </svg>
-      </motion.div>
-
-      {/* z18 — brume médiane : deux échelles de rapport non entier en
-          sens inverse, l'interférence détruit la périodicité */}
-      <motion.div className="p-fog-mid" style={{ y: pFogMid.y, opacity: fogMidO }}>
-        <div className="fog-sheet fog-lit sheet-a drift-l" />
-        <div className="fog-sheet fog-occl sheet-b drift-r" />
       </motion.div>
 
       {/* z12 — LE SOL. Trois boîtes imbriquées : la perspective ne
@@ -260,17 +233,14 @@ export function World() {
       {/* z2.6 — entretoises, tuilées 240px */}
       <motion.div className="p-struts" style={{ y: pStruts.y }} />
 
-      {/* z1.4 — écharpe qui passe l'objectif : c'est elle qui fait
-          « on traverse » plutôt que « ça glisse » */}
-      <motion.div className="p-fog-near" style={{ y: pFogNear.y, opacity: fogNearO }} />
-
       {/* z1 — poussière */}
       <motion.div className="p-dust" style={{ y: pDust.y }} />
 
       {/* — objectif : solidaire de la caméra, jamais parallaxé — */}
       <motion.div className="p-scrim" style={{ opacity: scrimO }} />
       <motion.div className="p-sweep" style={{ y: sweepY, opacity: sweepO }} />
-      <motion.div className="p-grain" style={{ opacity: grainO }} />
+      {/* opacité constante en CSS : elle ne compensait que la brume */}
+      <div className="p-grain" />
       <div className="p-vignette" />
     </div>
   )

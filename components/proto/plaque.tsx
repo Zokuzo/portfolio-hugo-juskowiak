@@ -27,9 +27,9 @@ export function Plaque({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => vo
   })
 
   /* La plaque ne « fade » plus : elle S'ENFONCE. Le fondu s'arrête à
-     0,15 — c'est la brume du monde qui achève de l'effacer, et ce
-     résidu visible derrière elle est précisément ce qui fait la
-     continuité. Sans lui on retombe sur un cross-fade. */
+     0,15 — le résidu visible derrière elle est précisément ce qui
+     fait la continuité avec le décor. Sans lui on retombe sur un
+     cross-fade. */
   const depth = useTransform(scrollYProgress, [0, 1], [0, -180])
   const scale = useTransform(scrollYProgress, [0, 1], [1, 0.88])
   const fade = useTransform(scrollYProgress, [0, 0.62, 1], [1, 0.5, 0.15])
