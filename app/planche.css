@@ -3145,7 +3145,12 @@ body {
 .at-fiche-lien:hover span,
 .etu-fiche-lien:hover span,
 .at-a-fiche:hover .at-fiche-lien span,
-.etu-a-fiche:hover .etu-fiche-lien span {
+.etu-a-fiche:hover .etu-fiche-lien span,
+.xp-fiche-lien:focus-visible span,
+.at-fiche-lien:focus-visible span,
+.etu-fiche-lien:focus-visible span,
+.at-a-fiche:focus-within .at-fiche-lien span,
+.etu-a-fiche:focus-within .etu-fiche-lien span {
   transform: translateX(4px);
 }
 
@@ -3483,7 +3488,13 @@ body {
   fill: var(--sig-hot);
 }
 @media (prefers-reduced-motion: reduce) {
-  .at-projet:hover .at-fil:not(.at-coupe),
+  /* stroke-dasharray revient à none en plus d'animation : sinon le
+     survol fige un fil en tireté — le code visuel réservé au tronçon
+     coupé de la vanne fermée, qui dirait le contraire de la fiche. */
+  .at-projet:hover .at-fil:not(.at-coupe) {
+    animation: none;
+    stroke-dasharray: none;
+  }
   .at-projet:hover .at-vanne,
   .at-projet:hover .at-filtre {
     animation: none;

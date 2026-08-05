@@ -178,6 +178,8 @@ export function Etudes({ lang }: { lang: Lang }) {
                 </div>
               </motion.li>
             )
+            /* Seules les entrées à fiche portent un nom de transition : nommer
+               les autres créerait des paires fantômes sans destination. */
             return e.fiche ? (
               <ViewTransition key={e.code} name={`fiche-${e.fiche}`} share="morph" default="none">
                 {entree}

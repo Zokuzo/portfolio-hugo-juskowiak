@@ -132,6 +132,8 @@ export function Experience({ lang }: { lang: Lang }) {
                       </div>
                     </li>
                   )
+                  /* Seules les lignes à fiche portent un nom de transition : nommer
+                     les autres créerait des paires fantômes sans destination. */
                   return p.fiche ? (
                     <ViewTransition key={p.code} name={`fiche-${p.fiche}`} share="morph" default="none">
                       {ligne}

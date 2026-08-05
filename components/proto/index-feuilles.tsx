@@ -61,8 +61,9 @@ export function IndexFeuilles({ lang }: { lang: Lang }) {
 
       {/* Les fiches d'unité ne sont PAS des feuilles du jeu : ce sont
           des pièces détachées, documentées à part et référencées en
-          U-0n. Les mêler à la nomenclature ferait passer le document de
-          huit à treize feuilles et casserait sa promesse de brièveté. */}
+          U-0n et F-0n. Les mêler à la nomenclature ferait passer le
+          document de dix à dix-neuf feuilles et casserait sa promesse
+          de brièveté. */}
       <div className="nomen-annexes">
         <h3 className="mono mono-sm nomen-annexes-titre">{t(lang, "idxAnnexes")}</h3>
         <p className="mono mono-xs dim nomen-annexes-note">{t(lang, "idxAnnexesNote")}</p>
