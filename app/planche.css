@@ -166,6 +166,26 @@ body {
   color: var(--g-300);
 }
 
+/* Texte réservé aux lecteurs d'écran : il porte une information que le
+   dessin porte GÉOMÉTRIQUEMENT et qu'aucune restitution vocale ne peut
+   deviner. Premier emploi : la ligne « ⋯ » d'un extrait de code, dont
+   le marqueur vit dans la colonne des numéros — colonne aria-hidden,
+   sinon chaque ligne se ferait annoncer son numéro. Sans ce relais,
+   l'extrait s'entend comme un bloc contigu et l'élision disparaît.
+   Pas de `display: none` ni de `visibility: hidden` : les deux
+   retireraient aussi le texte de l'arbre d'accessibilité. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* ------------------------------------------------------------
    CHROME
    Un vrai chrome = un horizon réfléchi : bandes sombres et
@@ -2404,6 +2424,149 @@ body {
   color: var(--paper);
 }
 
+/* ------------------------------------------------------------
+   BLOCS DES FICHES SUR MESURE
+
+   Le vocabulaire de `fiche-blocs.tsx` : un schéma, un tableau de
+   cotes, un extrait de code annoté. Il vit ici et pas dans un bloc
+   par fiche — deux fiches qui montrent une architecture doivent la
+   montrer pareil. C'est la moitié mécanique de la cohérence ; l'autre
+   est la coque, qu'aucun corps de fiche ne peut réécrire.
+   ------------------------------------------------------------ */
+
+/* Le schéma est POSÉ, jamais animé ni accroché au scroll : le module
+   du ticket 10 ne produit que de la géométrie statique, et sa légende
+   est dans le SVG — il n'y a rien à faire défiler à côté. Le lit
+   d'encre le décolle de la page sans le cadrer. */
+.fp-schema {
+  padding: clamp(1rem, 3vw, 2rem);
+  border: var(--rule) solid var(--line-2);
+  background: var(--ink-2);
+}
+
+/* Le tableau des cotes. La COMMANDE est une colonne et pas une note
+   de bas de page : un chiffre sans son geste de reproduction est une
+   affirmation. Elle défile toute seule plutôt que de se replier —
+   une commande coupée n'est plus une commande. */
+.fp-cotes-cadre {
+  overflow-x: auto;
+}
+.fp-cotes {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+.fp-cotes th,
+.fp-cotes td {
+  padding: 0.62rem 1.4rem 0.62rem 0;
+  border-bottom: var(--rule) solid var(--line);
+  vertical-align: baseline;
+  font-weight: 400;
+}
+.fp-cotes thead th {
+  border-bottom-color: var(--line-2);
+}
+/* PIÈGE : `.mono` met le texte en CAPITALES. Sur une valeur ou une
+   commande, c'est un mensonge — `ls` n'est pas `LS`, et « 5 784 o »
+   n'est pas « 5 784 O ». Les trois cellules le désactivent. */
+/* Un nom de cote ne se replie pas sur deux lignes : c'est une
+   étiquette, pas une phrase. Quand la table dépasse, c'est la table
+   qui défile — d'où `.fp-cotes-cadre`. */
+.fp-cote-nom {
+  color: var(--g-300);
+  text-transform: none;
+  letter-spacing: 0.035em;
+  white-space: nowrap;
+}
+.fp-cote-val {
+  color: var(--paper);
+  text-transform: none;
+  letter-spacing: 0.035em;
+  white-space: nowrap;
+}
+.fp-cote-cmd {
+  width: 100%;
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+.fp-cote-cmd code {
+  font-family: inherit;
+  white-space: pre;
+}
+.fp-cotes-note {
+  margin: 0.9rem 0 0;
+  text-transform: none;
+  letter-spacing: 0.035em;
+}
+
+/* EXTRAIT DE CODE — le §10 du filtre de retheming, appliqué.
+   R-10.1 : un thème de coloration syntaxique est une palette de six à
+   dix teintes, et ce système en interdit une. Aucun n'entre.
+   R-10.3 : aucun moteur de coloration n'est installé — ce bloc n'est
+   que des <span> de classe.
+   R-10.2 : la différenciation passe par le gris et la graisse. Trois
+   niveaux, et trois seulement : corps sur --g-100, commentaire sur
+   --g-500, mise en évidence sur --paper.
+   R-10.4 : la mise en évidence passe par le RAIL géométrique, jamais
+   par un fond coloré — même `inset 2px 0 0 var(--sig-hot)` qu'aux
+   trois précédents du fichier. */
+.fp-code {
+  margin: 0;
+}
+.fp-code-src,
+.fp-code-note {
+  text-transform: none;
+  letter-spacing: 0.035em;
+}
+.fp-code-src {
+  margin: 0 0 0.6rem;
+}
+.fp-code-cadre {
+  overflow-x: auto;
+  padding: clamp(0.9rem, 2vw, 1.4rem) 0;
+  border: var(--rule) solid var(--line-2);
+  background: var(--ink-2);
+}
+.fp-code pre {
+  margin: 0;
+}
+.fp-code code {
+  display: block;
+  font-family: var(--f-mono), ui-monospace, monospace;
+  font-size: var(--f-micro);
+  line-height: 1.75;
+  color: var(--g-100);
+}
+.fp-code-l {
+  display: block;
+  padding-inline: clamp(0.9rem, 2vw, 1.4rem);
+  white-space: pre;
+}
+.fp-code-n {
+  display: inline-block;
+  width: 5ch;
+  color: var(--g-500);
+  user-select: none;
+}
+.fp-code-c {
+  color: var(--g-500);
+}
+/* ponytail: le rail est posé sur la ligne, donc il défile avec elle
+   quand l'extrait dépasse en largeur. Un rail collant demanderait une
+   seconde couche en position:sticky — à faire si un extrait large
+   devient la règle plutôt que l'exception. */
+.fp-code-m {
+  color: var(--paper);
+  font-weight: 700;
+  box-shadow: inset 2px 0 0 var(--sig-hot);
+}
+.fp-code-note {
+  margin: 0.9rem 0 0;
+  max-width: 74ch;
+  color: var(--g-300);
+  line-height: 1.7;
+}
+
 @media (max-width: 720px) {
   .fp-rail {
     display: none;
@@ -2411,6 +2574,13 @@ body {
   .fp-contraintes li,
   .fp-decision {
     grid-template-columns: 2rem 1fr;
+  }
+  /* Le schéma perd son lit sur petit écran : à cette largeur, un
+     cadre autour d'un dessin déjà dense vole de la place au dessin. */
+  .fp-schema {
+    padding: 0;
+    border: 0;
+    background: none;
   }
 }
 

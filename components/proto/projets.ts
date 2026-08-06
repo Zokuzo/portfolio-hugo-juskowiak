@@ -166,26 +166,68 @@ const FR: Projet[] = [
     cadre: "Projet personnel",
     periode: "En cours",
     etat: "En cours",
+    /* RÉÉCRIT AU TICKET 11, contre le code et non contre le souvenir.
+       Tout ce qui suit est sourcé dans
+       `.scratch/planche-profonde/recherches/02-eternal.md`, et le parc
+       est CORRIGÉ : il annonçait TypeScript, et
+       `find . -name '*.ts' -not -path './.git/*' | wc -l` rend 0 dans
+       le dépôt Eternal ; les autres faux souvenirs (ce que sert le lien
+       de démo, « Desktop uniquement », « En cours » contre
+       `actif: false`) demandent un arbitrage éditorial et restent au
+       ticket 20.
+
+       DEUXIÈME CORRECTION, et celle-là avait été INTRODUITE par le
+       ticket 11 lui-même : le contexte annonçait deux pages « sans
+       build ni dépendance ». Faux pour l'une des deux. Toutes les URL
+       externes des deux pages, hors espace de noms SVG :
+       `grep -oE 'https?://[^" ]+' index.html monde.html |
+       grep -v w3.org | sort -u` rend DEUX lignes, les deux dans
+       `monde.html`, les deux `cdn.jsdelivr.net/npm/three@0.160.0`.
+       L'asymétrie est le fait intéressant, et c'est elle qui est
+       publiée : le build est absent des deux côtés, la dépendance ne
+       l'est que d'un. */
     contexte:
-      "Le code écrit avec une IA part plus vite qu'il n'est compris. Eternal convertit ce code en leçons interactives, dans la forme d'un jeu vidéo 2D pixel HD, pour ancrer la connaissance sans ralentir la livraison.",
+      "Le code écrit avec une IA part plus vite qu'il n'est compris. Eternal n'est pas une application mais une chaîne de production : à la fin d'un travail significatif, un agent lit le vrai diff du projet, écrit une leçon interactive et la pousse dans un dépôt git. Deux pages HTML sans build la relisent au navigateur — l'interface 2D porte toutes les règles du jeu et zéro dépendance ; le monde 3D n'a aucune règle et exactement une dépendance, three.js chargé depuis un CDN.",
     contraintes: [
-      "La leçon ne doit rien coûter au rythme de travail, sinon elle ne sera jamais lue.",
-      "Apprendre après coup n'a d'intérêt que si la leçon porte sur le code réellement écrit.",
-      "Le jeu se joue au clavier sur grand écran : la démo en ligne est desktop uniquement, et l'assumer vaut mieux que servir une version tactile dégradée.",
+      "La leçon ne doit rien coûter au rythme de travail : elle part en arrière-plan à la fin d'une tâche, jamais en bloquant.",
+      "Des agents qui n'échangent aucun message doivent produire des fichiers interopérables — il fallait un point de rendez-vous qui ne soit ni une API ni une base.",
+      "Plusieurs sessions, sur plusieurs machines, peuvent rédiger en même temps : deux d'entre elles ne doivent pas se donner le même numéro de leçon.",
+      "Zéro serveur, zéro compte, hébergement statique — la progression reste donc sur l'appareil, et cette limite est écrite plutôt que masquée.",
     ],
     decisions: [
       {
-        titre: "La leçon se déclenche depuis l'outil de travail",
+        titre: "Un fichier de contrat à la place d'une réunion",
         texte:
-          "Une commande `/prof` lancée là où le code est écrit : la leçon naît du travail au lieu de l'interrompre.",
+          "`FORMAT.md` est déclaré source de vérité partagée entre l'agent qui écrit et l'interface qui rend : disposition, vocabulaire fermé de huit thèmes, économie d'XP, structure exacte du fragment. Onze leçons plus tard, les onze le respectent.",
       },
       {
-        titre: "Forme de jeu, pas de cours",
+        titre: "Le manifeste est séparé du contenu",
         texte:
-          "Un jeu 2D pixel HD plutôt qu'une liste d'articles — on revient dans un jeu, on ne revient pas dans un wiki.",
+          "Au démarrage, l'interface ne charge que les métadonnées — 5 784 octets — et va chercher le fragment d'une leçon à son ouverture, une seule fois. Trier, filtrer et calculer la progression ne coûtent donc pas les 194 989 octets de fragments.",
+      },
+      {
+        titre: "Aucun compteur persisté",
+        texte:
+          "L'XP, le solde, les rangs et les statistiques de combat se recalculent à chaque affichage depuis ce qui a été lu et répondu. Un état de progression corrompu ou d'une ancienne version ne peut donc pas mentir sur un total.",
+      },
+      {
+        titre: "Deux vues, un seul moteur",
+        texte:
+          "Le monde en trois dimensions ne rend que le décor : il n'a aucune règle. Il pilote le moteur de la page 2D par un pont en lecture seule, exposé depuis une iframe cachée — et il n'écrit jamais l'état.",
       },
     ],
-    parc: ["TypeScript", "Génération de contenu par LLM"],
+    parc: [
+      "HTML",
+      "CSS (OKLCH)",
+      "JavaScript sans build",
+      "three.js r160",
+      "WebGL",
+      "SVG inline",
+      "localStorage",
+      "git / GitHub Pages",
+      "PowerShell",
+      "Claude Code",
+    ],
   },
   {
     slug: "trading-agent",
@@ -463,25 +505,52 @@ const EN: Projet[] = [
     cadre: "Personal project",
     periode: "Ongoing",
     etat: "Ongoing",
+    /* Voir le commentaire de la fiche FR : réécrite au ticket 11
+       contre le code, le parc corrigé, et la dépendance de `monde.html`
+       rétablie — la version précédente écrivait « no dependency » des
+       DEUX pages, ce qui était faux de celle qui charge three.js. */
     contexte:
-      "Code written with an AI ships faster than it is understood. Eternal turns that code into interactive lessons, shaped as a 2D pixel HD video game, to anchor the knowledge without slowing delivery.",
+      "Code written with an AI ships faster than it is understood. Eternal is not an application but a production chain: at the end of a significant piece of work, an agent reads the project's real diff, writes an interactive lesson and pushes it into a git repository. Two HTML pages with no build read it back in the browser — the 2D interface holds every rule of the game and zero dependencies; the 3D world holds no rule and exactly one dependency, three.js loaded from a CDN.",
     contraintes: [
-      "The lesson must cost nothing to the working rhythm, or it will never be read.",
-      "Learning after the fact only matters if the lesson covers the code actually written.",
-      "The game is played on a keyboard and a large screen: the online demo is desktop only, and owning that beats serving a degraded touch version.",
+      "The lesson must cost nothing to the working rhythm: it fires in the background at the end of a task, never blocking.",
+      "Agents that exchange no messages must still produce interoperable files — the meeting point had to be neither an API nor a database.",
+      "Several sessions, on several machines, may write at the same time: no two of them may claim the same lesson number.",
+      "No server, no account, static hosting — so progress stays on the device, and that limit is written down rather than hidden.",
     ],
     decisions: [
       {
-        titre: "The lesson fires from the working tool",
-        texte: "A `/prof` command run where the code is written: the lesson comes out of the work instead of interrupting it.",
+        titre: "A contract file instead of a meeting",
+        texte:
+          "`FORMAT.md` is declared the shared source of truth between the agent that writes and the interface that renders: layout, a closed vocabulary of eight themes, the XP economy, the exact shape of a fragment. Eleven lessons later, all eleven comply.",
       },
       {
-        titre: "Game form, not course form",
+        titre: "The manifest is separate from the content",
         texte:
-          "A 2D pixel HD game rather than a list of articles — people come back to a game, they do not come back to a wiki.",
+          "At start-up the interface loads metadata only — 5,784 bytes — and fetches a lesson's fragment when it is opened, once. Sorting, filtering and computing progress therefore do not cost the 194,989 bytes of fragments.",
+      },
+      {
+        titre: "No persisted counter",
+        texte:
+          "XP, balance, ranks and combat statistics are recomputed on every render from what was actually read and answered. A corrupted or outdated progress store therefore cannot lie about a total.",
+      },
+      {
+        titre: "Two views, one engine",
+        texte:
+          "The three-dimensional world only renders scenery: it holds no rule. It drives the 2D page's engine through a read-only bridge exposed from a hidden iframe — and it never writes state.",
       },
     ],
-    parc: ["TypeScript", "LLM content generation"],
+    parc: [
+      "HTML",
+      "CSS (OKLCH)",
+      "Build-less JavaScript",
+      "three.js r160",
+      "WebGL",
+      "Inline SVG",
+      "localStorage",
+      "git / GitHub Pages",
+      "PowerShell",
+      "Claude Code",
+    ],
   },
   {
     slug: "trading-agent",

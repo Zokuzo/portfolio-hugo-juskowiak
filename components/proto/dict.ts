@@ -1,5 +1,28 @@
 export type Lang = "fr" | "en"
 
+/* LE CODE NE SE TRADUIT PAS. Cet extrait est du source : il n'en
+   existe qu'une version, donc les deux langues rendent le MÊME
+   tableau — dupliquer les lignes serait ouvrir la porte à deux codes
+   qui divergent. Seules la source et la note changent de langue.
+   [numéro de ligne, texte, marque] ; marque « c » = commentaire
+   (--g-500), « ! » = ligne mise en évidence (rail + --paper).
+   Relevé le 2026-08-06 dans `/home/hjuskowiak/PP/Eternal/index.html`,
+   HEAD `acfe5b8` ; aucune ligne montrée n'est tronquée, la ligne « ⋯ »
+   est une ÉLISION. Elle est déclarée aux DEUX publics : « ⋯ » pour
+   l'œil, et un relais `sr-only` posé par `CodeAnnote` pour le lecteur
+   d'écran — le marqueur vit dans la colonne des numéros, qui est
+   aria-hidden, donc sans ce relais l'extrait s'entendrait contigu. */
+const CODE_PONT = [
+  ["3729", "/* Pont lecture seule pour le monde 3D (monde.html, même origine) :", "c"],
+  ["3730", "   des dérivés calculés, jamais l'état brut ni de mutation. */", "c"],
+  ["3731", "window.__eternal = {", "!"],
+  ["3732", "  solde:     () => eclatsSolde(),", ""],
+  ["3733", "  xp:        () => xpTotal(),", ""],
+  ["⋯", "", ""],
+  ["3757", "  shopDo:  (action, arg) => actionRPG({ dataset:{ action, item:arg, slot:arg } }),  // réutilise le vrai chemin d'achat/équip", ""],
+  ["3758", "};", "!"],
+] as const
+
 /* Contenu bilingue du prototype. Tout le texte visible passe par ici —
    pas de chaîne en dur dans les composants.
    Règle de contenu : rien d'inventé. Chaque chiffre, date et techno
@@ -600,6 +623,29 @@ const DICT = {
   fpResultat: { fr: "Résultat", en: "Outcome" },
   fpParc: { fr: "Parc", en: "Stack" },
 
+  /* — blocs des fiches sur mesure —
+     Titres du vocabulaire de `fiche-blocs.tsx`. Ils sont ici et non
+     dans la fiche qui les emploie : deux fiches qui montrent une
+     architecture doivent l'appeler pareil. */
+  fpArchitecture: { fr: "Architecture", en: "Architecture" },
+  fpPont: { fr: "Le pont, en code", en: "The bridge, in code" },
+  fpCotes: { fr: "Cotes relevées", en: "Measured figures" },
+  fpCotesTete: {
+    fr: ["Cote", "Valeur", "Commande"],
+    en: ["Figure", "Value", "Command"],
+  },
+  /* La commande est une COLONNE et pas une note : `projets.ts` écrit
+     qu'une fiche technique qui invente ses cotes n'est plus une fiche.
+     Un chiffre sans son geste de reproduction est une affirmation. */
+  fpCotesNote: {
+    fr: "Chaque valeur se rejoue par sa commande, à la racine du dépôt du projet. Relevé du 2026-08-06.",
+    en: "Every value replays through its command, at the root of the project repository. Taken 2026-08-06.",
+  },
+  /* Le mot que le glyphe « ⋯ » ne prononce pas. Il est précédé du
+     nombre de lignes sautées, que `CodeAnnote` DÉDUIT des numéros
+     voisins — donc pas de nombre à tenir à jour ici. */
+  fpCodeElision: { fr: "lignes omises", en: "lines omitted" },
+
   /* Les fiches formation partagent le gabarit des fiches projet
      mais pas leur grille de lecture : un cursus n'a ni contraintes
      ni décisions techniques. Mêmes emplacements, autres mots. */
@@ -688,6 +734,52 @@ const DICT = {
   etnTitre: {
     fr: "Architecture d'Eternal : une chaîne d'écriture dépose deux fichiers dans un dépôt git, que deux vues du navigateur relisent — index.html porte toutes les règles, monde.html n'en porte aucune.",
     en: "Eternal architecture: a writing chain drops two files into a git repository, which two browser views read back — index.html holds every rule, monde.html holds none.",
+  },
+
+  /* — l'extrait de code de la fiche U-04 —
+       Le pont : la seule surface par laquelle le monde 3D touche le
+       moteur. 15 méthodes au total, 3 montrées — compté par
+       `awk 'NR>=3732 && NR<=3757' index.html | grep -cE "^  [a-zA-Z]+: *"`
+       → 15. La recherche 02 §2 en annonçait 14 : c'est elle qui se
+       trompe, et le chiffre publié ici est celui de la commande. */
+  etnPontSource: {
+    fr: "index.html:3729-3758 — extrait, 3 des 15 méthodes",
+    en: "index.html:3729-3758 — excerpt, 3 of 15 methods",
+  },
+  etnPontCode: { fr: CODE_PONT, en: CODE_PONT },
+  etnPontNote: {
+    fr: "Tout ce que le monde 3D peut toucher tient entre ces deux accolades : des lectures et des appels au moteur, jamais l'état brut, jamais une mutation. De l'autre côté du pont, `grep -c setItem monde.html` rend 0 — la vue n'écrit rien.",
+    en: "Everything the 3D world can touch fits between those two braces: reads and calls into the engine, never the raw state, never a mutation. On the other side of the bridge, `grep -c setItem monde.html` returns 0 — the view writes nothing.",
+  },
+
+  /* — les cotes de la fiche U-04 —
+       [cote, valeur, commande]. Chaque ligne a été RELEVÉE le
+       2026-08-06 à la racine de `/home/hjuskowiak/PP/Eternal`, HEAD
+       `acfe5b8`, par la commande qu'elle affiche — pas recopiée d'une
+       recherche. La ligne « Fichiers TypeScript » est celle qui corrige
+       le `parc: ["TypeScript"]` que la fiche annonçait : la fiche
+       publie désormais sa propre preuve. */
+  etnCotes: {
+    fr: [
+      ["Fragments de leçon", "11", "ls lecons/lecon-*.html | wc -l"],
+      ["Manifeste", "5 784 o", "du -b lecons/index.json"],
+      ["Interface 2D", "3 763 lignes", "wc -l index.html"],
+      ["Fonctions d'index.html", "116", "grep -cE '^(async )?function ' index.html"],
+      ["Fichiers TypeScript", "0", "find . -name '*.ts' -not -path './.git/*' | wc -l"],
+      ["Écritures d'état dans monde.html", "0", "grep -c setItem monde.html"],
+      ["Assets tracés", "226 PNG", "find assets -name '*.png' | wc -l"],
+      ["Fenêtre de publication", "2026-07-08 → 2026-07-15", "git log --date=short --pretty=%ad | sort -u"],
+    ],
+    en: [
+      ["Lesson fragments", "11", "ls lecons/lecon-*.html | wc -l"],
+      ["Manifest", "5,784 B", "du -b lecons/index.json"],
+      ["2D interface", "3,763 lines", "wc -l index.html"],
+      ["Functions in index.html", "116", "grep -cE '^(async )?function ' index.html"],
+      ["TypeScript files", "0", "find . -name '*.ts' -not -path './.git/*' | wc -l"],
+      ["State writes in monde.html", "0", "grep -c setItem monde.html"],
+      ["Credited assets", "226 PNG", "find assets -name '*.png' | wc -l"],
+      ["Publishing window", "2026-07-08 → 2026-07-15", "git log --date=short --pretty=%ad | sort -u"],
+    ],
   },
 } as const
 
