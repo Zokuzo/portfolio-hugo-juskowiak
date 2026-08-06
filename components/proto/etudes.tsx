@@ -155,7 +155,7 @@ export function Etudes({ lang }: { lang: Lang }) {
             const entree = (
               <motion.li
                 key={e.code}
-                className={`etu-entree${e.fiche ? " etu-a-fiche" : ""}`}
+                className={`etu-entree${e.fiche ? " a-fiche etu-a-fiche" : ""}`}
                 initial={e.fiche ? false : { opacity: 0, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.5 }}
@@ -173,7 +173,7 @@ export function Etudes({ lang }: { lang: Lang }) {
                       que la feuille 02 : un renvoi vers une page vide est
                       pire qu'une absence. */}
                   {e.fiche && (
-                    <Link href={`/work/${e.fiche}`} className="mono mono-xs etu-fiche-lien">
+                    <Link href={`/work/${e.fiche}`} className="mono mono-xs fiche-lien etu-fiche-lien">
                       {t(lang, "xpFiche")} <span aria-hidden="true">→</span>
                     </Link>
                   )}

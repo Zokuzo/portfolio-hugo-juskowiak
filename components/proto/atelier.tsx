@@ -150,7 +150,7 @@ export function Atelier({ lang }: { lang: Lang }) {
           const carte = (
             <motion.article
               key={p.code}
-              className={`at-projet${p.fiche ? " at-a-fiche" : ""}`}
+              className={`at-projet${p.fiche ? " a-fiche at-a-fiche" : ""}`}
               initial={p.fiche ? false : { opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.25 }}
@@ -168,7 +168,7 @@ export function Atelier({ lang }: { lang: Lang }) {
                 <p className="mono mono-sm dim-2 at-texte">{p.texte}</p>
 
                 {p.fiche && (
-                  <Link href={`/work/${p.fiche}`} className="mono mono-xs at-fiche-lien">
+                  <Link href={`/work/${p.fiche}`} className="mono mono-xs fiche-lien at-fiche-lien">
                     {t(lang, "xpFiche")} <span aria-hidden="true">→</span>
                   </Link>
                 )}

@@ -116,7 +116,11 @@ export function Experience({ lang }: { lang: Lang }) {
               <ol className="xp-produits">
                 {e.produits.map((p) => {
                   const ligne = (
-                    <li key={p.code} className="xp-produit">
+                    /* `a-fiche` : la ligne à fiche se clique PARTOUT, comme sur
+                       les feuilles 03 et 04. Sans elle, le centre d'une ligne 02
+                       n'atteignait aucun lien quand celui d'une card 03 ou 04
+                       atteignait le sien — trois feuilles, deux grammaires. */
+                    <li key={p.code} className={`xp-produit${p.fiche ? " a-fiche" : ""}`}>
                       <span className="mono mono-xs dim xp-code">{p.code}</span>
                       <div>
                         <h4 className="xp-produit-nom">
@@ -127,7 +131,7 @@ export function Experience({ lang }: { lang: Lang }) {
                         {/* Le lien n apparait que si la fiche existe : un
                             renvoi vers une page vide est pire qu absence. */}
                         {p.fiche && (
-                          <Link href={`/work/${p.fiche}`} className="mono mono-xs xp-fiche-lien">
+                          <Link href={`/work/${p.fiche}`} className="mono mono-xs fiche-lien xp-fiche-lien">
                             {t(lang, "xpFiche")} <span aria-hidden="true">→</span>
                           </Link>
                         )}

@@ -3155,9 +3155,59 @@ body {
   letter-spacing: 0.035em;
   line-height: 1.72;
 }
-.xp-fiche-lien,
-.at-fiche-lien,
-.etu-fiche-lien {
+/* ------------------------------------------------------------
+   GRAMMAIRE D'INTERACTION DES CARDS — feuilles 02, 03 et 04
+
+   UNE SEULE GRAMMAIRE POUR LES TROIS FEUILLES. Deux classes la
+   portent, `.a-fiche` sur la card et `.fiche-lien` sur le lien ;
+   les classes par feuille (.xp-*, .etu-*, .at-*) restent dans le
+   markup parce qu'un contrôle publié les vise, mais elles ne
+   portent plus d'état.
+
+   UN CANAL PAR ÉTAT, pour que deux états ne se distinguent JAMAIS
+   par la seule teinte (WCAG 1.4.1) :
+
+     survol  → RAIL papier DANS le bord d'attaque de la card
+     focus   → ANNEAU papier HORS du lien (:focus-visible global,
+               --rail-w, offset 2px) — le rail vient en plus
+     pressé  → le rail S'ALLUME en --sig-hot, sur un AUTRE élément
+
+   Le rail est le canal géométrique de l'état allumé (--rail-w,
+   « canal GÉOMÉTRIQUE de l'état allumé ») et l'idiome du fichier :
+   quatre précédents en `inset … var(--sig-hot)` (.fp-courante
+   .fp-etat, .fp-code-m, .tel-tr-lourde td, .xp-courant). Survol et
+   focus se lisent à la PRÉSENCE de l'anneau, pas à sa couleur.
+
+   POURQUOI L'OUTLINE DE SURVOL DE 04 EST PARTI : papier, 1px,
+   autour de la card — la même couleur et presque la même forme que
+   l'anneau de focus, papier, 2px, autour du lien. Deux états qui ne
+   diffèrent que par un pixel et par ce qu'ils entourent ne se
+   distinguent pas.
+
+   POURQUOI LE FOND DE SURVOL DE 03 EST PARTI : un aplat translucide
+   ne se pose pas sur .at-projet, qui a déjà --ink-2 pour fond — il
+   aurait fallu une valeur par feuille. Le rail, lui, se pose à
+   l'identique sur une ligne de liste et sur une card.
+
+   PAS DE LIFT : `motion` laisse un transform inline sur la card
+   après son entrée, un translate CSS au survol perdrait. Constat
+   d'origine conservé.
+
+   LE PRESSÉ EST EN CSS, PAS EN JS. La seule chose qu'un hook de
+   pression apporterait ici est un plancher de visibilité pour un
+   clic très bref ; il s'écrit en deux lignes — allumage
+   INSTANTANÉ (`transition: none` sur :active), extinction en 0,3 s
+   portée par la règle de base. Un clic d'une milliseconde laisse
+   donc 0,3 s de rail. Et la cible est un <a href> : lui donner
+   l'Espace, ce que fait un hook écrit pour <button>, contredirait
+   la sémantique native du lien.
+
+   FOCUS : `:has(.fiche-lien:focus-visible)` et non `:focus-within`.
+   Avec :focus-within, tabuler jusqu'au lien de dépôt d'une card 04
+   allumait la card entière — elle disait « c'est moi la cible »
+   alors que la cible était le lien GitHub.
+   ------------------------------------------------------------ */
+.fiche-lien {
   display: inline-block;
   margin-top: 0.6rem;
   color: var(--g-300);
@@ -3168,32 +3218,44 @@ body {
     color 0.3s var(--ease),
     border-color 0.3s var(--ease);
 }
-.xp-fiche-lien span,
-.at-fiche-lien span,
-.etu-fiche-lien span {
+.fiche-lien span {
   display: inline-block;
   transition: transform 0.3s var(--ease);
 }
-.xp-fiche-lien:hover,
-.xp-fiche-lien:focus-visible,
-.at-fiche-lien:hover,
-.at-fiche-lien:focus-visible,
-.etu-fiche-lien:hover,
-.etu-fiche-lien:focus-visible {
+/* La card à fiche est cliquable PARTOUT : le lien s'étire par son
+   ::after. Le lien lui-même reste non positionné, sinon l'::after
+   se calerait sur lui au lieu de la card. */
+.a-fiche {
+  position: relative;
+  transition: box-shadow 0.3s var(--ease);
+}
+.a-fiche .fiche-lien::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  transition: box-shadow 0.3s var(--ease);
+}
+.a-fiche:hover,
+.a-fiche:has(.fiche-lien:focus-visible) {
+  box-shadow: inset var(--rail-w) 0 0 var(--paper);
+}
+.a-fiche:hover .fiche-lien,
+.a-fiche:has(.fiche-lien:focus-visible) .fiche-lien {
   color: var(--paper);
   border-color: var(--paper);
 }
-.xp-fiche-lien:hover span,
-.at-fiche-lien:hover span,
-.etu-fiche-lien:hover span,
-.at-a-fiche:hover .at-fiche-lien span,
-.etu-a-fiche:hover .etu-fiche-lien span,
-.xp-fiche-lien:focus-visible span,
-.at-fiche-lien:focus-visible span,
-.etu-fiche-lien:focus-visible span,
-.at-a-fiche:focus-within .at-fiche-lien span,
-.etu-a-fiche:focus-within .etu-fiche-lien span {
+.a-fiche:hover .fiche-lien span,
+.a-fiche:has(.fiche-lien:focus-visible) .fiche-lien span {
   transform: translateX(4px);
+}
+/* Le rail s'allume. Sur l'::after et non sur la card : le rouge se
+   pose PAR-DESSUS le rail papier au lieu d'interpoler vers lui —
+   une interpolation --sig-hot → --paper passerait par des roses,
+   c'est-à-dire par une teinte que le système n'a pas. */
+.a-fiche .fiche-lien:active::after {
+  box-shadow: inset var(--rail-w) 0 0 var(--sig-hot);
+  transition: none;
 }
 
 .xp-parc,
@@ -3359,24 +3421,9 @@ body {
   gap: 0 clamp(0.6rem, 1.6vw, 1.2rem);
   padding: clamp(0.9rem, 2.2vh, 1.4rem) 0;
   border-bottom: var(--rule) solid var(--line);
-  /* Ancre du lien étiré, comme .at-projet. */
-  position: relative;
 }
-/* L'entrée à fiche se clique PARTOUT — même motif que la feuille 04. */
-.etu-a-fiche .etu-fiche-lien::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-}
-.etu-a-fiche:hover,
-.etu-a-fiche:focus-within {
-  background: rgba(226, 232, 240, 0.03);
-}
-.etu-a-fiche:hover .etu-fiche-lien,
-.etu-a-fiche:focus-within .etu-fiche-lien {
-  color: var(--paper);
-  border-color: var(--paper);
-}
+/* Le lien étiré et les trois états sont portés par `.a-fiche` —
+   voir GRAMMAIRE D'INTERACTION DES CARDS, plus haut. */
 .etu-nom {
   margin: 0;
   font-size: 1.0625rem;
@@ -3414,34 +3461,12 @@ body {
   display: flex;
   flex-direction: column;
   background: var(--ink-2);
-  /* Ancre du lien étiré : le ::after du lien fiche se cale sur la
-     card entière, pas sur le lien. */
+  /* `relative` reste ici et pas seulement sur `.a-fiche` : les cards
+     SANS fiche (A3, A4) en ont besoin pour le z-index de .at-liens. */
   position: relative;
 }
-/* La card à fiche est cliquable PARTOUT : le lien « fiche
-   détaillée » s'étire sur toute la card par son ::after. Le lien
-   lui-même reste non positionné, sinon l'::after se calerait sur
-   lui au lieu de la card. */
-.at-a-fiche .at-fiche-lien::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-}
-/* « Bordure vers --paper, léger lift » dit la spec. La bordure y
-   est ; le lift, non : `motion` laisse un transform inline sur
-   la card après son entrée, un translate CSS au hover perdrait.
-   L'outline + les couleurs suffisent à dire « cliquable ». */
-.at-a-fiche:hover,
-.at-a-fiche:focus-within {
-  outline: var(--rule) solid var(--paper);
-  outline-offset: calc(-1 * var(--rule));
-}
-.at-a-fiche:hover .at-fiche-lien,
-.at-a-fiche:focus-within .at-fiche-lien {
-  color: var(--paper);
-  border-color: var(--paper);
-}
+/* Le lien étiré et les trois états sont portés par `.a-fiche` —
+   voir GRAMMAIRE D'INTERACTION DES CARDS, plus haut. */
 .at-cadre {
   padding: clamp(1rem, 3vw, 1.6rem);
   border-bottom: var(--rule) solid var(--line);
