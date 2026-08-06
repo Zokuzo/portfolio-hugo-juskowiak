@@ -22,14 +22,14 @@
                     --depart=0 --env=1 --poids=60000 --sortie=1000
    ================================================================== */
 
-import { spawn } from "node:child_process"
 import { createServer } from "node:http"
 import { readFile, writeFile, mkdir, rm, readdir } from "node:fs/promises"
-import { existsSync, readdirSync } from "node:fs"
+import { existsSync } from "node:fs"
 import { execFile } from "node:child_process"
-import { tmpdir, homedir } from "node:os"
+import { tmpdir } from "node:os"
 import { promisify } from "node:util"
 import path from "node:path"
+import { trouveChrome, Cdp, attends, lanceChrome } from "../chrome.mjs"
 
 const pexec = promisify(execFile)
 const ICI = path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"))
@@ -55,42 +55,8 @@ const POIDS  = +(opt.poids ?? 60000)          // plafond par image, en octets
 const DEST   = path.resolve(RACINE, opt.dest ?? "public/voiture")
 const CHROME = opt.chrome ?? trouveChrome()
 
-/* Le dépôt sert DEUX machines : Hugo rend sous Windows, la machine de mesure
-   est sous Linux. Une liste de chemins Windows y échouait sans autre recours
-   que --chrome à la main. Le chromium du cache Playwright fait un troisième
-   candidat — il est déjà installé pour les bancs de mesure et sait faire du
-   WebGL2 en SwiftShader ; son numéro de build change à chaque mise à jour de
-   Playwright, on le CHERCHE donc au lieu de l'écrire en dur. En tête de liste :
-   un vrai Chrome, s'il y en a un, reste le rendu de référence. */
-function trouveChrome() {
-  const win = process.platform === "win32"
-  const cache = process.env.PLAYWRIGHT_BROWSERS_PATH ??
-    path.join(homedir(), win ? "AppData/Local/ms-playwright" : ".cache/ms-playwright")
-  const playwright = (existsSync(cache) ? readdirSync(cache) : [])
-    .filter((d) => d.startsWith("chromium-"))
-    .sort((a, b) => +b.slice(9) - +a.slice(9))          // build le plus récent d'abord
-    .map((d) => path.join(cache, d, ...(win ? ["chrome-win", "chrome.exe"] : ["chrome-linux64", "chrome"])))
-  const pistes = [
-    process.env.CHROME_PATH,
-    ...(win
-      ? ["C:/Program Files/Google/Chrome/Application/chrome.exe",
-         "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe"]
-      : ["/usr/bin/google-chrome", "/usr/bin/google-chrome-stable", "/opt/google/chrome/chrome"]),
-    ...playwright,
-    /* Les chromium de la distribution passent APRÈS le cache Playwright, et
-       seulement sous Linux : sur Ubuntu ces trois chemins sont des shims snap,
-       confinés, dont rien ne dit qu'ils savent écrire le --user-data-dir qu'on
-       pose dans tmpdir(). NON VÉRIFIÉ — aucun snap sur la machine de mesure.
-       Le binaire Playwright, lui, n'est pas confiné et sert déjà aux bancs :
-       en cas de doute c'est lui qu'on veut. Symptôme si un shim snap gagnait
-       quand même : « délai dépassé : démarrage de Chrome » au bout de 30 s ;
-       contournement : --chrome=<chemin>. */
-    ...(win ? [] : ["/usr/bin/chromium", "/usr/bin/chromium-browser", "/snap/bin/chromium"]),
-  ].filter(Boolean)
-  const t = pistes.find((p) => existsSync(p))
-  if (!t) throw new Error("Chrome introuvable — passer --chrome=<chemin>")
-  return t
-}
+/* `trouveChrome` vit dans `tools/chrome.mjs` : le banc de budget de frame
+   a besoin du même savoir, et deux copies, c'est une copie qui pourrit. */
 
 /* ── encodeur WebP ────────────────────────────────────────────────
    ffmpeg n'est pas installé partout, et celui qu'embarque Playwright est
@@ -166,36 +132,6 @@ function servir(alias, dossier) {
 }
 
 /* ── client CDP minimal ──────────────────────────────────────── */
-class Cdp {
-  constructor(ws) {
-    this.ws = ws; this.id = 0; this.attente = new Map()
-    ws.addEventListener("message", (e) => {
-      const m = JSON.parse(e.data)
-      const p = this.attente.get(m.id)
-      if (!p) return
-      this.attente.delete(m.id)
-      m.error ? p.rej(new Error(m.error.message)) : p.res(m.result)
-    })
-  }
-  envoie(method, params = {}) {
-    const id = ++this.id
-    return new Promise((res, rej) => { this.attente.set(id, { res, rej }); this.ws.send(JSON.stringify({ id, method, params })) })
-  }
-  async evalue(expr, attendrePromesse = false) {
-    const r = await this.envoie("Runtime.evaluate", { expression: expr, awaitPromise: attendrePromesse, returnByValue: true })
-    if (r.exceptionDetails) throw new Error(r.exceptionDetails.exception?.description ?? "erreur page")
-    return r.result.value
-  }
-}
-
-const pause = (ms) => new Promise((r) => setTimeout(r, ms))
-
-async function attends(fn, limite, quoi) {
-  const fin = Date.now() + limite
-  while (Date.now() < fin) { const v = await fn(); if (v) return v; await pause(250) }
-  throw new Error("délai dépassé : " + quoi)
-}
-
 async function main() {
   /* L'encodeur se cherche AVANT le rendu : découvrir qu'il manque après
      quarante minutes de calcul 3D serait une mauvaise plaisanterie. */
@@ -219,47 +155,24 @@ async function main() {
   }
   const page = `http://127.0.0.1:${port}/scene.html?${q}`
 
-  /* Port de débogage pris à l'OS, et profil nommé d'après lui. Un port
-     fixe interdisait deux rendus en parallèle : le second trouvait le
-     port occupé, se rattachait à la page du PREMIER et échouait sans
-     rien dire d'utile. On teste souvent plusieurs réglages à la fois,
-     ça ne peut pas être un piège. */
-  const port0 = await new Promise((res) => {
-    const s = createServer()
-    s.listen(0, "127.0.0.1", () => { const { port } = s.address(); s.close(() => res(port)) })
+  /* Le port de débogage est pris à l'OS et le profil nommé d'après lui
+     (`lanceChrome`, tools/chrome.mjs). Un port fixe interdisait deux rendus
+     en parallèle : le second trouvait le port occupé, se rattachait à la page
+     du PREMIER et échouait sans rien dire d'utile. On teste souvent plusieurs
+     réglages à la fois, ça ne peut pas être un piège — et le dossier des PNG
+     intermédiaires suit le même port, pour la même raison. */
+  const { cdp, ferme, port: port0 } = await lanceChrome({
+    chrome: CHROME,
+    nom: "rendu-voiture",
+    url: page,
+    args: [
+      "--hide-scrollbars", "--window-size=2048,2048",
+      // WebGL logiciel : garantit un rendu identique quelle que soit la machine
+      ...(opt.gpu ? [] : ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--disable-gpu-sandbox"]),
+    ],
   })
-  const profil = path.join(tmpdir(), `chrome-rendu-voiture-${port0}`)
-  await rm(profil, { recursive: true, force: true })
-  const chrome = spawn(CHROME, [
-    "--headless=new",
-    /* Sans ça, le chromium de Playwright s'ABORTE au démarrage sur les
-       distributions qui bloquent les user namespaces non privilégiés
-       (« No usable sandbox! », signal 6). On ne rend qu'une page locale
-       qu'on écrit nous-mêmes : il n'y a pas de contenu hostile à isoler. */
-    "--no-sandbox",
-    `--remote-debugging-port=${port0}`,
-    `--user-data-dir=${profil}`,
-    "--no-first-run", "--no-default-browser-check", "--disable-extensions",
-    "--hide-scrollbars", "--mute-audio", "--window-size=2048,2048",
-    // WebGL logiciel : garantit un rendu identique quelle que soit la machine
-    ...(opt.gpu ? [] : ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--disable-gpu-sandbox"]),
-    page,
-  ], { stdio: "ignore" })
 
-  let ws
   try {
-    const cible = await attends(async () => {
-      try {
-        const l = await (await fetch(`http://127.0.0.1:${port0}/json/list`)).json()
-        return l.find((t) => t.type === "page" && t.webSocketDebuggerUrl)
-      } catch { return null }
-    }, 30000, "démarrage de Chrome")
-
-    ws = new WebSocket(cible.webSocketDebuggerUrl)
-    await new Promise((r, j) => { ws.addEventListener("open", r); ws.addEventListener("error", j) })
-    const cdp = new Cdp(ws)
-    await cdp.envoie("Runtime.enable")
-
     await attends(async () => {
       const e = await cdp.evalue("window.erreur ?? null")
       if (e) throw new Error("chargement du modèle : " + e)
@@ -300,8 +213,7 @@ async function main() {
        permet de reprendre au seul encodage sans refaire le calcul 3D. */
     await rm(brut, { recursive: true, force: true })
   } finally {
-    try { ws?.close() } catch {}
-    chrome.kill()
+    await ferme()
     srv.close()
   }
 }

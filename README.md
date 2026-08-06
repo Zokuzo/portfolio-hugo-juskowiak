@@ -58,7 +58,9 @@ components/proto/      one file per sheet + the data
   voiture.tsx          the scroll-driven car sequence
 lib/utils.ts           cn() — for imported components only
 public/voiture/        the 120 rendered frames
+tools/chrome.mjs       finds and drives Chrome over CDP — no npm dependency
 tools/voiture/         the offline render pipeline (Three.js in a headless Chrome)
+tools/banc/frame.mjs   frame-budget bench: `node tools/banc/frame.mjs <url> <label> --tete`
 ```
 
 ### Conventions
@@ -74,7 +76,9 @@ it does.
   substrates). Contrast ratios are computed, not eyeballed. Do not add a hue.
 - **`prefers-reduced-motion: reduce` cuts every animation** — including the JS ones, which CSS
   cannot reach; see the note in `planche.css` under `ACCESSIBILITÉ`.
-- **Frame budget: 8.3 ms** (120 Hz). Anything added is measured against it.
+- **Frame budget: 8.3 ms** (120 Hz). Anything added is measured against it, with
+  `node tools/banc/frame.mjs <url> <label> --tete`. `--tete` is not optional:
+  headless Chrome composites in software and cannot answer a 120 Hz question.
 - Code comments are in French and say *why*, not *what*.
 
 ### Contact
