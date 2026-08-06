@@ -1,0 +1,17 @@
+# Sans ce fichier, git stockait exactement les octets de l'arbre : un fichier
+# écrit depuis Windows entrait en CRLF contre un HEAD en LF, et `git status`
+# annonçait modifié ce qui ne l'était pas. Au lot 22-25, six fichiers sur
+# vingt-huit ne différaient QUE par leurs fins de ligne.
+* text=auto eol=lf
+
+# `text=auto` détecte les binaires tout seul (octet nul dans les 8 000 premiers)
+# et ces lignes seraient donc redondantes — sauf que `public/voiture/` contient
+# 120 WebP de production qu'aucune commande de ce dépôt ne sait re-fabriquer
+# aujourd'hui : il manque le modèle 3D. Une détection ratée les corromprait
+# sans bruit. Six lignes contre cette perte-là, c'est gratuit.
+*.png   binary
+*.webp  binary
+*.pdf   binary
+*.woff  binary
+*.woff2 binary
+*.glb   binary
