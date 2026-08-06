@@ -1,8 +1,8 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { motion, useMotionValueEvent, useScroll, useSpring, useTransform } from "framer-motion"
-import type { MotionValue } from "framer-motion"
+import { motion, useMotionValueEvent, useReducedMotion, useScroll, useSpring, useTransform } from "motion/react"
+import type { MotionValue } from "motion/react"
 import type { Lang } from "./dict"
 import { t } from "./dict"
 
@@ -295,12 +295,16 @@ type NodeState = "off" | "on" | "done"
 
 function Node({ state, children }: { state: NodeState; children: React.ReactNode }) {
   const seen = state !== "off"
+  /* L'état allumé/éteint reste une INFORMATION et se garde sous `reduce` :
+     c'est le passage de l'un à l'autre qui devient instantané. Le CSS
+     n'atteint pas framer — cf. planche.css, ACCESSIBILITÉ. */
+  const reduit = useReducedMotion()
   return (
     <motion.g
       className={`node ${state}`}
       initial={false}
       animate={{ opacity: seen ? 1 : 0.26, y: seen ? 0 : 9 }}
-      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+      transition={reduit ? { duration: 0 } : { duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
     >
       {children}
     </motion.g>

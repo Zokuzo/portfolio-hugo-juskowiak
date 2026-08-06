@@ -1,6 +1,6 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion, useReducedMotion } from "motion/react"
 import { t, type Lang } from "./dict"
 
 /* ==================================================================
@@ -26,6 +26,8 @@ import { t, type Lang } from "./dict"
 export function Cartouche({ lang }: { lang: Lang }) {
   const champs = t(lang, "ctChamps") as unknown as [string, string][]
   const liens = t(lang, "ctLiens") as unknown as [string, string, string][]
+  // la coupure reduced-motion s'écrit ICI : le CSS n'atteint pas framer — cf. planche.css, ACCESSIBILITÉ
+  const reduit = useReducedMotion()
 
   return (
     <section className="ct" id="contact" aria-labelledby="ct-titre">
@@ -49,7 +51,7 @@ export function Cartouche({ lang }: { lang: Lang }) {
         initial={{ opacity: 0, y: 14 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.6 }}
-        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+        transition={reduit ? { duration: 0 } : { duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
       >
         {t(lang, "ctAccroche")}
       </motion.p>

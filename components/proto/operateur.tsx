@@ -1,6 +1,6 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion, useReducedMotion } from "motion/react"
 import { t, type Lang } from "./dict"
 
 /* ==================================================================
@@ -19,6 +19,8 @@ import { t, type Lang } from "./dict"
 
 export function Operateur({ lang }: { lang: Lang }) {
   const champs = t(lang, "opChamps") as unknown as [string, string][]
+  // la coupure reduced-motion s'écrit ICI : le CSS n'atteint pas framer — cf. planche.css, ACCESSIBILITÉ
+  const reduit = useReducedMotion()
 
   return (
     <section className="op" id="profil" aria-labelledby="op-titre">
@@ -45,7 +47,7 @@ export function Operateur({ lang }: { lang: Lang }) {
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.4 }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          transition={reduit ? { duration: 0 } : { duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
         >
           <p className="op-texte">{t(lang, "opCorps")}</p>
           {/* La chute porte le seul rapprochement du document entre le
@@ -63,7 +65,7 @@ export function Operateur({ lang }: { lang: Lang }) {
               initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.6 }}
-              transition={{ duration: 0.45, delay: 0.05 * i, ease: [0.22, 1, 0.36, 1] }}
+              transition={reduit ? { duration: 0 } : { duration: 0.45, delay: 0.05 * i, ease: [0.22, 1, 0.36, 1] }}
             >
               <dt className="mono mono-xs dim">{cle}</dt>
               <dd className="mono mono-sm op-valeur">{valeur}</dd>

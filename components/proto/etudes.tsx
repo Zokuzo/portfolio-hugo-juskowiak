@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { motion } from "framer-motion"
+import { motion, useReducedMotion } from "motion/react"
 import { ViewTransition } from "react"
 import { t, type Lang } from "./dict"
 import { etudes } from "./parcours"
@@ -41,6 +41,8 @@ const ANNEES = [2021, 2022, 2023, 2024, 2025, 2026]
 
 export function Etudes({ lang }: { lang: Lang }) {
   const liste = etudes(lang)
+  // la coupure reduced-motion s'écrit ICI : le CSS n'atteint pas framer — cf. planche.css, ACCESSIBILITÉ
+  const reduit = useReducedMotion()
   const principal = liste.filter((e) => e.rail === 0 && !e.excursion)
   const second = liste.filter((e) => e.rail === 1)
   const excursions = liste.filter((e) => e.excursion)
@@ -77,7 +79,7 @@ export function Etudes({ lang }: { lang: Lang }) {
         initial={{ opacity: 0, y: 14 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.3 }}
-        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        transition={reduit ? { duration: 0 } : { duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
       >
         <svg viewBox="0 0 960 250" className="etu-svg" role="img">
           {/* graduations d'année, sous tout le reste */}
@@ -157,7 +159,7 @@ export function Etudes({ lang }: { lang: Lang }) {
                 initial={e.fiche ? false : { opacity: 0, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.5 }}
-                transition={{ duration: 0.45, delay: 0.04 * i, ease: [0.22, 1, 0.36, 1] }}
+                transition={reduit ? { duration: 0 } : { duration: 0.45, delay: 0.04 * i, ease: [0.22, 1, 0.36, 1] }}
               >
                 <span className="mono mono-xs dim etu-code">{e.code}</span>
                 <div>

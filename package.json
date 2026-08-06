@@ -1,20 +1,21 @@
 {
-  "name": "my-v0-project",
+  "name": "portfolio-hugo-juskowiak",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "build": "next build",
     "dev": "next dev",
-    "lint": "eslint .",
     "start": "next start"
   },
   "dependencies": {
     "@vercel/analytics": "latest",
-    "framer-motion": "latest",
+    "clsx": "^2.1.1",
     "lenis": "^1.3.25",
+    "motion": "^12.43.0",
     "next": "^16.2.12",
     "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react-dom": "19.2.0",
+    "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.9",
@@ -23,7 +24,6 @@
     "@types/react-dom": "^19",
     "postcss": "^8.5",
     "tailwindcss": "^4.1.9",
-    "tw-animate-css": "1.3.3",
     "typescript": "^5"
   }
 }

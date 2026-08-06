@@ -310,8 +310,11 @@ body {
 /* ------------------------------------------------------------
    PLANS — du plus lointain au plus proche.
    Aucun de ces éléments ne porte de `transform` en CSS :
-   framer-motion écrit `transform` en inline et l'écraserait
-   intégralement (la perspective et le centrage disparaîtraient).
+   `motion` (le paquet ex-`framer-motion`, même moteur, importé
+   partout ici par `motion/react`) écrit `transform` en inline et
+   l'écraserait intégralement — la perspective et le centrage
+   disparaîtraient. Partout où ce fichier dit « framer », il parle de
+   ce moteur-là.
    Les décalages statiques passent donc par la propriété `translate`,
    indépendante de `transform` dans l'ordre de rendu.
    ------------------------------------------------------------ */
@@ -1474,7 +1477,32 @@ body {
 
 /* On ne remet pas la scène à plat : la profondeur est une
    information (hiérarchie, structure, orientation), seul le
-   mouvement est un effet. On fige une image composée. */
+   mouvement est un effet. On fige une image composée.
+
+   CE BLOC N'ATTEINT PAS LES RÉVÉLATIONS framer-motion, et c'est
+   mesuré : elles écrivent du style INLINE par rAF, sans jamais passer
+   par une transition CSS, donc `transition-duration: 0.001ms` ne les
+   touche pas. Relevé sur `.plate-label` (production, chromium,
+   `reducedMotion: reduce`) : l'opacité partait de 0 et arrivait à 1 en
+   traversant 40 valeurs distinctes — l'animation entière, sous
+   `reduce`. Après coupure : 2 valeurs, 0 puis 1.
+
+   La coupure s'écrit donc DANS chaque composant, sur les 14 sites, et
+   elle ne touche QUE la durée : `transition={reduit ? { duration: 0 }
+   : …}`. Elle ne touche PAS `initial`, et c'est délibéré — framer rend
+   `initial` en style inline dans le HTML du serveur, or le serveur ne
+   connaît pas la préférence : brancher `initial` fait diverger les deux
+   rendus, et React 19 le dit en toutes lettres — « some attributes of
+   the server rendered HTML didn't match the client properties. THIS
+   WON'T BE PATCHED UP ». L'élément n'atterrissait au bon endroit que
+   parce que framer réécrivait le style après coup. Une révélation reste
+   donc à l'état de départ jusqu'à l'hydratation, sous `reduce` comme
+   sans — puis se pose d'un coup au lieu de glisser.
+
+   Contrôles :
+     grep -rn "duration:" components/proto/*.tsx | grep -vc "reduit ?"
+       → 0 : aucune durée d'animation sans sa branche de coupure
+     node .scratch/planche-profonde/recherches/23-controle-reduce.mjs */
 @media (prefers-reduced-motion: reduce) {
   .proto-root *,
   .proto-root *::before,
@@ -3231,7 +3259,7 @@ body {
   z-index: 1;
 }
 /* « Bordure vers --paper, léger lift » dit la spec. La bordure y
-   est ; le lift, non : framer-motion laisse un transform inline sur
+   est ; le lift, non : `motion` laisse un transform inline sur
    la card après son entrée, un translate CSS au hover perdrait.
    L'outline + les couleurs suffisent à dire « cliquable ». */
 .at-a-fiche:hover,
@@ -3447,6 +3475,119 @@ body {
   .xp-svg {
     max-width: 320px;
   }
+}
+
+/* ------------------------------------------------------------
+   SCHÉMAS CALCULÉS — l'habillage des primitives de `schema.tsx`
+
+   Le module ne produit que de la GÉOMÉTRIE ; tout ce qui se voit se
+   décide ici, et rien de ce qui se voit ici ne peut déplacer un trait.
+
+   L'INTERDICTION, et elle est absolue : aucune règle ci-dessous ne
+   déclare width, height, x, y ni r. En SVG2 ces propriétés CSS battent
+   les attributs de présentation et réécriraient la géométrie calculée.
+   Le piège est déjà documenté deux fois dans le dépôt —
+   `components/proto/ortho.tsx:19-23` et
+   `components/proto/telemetrie.tsx:35-36`. Seule exception, la même que
+   pour `.xp-svg` / `.etu-svg` / `.tel-svg` / `.ov-svg` : la racine
+   `<svg>` est un élément HTML remplacé, son dimensionnement EST le
+   travail du CSS.
+
+   CHAQUE SCHÉMA GARDE SON PRÉFIXE. `etn-` est celui d'Eternal. Un
+   second schéma ajoute son préfixe à ces sélecteurs, il n'en hérite
+   pas : deux schémas qui partagent une classe partagent aussi leurs
+   régressions.
+
+   AUCUNE TEINTE NOUVELLE : le nœud accentué reprend exactement le
+   couple de `.at-actif` (braise + trait clair), et rien d'autre n'est
+   coloré. Un schéma d'architecture n'a pas à s'allumer.
+   ------------------------------------------------------------ */
+
+.etn-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.etn-boite {
+  fill: var(--ink-2);
+  stroke: var(--g-500);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+/* Les deux pièces qui portent une décision : le rédacteur et le
+   moteur. Le reste du schéma est du mobilier. */
+.etn-accent {
+  fill: var(--sig-ember);
+  stroke: var(--g-100);
+}
+.etn-fil {
+  fill: none;
+  stroke: var(--line-3);
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+}
+.etn-tete {
+  fill: var(--line-3);
+  stroke: none;
+}
+/* Le bus est plus épais que les fils : ce n'est pas un flux de plus,
+   c'est la pièce sur laquelle tous les autres se raccordent. */
+.etn-bus {
+  stroke: var(--g-100);
+  stroke-width: 2.4;
+  vector-effect: non-scaling-stroke;
+}
+/* Le cadre de bande n'a pas à concurrencer les boîtes : il délimite,
+   il ne dessine pas. D'où le tireté au filet le plus faible. */
+.etn-groupe {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+  vector-effect: non-scaling-stroke;
+}
+.etn-puce {
+  fill: none;
+  stroke: var(--g-700);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.etn-attache,
+.etn-cote {
+  fill: none;
+  stroke: var(--g-700);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.etn-cote-f {
+  fill: var(--g-700);
+  stroke: none;
+}
+.etn-t {
+  font-family: var(--f-mono), monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  fill: var(--g-300);
+}
+.etn-t-titre {
+  fill: var(--g-100);
+}
+.etn-t-sous,
+.etn-t-etq,
+.etn-t-leg {
+  fill: var(--g-500);
+}
+/* Pas d'interlettrage particulier ici, et c'est délibéré : la largeur
+   d'un libellé est CALCULÉE dans `schema.tsx` à partir d'une avance
+   unique. Une classe qui tracerait plus large mentirait au calcul de
+   non-chevauchement sans rien casser de visible tout de suite. */
+.etn-t-num,
+.etn-t-groupe {
+  fill: var(--g-500);
+  text-transform: uppercase;
+}
+.etn-t-cote {
+  fill: var(--g-300);
 }
 
 /* ------------------------------------------------------------

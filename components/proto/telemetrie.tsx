@@ -1,6 +1,6 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion, useReducedMotion } from "motion/react"
 import { t, type Lang } from "./dict"
 
 /* ==================================================================
@@ -55,6 +55,8 @@ export function Telemetrie({ lang }: { lang: Lang }) {
   const paliers = t(lang, "telTiers") as unknown as [string, string][]
   const cols = t(lang, "telCols") as unknown as string[]
   const pourquoi = t(lang, "telWhy") as unknown as string[]
+  // la coupure reduced-motion s'écrit ICI : le CSS n'atteint pas framer — cf. planche.css, ACCESSIBILITÉ
+  const reduit = useReducedMotion()
 
   return (
     <section className="tel" id="telemetrie" aria-labelledby="tel-titre">
@@ -127,7 +129,7 @@ export function Telemetrie({ lang }: { lang: Lang }) {
                   initial={{ scaleY: 0 }}
                   whileInView={{ scaleY: 1 }}
                   viewport={{ once: true, amount: 0.4 }}
-                  transition={{ duration: 0.7, delay: 0.06 * i, ease: [0.22, 1, 0.36, 1] }}
+                  transition={reduit ? { duration: 0 } : { duration: 0.7, delay: 0.06 * i, ease: [0.22, 1, 0.36, 1] }}
                 />
                 <text className="tel-t tel-t-rep" x={x + LARGEUR / 2} y={BASE + 16}>
                   {rep}

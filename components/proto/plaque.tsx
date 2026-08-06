@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import { motion, useScroll, useTransform } from "framer-motion"
+import { motion, useReducedMotion, useScroll, useTransform } from "motion/react"
 import type { Lang } from "./dict"
 import { t } from "./dict"
 
@@ -117,10 +117,17 @@ export function Plaque({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => vo
     }
   }, [])
 
+  /* L'entrée de la plaque est la seule du document à jouer AU CHARGEMENT,
+     sans attendre le scroll : c'est donc la révélation la plus visible
+     sous `reduce`, et la seule qu'on ait pu mesurer sans faire défiler la
+     page (contrôle 23). Le CSS n'atteint pas framer — cf. planche.css,
+     ACCESSIBILITÉ. */
+  const reduit = useReducedMotion()
+
   const rise = (delay: number) => ({
     initial: { opacity: 0, y: 22 },
     animate: { opacity: 1, y: 0 },
-    transition: { duration: 1.1, delay, ease: [0.22, 1, 0.36, 1] as const },
+    transition: reduit ? { duration: 0 } : { duration: 1.1, delay, ease: [0.22, 1, 0.36, 1] as const },
   })
 
   const timeline = t(lang, "timeline") as unknown as [string, string][]

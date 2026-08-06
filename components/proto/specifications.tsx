@@ -1,6 +1,6 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion, useReducedMotion } from "motion/react"
 import { t, type Lang } from "./dict"
 
 /* ==================================================================
@@ -34,6 +34,8 @@ import { t, type Lang } from "./dict"
 export function Specifications({ lang }: { lang: Lang }) {
   const groupes = t(lang, "specGroupes") as unknown as [string, [string, string][]][]
   const cols = t(lang, "specCols") as unknown as string[]
+  // la coupure reduced-motion s'écrit ICI : le CSS n'atteint pas framer — cf. planche.css, ACCESSIBILITÉ
+  const reduit = useReducedMotion()
 
   return (
     <section className="fiche" id="specifications" aria-labelledby="fiche-titre">
@@ -62,7 +64,7 @@ export function Specifications({ lang }: { lang: Lang }) {
             initial={{ opacity: 0, y: 12 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.5, delay: 0.05 * g, ease: [0.22, 1, 0.36, 1] }}
+            transition={reduit ? { duration: 0 } : { duration: 0.5, delay: 0.05 * g, ease: [0.22, 1, 0.36, 1] }}
           >
             <h3 className="mono mono-sm fiche-groupe-titre">{groupe}</h3>
             <div className="mono mono-xs dim fiche-cols" aria-hidden="true">

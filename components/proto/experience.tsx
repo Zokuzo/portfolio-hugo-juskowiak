@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { motion } from "framer-motion"
+import { motion, useReducedMotion } from "motion/react"
 import { ViewTransition } from "react"
 import { t, type Lang } from "./dict"
 import { employeurs, type Employeur } from "./parcours"
@@ -68,6 +68,8 @@ function Arborescence({ e }: { e: Employeur }) {
 
 export function Experience({ lang }: { lang: Lang }) {
   const liste = employeurs(lang)
+  // la coupure reduced-motion s'écrit ICI : le CSS n'atteint pas framer — cf. planche.css, ACCESSIBILITÉ
+  const reduit = useReducedMotion()
 
   return (
     <section className="xp" id="experience" aria-labelledby="xp-titre">
@@ -95,7 +97,7 @@ export function Experience({ lang }: { lang: Lang }) {
             initial={e.produits.some((p) => p.fiche) ? false : { opacity: 0, y: 14 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
-            transition={{ duration: 0.55, delay: 0.05 * i, ease: [0.22, 1, 0.36, 1] }}
+            transition={reduit ? { duration: 0 } : { duration: 0.55, delay: 0.05 * i, ease: [0.22, 1, 0.36, 1] }}
           >
             <div className="xp-fiche">
               <header className="xp-emp-head">

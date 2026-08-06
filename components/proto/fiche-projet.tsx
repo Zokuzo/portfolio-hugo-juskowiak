@@ -2,7 +2,7 @@
 
 import { useState, ViewTransition } from "react"
 import Link from "next/link"
-import { motion } from "framer-motion"
+import { motion, useReducedMotion } from "motion/react"
 import { Smooth } from "./smooth"
 import { World } from "./world"
 import { t, type Lang } from "./dict"
@@ -28,6 +28,10 @@ import { projet } from "./projets"
 
 export function FicheProjet({ slug }: { slug: string }) {
   const [lang, setLang] = useState<Lang>("fr")
+  /* Avant le garde-fou ci-dessous : un hook ne se place jamais après un
+     retour anticipé. La coupure reduced-motion s'écrit ICI parce que le
+     CSS n'atteint pas framer — cf. planche.css, ACCESSIBILITÉ. */
+  const reduit = useReducedMotion()
   const p = projet(lang, slug)
 
   // La route valide déjà le slug ; ce garde-fou couvre le cas d'une
@@ -47,7 +51,7 @@ export function FicheProjet({ slug }: { slug: string }) {
     initial: { opacity: 0, y: 12 },
     whileInView: { opacity: 1, y: 0 },
     viewport: { once: true, amount: 0.3 },
-    transition: { duration: 0.5, delay: 0.04 * i, ease: [0.22, 1, 0.36, 1] as const },
+    transition: reduit ? { duration: 0 } : { duration: 0.5, delay: 0.04 * i, ease: [0.22, 1, 0.36, 1] as const },
   })
 
   return (

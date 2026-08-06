@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { motion } from "framer-motion"
+import { motion, useReducedMotion } from "motion/react"
 import { ViewTransition } from "react"
 import { t, type Lang } from "./dict"
 import { perso, type ProjetPerso } from "./parcours"
@@ -123,6 +123,8 @@ const SCHEMAS: Record<string, () => React.JSX.Element> = {
 
 export function Atelier({ lang }: { lang: Lang }) {
   const liste = perso(lang)
+  // la coupure reduced-motion s'écrit ICI : le CSS n'atteint pas framer — cf. planche.css, ACCESSIBILITÉ
+  const reduit = useReducedMotion()
 
   return (
     <section className="at" id="atelier" aria-labelledby="at-titre">
@@ -152,7 +154,7 @@ export function Atelier({ lang }: { lang: Lang }) {
               initial={p.fiche ? false : { opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.25 }}
-              transition={{ duration: 0.5, delay: 0.05 * i, ease: [0.22, 1, 0.36, 1] }}
+              transition={reduit ? { duration: 0 } : { duration: 0.5, delay: 0.05 * i, ease: [0.22, 1, 0.36, 1] }}
             >
               <div className="at-cadre">{Schema && <Schema />}</div>
 

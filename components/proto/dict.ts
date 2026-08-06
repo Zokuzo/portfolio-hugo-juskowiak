@@ -616,6 +616,79 @@ const DICT = {
     fr: "Neuf pièces documentées séparément — cinq projets, quatre cursus.",
     en: "Nine pieces documented separately — five projects, four programmes.",
   },
+
+  /* — schéma d'architecture d'Eternal —
+       Chaque chiffre affiché ici a été relevé dans le dépôt Eternal et
+       porte sa commande dans `.scratch/planche-profonde/recherches/02-eternal.md`
+       §6 : 11 fragments (`ls lecons/lecon-*.html | wc -l`), 5 784 octets de
+       manifeste (`du -b`), 3 763 lignes et 116 fonctions pour `index.html`,
+       zéro URL externe pour la même page, zéro `setItem` dans `monde.html`,
+       `actif: false` dans `state.json:2`, 8 thèmes fermés (`FORMAT.md:44-53`).
+       Les noms de fichier ne se traduisent pas : les deux langues portent
+       les mêmes, et c'est exact — le dépôt n'en a qu'un jeu.
+       [id, titre, précision…] — la géométrie vit dans schema-eternal.tsx,
+       ce dictionnaire ne porte que des mots. */
+  etnNoeuds: {
+    fr: [
+      ["etat", "state.json", "interrupteur — actif : false"],
+      ["projet", "un projet quelconque", "git diff · git log"],
+      ["contrat", "FORMAT.md", "le contrat — 8 thèmes fermés"],
+      ["agent", "agent professeur", "lit le diff, écrit, pousse"],
+      ["fragment", "lecon-N.html", "le fragment — 11 fichiers"],
+      ["manifeste", "index.json", "le manifeste — 5 784 o"],
+      ["moteur", "index.html", "le moteur — 0 dépendance", "3 763 lignes · 116 fonctions"],
+      ["vue", "monde.html", "la vue — three.js r160", "aucune règle : 0 setItem"],
+    ],
+    en: [
+      ["etat", "state.json", "the switch — actif: false"],
+      ["projet", "any project", "git diff · git log"],
+      ["contrat", "FORMAT.md", "the contract — 8 closed themes"],
+      ["agent", "professeur agent", "reads the diff, writes, pushes"],
+      ["fragment", "lecon-N.html", "the fragment — 11 files"],
+      ["manifeste", "index.json", "the manifest — 5,784 B"],
+      ["moteur", "index.html", "the engine — 0 dependency", "3,763 lines · 116 functions"],
+      ["vue", "monde.html", "the view — three.js r160", "no rule: 0 setItem"],
+    ],
+  },
+  etnBus: {
+    fr: ["dépôt git — Zokuzo/eternal", "base · canal multi-machine · hébergement"],
+    en: ["git repository — Zokuzo/eternal", "database · cross-machine channel · hosting"],
+  },
+  etnGroupes: {
+    fr: [
+      ["1", "chaîne d'écriture"],
+      ["2", "transport"],
+      ["3", "runtime"],
+    ],
+    en: [
+      ["1", "writing chain"],
+      ["2", "transport"],
+      ["3", "runtime"],
+    ],
+  },
+  etnLegende: {
+    fr: [
+      ["1", "un interrupteur, un contrat, un rédacteur — et deux fichiers déposés"],
+      ["2", "le dépôt est à la fois la base, le canal entre machines et l'hébergement"],
+      ["3", "deux vues, un seul moteur — le pont ne rend que des dérivés, en lecture seule"],
+    ],
+    en: [
+      ["1", "a switch, a contract, a writer — and two files dropped"],
+      ["2", "the repository is the database, the cross-machine channel and the host"],
+      ["3", "two views, one engine — the bridge only returns derived values, read-only"],
+    ],
+  },
+  etnPont: {
+    fr: "iframe cachée — pont en lecture seule",
+    en: "hidden iframe — read-only bridge",
+  },
+  /* La cote mesure l'ÉCART entre les deux vues, et cet écart vaut zéro
+     règle : c'est la seule affirmation chiffrée du schéma. */
+  etnCote: { fr: "1 moteur · 0 règle dupliquée", en: "1 engine · 0 duplicated rule" },
+  etnTitre: {
+    fr: "Architecture d'Eternal : une chaîne d'écriture dépose deux fichiers dans un dépôt git, que deux vues du navigateur relisent — index.html porte toutes les règles, monde.html n'en porte aucune.",
+    en: "Eternal architecture: a writing chain drops two files into a git repository, which two browser views read back — index.html holds every rule, monde.html holds none.",
+  },
 } as const
 
 type Key = keyof typeof DICT

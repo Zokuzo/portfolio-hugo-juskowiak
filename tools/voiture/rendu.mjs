@@ -1,13 +1,18 @@
 /* ==================================================================
-   GÉNÉRATEUR DE LA SÉQUENCE — 60 WebP à fond transparent.
+   GÉNÉRATEUR DE LA SÉQUENCE — NB WebP à fond transparent. NB vient de
+   --nb (60 par défaut) ; la séquence en production en compte 120
+   (`ls public/voiture/*.webp | wc -l` → 120).
 
    Chaîne : Chrome headless rend la scène three.js (scene.html) en
    2000×2000 avec alpha → recadrage/réduction à 1000×1000 dans la page
-   → ffmpeg encode en WebP `yuva420p` (lossy avec alpha).
+   → ImageMagick OU ffmpeg encode en WebP lossy avec alpha. L'encodeur
+   n'est pas imposé, il est SONDÉ (voir plus bas) : ImageMagick sur la
+   machine Linux, ffmpeg sous Windows s'il est installé.
 
-   AUCUNE DÉPENDANCE npm. Chrome et ffmpeg sont déjà sur la machine, et
-   Node 22 embarque un client WebSocket : le pilotage se fait donc en
-   CDP à la main plutôt qu'en installant Playwright pour trois appels.
+   AUCUNE DÉPENDANCE npm. Chrome et l'encodeur (ffmpeg OU ImageMagick)
+   sont déjà sur la machine, et Node 22 embarque un client WebSocket : le
+   pilotage se fait donc en CDP à la main plutôt qu'en installant
+   Playwright pour trois appels.
 
    Usage :
      node tools/voiture/rendu.mjs <modele.glb> [--cle=valeur ...]
@@ -20,9 +25,9 @@
 import { spawn } from "node:child_process"
 import { createServer } from "node:http"
 import { readFile, writeFile, mkdir, rm, readdir } from "node:fs/promises"
-import { existsSync } from "node:fs"
+import { existsSync, readdirSync } from "node:fs"
 import { execFile } from "node:child_process"
-import { tmpdir } from "node:os"
+import { tmpdir, homedir } from "node:os"
 import { promisify } from "node:util"
 import path from "node:path"
 
@@ -50,15 +55,81 @@ const POIDS  = +(opt.poids ?? 60000)          // plafond par image, en octets
 const DEST   = path.resolve(RACINE, opt.dest ?? "public/voiture")
 const CHROME = opt.chrome ?? trouveChrome()
 
+/* Le dépôt sert DEUX machines : Hugo rend sous Windows, la machine de mesure
+   est sous Linux. Une liste de chemins Windows y échouait sans autre recours
+   que --chrome à la main. Le chromium du cache Playwright fait un troisième
+   candidat — il est déjà installé pour les bancs de mesure et sait faire du
+   WebGL2 en SwiftShader ; son numéro de build change à chaque mise à jour de
+   Playwright, on le CHERCHE donc au lieu de l'écrire en dur. En tête de liste :
+   un vrai Chrome, s'il y en a un, reste le rendu de référence. */
 function trouveChrome() {
+  const win = process.platform === "win32"
+  const cache = process.env.PLAYWRIGHT_BROWSERS_PATH ??
+    path.join(homedir(), win ? "AppData/Local/ms-playwright" : ".cache/ms-playwright")
+  const playwright = (existsSync(cache) ? readdirSync(cache) : [])
+    .filter((d) => d.startsWith("chromium-"))
+    .sort((a, b) => +b.slice(9) - +a.slice(9))          // build le plus récent d'abord
+    .map((d) => path.join(cache, d, ...(win ? ["chrome-win", "chrome.exe"] : ["chrome-linux64", "chrome"])))
   const pistes = [
     process.env.CHROME_PATH,
-    "C:/Program Files/Google/Chrome/Application/chrome.exe",
-    "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe",
+    ...(win
+      ? ["C:/Program Files/Google/Chrome/Application/chrome.exe",
+         "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe"]
+      : ["/usr/bin/google-chrome", "/usr/bin/google-chrome-stable", "/opt/google/chrome/chrome"]),
+    ...playwright,
+    /* Les chromium de la distribution passent APRÈS le cache Playwright, et
+       seulement sous Linux : sur Ubuntu ces trois chemins sont des shims snap,
+       confinés, dont rien ne dit qu'ils savent écrire le --user-data-dir qu'on
+       pose dans tmpdir(). NON VÉRIFIÉ — aucun snap sur la machine de mesure.
+       Le binaire Playwright, lui, n'est pas confiné et sert déjà aux bancs :
+       en cas de doute c'est lui qu'on veut. Symptôme si un shim snap gagnait
+       quand même : « délai dépassé : démarrage de Chrome » au bout de 30 s ;
+       contournement : --chrome=<chemin>. */
+    ...(win ? [] : ["/usr/bin/chromium", "/usr/bin/chromium-browser", "/snap/bin/chromium"]),
   ].filter(Boolean)
   const t = pistes.find((p) => existsSync(p))
   if (!t) throw new Error("Chrome introuvable — passer --chrome=<chemin>")
   return t
+}
+
+/* ── encodeur WebP ────────────────────────────────────────────────
+   ffmpeg n'est pas installé partout, et celui qu'embarque Playwright est
+   compilé SANS libwebp (son `-encoders` ne liste que png et libvpx) : sur la
+   machine Linux il ne reste qu'ImageMagick, et un apt install demanderait un
+   sudo qu'on n'a pas. On prend donc celui qui répond plutôt que d'en imposer un.
+
+   MAIS LES DEUX BRANCHES NE SONT PAS INTERCHANGEABLES À L'OCTET :
+   — magick ≡ sharp : même fichier, md5 identiques aux qualités 60/75/80/85/95.
+     Mesuré. Et remarquable, parce que les deux enveloppent des libwebp
+     DIFFÉRENTES (magick 1.5.0, sharp 1.6.0) — la cause de cette identité
+     n'est pas connue, elle n'est pas « la même libwebp ».
+   — magick contre ffmpeg : NON VÉRIFIÉ. Aucun ffmpeg avec libwebp n'est
+     joignable sur la machine de mesure (celui de Playwright n'a que png et
+     libvpx). Et c'est douteux par construction : la branche ffmpeg impose
+     -pix_fmt yuva420p, donc swscale convertit RGB→YUV 4:2:0 AVANT libwebp,
+     là où magick passe du RGBA que libwebp convertit lui-même. Deux
+     conversions chroma différentes ne peuvent pas donner le même bitstream.
+   Conséquence pratique : un rendu sous Windows (ffmpeg) et un rendu sous
+   Linux (magick) ne produiront vraisemblablement PAS les mêmes fichiers.
+   Si deux séquences doivent être comparables, forcer --encodeur=magick des
+   deux côtés. */
+let ENCODEUR = null
+
+async function trouveEncodeur() {
+  const sondes = [
+    ["ffmpeg", ["-hide_banner", "-encoders"], /libwebp/],
+    ["magick", ["-list", "format"], /^\s*WEBP\*?\s+WEBP\s+rw/m],
+  ]
+  for (const [bin, args, marque] of sondes) {
+    /* --encodeur choisit la branche mais NE COURT-CIRCUITE PAS la sonde. Ce
+       drapeau est précisément ce que le message d'erreur ci-dessous recommande :
+       le prendre au mot sans vérifier ferait découvrir le binaire absent APRÈS
+       les quarante minutes de rendu, sur un dossier de destination vide. */
+    if (opt.encodeur && opt.encodeur !== bin) continue
+    try { if (marque.test((await pexec(bin, args)).stdout)) return bin } catch {}
+  }
+  throw new Error((opt.encodeur ? `--encodeur=${opt.encodeur} : ` : "") +
+    "aucun encodeur WebP avec alpha — installer ffmpeg compilé avec libwebp ou ImageMagick, ou passer --encodeur=<ffmpeg|magick>")
 }
 
 /* ── serveur statique ────────────────────────────────────────────
@@ -126,6 +197,10 @@ async function attends(fn, limite, quoi) {
 }
 
 async function main() {
+  /* L'encodeur se cherche AVANT le rendu : découvrir qu'il manque après
+     quarante minutes de calcul 3D serait une mauvaise plaisanterie. */
+  if (!opt.materiaux) { ENCODEUR = await trouveEncodeur(); console.log("encodeur :", ENCODEUR) }
+
   // Reprise : les PNG existent déjà, on ne refait que l'encodage.
   if (opt.depuis) return encodeTout(path.resolve(opt.depuis))
 
@@ -157,6 +232,11 @@ async function main() {
   await rm(profil, { recursive: true, force: true })
   const chrome = spawn(CHROME, [
     "--headless=new",
+    /* Sans ça, le chromium de Playwright s'ABORTE au démarrage sur les
+       distributions qui bloquent les user namespaces non privilégiés
+       (« No usable sandbox! », signal 6). On ne rend qu'une page locale
+       qu'on écrit nous-mêmes : il n'y a pas de contenu hostile à isoler. */
+    "--no-sandbox",
     `--remote-debugging-port=${port0}`,
     `--user-data-dir=${profil}`,
     "--no-first-run", "--no-default-browser-check", "--disable-extensions",
@@ -284,9 +364,15 @@ async function encodeTout(brut) {
 
 async function encode(src, q) {
   const out = src.replace(/\.png$/, `.q${q}.webp`)
-  await pexec("ffmpeg", ["-y", "-loglevel", "error", "-i", src,
-    "-c:v", "libwebp", "-pix_fmt", "yuva420p", "-compression_level", "6",
-    "-quality", String(q), out])
+  /* Les deux commandes visent le MÊME réglage libwebp : lossy, qualité q,
+     méthode 6, canal alpha conservé sans perte (alpha_quality 100, défaut des
+     deux côtés). Le -define est nécessaire parce qu'ImageMagick est à
+     method=4 par défaut là où ffmpeg reçoit -compression_level 6. */
+  await (ENCODEUR === "ffmpeg"
+    ? pexec("ffmpeg", ["-y", "-loglevel", "error", "-i", src,
+        "-c:v", "libwebp", "-pix_fmt", "yuva420p", "-compression_level", "6",
+        "-quality", String(q), out])
+    : pexec(ENCODEUR, [src, "-quality", String(q), "-define", "webp:method=6", out]))
   const b = await readFile(out)
   await rm(out, { force: true })
   return b
