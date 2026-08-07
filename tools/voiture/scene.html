@@ -36,24 +36,21 @@ const CARRO  = P.get("carrosserie") || "0b0e14"      // hex de la carrosserie
 const RUGO   = n("rugosite", 0.14)
 
 /* ── RETOUCHES MATÉRIAUX ──────────────────────────────────────────
-   Propres au modèle GT86 de Mpgs.studio3DModels. Le glTF arrive sans
-   aucune texture : douze matériaux de couleur pure, dont deux MENTENT.
-   Les pneus et les plastiques sont déclarés métalliques à 0,9 ; sous des
-   bandes lumineuses ils brilleraient comme du chrome et la voiture
-   ressemblerait à un jouet. Douze lignes écrites à la main valent mieux
-   qu'un détecteur automatique qui se tromperait quand même — et si on
-   change de modèle, on réécrit ce tableau, c'est le seul endroit.
+   Propres au modèle McLaren P1 MSO de bohmerang. Contrairement à la
+   GT86, le .glb arrive TEXTURÉ (34 textures) : on ne recolore que les
+   matériaux de couleur pure qui portent la livrée. La carrosserie
+   blanche et l'accent bleu MSO passent au carbone sombre parce que le
+   système du site est mono-accent : le bleu y serait une teinte
+   étrangère, et une carrosserie blanche un phare derrière le titre.
+   La livrée MSO d'origine est réservée au futur thème clair.
+   Aucun des trois matériaux ci-dessous ne porte de texture — les 34
+   textures du modèle restent donc toutes intactes. Si on change de
+   modèle, on réécrit ce tableau, c'est le seul endroit.
    ───────────────────────────────────────────────────────────────── */
 const RETOUCHES = {
-  "body.001":       { couleur: CARRO,  metal: 0.90, rugo: RUGO, vernis: 1 },
-  "Car_chrome.001": {                  metal: 1.00, rugo: 0.05 },
-  "chrome.002":     {                  metal: 1.00, rugo: 0.05 },
-  "silver.002":     { couleur: "b2b8c0", metal: 1.00, rugo: 0.13 }, // jantes
-  "gum.002":        { couleur: "17181a", metal: 0.00, rugo: 0.72 }, // pneus : pas du métal
-  "black.001":      { couleur: "121317", metal: 0.10, rugo: 0.62 }, // joints, plastiques
-  "Material.006":   { couleur: "26292f", metal: 0.30, rugo: 0.45 },
-  "logo":           { couleur: "aeb4bc", metal: 1.00, rugo: 0.25 },
-  "Glass.002":      { couleur: "04060a", metal: 0.00, rugo: 0.06 }, // vitrage teinté
+  "WhitePaintjob": { couleur: CARRO,    metal: 0.90, rugo: RUGO, vernis: 1 },
+  "Blue":          { couleur: "121317", metal: 0.30, rugo: 0.45 }, // accent MSO neutralisé
+  "Glass":         { couleur: "04060a", metal: 0.00, rugo: 0.06 }, // vitrage teinté, même geste que la GT86
 }
 
 const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true })
