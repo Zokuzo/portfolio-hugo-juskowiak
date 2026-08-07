@@ -33,7 +33,14 @@ const SENS   = n("sens", 1)
 const ENV    = n("env", 1)
 const MARGE  = n("marge", 1.02)     // respiration autour du cadrage automatique
 const CARRO  = P.get("carrosserie") || "0b0e14"      // hex de la carrosserie
-const RUGO   = n("rugosite", 0.14)
+/* 0,08 et non les 0,14 de la GT86. La GT86 tenait sa brillance de ses
+   chromes et de ses jantes argent ; la P1 MSO n'a que du carbone mat et
+   des jantes noires, et à 0,14 les neuf bandes s'y étalaient en nappe
+   grise au lieu de dessiner un trait. Mesuré sur le rendu d'essai à 8
+   vues : le p99 de luminance des pixels opaques passe de 93 à 120 sur
+   `000` et de 120 à 138 sur `007`, pendant que la médiane DESCEND de 12,0
+   à 9,4 — plus de noir ET plus de trait, c'est-à-dire du galbe. */
+const RUGO   = n("rugosite", 0.08)
 
 /* ── RETOUCHES MATÉRIAUX ──────────────────────────────────────────
    Propres au modèle McLaren P1 MSO de bohmerang. Contrairement à la
