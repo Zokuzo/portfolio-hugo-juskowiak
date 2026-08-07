@@ -220,7 +220,12 @@ loader.load(MODELE, (gltf) => {
       mat.envMapIntensity = 1
       const r = RETOUCHES[mat.name]
       if (!r) continue
-      if (r.couleur !== undefined) { mat.color.setHex(parseInt(r.couleur, 16)); mat.map = null }
+      /* Vider la texture est OPT-IN : d'office, recolorer un matériau
+         texturé détruirait sa texture — la GT86 n'en avait aucune, la
+         P1 en a 34. `masquer` éteint un matériau entier (les Decals
+         d'une livrée qu'on ne garde pas) sans toucher à la géométrie. */
+      if (r.couleur !== undefined) { mat.color.setHex(parseInt(r.couleur, 16)); if (r.sansTexture) mat.map = null }
+      if (r.masquer) mat.visible = false
       if (r.metal !== undefined) mat.metalness = r.metal
       if (r.rugo !== undefined) mat.roughness = r.rugo
       if (r.vernis !== undefined && "clearcoat" in mat) { mat.clearcoat = r.vernis; mat.clearcoatRoughness = 0.04 }
