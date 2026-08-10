@@ -3820,38 +3820,12 @@ body {
   pointer-events: none;
   will-change: transform, opacity;
 }
-/* FLOTTAISON — le mouvement qui fait tenir l'illusion.
-
-   TROIS ANIMATIONS AUX PÉRIODES PREMIÈRES ENTRE ELLES (6,7 / 9,1 / 11,3
-   secondes) : le motif combiné ne se referme qu'au bout de dix minutes,
-   donc l'œil ne surprend jamais la boucle. Trois animations synchrones,
-   ou une seule, se liraient en quelques secondes comme un balancier —
-   et un balancier, ça ne flotte pas, ça pend.
-
-   Elles visent `translate` et `rotate`, propriétés CSS INDÉPENDANTES du
-   `transform` : c'est ce qui permet à trois animations de cohabiter sur
-   le même élément sans se réécrire l'une l'autre, et au parent de garder
-   son `transform` piloté au scroll. Amplitudes minuscules — 1,4 % et
-   1,2° — parce que le flottement doit se sentir sans se voir. */
-@keyframes voiture-derive {
-  0%, 100% { translate: 0 -1.4%; }
-  50%      { translate: 0 1.4%; }
-}
-@keyframes voiture-tangage {
-  0%, 100% { rotate: -1.2deg; }
-  50%      { rotate: 1.2deg; }
-}
-@keyframes voiture-respire {
-  0%, 100% { scale: 1; }
-  50%      { scale: 1.018; }
-}
+/* La flottaison vit désormais dans voiture.tsx, en JS : jugée trop
+   discrète ici, et deux couches qui flottent auraient additionné leurs
+   tangages. Cette classe ne porte plus que la taille de la toile. */
 .voiture-flotte {
   width: 100%;
   height: 100%;
-  animation:
-    voiture-derive 6.7s ease-in-out infinite,
-    voiture-tangage 9.1s ease-in-out infinite,
-    voiture-respire 11.3s ease-in-out infinite;
 }
 
 .voiture-toile {
@@ -3875,16 +3849,13 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  /* Le composant coupe déjà le trajet et la rotation. La flottaison, elle,
-     est en CSS : le JavaScript ne peut pas l'éteindre, il faut le faire
-     ici. Sans cette règle, le seul mouvement qui resterait à l'écran
-     serait précisément celui d'un objet qui dérive en permanence — le
-     pire cas pour qui a demandé qu'on arrête de bouger. */
+  /* Le composant coupe déjà le trajet, la rotation ET la flottaison —
+     celle-ci ayant migré en JS, il n'y a plus rien à éteindre ici. Ne
+     reste que le `will-change` : promettre au compositeur un transform
+     qui ne viendra jamais, c'est lui faire réserver une couche pour
+     rien. */
   .voiture {
     will-change: auto;
-  }
-  .voiture-flotte {
-    animation: none;
   }
 }
 

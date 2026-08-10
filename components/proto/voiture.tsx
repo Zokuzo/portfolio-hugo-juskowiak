@@ -20,7 +20,7 @@ import { motion, useMotionValue, useMotionValueEvent, useReducedMotion, useScrol
    pouvoir se poser sur une image précise. Des fichiers, pas un flux.
 
    CONTRAT D'INTÉGRATION — les images vivent dans /public/voiture/ et
-   se nomment 000.webp à 119.webp, fond transparent. La rotation en
+   se nomment 000.webp à 159.webp, fond transparent. La rotation en
    parcourt la TOTALITÉ ; c'est l'absence de l'image de départ qui fait
    renoncer le composant : il ne rend alors RIEN et la page est intacte.
 
@@ -64,7 +64,7 @@ const DPR_MAX = 1.5
    qui tourne EN se déplaçant demande à l'œil de suivre deux mouvements
    à la fois, et c'est ce qui donnait l'impression de tourbillon.
    ───────────────────────────────────────────────────────────────── */
-const NB = 120           // images de la séquence, une tous les 3°
+const NB = 160           // images de la séquence, une tous les 2,25°
 const TOURS = 1          // tours complets sur l'axe pendant le trajet
 
 /* ── LA POSE DE DÉPART ────────────────────────────────────────────
@@ -72,7 +72,7 @@ const TOURS = 1          // tours complets sur l'axe pendant le trajet
    000 est une plongée de face — le toit, et rien d'autre : ouvrir la
    page dessus, c'est ouvrir sur la plus mauvaise vue de la séquence.
 
-   L'image 105 (azimut 315°) est la meilleure : trois-quarts avant,
+   L'image 140 (azimut 315°) est la meilleure : trois-quarts avant,
    pare-chocs avant en bas à gauche, arrière en haut à droite, capot,
    flanc et les quatre roues lisibles d'un coup. Le tour part donc
    d'elle et, faisant exactement 360°, y revient à la fin.
@@ -83,12 +83,17 @@ const TOURS = 1          // tours complets sur l'axe pendant le trajet
    balancer. Ces -12° redressent la diagonale naturelle de l'image de
    départ, environ 28° sur l'horizontale, à 40° plus franche.
 
+   LE CHANGEMENT DE VOITURE N'A PAS DÉPLACÉ CETTE DIAGONALE. Mesurée sur
+   la silhouette de la pose, elle tombe à 0,4° de celle de la séquence
+   qu'elle remplace — sous ce que l'œil distingue sur une image en
+   retrait. L'assiette se reporte donc telle quelle : rien à réajuster.
+
    CES CHIFFRES SONT SOLIDAIRES DU RENDU. Changer l'élévation ou le
    `--depart` dans tools/voiture décale l'azimut de chaque image : POSE
    ne désignerait plus la même vue, et l'assiette ne compenserait plus
    la bonne diagonale. Les revoir ensemble, jamais l'un sans l'autre.
    ───────────────────────────────────────────────────────────────── */
-const POSE = 105         // image de départ : le trois-quarts avant
+const POSE = 140         // image de départ : le trois-quarts avant
 const INCLINAISON = -12  // assiette fixe : redresse la diagonale à 40°
 
 /* ── LE RESSORT ───────────────────────────────────────────────────
@@ -96,7 +101,7 @@ const INCLINAISON = -12  // assiette fixe : redresse la diagonale à 40°
    pas lisse : molette crantée, trackpad par à-coups, barre d'espace
    qui saute un écran. Branché tel quel, chaque secousse devenait une
    secousse de la voiture, et sur une séquence d'images le défaut est
-   deux fois visible puisque le volume saute d'un cran de 3° d'un coup.
+   deux fois visible puisque le volume saute d'un cran de 2,25° d'un coup.
 
    Le ressort absorbe ça : il POURSUIT la valeur du scroll au lieu de
    l'épouser.
@@ -111,6 +116,39 @@ const INCLINAISON = -12  // assiette fixe : redresse la diagonale à 40°
    ζ = amortissement / (2·√(raideur × masse)). Les trois nombres se
    tiennent : en changer un seul déplace l'amortissement réel. */
 const RESSORT = { stiffness: 170, damping: 16, mass: 0.35, restDelta: 0.0002 }
+
+/* ── LE FLOTTEMENT ────────────────────────────────────────────────
+   À 160 images pour un tour, le cran vaut 2,25° : il ne se voit plus au
+   scroll, mais il reste visible à l'arrêt, quand plus rien ne bouge et
+   que l'œil s'installe sur une image fixe. Le remède n'est pas un
+   compositing plus malin — le fondu enchaîné a été essayé et rejeté au
+   côte-à-côte du 2026-08-10, il dédoublait les arêtes au lieu de les
+   fondre. C'est de donner à l'œil autre chose à suivre : l'objet respire
+   sur place, indépendamment du scroll.
+
+   IL Y AVAIT DÉJÀ UNE FLOTTAISON, EN CSS, et elle ne suffisait pas :
+   jugée trop discrète à l'œil, elle portait en plus une échelle qui
+   pulse. Elle est retirée de planche.css ; deux couches qui flottent
+   auraient cumulé leurs tangages, et c'est exactement la danse que la
+   suppression de l'orbite avait chassée. Une seule couche, ici.
+
+   DEUX SINUS D'ASSIETTE ET UNE DÉRIVE VERTICALE, RIEN D'AUTRE — ni
+   translation horizontale ni échelle : une respiration, pas une danse.
+   La ligne de crête est celle du tourbillon : tout mouvement ajouté à
+   une chose qui tourne déjà se paie en lisibilité.
+
+   LES PÉRIODES N'ONT PAS DE RAPPORT SIMPLE ENTRE ELLES (7,1 / 11,3 /
+   9,7 s) et c'est le point : le motif combiné ne se referme pas devant
+   l'œil. Les toucher raccourcirait la boucle, donc la rendrait
+   reconnaissable — et accélérer une respiration la rend haletante là où
+   l'amplifier la rend ample. Ces amplitudes-ci sont le DOUBLE de la base
+   prototypée, calibrées à l'œil par Hugo au même côte-à-côte. */
+const FLOT = {
+  a1: 2.4, p1: 7.1,   // assiette : degrés, secondes
+  a2: 1.0, p2: 11.3,
+  dy: 8, p3: 9.7,     // dérive verticale : pixels, secondes
+}
+const TAU = Math.PI * 2
 
 export function Voiture() {
   const canvas = useRef<HTMLCanvasElement>(null)
@@ -193,10 +231,10 @@ export function Voiture() {
 
   /* Un tour complet, à partir de la pose de départ.
 
-     LE MODULO N'EST PAS DÉFENSIF, IL EST STRUCTUREL : partir de POSE=105
-     et ajouter jusqu'à 120 donne 225, très au-delà de la dernière image.
-     Boucler est ici le comportement JUSTE, l'image 119 et l'image 000
-     étant voisines de 3°. Le second `+ NB` couvre le cas d'une valeur
+     LE MODULO N'EST PAS DÉFENSIF, IL EST STRUCTUREL : partir de POSE=140
+     et ajouter jusqu'à 160 donne 300, très au-delà de la dernière image.
+     Boucler est ici le comportement JUSTE, l'image 159 et l'image 000
+     étant voisines de 2,25°. Le second `+ NB` couvre le cas d'une valeur
      négative, que le `%` de JavaScript propagerait — le ressort étant
      sur-amorti il ne dépasse pas, mais un index négatif rendrait
      `undefined` en silence et figerait la toile, ce qui ne vaut pas
@@ -213,6 +251,45 @@ export function Voiture() {
      pâle qu'avant sans que personne l'ait demandé. */
   const fondu = useTransform(lisse, [0, 0.5, 0.9, 1], [1, 0.64, 0.42, 0])
 
+  /* ── LA RESPIRATION ───────────────────────────────────────────────
+     La boucle n'écrit QUE des valeurs de transform : elle ne touche pas
+     à la toile, donc elle ne déclenche aucun repeint et le compositeur
+     absorbe tout. Et elle ne dépend pas du scroll — une chose qui flotte
+     flotte aussi quand on ne touche à rien, ce qui est tout l'intérêt
+     ici : entre deux images, l'œil garde du mouvement à suivre.
+
+     UN rAF NU PLUTÔT QUE `useAnimationFrame` : le hook s'enregistre
+     toujours, donc la boucle de frames tournerait même quand il n'y a
+     rien à faire, pour n'y faire qu'un retour anticipé. Ici, mouvement
+     réduit = rien ne démarre du tout, et c'est la seule coupure dont
+     cette respiration a besoin : elle est le mouvement, pas son décor.
+
+     LE TRANSFORM RESTE SUR L'ÉLÉMENT QUI PORTE DÉJÀ L'ASSIETTE.
+     L'envelopper dans une couche de plus insérerait un ancêtre
+     transformé entre la page et un `position: fixed` — le piège que
+     page.tsx signale pour le décor comme pour la voiture. */
+  const assiette = useMotionValue(INCLINAISON)
+  const derive = useMotionValue(0)
+
+  useEffect(() => {
+    if (reduit) return
+    let id = 0
+    const battre = (t: number) => {
+      const s = t / 1000
+      assiette.set(INCLINAISON + FLOT.a1 * Math.sin((s * TAU) / FLOT.p1) + FLOT.a2 * Math.sin((s * TAU) / FLOT.p2))
+      derive.set(FLOT.dy * Math.sin((s * TAU) / FLOT.p3))
+      id = requestAnimationFrame(battre)
+    }
+    id = requestAnimationFrame(battre)
+    return () => {
+      cancelAnimationFrame(id)
+      // Reposer l'assiette : sans ça, un démontage en plein sinus
+      // laisserait la pose figée de travers.
+      assiette.set(INCLINAISON)
+      derive.set(0)
+    }
+  }, [reduit, assiette, derive])
+
   /* ── POURQUOI DES ImageBitmap ET PAS DES BALISES IMAGE ────────────
      MESURÉ, sur build de production, trois essais alternés dans le même
      onglet : avec des HTMLImageElement, la traversée montait à 16,6ms de
@@ -221,22 +298,23 @@ export function Voiture() {
      DÉCODAGE. Un `drawImage` sur une image dont le bitmap n'est pas déjà
      dans le cache du moteur déclenche un décodage SYNCHRONE sur le fil
      principal. Sur 378 frames de traversée, les 120 changements d'index
-     tombent une frame sur trois — donc un décodage une frame sur trois.
+     tombent une frame sur trois (mesuré sur la séquence de 120 images
+     d'alors) — donc un décodage une frame sur trois.
 
      `decoding = "async"` ne protège pas : cet attribut concerne le rendu
      d'une balise image par le moteur, pas un appel manuel à drawImage.
 
      `createImageBitmap` décode HORS du fil principal et rend un objet
      déjà décodé : le drawImage qui suit ne peut plus bloquer. On ne les
-     garde pas tous — 120 bitmaps de 1000×1000 feraient 480 Mo — mais une
+     garde pas tous — 160 bitmaps de 1000×1000 feraient 640 Mo — mais une
      FENÊTRE glissante autour de la tête de lecture, refermée derrière.
 
      La fenêtre revient AVEC le tour complet, et c'est la même raison qui
      l'avait fait partir : elle suppose une tête de lecture qui AVANCE.
      Un lacet qui oscille sur un arc étroit refermait derrière lui des
      images redemandées à l'aller suivant, et charger l'arc entier coûtait
-     moins. Une rotation de 360° reparcourt les 120 : les garder toutes
-     ferait un demi-gigaoctet, la fenêtre redevient le bon outil. */
+     moins. Une rotation de 360° reparcourt les 160 : les garder toutes
+     ferait plus d'un demi-gigaoctet, la fenêtre redevient le bon outil. */
   const bitmaps = useRef<(ImageBitmap | undefined)[]>([])
   const enVol = useRef<Set<number>>(new Set())
   /* LES IMAGES ABANDONNÉES, et le compte des échecs qui y mène.
@@ -310,6 +388,15 @@ export function Voiture() {
      descend la page bien plus souvent qu'on ne la remonte, et une image
      déjà dépassée ne resservira qu'en cas de retour en arrière.
 
+     CES DEUX NOMBRES SONT DES IMAGES, PAS DES DEGRÉS, et la séquence a
+     changé de densité sous eux : à 120 images ils couvraient 60° devant,
+     ils n'en couvrent plus que 45. Réduire la PORTÉE d'un quart aurait
+     pu laisser le scroll rapide dépasser la fenêtre et montrer un trou —
+     c'est ce qu'on a regardé au côte-à-côte du 2026-08-10, en conditions
+     réelles : aucun pop-in. Ils restent donc à 20 et 5. Les monter à
+     27/7 pour rendre les 60° coûterait un tiers d'empreinte mémoire en
+     plus pour un défaut qui ne se produit pas.
+
      Rejouée à chaque changement d'index, elle RATTRAPE au passage : une
      requête tombée sur une coupure réseau serait sinon un trou définitif
      dans le tour. Les 404 avérés, eux, ne sont pas retentés — c'est
@@ -337,17 +424,18 @@ export function Voiture() {
     }
     vivant.current = true
     /* On affiche dès la première image arrivée, sans attendre les
-       autres : à 120 images, exiger la séquence complète imposerait
-       3 Mo avant le premier pixel.
+       autres : à 160 images, exiger la séquence complète imposerait
+       ~4,2 Mo avant le premier pixel.
 
        La veille part de l'index VOULU et non de zéro : le tour commence
        à la pose de départ, et amorcer la fenêtre ailleurs téléchargerait
        vingt images qu'on ne montrera qu'à la fin du trajet.
 
        EN MOUVEMENT RÉDUIT, une seule. La voiture ne tournera jamais, donc
-       les vingt-cinq voisines de la fenêtre ne serviront à rien : les
-       télécharger serait faire payer six cents kilooctets à quelqu'un qui
-       a précisément demandé qu'on lui en fasse moins. */
+       les vingt-cinq voisines de la fenêtre ne serviront à rien : à 26 Ko
+       de moyenne mesurée sur la séquence, les télécharger serait faire
+       payer six cent soixante kilooctets à quelqu'un qui a précisément
+       demandé qu'on lui en fasse moins. */
     setPretes(true)
     if (reduit) charge(index.get())
     else veille(index.get())
@@ -362,7 +450,7 @@ export function Voiture() {
   /* Repli : tant que la fenêtre se remplit, on affiche le bitmap le plus
      proche plutôt que rien. Le parcours est modulo, comme la rotation
      qu'il sert : chercher autour de l'image 002 doit pouvoir trouver la
-     119, sa voisine de 3°, et non sortir de la plage.
+     159, sa voisine de 2,25°, et non sortir de la plage.
 
      ON CHERCHE DES DEUX CÔTÉS, et l'écart croît d'un cran à la fois. Ne
      reculer que d'un seul côté paraissait suffisant — les images arrivent
@@ -431,8 +519,8 @@ export function Voiture() {
        non la plongée de face de l'image 000 : la vue figée est lisible.
 
        On sort AVANT la veille, et c'est voulu : ne jamais tourner, c'est
-       ne jamais avoir besoin des 119 autres images. Une seule requête au
-       montage au lieu de cent vingt. */
+       ne jamais avoir besoin des 159 autres images. Une seule requête au
+       montage au lieu de cent soixante. */
     if (reduit || !pretes) return
     peindre(i)
     veille(i)
@@ -445,12 +533,12 @@ export function Voiture() {
       className="voiture"
       aria-hidden="true"
       /* PLUS DE BRANCHE SUR `reduit` ICI, et c'est la suppression de la
-         spirale qui l'a rendue inutile. Il ne reste que deux valeurs :
-         une assiette FIXE — une pose, pas une animation — et le fondu.
-         Ni l'une ni l'autre n'est un mouvement, donc les deux valent
-         dans les deux modes. Toute la différence tient désormais au
-         canvas : en mouvement réduit il n'est repeint qu'une fois, donc
-         la voiture ne tourne pas.
+         spirale qui l'a rendue inutile. Il ne reste que trois valeurs :
+         l'assiette, la dérive et le fondu. En mouvement réduit la boucle
+         de respiration ne démarre pas, donc `assiette` garde INCLINAISON
+         et `derive` reste à zéro : la même expression rend exactement la
+         pose fixe d'avant, sans avoir à l'écrire deux fois. Toute la
+         différence tient au canvas et à cette boucle-là.
 
          LE FONDU DOIT RESTER LIÉ DANS LES DEUX CAS. La version d'avant
          ne liait rien du tout en mouvement réduit, ce qui débranchait
@@ -467,17 +555,24 @@ export function Voiture() {
          qui promettait d'exposer l'état au CSS ; il ne l'a jamais fait —
          `matchMedia` n'existant pas au rendu serveur, l'attribut était
          toujours absent du HTML et React ne réconcilie pas les attributs
-         à l'hydratation. Aucune règle ne le ciblait, il est parti. */
-      style={{ rotate: INCLINAISON, opacity: fondu }}
+         à l'hydratation. Aucune règle ne le ciblait, il est parti. Les
+         deux MotionValues de la respiration ne rouvrent pas cet écart :
+         elles naissent à INCLINAISON et 0, serveur comme client, et la
+         boucle ne les touche qu'après le montage.
+
+         LA RESPIRATION ÉCRIT ICI, sur l'élément qui porte déjà l'assiette
+         et le fondu, et pas dans une couche à elle. Framer compose les
+         MotionValues d'un même `style` en un seul transform : il n'y a
+         rien à se disputer, et surtout pas un ancêtre transformé de plus
+         devant un `position: fixed`. */
+      style={{ rotate: assiette, y: derive, opacity: fondu }}
     >
-      {/* La flottaison est une couche À PART, et en CSS. À part, parce
-          que framer réécrit le `transform` du parent à chaque frame de
-          scroll et écraserait tout ce qu'on poserait au même endroit. En
-          CSS, parce qu'une animation de `translate`/`rotate` en boucle
-          tourne sur le compositeur : elle ne coûte rien au fil principal,
-          là où une boucle rAF en JavaScript disputerait le budget par
-          frame au décor. Et surtout elle ne dépend PAS du scroll — une
-          chose qui flotte flotte aussi quand on ne touche à rien. */}
+      {/* Cette couche ne flotte plus : elle ne fait que porter la toile.
+          Son animation CSS a été retirée de planche.css au profit de la
+          respiration en JS ci-dessus — cumulées, les deux tangages se
+          seraient additionnés, et le CSS ajoutait une échelle qui pulse
+          que le JS n'a délibérément pas. La div reste parce que la toile
+          a besoin d'un bloc à sa taille, pas parce qu'elle bouge. */}
       <div className="voiture-flotte">
         <canvas ref={canvas} className="voiture-toile" />
       </div>
