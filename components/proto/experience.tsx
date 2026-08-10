@@ -11,9 +11,10 @@ import { employeurs, type Employeur } from "./parcours"
 
    POURQUOI PAR EMPLOYEUR ET NON PAR PROJET : un projet seul ne dit pas
    dans quelles conditions il a été fait. Quatre produits chez le même
-   employeur sur la même base technique, ce n'est pas quatre lignes de
-   CV, c'est une contrainte d'architecture — et ça ne se voit qu'en les
-   regroupant.
+   employeur, ce n'est pas quatre lignes de CV : ils partagent une
+   manière de faire — pas un socle de code, la comparaison des dépôts
+   l'a montré (issue #7) — et la contrainte de se parler entre eux.
+   Ça ne se voit qu'en les regroupant.
 
    LE SCHÉMA D'ARBORESCENCE porte cette information : un bus vertical
    part de l'employeur, chaque produit s'y raccorde. À quatre produits
@@ -123,10 +124,10 @@ export function Experience({ lang }: { lang: Lang }) {
                     <li key={p.code} className={`xp-produit${p.fiche ? " a-fiche" : ""}`}>
                       <span className="mono mono-xs dim xp-code">{p.code}</span>
                       <div>
-                        <h4 className="xp-produit-nom">
-                          {p.nom}
-                          {p.aka && <span className="mono mono-xs dim xp-aka">— {p.aka}</span>}
-                        </h4>
+                        {/* `aka` a disparu avec le renommage Reach-Up :
+                            plus aucune donnée ne portait le champ, le
+                            type et le rendu sont partis avec (revue). */}
+                        <h4 className="xp-produit-nom">{p.nom}</h4>
                         <p className="mono mono-sm dim-2 xp-produit-texte">{p.texte}</p>
                         {/* Le lien n apparait que si la fiche existe : un
                             renvoi vers une page vide est pire qu absence. */}

@@ -31,7 +31,6 @@ export type Lien = { role: string; url: string; note?: string }
 export type Produit = {
   code: string
   nom: string
-  aka?: string
   texte: string
   liens?: Lien[]
   /* Slug de la fiche détaillée en /work/[slug], quand elle existe.
@@ -89,16 +88,20 @@ const EMPLOYEURS_FR: Employeur[] = [
     lieu: "France",
     periode: "2026.05 → présent",
     courant: true,
+    /* La thèse « une même base technique » a été confrontée aux dépôts
+       (ticket 13 / issue #7) : zéro fichier commun, zéro import croisé.
+       Ce que les produits partagent est une manière de faire — et une
+       contrainte réelle : ils doivent se parler. C'est ce que dit le
+       résumé, plus rien d'autre. */
     resume:
-      "Quatre produits sur une même base technique. Le travail consiste autant à faire tenir les quatre ensemble qu'à en construire un.",
+      "Quatre produits d'une même maison : pas un socle de code partagé, une même manière de faire — et une contrainte réelle, ils doivent se parler.",
     produits: [
       {
         code: "P1",
-        nom: "reach_up",
-        aka: "Prospector",
-        fiche: "prospector",
+        nom: "Reach-Up",
+        fiche: "reach-up",
         texte:
-          "SaaS de prospection B2B multi-tenant, en marque blanche. Routage multi-modèle sur six types de tâches, orchestration de campagnes sur canvas, séquençage multicanal e-mail / LinkedIn / WhatsApp, envoi par les comptes Office 365 des clients en OAuth, collecte automatisée en Scrapy et Playwright.",
+          "SaaS de prospection B2B multi-tenant, en marque blanche. Routage multi-modèle par type de tâche, orchestration de campagnes sur canvas, séquençage multicanal e-mail / LinkedIn / SMS / WhatsApp, envoi par les boîtes Office 365 des clients connectées chez l'exécutant, collecte du catalogue client dans un dépôt séparé.",
       },
       {
         code: "P2",
@@ -120,7 +123,7 @@ const EMPLOYEURS_FR: Employeur[] = [
         aConfirmer: true,
       },
     ],
-    parc: ["TypeScript", "React", "Supabase", "OpenRouter", "Lemlist", "OAuth Office 365", "Scrapy", "Playwright"],
+    parc: ["TypeScript", "React", "Vite", "Hono", "Supabase", "PostgreSQL", "OpenRouter", "Lemlist", "Vercel"],
   },
   {
     slug: "sophia-genetics",
@@ -136,10 +139,10 @@ const EMPLOYEURS_FR: Employeur[] = [
         nom: "Prédiction d'usage mémoire",
         fiche: "prediction-memoire",
         texte:
-          "Modèle prédisant la RAM consommée par tâche. XGBoost, LightGBM, CatBoost et Random Forest comparés ; chaîne ETL en Python et Pandas sur ElasticSearch et Azure Blob Storage ; mise en production par GitLab CI/CD.",
+          "Modèle prédisant la RAM consommée par tâche — l'ancien système sur-allouait ~1200 To en trois mois. XGBoost, CatBoost et LightGBM comparés sous une perte asymétrique qui pénalise la sous-prédiction ; features reconstruites depuis les journaux d'exécution en Python et Pandas.",
       },
     ],
-    parc: ["Python", "Pandas", "XGBoost", "LightGBM", "CatBoost", "Random Forest", "ElasticSearch", "Azure", "GitLab CI/CD"],
+    parc: ["Python", "Pandas", "scikit-learn", "XGBoost", "LightGBM", "CatBoost", "SHAP", "Azure", "GitLab CI/CD"],
   },
   {
     slug: "the-guill-corp",
@@ -185,16 +188,18 @@ const EMPLOYEURS_EN: Employeur[] = [
     lieu: "France",
     periode: "2026.05 → present",
     courant: true,
+    /* Voir le commentaire FR : la thèse du socle commun est morte
+       contre le code, le résumé dit la manière de faire et la
+       frontière d'appelants. */
     resume:
-      "Four products on one technical base. The work is as much about keeping the four coherent as about building one.",
+      "Four products from one house: no shared codebase — one way of building, and one real constraint: they have to talk to each other.",
     produits: [
       {
         code: "P1",
-        nom: "reach_up",
-        aka: "Prospector",
-        fiche: "prospector",
+        nom: "Reach-Up",
+        fiche: "reach-up",
         texte:
-          "Multi-tenant white-label B2B prospecting SaaS. Multi-model routing across six task types, canvas campaign orchestration, multichannel sequencing over email / LinkedIn / WhatsApp, sending through clients' own Office 365 accounts over OAuth, automated collection with Scrapy and Playwright.",
+          "Multi-tenant white-label B2B prospecting SaaS. Multi-model routing per task type, canvas campaign orchestration, multichannel sequencing over email / LinkedIn / SMS / WhatsApp, sending through clients' Office 365 mailboxes connected at the executor, client catalogue collection in a separate repository.",
       },
       {
         code: "P2",
@@ -206,7 +211,7 @@ const EMPLOYEURS_EN: Employeur[] = [
       { code: "P3", nom: "UYB360", texte: "Product in the UpYourBizz suite.", aConfirmer: true },
       { code: "P4", nom: "UpYourAds", texte: "Advertising side of the UpYourBizz suite.", aConfirmer: true },
     ],
-    parc: ["TypeScript", "React", "Supabase", "OpenRouter", "Lemlist", "OAuth Office 365", "Scrapy", "Playwright"],
+    parc: ["TypeScript", "React", "Vite", "Hono", "Supabase", "PostgreSQL", "OpenRouter", "Lemlist", "Vercel"],
   },
   {
     slug: "sophia-genetics",
@@ -222,10 +227,10 @@ const EMPLOYEURS_EN: Employeur[] = [
         nom: "Memory usage prediction",
         fiche: "prediction-memoire",
         texte:
-          "Model predicting RAM consumed per task. XGBoost, LightGBM, CatBoost and Random Forest compared; ETL chain in Python and Pandas over ElasticSearch and Azure Blob Storage; shipped through GitLab CI/CD.",
+          "Model predicting RAM consumed per task — the incumbent system over-allocated ~1200 TB in three months. XGBoost, CatBoost and LightGBM compared under an asymmetric loss penalising under-prediction; features rebuilt from execution logs in Python and Pandas.",
       },
     ],
-    parc: ["Python", "Pandas", "XGBoost", "LightGBM", "CatBoost", "Random Forest", "ElasticSearch", "Azure", "GitLab CI/CD"],
+    parc: ["Python", "Pandas", "scikit-learn", "XGBoost", "LightGBM", "CatBoost", "SHAP", "Azure", "GitLab CI/CD"],
   },
   {
     slug: "the-guill-corp",
@@ -326,13 +331,19 @@ const PERSO_FR: ProjetPerso[] = [
     etat: "En ligne",
     texte:
       "Le code écrit avec une IA part plus vite qu'il n'est compris. Eternal le convertit en leçons interactives, dans la forme d'un jeu 2D pixel HD, déclenchées par une commande depuis l'outil de travail.",
-    liens: [{ role: "Démo", url: "https://zokuzo.github.io/eternal/", note: "Desktop uniquement" }],
+    /* Deux liens et non un (issue #7) : l'interface est responsive, le
+       monde 3D ne l'est pas — la réserve ne vaut que pour lui, elle
+       est donc portée par SON lien et pas par l'autre. */
+    liens: [
+      { role: "Interface", url: "https://zokuzo.github.io/eternal/" },
+      { role: "Monde 3D", url: "https://zokuzo.github.io/eternal/monde.html", note: "Desktop uniquement" },
+    ],
   },
   {
     code: "A2", nom: "Trading Agent", fiche: "trading-agent", intitule: "Bot de trading multi-stratégie",
     etat: "Paper trading",
     texte:
-      "Plusieurs stratégies exécutées en parallèle sur de l'argent fictif via Alpaca et TradingView, avec un cockpit de reporting qui dit ce que chacune a fait. Le passage à l'argent réel se fait par IBKR, séparément et volontairement.",
+      "Plusieurs stratégies exécutées en parallèle sur de l'argent fictif via Alpaca — TradingView choisit l'univers de titres, les barres de marché décident. Un cockpit de reporting dit ce que chacune a fait, et le backtest rejoue le même code que le live. Le passage à l'argent réel est prévu, par une bascule volontaire et séparée.",
   },
   {
     code: "A3", nom: "La Provence", intitule: "Site vitrine — savonnerie artisanale, Montpellier",
@@ -354,13 +365,18 @@ const PERSO_EN: ProjetPerso[] = [
     etat: "Live",
     texte:
       "Code written with an AI ships faster than it is understood. Eternal turns it into interactive lessons, shaped as a 2D pixel HD game, fired by a command from the working tool.",
-    liens: [{ role: "Demo", url: "https://zokuzo.github.io/eternal/", note: "Desktop only" }],
+    /* Voir le commentaire FR : la réserve « desktop » ne vaut que pour
+       le monde 3D, elle est portée par son lien. */
+    liens: [
+      { role: "Interface", url: "https://zokuzo.github.io/eternal/" },
+      { role: "3D world", url: "https://zokuzo.github.io/eternal/monde.html", note: "Desktop only" },
+    ],
   },
   {
     code: "A2", nom: "Trading Agent", fiche: "trading-agent", intitule: "Multi-strategy trading bot",
     etat: "Paper trading",
     texte:
-      "Several strategies running in parallel on fake money through Alpaca and TradingView, with a reporting cockpit that says what each one did. The move to real money runs through IBKR, separately and deliberately.",
+      "Several strategies running in parallel on fake money through Alpaca — TradingView picks the universe of symbols, market bars decide. A reporting cockpit says what each one did, and the backtest replays the same code as live. The move to real money is planned, through a deliberate, separate switch.",
   },
   {
     code: "A3", nom: "La Provence", intitule: "Storefront site — artisan soap maker, Montpellier",

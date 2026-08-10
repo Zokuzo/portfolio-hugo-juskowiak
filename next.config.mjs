@@ -8,6 +8,14 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  /* Le produit a été rebaptisé Reach-Up le 2026-07-15 ; la fiche a
+     suivi (issue #7). L'ancienne URL a été publiée deux jours — elle
+     redirige au lieu de casser. */
+  async redirects() {
+    return [
+      { source: "/work/prospector", destination: "/work/reach-up", permanent: true },
+    ]
+  },
 }
 
 export default nextConfig

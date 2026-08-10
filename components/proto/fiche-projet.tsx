@@ -95,13 +95,33 @@ const CORPS_GENERIQUE: Corps = ({ p, lang, reduit }) => {
         </ol>
       </Bloc>
 
+      {/* Le PRÉVU est une rubrique et pas une ligne de parc : le parc
+          ne dit que ce qui est, un projet au futur qui s'y glisserait
+          redeviendrait un fait inventé (issue #7, IBKR). La flèche
+          remplace le numéro d'ordre — on n'ordonne pas ce qui n'existe
+          pas encore. */}
+      {p.prevu && (
+        <Bloc id="fp-prevu" titre={t(lang, "fpPrevu")} reduit={reduit} i={3}>
+          <ul className="fp-contraintes">
+            {p.prevu.map((c) => (
+              <li key={c}>
+                <span className="mono mono-xs dim fp-num" aria-hidden="true">
+                  →
+                </span>
+                <span className="mono mono-sm dim-2 fp-contrainte">{c}</span>
+              </li>
+            ))}
+          </ul>
+        </Bloc>
+      )}
+
       {p.resultat && (
-        <Bloc id="fp-res" titre={t(lang, "fpResultat")} reduit={reduit} i={3}>
+        <Bloc id="fp-res" titre={t(lang, "fpResultat")} reduit={reduit} i={4}>
           <p className="fp-prose">{p.resultat}</p>
         </Bloc>
       )}
 
-      <Bloc id="fp-parc" titre={t(lang, libelles.parc)} reduit={reduit} i={4}>
+      <Bloc id="fp-parc" titre={t(lang, libelles.parc)} reduit={reduit} i={5}>
         <ul className="fp-parc">
           {p.parc.map((x) => (
             <li key={x} className="mono mono-xs fp-piece">
@@ -110,6 +130,26 @@ const CORPS_GENERIQUE: Corps = ({ p, lang, reduit }) => {
           ))}
         </ul>
       </Bloc>
+
+      {/* Les captures ferment la fiche : la preuve visuelle après les
+          faits, jamais à leur place. `<img>` nu et pas next/image —
+          l'optimiseur est coupé (next.config.mjs, unoptimized), les
+          dimensions posées dans le balisage réservent la place avant
+          l'arrivée du fichier. */}
+      {p.captures && (
+        <Bloc id="fp-captures" titre={t(lang, "fpCaptures")} reduit={reduit} i={6}>
+          <ul className="fp-captures">
+            {p.captures.map((c) => (
+              <li key={c.src}>
+                <figure>
+                  <img src={c.src} alt={c.alt} width={1600} height={900} loading="lazy" decoding="async" />
+                  <figcaption className="mono mono-xs dim">{c.legende}</figcaption>
+                </figure>
+              </li>
+            ))}
+          </ul>
+        </Bloc>
+      )}
     </>
   )
 }

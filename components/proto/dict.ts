@@ -118,14 +118,17 @@ const DICT = {
     fr: "Projet en vedette",
     en: "Featured project",
   },
-  featuredName: { fr: "Prospector", en: "Prospector" },
+  featuredName: { fr: "Reach-Up", en: "Reach-Up" },
   featuredDesc: {
     fr: "SaaS de prospection B2B multi-tenant, en marque blanche.",
     en: "Multi-tenant white-label B2B prospecting SaaS.",
   },
+  /* Recalé par la revue (issue #7) : « 06 étapes » citait la chaîne
+     de l'ancien Prospector, disparue de la feuille 01 ; le code du
+     produit déclare sept types de tâches et quatre canaux. */
   featuredFigures: {
-    fr: "06 étapes · 3 canaux · n modèles",
-    en: "06 steps · 3 channels · n models",
+    fr: "07 types de tâches · 4 canaux · n modèles",
+    en: "07 task types · 4 channels · n models",
   },
   offdutyLabel: {
     fr: "Hors travail",
@@ -154,10 +157,10 @@ const DICT = {
 
   /* — section tracé — */
   /* — 01 MÉTHODE —
-     Cette feuille décrivait la chaîne de Prospector. Elle décrit
-     maintenant la MANIÈRE DE TRAVAILLER : Prospector est un projet, il
-     a sa fiche ; ce qu'un recruteur ne peut pas déduire d'une liste de
-     projets, c'est comment on s'y prend.
+     Cette feuille décrivait la chaîne de Reach-Up (alors nommé
+     Prospector). Elle décrit maintenant la MANIÈRE DE TRAVAILLER :
+     Reach-Up est un projet, il a sa fiche ; ce qu'un recruteur ne peut
+     pas déduire d'une liste de projets, c'est comment on s'y prend.
 
      À CONFIRMER AVEC LE PROPRIÉTAIRE. Les six étapes ne sont pas
      inventées, elles sont DÉDUITES de ce que le CV démontre : router
@@ -280,9 +283,12 @@ const DICT = {
   telNum: { fr: "05", en: "05" },
   telTitle: { fr: "Routage multi-modèle", en: "Multi-model routing" },
   telJp: { fr: "テレメトリ", en: "テレメトリ" },
+  /* « Six voies » et non « six types de tâches » : la feuille décrit
+     SON tableau — six voies affichées dessous — pas le schéma du
+     produit, qui en déclare sept (revue, issue #7). */
   telNote: {
-    fr: "Six types de tâches, un parc de modèles, une règle : prendre le moins cher qui tient la tâche. Le palier n'est pas un réglage de confort, c'est la facture.",
-    en: "Six task types, one model pool, one rule: take the cheapest that holds the task. The tier is not a comfort setting, it is the invoice.",
+    fr: "Six voies, un parc de modèles, une règle : le palier le plus bas qui tient la tâche. Le palier n'est pas un réglage de confort, c'est la facture.",
+    en: "Six channels, one model pool, one rule: the lowest tier that holds the task. The tier is not a comfort setting, it is the invoice.",
   },
   telRead: {
     fr: "Chaque voie monte jusqu'au palier qu'elle exige. Une seule atteint le palier lourd — c'est là que passe le coût, et c'est la seule qui mérite de le coûter.",
@@ -306,7 +312,7 @@ const DICT = {
       ["02", "Classification", "Tri des retours", "0"],
       ["03", "Personas", "Synthèse de cible", "1"],
       ["04", "Rédaction", "Séquences multicanal", "1"],
-      ["05", "Conversation", "Chatbot agentique", "1"],
+      ["05", "Conversation", "Assistant agentique", "1"],
       ["06", "Rapport", "Segmentation DMS", "2"],
     ],
     en: [
@@ -314,7 +320,7 @@ const DICT = {
       ["02", "Classification", "Reply triage", "0"],
       ["03", "Personas", "Target synthesis", "1"],
       ["04", "Drafting", "Multichannel sequences", "1"],
-      ["05", "Conversation", "Agentic chatbot", "1"],
+      ["05", "Conversation", "Agentic assistant", "1"],
       ["06", "Report", "DMS segmentation", "2"],
     ],
   },
@@ -352,9 +358,13 @@ const DICT = {
   xpNum: { fr: "02", en: "02" },
   xpTitle: { fr: "Là où j'ai travaillé", en: "Where I have worked" },
   xpJp: { fr: "職務経歴", en: "職務経歴" },
+  /* La thèse précédente — « une même base technique » — est morte
+     contre le code (issue #7) : zéro fichier commun entre les dépôts
+     comparés. Ce qui est vrai, et plus intéressant : une manière de
+     faire commune, et la contrainte que les produits se parlent. */
   xpNote: {
-    fr: "Groupés par employeur et non par projet : quatre produits sur une même base technique, ce n'est pas quatre lignes de CV, c'est une contrainte d'architecture.",
-    en: "Grouped by employer rather than by project: four products on one technical base is not four résumé lines, it is an architectural constraint.",
+    fr: "Groupés par employeur et non par projet : quatre produits d'une même maison ne partagent pas un socle de code, ils partagent une manière de faire — et une contrainte d'architecture réelle, se parler entre eux.",
+    en: "Grouped by employer rather than by project: four products from one house share no common codebase — they share a way of building, and one real architectural constraint: talking to each other.",
   },
   xpEnCours: { fr: "En poste", en: "Current" },
   xpSchema: { fr: "Arborescence", en: "Tree" },
@@ -473,11 +483,20 @@ const DICT = {
       ["ML, IA & data", [
         ["XGBoost", ""], ["LightGBM", ""], ["CatBoost", ""], ["Random Forest", ""],
         ["Intégration de LLM & prompt engineering", "OpenRouter"],
-        ["Pipelines ETL", ""], ["Web scraping", "Scrapy · Playwright"],
+        ["Pipelines ETL", ""], ["Web scraping", "Scrapy"],
       ]],
       ["Cloud & bases de données", [
         ["AWS", ""], ["Azure", ""], ["Supabase / PostgreSQL", ""],
         ["MongoDB", ""], ["ElasticSearch", ""], ["Systèmes distribués", ""],
+      ]],
+      /* Ce groupe ne vient pas du CV : déclaré par le propriétaire et
+         relevé sur sa machine le 2026-08-10 (issue #3). La colonne
+         Classe porte le nom de l'outil, comme « OpenRouter » plus
+         haut — jamais un niveau inventé. Hyprland n'y est pas : c'est
+         un projet, pas un fait. */
+      ["Systèmes & environnement", [
+        ["Linux", "Ubuntu"], ["Terminal & shell", "kitty · bash"],
+        ["Gestion de paquets", "apt"],
       ]],
       ["Langues", [
         ["Français", "Natif"], ["Anglais", "Courant · IELTS 2023"],
@@ -496,11 +515,15 @@ const DICT = {
       ["ML, AI & data", [
         ["XGBoost", ""], ["LightGBM", ""], ["CatBoost", ""], ["Random Forest", ""],
         ["LLM integration & prompt engineering", "OpenRouter"],
-        ["ETL pipelines", ""], ["Web scraping", "Scrapy · Playwright"],
+        ["ETL pipelines", ""], ["Web scraping", "Scrapy"],
       ]],
       ["Cloud & databases", [
         ["AWS", ""], ["Azure", ""], ["Supabase / PostgreSQL", ""],
         ["MongoDB", ""], ["ElasticSearch", ""], ["Distributed systems", ""],
+      ]],
+      ["Systems & environment", [
+        ["Linux", "Ubuntu"], ["Terminal & shell", "kitty · bash"],
+        ["Package management", "apt"],
       ]],
       ["Languages", [
         ["French", "Native"], ["English", "Fluent · IELTS 2023"],
@@ -530,6 +553,13 @@ const DICT = {
   opChute: {
     fr: "Trois programmes de force conçus pour des pratiquants intermédiaires. Un programme d'entraînement est une spécification : une charge, une progression, une tolérance — et quelqu'un qui doit pouvoir l'exécuter sans vous.",
     en: "Three strength programmes written for intermediate lifters. A training programme is a specification: a load, a progression, a tolerance — and someone who has to run it without you.",
+  },
+  /* Le second goût déclaré (issue #3) : le réglage de l'environnement.
+     Sans chute vers le métier — celle du bloc force existe déjà, la
+     répéter ferait une redite de procédé. */
+  opDesign: {
+    fr: "L'autre goût est celui du réglage : un environnement de travail se choisit, puis s'ajuste — couleurs, typographie, chaque outil à sa place, jusqu'à ce que l'ensemble soit cohérent.",
+    en: "The other taste is tuning: a working environment is chosen, then adjusted — colors, typography, every tool in its place, until the whole is coherent.",
   },
   opChamps: {
     fr: [
@@ -622,6 +652,10 @@ const DICT = {
   fpDecisions: { fr: "Décisions techniques", en: "Technical decisions" },
   fpResultat: { fr: "Résultat", en: "Outcome" },
   fpParc: { fr: "Parc", en: "Stack" },
+  /* Le prévu est séparé du parc pour que le futur ne se déguise
+     jamais en présent (issue #7). */
+  fpPrevu: { fr: "Prévu", en: "Planned" },
+  fpCaptures: { fr: "Captures d'interface", en: "Interface screens" },
 
   /* — blocs des fiches sur mesure —
      Titres du vocabulaire de `fiche-blocs.tsx`. Ils sont ici et non

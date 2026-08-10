@@ -13,12 +13,12 @@ import type { Lang } from "./dict"
    TOUT VIENT DU CV. Les décisions techniques listées sont celles qu'il
    décrit ; aucune n'est extrapolée.
 
-   PAS DE RÉSULTATS CHIFFRÉS, et c'est un manque assumé. Le CV dit
-   « réduisant les coûts cloud, les échecs et le temps d'exécution »
-   sans donner de chiffres. Une fiche technique qui invente ses cotes
-   n'est plus une fiche — donc la rubrique dit ce qui a été obtenu, pas
-   de combien. À COMPLÉTER AVEC LE PROPRIÉTAIRE : c'est le seul endroit
-   du site où un chiffre vérifié ajouterait beaucoup.
+   LES CHIFFRES ONT UNE SOURCE, OU N'EXISTENT PAS. Une fiche technique
+   qui invente ses cotes n'est plus une fiche. Les chiffres de la fiche
+   prédiction-mémoire viennent du support du tech talk de fin de stage,
+   fourni par le propriétaire le 2026-08-10 — le code est resté chez
+   Sophia Genetics, et la fiche dit sa source plutôt que de faire
+   passer un souvenir pour une mesure.
    ================================================================== */
 
 export type Projet = {
@@ -42,16 +42,36 @@ export type Projet = {
   contraintes: string[]
   decisions: { titre: string; texte: string }[]
   parc: string[]
+  /* Ce qui est PRÉVU et pas encore construit. La rubrique existe pour
+     qu'un projet réel au futur ne se glisse pas dans le parc, qui ne
+     dit que ce qui est. */
+  prevu?: string[]
   resultat?: string
+  /* Captures d'interface, expurgées AVANT d'entrer ici : noms de
+     clients pixelisés à la source. `src` pointe sous public/ ; alt et
+     légende vivent dans l'enregistrement pour être traduits comme le
+     reste de la fiche. CONTRAT DE COTES : toutes les captures font
+     1600×900 — le gabarit fige ces dimensions dans le balisage pour
+     réserver la place ; une capture d'un autre ratio devra d'abord
+     porter ses cotes ici. */
+  captures?: { src: string; alt: string; legende: string }[]
 }
 
 const FR: Projet[] = [
+  /* RÉÉCRITE AU TICKET 20 (issue GitHub #7), contre le code et les
+     réponses du propriétaire du 2026-08-10. Le produit s'appelle
+     Reach-Up depuis le 2026-07-15 — le travail a commencé sous le nom
+     Prospector, l'ancienne URL /work/prospector redirige ici. Le parc
+     précédent annonçait OAuth Office 365 (les boîtes sont en réalité
+     connectées chez l'exécutant d'envoi) et Scrapy (la collecte est
+     réelle mais vit dans un dépôt séparé) ; « En service » est confirmé
+     par le propriétaire : un client réel utilise le produit. */
   {
-    slug: "prospector",
+    slug: "reach-up",
     unite: "U-01",
-    nom: "Prospector",
+    nom: "Reach-Up",
     sousTitre: "SaaS de prospection B2B multi-tenant, en marque blanche",
-    jp: "プロスペクター",
+    jp: "リーチアップ",
     cadre: "UpYourBizz",
     periode: "2026.05 → présent",
     etat: "En service",
@@ -59,16 +79,16 @@ const FR: Projet[] = [
     contexte:
       "Une plateforme de prospection vendue en marque blanche : chaque client la voit comme la sienne, tous partagent la même base et le même moteur. La multi-tenance n'est pas une option ajoutée, c'est la première contrainte de conception.",
     contraintes: [
-      "Multi-tenant : l'isolation des données est structurelle, pas applicative.",
-      "Marque blanche : l'identité visuelle est une donnée, pas du code.",
+      "Multi-tenant : l'isolation des données est structurelle, pas applicative — deux portes opérateur assumées la contournent, filtrées et auditées.",
+      "Marque blanche : sur les surfaces publiques, l'identité visuelle est une donnée, pas du code.",
       "Coût par tâche : un modèle lourd sur toutes les tâches rendrait le produit non rentable.",
-      "Multicanal : e-mail, LinkedIn et WhatsApp n'ont ni les mêmes limites ni le même ton.",
+      "Multicanal : e-mail, LinkedIn, SMS et WhatsApp n'ont ni les mêmes limites ni le même ton.",
     ],
     decisions: [
       {
-        titre: "Routage multi-modèle sur six types de tâches",
+        titre: "Routage multi-modèle par type de tâche",
         texte:
-          "Chaque type de tâche part vers le modèle le moins cher qui la tient, via OpenRouter. Le coût et la latence sont arbitrés par tâche et non réglés une fois pour toutes — c'est ce qui sépare une intégration de LLM d'un produit qui tient sa marge.",
+          "Chaque type de tâche part vers le modèle choisi pour lui dans une table de routage par tenant, via OpenRouter. Le verrou juridique eu_only est automatique et ferme par défaut ; l'arbitrage coût/qualité est posé par l'opérateur, tâche par tâche — c'est ce qui sépare une intégration de LLM d'un produit qui tient sa marge.",
       },
       {
         titre: "Orchestration de campagnes sur canvas",
@@ -76,21 +96,49 @@ const FR: Projet[] = [
           "Les workflows se construisent visuellement, les personas se génèrent à partir de documents fournis, et le séquençage multicanal passe par l'API Lemlist.",
       },
       {
-        titre: "Infrastructure e-mail en OAuth",
+        titre: "L'envoi part des boîtes des clients",
         texte:
-          "L'envoi passe par les comptes Office 365 des clients en OAuth, pas par un relais mutualisé : la délivrabilité appartient à l'expéditeur.",
+          "Les boîtes Office 365 des clients sont connectées chez l'exécutant d'envoi, pas derrière un relais mutualisé : la délivrabilité appartient à l'expéditeur, et le produit ne porte pas d'OAuth applicatif.",
       },
       {
-        titre: "Collecte automatisée",
-        texte: "Web scraping en Scrapy et Playwright pour alimenter la base sans saisie manuelle.",
+        titre: "Collecte du catalogue client",
+        texte:
+          "Le catalogue de chaque client est collecté en Scrapy, dans un dépôt séparé du produit : e-mails et messages de prospection s'adaptent aux offres du moment sans saisie manuelle.",
       },
       {
-        titre: "Chatbot agentique et bibliothèque interne",
+        titre: "Assistant agentique et bibliothèque interne",
         texte:
-          "Un chatbot IA à routage multi-sessions, et une bibliothèque de composants maison pour que l'interface reste cohérente à mesure que le produit grossit.",
+          "Un assistant à outils fixes, conversation persistée par tenant et par campagne, chaque action sortante passant par une confirmation humaine — et une bibliothèque de composants maison pour que l'interface reste cohérente à mesure que le produit grossit.",
       },
     ],
-    parc: ["TypeScript", "React", "Supabase", "OpenRouter", "Lemlist", "OAuth Office 365", "Scrapy", "Playwright"],
+    parc: [
+      "TypeScript",
+      "React",
+      "Vite",
+      "Hono",
+      "Turborepo / pnpm",
+      "Supabase",
+      "PostgreSQL — RLS & partitionnement",
+      "pgmq · pg_cron",
+      "Zod",
+      "Vitest",
+      "OpenRouter",
+      "Lemlist",
+      "Sentry",
+      "Vercel",
+    ],
+    captures: [
+      {
+        src: "/reach-up/01-dashboard.webp",
+        alt: "Dashboard opérateur de Reach-Up : indicateurs de prospection, table des tenants, journal de gouvernance et console assistant.",
+        legende: "Le dashboard opérateur — pilotage multi-tenants, conformité et assistant. Noms de clients expurgés.",
+      },
+      {
+        src: "/reach-up/02-campagne.webp",
+        alt: "Vue campagne de Reach-Up : séquence multicanal en workflow, taux d'ouverture et de réponse par étape.",
+        legende: "Une campagne en séquence — le workflow d'exécution multicanal, étape par étape. Noms de clients expurgés.",
+      },
+    ],
   },
   {
     slug: "octo",
@@ -121,41 +169,55 @@ const FR: Projet[] = [
     ],
     parc: ["TypeScript", "Traitement d'exports DMS"],
   },
+  /* RÉÉCRITE AU TICKET 14 (issue GitHub #2), depuis le support du tech
+     talk de fin de stage fourni par le propriétaire le 2026-08-10. Le
+     code est resté chez Sophia Genetics : la fiche ne publie que les
+     agrégats du support — jamais un nom de pipeline, de cluster ou de
+     collègue — et dit sa source. L'ancienne version surdéclarait :
+     « en production » (le stage livre une étude et une baseline, le
+     microservice est dessiné, pas déployé) et « Random Forest comparé »
+     (écarté dès la pré-analyse). */
   {
     slug: "prediction-memoire",
     unite: "U-03",
     nom: "Prédiction d'usage mémoire",
-    sousTitre: "Machine learning en production sur pipelines bio-informatiques",
+    sousTitre: "Machine learning contre la sur-allocation mémoire de pipelines bio-informatiques",
     jp: "メモリ予測",
     cadre: "Sophia Genetics",
     periode: "2025.04 → 2025.09",
     etat: "Livré",
     contexte:
-      "Dans un pipeline bio-informatique, chaque tâche demande une allocation mémoire avant de démarrer. Surestimer coûte du cloud ; sous-estimer fait échouer la tâche et repartir de zéro. Le système prédit l'usage réel par tâche.",
+      "Dans un pipeline bio-informatique, chaque tâche demande une allocation mémoire avant de démarrer. Le système en place — une table par tranches de 100 Mo sur la taille du plus gros fichier d'entrée, qui ne se met à jour qu'à la hausse — est très sûr et très pessimiste : environ 1200 To de RAM sur-alloués en trois mois. Le stage le confronte à des modèles appris. Le code est resté chez Sophia Genetics ; cette fiche s'appuie sur le support du tech talk de fin de stage.",
     contraintes: [
-      "Se tromper vers le bas est plus cher que se tromper vers le haut : l'erreur n'est pas symétrique.",
-      "Le modèle sert en production, pas en notebook : il doit tenir dans une chaîne CI/CD.",
-      "Les données viennent de sources hétérogènes et ne sont pas propres.",
+      "Se tromper vers le bas est plus cher que se tromper vers le haut : l'échec d'une tâche coûte l'analyse entière, le gaspillage ne coûte que du cloud.",
+      "Le système en place fait zéro échec : le battre sur le gaspillage sans créer d'échecs est tout l'arbitrage.",
+      "L'entrée est un journal d'exécution brut, à reconstruire par tâche, par échantillon et par partition avant d'apprendre quoi que ce soit.",
     ],
     decisions: [
       {
-        titre: "Ensembles d'arbres plutôt qu'un réseau",
+        titre: "Un modèle par type de tâche",
         texte:
-          "XGBoost, LightGBM, CatBoost et Random Forest comparés : sur des données tabulaires hétérogènes, un ensemble d'arbres se règle plus vite, s'explique et ne demande pas de GPU en production.",
+          "Les journaux quotidiens de l'exécuteur deviennent des jeux hebdomadaires par cluster, puis des features — taille du plus gros fichier d'entrée, tailles et nombre d'échantillons, taille du panel de gènes, historique mémoire et CPU. Chaque type de tâche a son modèle, pas un modèle global qui moyenne des comportements différents.",
       },
       {
-        titre: "Chaîne ETL avant modèle",
+        titre: "Ensembles d'arbres, choisis pour s'expliquer",
         texte:
-          "Collecte, prétraitement et feature engineering en Python et Pandas, sur ElasticSearch et Azure Blob Storage. La qualité du jeu d'entraînement décide de tout le reste.",
+          "Decision Trees et Random Forest écartés dès la pré-analyse ; XGBoost, CatBoost et LightGBM comparés à fond. Le gradient boosting est retenu pour son interprétabilité : l'importance de chaque feature se lit en valeurs SHAP, et la taille du plus gros fichier d'entrée domine.",
       },
       {
-        titre: "Mise en production continue",
-        texte: "Déploiement par GitLab CI/CD, en méthode agile — le modèle vit avec le pipeline qu'il sert.",
+        titre: "Une perte asymétrique contre la sous-prédiction",
+        texte:
+          "Une fonction de perte custom pénalise la sous-prédiction plus que la sur-prédiction, avec un facteur de pondération balayé sur échelle logarithmique pour trouver la zone d'équilibre entre échec de tâche et gaspillage de RAM.",
+      },
+      {
+        titre: "Un score en argent plutôt qu'une métrique",
+        texte:
+          "Loss = c_fail · F + c_waste · W : le coût d'un échec (humain et infra) contre le prix du gigaoctet-seconde de VM gaspillé. Les modèles se comparent en argent, pas en métriques abstraites.",
       },
     ],
-    parc: ["Python", "Pandas", "XGBoost", "LightGBM", "CatBoost", "Random Forest", "ElasticSearch", "Azure Blob Storage", "GitLab CI/CD"],
+    parc: ["Python", "Pandas / NumPy", "scikit-learn", "XGBoost", "LightGBM", "CatBoost", "SHAP", "Matplotlib / Seaborn / Plotly", "Azure Blob Storage"],
     resultat:
-      "Coûts cloud, taux d'échec et temps d'exécution en baisse sur le calcul distribué. Les valeurs chiffrées ne sont pas publiées ici.",
+      "Sur les familles de tâches étudiées, la mémoire réservée totale est divisée par deux à dix selon la famille — la sous-prédiction restant à quelques pour cent sur les plus gros volumes — d'après le support du tech talk. Le stage livre l'étude comparative et la baseline ; le microservice de prédiction est dessiné, pas déployé.",
   },
   {
     slug: "eternal",
@@ -171,10 +233,10 @@ const FR: Projet[] = [
        `.scratch/planche-profonde/recherches/02-eternal.md`, et le parc
        est CORRIGÉ : il annonçait TypeScript, et
        `find . -name '*.ts' -not -path './.git/*' | wc -l` rend 0 dans
-       le dépôt Eternal ; les autres faux souvenirs (ce que sert le lien
-       de démo, « Desktop uniquement », « En cours » contre
-       `actif: false`) demandent un arbitrage éditorial et restent au
-       ticket 20.
+       le dépôt Eternal ; le lien de démo et « Desktop uniquement » ont
+       été tranchés au ticket 20 (issue #7) : deux liens en feuille 04,
+       la réserve desktop portée par le seul monde 3D. Reste « En
+       cours » contre `actif: false`, non arbitré.
 
        DEUXIÈME CORRECTION, et celle-là avait été INTRODUITE par le
        ticket 11 lui-même : le contexte annonçait deux pages « sans
@@ -238,29 +300,50 @@ const FR: Projet[] = [
     cadre: "Projet personnel",
     periode: "En cours",
     etat: "Paper trading",
+    /* ENRICHIE AU TICKET 20 (issue GitHub #7) : IBKR sort du parc —
+       le mot n'apparaît dans aucun fichier de code du bot, seulement
+       dans des ADR au futur — et rejoint la rubrique « prévu ». Les
+       quatre morceaux d'architecture ajoutés sont prouvés par la
+       recherche sur le dépôt du bot, consignée à l'issue #7. */
     contexte:
       "Un bot qui exécute plusieurs stratégies en parallèle sur de l'argent fictif, avec le cockpit qu'il faut pour comprendre ce qu'il fait avant de lui confier quoi que ce soit de réel.",
     contraintes: [
       "Une stratégie qui gagne en backtest ne gagne pas forcément en marché : le paper trading est la seule mesure honnête.",
-      "Passer à l'argent réel est irréversible : la bascule doit être un acte, pas un réglage.",
+      "Passer à l'argent réel est irréversible : la bascule doit être un acte, pas un réglage — aujourd'hui, l'argent réel n'est pas branché du tout.",
     ],
     decisions: [
       {
-        titre: "Paper trading d'abord, bascule explicite ensuite",
+        titre: "Paper trading d'abord",
         texte:
-          "Alpaca et TradingView pour l'exécution fictive et les signaux ; le passage à l'argent réel se fait par IBKR, séparément et volontairement.",
+          "Alpaca exécute sur compte fictif ; TradingView sert à choisir l'univers de titres, ce sont les barres de marché qui décident des entrées. Chaque stratégie a son propre compte et ses propres clés — jamais de repli sur le compte d'une autre.",
       },
       {
-        titre: "Cockpit de reporting",
+        titre: "Le backtest rejoue le même code que le live",
         texte:
-          "Un bot sans reporting est une boîte noire qui perd de l'argent poliment. Le cockpit dit ce que chaque stratégie a fait et pourquoi.",
+          "Un seul cycle argent, neutre vis-à-vis du courtier : le rejeu historique passe par le même contrat que l'exécution réelle. Ce qu'on teste est ce qui tournera — pas une réimplémentation qui divergerait en silence.",
+      },
+      {
+        titre: "Zéro dépendance Python",
+        texte:
+          "Le bot tient en bibliothèque standard pure, adaptateur REST compris. Pas de dépendance à casser, pas de chaîne d'approvisionnement à surveiller pour un process qui touche à l'argent.",
+      },
+      {
+        titre: "Cockpit déployé, gardé par clé",
+        texte:
+          "Un bot sans reporting est une boîte noire qui perd de l'argent poliment. Le cockpit — neuf écrans, déployé — dit ce que chaque stratégie a fait et pourquoi, derrière une clé d'accès.",
+      },
+      {
+        titre: "Un watchdog indépendant",
+        texte:
+          "Un processus séparé surveille l'âge des journaux des deux boucles de trading et alerte une fois par incident. Le surveillant ne partage pas le sort du surveillé.",
       },
       {
         titre: "Leçons intégrées et dictionnaire d'abréviations",
         texte: "Le domaine est plein de jargon : l'outil l'explique au lieu de supposer qu'il est connu.",
       },
     ],
-    parc: ["Python", "Alpaca", "TradingView", "IBKR"],
+    parc: ["Python — stdlib pur", "Alpaca (paper, données IEX)", "TradingView", "Vercel", "bash / systemd"],
+    prevu: ["IBKR — le passage à l'argent réel, par une bascule volontaire et séparée"],
   },
   {
     slug: "cpge",
@@ -310,7 +393,7 @@ const FR: Projet[] = [
       {
         titre: "Deux stages d'ingénierie logicielle",
         texte:
-          "The Guill Corp en 2023 — interface de filtrage de données d'aviation — puis Sophia Genetics en 2025 — machine learning en production (U-03). Le second est documenté en fiche d'unité.",
+          "The Guill Corp en 2023 — interface de filtrage de données d'aviation — puis Sophia Genetics en 2025 — machine learning contre la sur-allocation mémoire (U-03). Le second est documenté en fiche d'unité.",
       },
       {
         titre: "Un semestre au Japon",
@@ -371,7 +454,7 @@ const FR: Projet[] = [
       {
         titre: "Un terrain d'application immédiat",
         texte:
-          "Le stage Sophia Genetics — machine learning en production (U-03) — se déroule pendant la même période : ce que le master enseigne, le pipeline le met à l'épreuve.",
+          "Le stage Sophia Genetics — machine learning contre la sur-allocation mémoire (U-03) — se déroule pendant la même période : ce que le master enseigne, le pipeline le met à l'épreuve.",
       },
       {
         titre: "Deux diplômes, un ordonnancement",
@@ -385,12 +468,16 @@ const FR: Projet[] = [
 ]
 
 const EN: Projet[] = [
+  /* Voir le commentaire de la fiche FR : réécrite au ticket 20
+     (issue GitHub #7) — nom Reach-Up, boîtes connectées chez
+     l'exécutant, collecte Scrapy dans un dépôt séparé, parc relevé
+     sur le dépôt réel. */
   {
-    slug: "prospector",
+    slug: "reach-up",
     unite: "U-01",
-    nom: "Prospector",
+    nom: "Reach-Up",
     sousTitre: "Multi-tenant white-label B2B prospecting SaaS",
-    jp: "プロスペクター",
+    jp: "リーチアップ",
     cadre: "UpYourBizz",
     periode: "2026.05 → present",
     etat: "In service",
@@ -398,16 +485,16 @@ const EN: Projet[] = [
     contexte:
       "A prospecting platform sold white-label: every client sees it as their own, all of them share one base and one engine. Multi-tenancy is not a feature bolted on — it is the first design constraint.",
     contraintes: [
-      "Multi-tenant: data isolation is structural, not application-level.",
-      "White-label: visual identity is data, not code.",
+      "Multi-tenant: data isolation is structural, not application-level — two acknowledged operator doors bypass it, filtered and audited.",
+      "White-label: on public surfaces, visual identity is data, not code.",
       "Cost per task: a heavy model on every task would make the product unprofitable.",
-      "Multichannel: email, LinkedIn and WhatsApp share neither limits nor tone.",
+      "Multichannel: email, LinkedIn, SMS and WhatsApp share neither limits nor tone.",
     ],
     decisions: [
       {
-        titre: "Multi-model routing across six task types",
+        titre: "Multi-model routing per task type",
         texte:
-          "Each task type goes to the cheapest model that holds it, through OpenRouter. Cost and latency are arbitrated per task rather than set once — that is what separates an LLM integration from a product that keeps its margin.",
+          "Each task type goes to the model chosen for it in a per-tenant routing table, through OpenRouter. The eu_only legal lock is automatic and fails closed; the cost/quality trade-off is set by the operator, task by task — that is what separates an LLM integration from a product that keeps its margin.",
       },
       {
         titre: "Canvas campaign orchestration",
@@ -415,21 +502,49 @@ const EN: Projet[] = [
           "Workflows are built visually, personas are generated from supplied documents, and multichannel sequencing runs through the Lemlist API.",
       },
       {
-        titre: "OAuth email infrastructure",
+        titre: "Sending leaves from the clients' own mailboxes",
         texte:
-          "Sending goes through clients' own Office 365 accounts over OAuth rather than a shared relay: deliverability belongs to the sender.",
+          "Clients' Office 365 mailboxes are connected at the sending executor, not behind a shared relay: deliverability belongs to the sender, and the product carries no application-side OAuth.",
       },
       {
-        titre: "Automated collection",
-        texte: "Scrapy and Playwright web scraping feeds the base without manual entry.",
+        titre: "Client catalogue collection",
+        texte:
+          "Each client's catalogue is collected with Scrapy, in a repository separate from the product: prospecting emails and messages adapt to current offers without manual entry.",
       },
       {
-        titre: "Agentic chatbot and internal library",
+        titre: "Agentic assistant and internal library",
         texte:
-          "A multi-session routed AI chatbot, and an in-house component library so the interface stays coherent as the product grows.",
+          "A fixed-toolset assistant, conversation persisted per tenant and per campaign, every outbound action gated by human confirmation — and an in-house component library so the interface stays coherent as the product grows.",
       },
     ],
-    parc: ["TypeScript", "React", "Supabase", "OpenRouter", "Lemlist", "OAuth Office 365", "Scrapy", "Playwright"],
+    parc: [
+      "TypeScript",
+      "React",
+      "Vite",
+      "Hono",
+      "Turborepo / pnpm",
+      "Supabase",
+      "PostgreSQL — RLS & partitioning",
+      "pgmq · pg_cron",
+      "Zod",
+      "Vitest",
+      "OpenRouter",
+      "Lemlist",
+      "Sentry",
+      "Vercel",
+    ],
+    captures: [
+      {
+        src: "/reach-up/01-dashboard.webp",
+        alt: "Reach-Up operator dashboard: prospecting indicators, tenant table, governance log and assistant console.",
+        legende: "The operator dashboard — multi-tenant steering, compliance and assistant. Client names redacted.",
+      },
+      {
+        src: "/reach-up/02-campagne.webp",
+        alt: "Reach-Up campaign view: multichannel workflow sequence with open and reply rates per step.",
+        legende: "A campaign as a sequence — the multichannel execution workflow, step by step. Client names redacted.",
+      },
+    ],
   },
   {
     slug: "octo",
@@ -460,41 +575,50 @@ const EN: Projet[] = [
     ],
     parc: ["TypeScript", "DMS export processing"],
   },
+  /* Voir le commentaire de la fiche FR : réécrite au ticket 14
+     (issue GitHub #2) depuis le support du tech talk — agrégats seuls,
+     source dite, plus de « en production ». */
   {
     slug: "prediction-memoire",
     unite: "U-03",
     nom: "Memory usage prediction",
-    sousTitre: "Machine learning in production on bioinformatics pipelines",
+    sousTitre: "Machine learning against memory over-allocation in bioinformatics pipelines",
     jp: "メモリ予測",
     cadre: "Sophia Genetics",
     periode: "2025.04 → 2025.09",
     etat: "Delivered",
     contexte:
-      "In a bioinformatics pipeline, every task requests a memory allocation before it starts. Overestimating costs cloud money; underestimating fails the task and starts it over. The system predicts actual per-task usage.",
+      "In a bioinformatics pipeline, every task requests a memory allocation before it starts. The incumbent system — a lookup table in 100 MB bins on the largest input file size, updated only upwards — is very safe and very pessimistic: roughly 1200 TB of RAM over-allocated in three months. The internship put learned models against it. The code stayed at Sophia Genetics; this file draws on the end-of-internship tech talk deck.",
     contraintes: [
-      "Being wrong downwards costs more than being wrong upwards: the error is not symmetric.",
-      "The model serves production, not a notebook: it has to live inside a CI/CD chain.",
-      "Data comes from heterogeneous sources and is not clean.",
+      "Being wrong downwards costs more than being wrong upwards: a failed task costs the whole analysis, waste only costs cloud.",
+      "The incumbent system fails zero tasks: beating it on waste without creating failures is the entire trade-off.",
+      "The input is a raw execution log, to be rebuilt per task, per sample and per partition before learning anything.",
     ],
     decisions: [
       {
-        titre: "Tree ensembles rather than a network",
+        titre: "One model per task type",
         texte:
-          "XGBoost, LightGBM, CatBoost and Random Forest compared: on heterogeneous tabular data a tree ensemble tunes faster, explains itself, and needs no GPU in production.",
+          "The executor's daily logs become weekly per-cluster datasets, then features — largest input file size, sample sizes and count, gene panel size, memory and CPU history. Each task type gets its own model, not one global model averaging different behaviours.",
       },
       {
-        titre: "ETL chain before model",
+        titre: "Tree ensembles, chosen to explain themselves",
         texte:
-          "Collection, preprocessing and feature engineering in Python and Pandas, over ElasticSearch and Azure Blob Storage. Training set quality decides everything downstream.",
+          "Decision Trees and Random Forest discarded at pre-analysis; XGBoost, CatBoost and LightGBM compared in depth. Gradient boosting is kept for its interpretability: each feature's weight reads out as SHAP values, and the largest input file size dominates.",
       },
       {
-        titre: "Continuous delivery",
-        texte: "Deployed through GitLab CI/CD, agile — the model lives with the pipeline it serves.",
+        titre: "An asymmetric loss against under-prediction",
+        texte:
+          "A custom loss function penalises under-prediction more than over-prediction, with a weight factor swept on a log scale to find the balance zone between task failure and wasted RAM.",
+      },
+      {
+        titre: "A score in money rather than a metric",
+        texte:
+          "Loss = c_fail · F + c_waste · W: the cost of a failure (human and infra) against the price of a wasted VM gigabyte-second. Models are compared in money, not abstract metrics.",
       },
     ],
-    parc: ["Python", "Pandas", "XGBoost", "LightGBM", "CatBoost", "Random Forest", "ElasticSearch", "Azure Blob Storage", "GitLab CI/CD"],
+    parc: ["Python", "Pandas / NumPy", "scikit-learn", "XGBoost", "LightGBM", "CatBoost", "SHAP", "Matplotlib / Seaborn / Plotly", "Azure Blob Storage"],
     resultat:
-      "Cloud cost, failure rate and run time down on distributed compute. Figures are not published here.",
+      "On the task families studied, total reserved memory is divided by two to ten depending on the family — under-prediction staying at a few percent on the largest volumes — per the tech talk deck. The internship delivers the comparative study and the baseline; the prediction microservice is designed, not deployed.",
   },
   {
     slug: "eternal",
@@ -561,28 +685,47 @@ const EN: Projet[] = [
     cadre: "Personal project",
     periode: "Ongoing",
     etat: "Paper trading",
+    /* Voir le commentaire de la fiche FR : IBKR déplacé en « prévu »,
+       quatre morceaux d'architecture ajoutés (ticket 20 / issue #7). */
     contexte:
       "A bot running several strategies in parallel on fake money, with the cockpit needed to understand what it does before trusting it with anything real.",
     contraintes: [
       "A strategy that wins in backtest does not necessarily win in the market: paper trading is the only honest measure.",
-      "Going to real money is irreversible: the switch must be an act, not a setting.",
+      "Going to real money is irreversible: the switch must be an act, not a setting — today, real money is not wired at all.",
     ],
     decisions: [
       {
-        titre: "Paper trading first, explicit switch after",
+        titre: "Paper trading first",
         texte:
-          "Alpaca and TradingView for simulated execution and signals; the move to real money runs through IBKR, separately and deliberately.",
+          "Alpaca executes on a paper account; TradingView picks the universe of symbols, and market bars decide the entries. Each strategy holds its own account and its own keys — never a fallback onto another's.",
       },
       {
-        titre: "Reporting cockpit",
-        texte: "A bot without reporting is a black box that loses money politely. The cockpit says what each strategy did, and why.",
+        titre: "The backtest replays the same code as live",
+        texte:
+          "One money cycle, broker-neutral: historical replay goes through the same contract as real execution. What gets tested is what will run — not a reimplementation drifting in silence.",
+      },
+      {
+        titre: "Zero Python dependencies",
+        texte:
+          "The bot runs on the pure standard library, REST adapter included. No dependency to break, no supply chain to watch for a process that touches money.",
+      },
+      {
+        titre: "A deployed cockpit, behind a key",
+        texte:
+          "A bot without reporting is a black box that loses money politely. The cockpit — nine screens, deployed — says what each strategy did and why, behind an access key.",
+      },
+      {
+        titre: "An independent watchdog",
+        texte:
+          "A separate process watches the age of both trading loops' logs and alerts once per incident. The watcher does not share the fate of the watched.",
       },
       {
         titre: "Built-in lessons and an abbreviation dictionary",
         texte: "The domain is dense with jargon: the tool explains it instead of assuming it is known.",
       },
     ],
-    parc: ["Python", "Alpaca", "TradingView", "IBKR"],
+    parc: ["Python — pure stdlib", "Alpaca (paper, IEX data)", "TradingView", "Vercel", "bash / systemd"],
+    prevu: ["IBKR — the move to real money, through a deliberate, separate switch"],
   },
   {
     slug: "cpge",
@@ -632,7 +775,7 @@ const EN: Projet[] = [
       {
         titre: "Two software engineering internships",
         texte:
-          "The Guill Corp in 2023 — aviation data filtering interface — then Sophia Genetics in 2025 — machine learning in production (U-03). The second is documented as a unit file.",
+          "The Guill Corp in 2023 — aviation data filtering interface — then Sophia Genetics in 2025 — machine learning against memory over-allocation (U-03). The second is documented as a unit file.",
       },
       {
         titre: "A semester in Japan",
@@ -693,7 +836,7 @@ const EN: Projet[] = [
       {
         titre: "An immediate proving ground",
         texte:
-          "The Sophia Genetics internship — machine learning in production (U-03) — runs over the same period: what the master's teaches, the pipeline puts to the test.",
+          "The Sophia Genetics internship — machine learning against memory over-allocation (U-03) — runs over the same period: what the master's teaches, the pipeline puts to the test.",
       },
       {
         titre: "Two degrees, one schedule",

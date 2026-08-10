@@ -55,6 +55,11 @@ export function Operateur({ lang }: { lang: Lang }) {
               gras : une idée juste n'a pas besoin d'être criée, et la
               crier ferait de la citation motivante. */}
           <p className="op-chute">{t(lang, "opChute")}</p>
+          {/* Le second goût parle dans le registre de la chute, pas en
+              display : la feuille reste la plus aérée du document, on
+              n'y élève pas la voix deux fois. Et pas de seconde chute
+              vers le métier — ce serait une redite de procédé. */}
+          <p className="op-chute op-design">{t(lang, "opDesign")}</p>
         </motion.div>
 
         <dl className="op-champs">

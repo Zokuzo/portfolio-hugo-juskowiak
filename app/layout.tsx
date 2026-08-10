@@ -33,7 +33,7 @@ const jp = Noto_Sans_JP({
 export const metadata: Metadata = {
   title: "Hugo Juskowiak | Ingénieur Full Stack & IA",
   description:
-    "Planche technique d'un ingénieur full stack et IA : Prospector, routage multi-modèle, machine learning en production.",
+    "Planche technique d'un ingénieur full stack et IA : Reach-Up, routage multi-modèle, prédiction mémoire par machine learning.",
   /* La mire porte son propre fond d'encre : elle tient sur une barre
      d'onglets claire comme sombre, donc plus de variantes par
      `prefers-color-scheme` — deux fichiers identiques qui prétendaient
