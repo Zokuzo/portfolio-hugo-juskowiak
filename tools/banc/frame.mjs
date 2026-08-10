@@ -184,7 +184,17 @@ async function defile(cdp) {
 
 /* Le plancher de cadence, mesuré sur la page témoin : c'est la vsync de
    l'écran (ou celle que le navigateur headless s'impose). Sans lui, on ne
-   sait pas si un « 110 fps » est un résultat ou un plafond. */
+   sait pas si un « 110 fps » est un résultat ou un plafond.
+
+   LE PLANCHER N'EST PAS UN CHIFFRE, C'EST UNE DISTRIBUTION (ticket 32) :
+   cette machine a deux écrans à cadences différentes (119,98 et 99,99 Hz)
+   et la fenêtre atterrit où le compositeur veut ; et sans entrée réelle la
+   cadence présentée décroît par moitiés en quelques secondes. Un p50 seul
+   ne distingue pas « vsync propre à 12 ms » d'un mélange 8,3/16,7 dont la
+   médiane tombe n'importe où — les 12,10 ms historiques étaient ce
+   mélange. D'où l'histogramme, et le verdict « mélange » quand deux
+   classes éloignées pèsent chacune : dans ce cas le plancher publié ne
+   correspond à aucune cadence réelle et ne doit pas servir d'appariement. */
 async function plancherDe(cdp) {
   await cdp.evalue("window.__banc.demarre()")
   await pause(1000)
@@ -193,7 +203,20 @@ async function plancherDe(cdp) {
      navigateur qui ne dessine pas — et un relevé vide se lirait comme un
      résultat. Mieux vaut échouer ici. */
   if (ech.length < 10) throw new Error(`le navigateur ne tire pas de frames (${ech.length} en 1 s) — aucun relevé n'aurait de sens`)
-  return pct(ech.map((e) => e[1]).filter(Boolean), 50)
+  const dts = ech.map((e) => e[1]).filter(Boolean)
+  const classes = new Map()
+  for (const d of dts) { const k = Math.round(d * 10) / 10; classes.set(k, (classes.get(k) || 0) + 1) }
+  const tri = [...classes.entries()].sort((a, b) => b[1] - a[1])
+  /* Mélange : deux classes qui pèsent chacune ≥ 20 % des intervalles et
+     dont l'une vaut au moins 1,5 fois l'autre — c'est la signature de la
+     décroissance par moitiés, pas du bruit de mesure autour d'une vsync. */
+  const lourdes = tri.filter(([, n]) => n >= dts.length * 0.2).map(([k]) => k)
+  const melange = lourdes.length >= 2 && Math.max(...lourdes) >= Math.min(...lourdes) * 1.5
+  return {
+    plancher: pct(dts, 50),
+    histo: tri.slice(0, 4).map(([k, n]) => `${k.toFixed(1)} ms ×${n}`).join("  "),
+    melange,
+  }
 }
 
 /* La page témoin porte une animation PERMANENTE, et ce n'est pas décoratif.
@@ -283,10 +306,29 @@ async function passe(n) {
   try {
     await temoin(cdp)
     await cdp.evalue(SONDE)
-    const plancher = await plancherDe(cdp)
+    const { plancher, histo, melange } = await plancherDe(cdp)
+    /* L'écran d'atterrissage et le moteur WebGL, relevés sur le témoin
+       (avant navigation, donc sans toucher à la page mesurée). L'écran se
+       reconnaît à sa hauteur CSS ; le moteur dit si le processus GPU rend
+       en matériel ou en SwiftShader — deux états entre lesquels les
+       chiffres ne se comparent pas (ticket 32). */
+    const env = JSON.parse(await cdp.evalue(`JSON.stringify({
+      ecran: screen.width + "×" + screen.height + " CSS, dpr " + (Math.round(devicePixelRatio * 100) / 100),
+      webgl: (() => {
+        try {
+          const gl = document.createElement("canvas").getContext("webgl2") || document.createElement("canvas").getContext("webgl")
+          if (!gl) return "aucun contexte"
+          const d = gl.getExtension("WEBGL_debug_renderer_info")
+          return d ? gl.getParameter(d.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER)
+        } catch (e) { return "erreur : " + e.message }
+      })(),
+    })`))
 
     if (PLANCHER !== null && Math.abs(plancher - PLANCHER) > TOLERANCE) {
       return { rejet: `plancher ${r2(plancher)} ms, consigne ${r2(PLANCHER)} ± ${TOLERANCE}` }
+    }
+    if (melange) {
+      console.log(`  passe ${n} — ⚠ plancher MÉLANGÉ (${histo}) : la médiane ${r2(plancher)} ms ne correspond à aucune cadence réelle.`)
     }
 
     await cdp.evalue("window.__navigue = 1")
@@ -298,8 +340,10 @@ async function passe(n) {
     const repos = await mesure(cdp, 1500)
     const scroll = await defile(cdp)
 
-    console.log(`  passe ${n} — plancher ${r2(plancher)} ms · ${scroll.couts.length} frames au défilement · ${scroll.pas} crans de molette`)
-    return { plancher, repos, scroll }
+    console.log(`  passe ${n} — plancher ${r2(plancher)} ms${melange ? " (MÉLANGE)" : ""} · ${scroll.couts.length} frames au défilement · ${scroll.pas} crans de molette`)
+    console.log(`            écran ${env.ecran} · ${env.webgl}`)
+    console.log(`            intervalles du plancher : ${histo}`)
+    return { plancher, melange, env, repos, scroll }
   } finally { await ferme() }
 }
 
@@ -329,6 +373,8 @@ async function main() {
   const bilan = {
     etiquette: ETIQUETTE, url: URL_, passes: bonnes.length, rejets,
     plancherMs: pct(bonnes.map((b) => b.plancher), 50),
+    plancherMelange: bonnes.some((b) => b.melange),
+    ecran: bonnes[0].env.ecran, webgl: bonnes[0].env.webgl,
     frames: couts.length,
     coutP50: pct(couts, 50), coutP90: pct(couts, 90), coutMax: Math.max(...couts),
     reposP90,
@@ -359,6 +405,15 @@ async function main() {
      logiciel et plafonne à 60 Hz. Le coût reste lisible (c'est du travail de
      fil principal, il ne dépend pas de la cadence), la cadence non. Le dire,
      sinon un « ✓ » se lira comme une preuve qu'il n'est pas. */
+  if (bilan.plancherMelange) {
+    console.log(`\n  ⚠ au moins une passe a un plancher MÉLANGÉ (deux cadences dans le même relevé,
+    signature de la décroissance sans entrée réelle — ticket 32). Le COÛT reste
+    lisible ; le plancher, les fps présentés et l'appariement « à plancher égal », non.`)
+  }
+  if (bonnes.some((b) => b.env.ecran !== bonnes[0].env.ecran)) {
+    console.log(`\n  ⚠ les passes n'ont pas toutes atterri sur le même écran — sous Wayland la
+    fenêtre se place où le compositeur veut, et le plancher suit l'écran (ticket 32).`)
+  }
   if (bilan.plancherMs > SEUIL + TOLERANCE) {
     console.log(`\n  ⚠ plancher à ${r2(bilan.plancherMs)} ms : cet environnement ne présente pas à ${r1(1000 / SEUIL)} Hz.
     Le COÛT reste comparable d'une mesure à l'autre ; l'intervalle, les fps
