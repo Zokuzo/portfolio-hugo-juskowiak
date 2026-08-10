@@ -436,6 +436,26 @@ EOF
 
 ---
 
+### Amendement du 2026-08-10 — décisions du gate de la Tâche 6
+
+Arbitré par Hugo au côte-à-côte, en conditions réelles :
+
+- **160 retenue** (les crans de 3° se voyaient à 120, la 160 gagne en fluidité).
+- **Aucun pop-in** observé → `AVANT/ARRIERE = 20/5` conservés (portée 45°).
+- **Flottement ajouté à la Tâche 7** : le `.voiture-flotte` CSS existant était
+  trop discret. Prototypé en JS, calibré par Hugo au multiplicateur ×2 :
+  assiette `INCLINAISON + 2,4°·sin(t/7,1s) + 1,0°·sin(t/11,3s)`, dérive
+  verticale ±8 px sur 9,7 s, transform pur, coupé sous `reduce`. Le
+  durcissement (retrait des paramètres d'URL, valeurs en dur commentées,
+  retrait de l'animation CSS devenue redondante dans `planche.css`) entre
+  dans la Tâche 7 ; la mesure au banc reste en Tâche 8.
+- **Fondu enchaîné rejeté** (dédoublement des arêtes perçu) : le code du
+  prototype est retiré à la Tâche 7, la décision est consignée pour ne pas
+  y revenir.
+- **3D manipulable à la souris demandée par Hugo** : hors de ce plan —
+  chantier séparé à specifier après clôture (drag = rendu hors scroll, donc
+  budget différent ; la séquence 160 promue reste socle et repli).
+
 ### Tâche 8 : Vérification et clôture
 
 **Files:**
