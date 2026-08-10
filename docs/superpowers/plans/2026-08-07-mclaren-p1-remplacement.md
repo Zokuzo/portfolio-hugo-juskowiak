@@ -481,8 +481,8 @@ Expected : **une seule requête** (la pose de départ), la voiture figée sur le
 
 Au navigateur, pied de page, FR puis EN (bascule de langue) :
 Expected : « Modèle 3D McLaren P1 : bohmerang — CC BY-NC-SA 4.0 » / « McLaren P1 3D model: bohmerang — CC BY-NC-SA 4.0 ». Plus aucune mention GT86 :
-Run : `grep -rn "GT86\|Mpgs" components/ app/ public/voiture/CREDIT.txt tools/voiture/scene.html`
-Expected : aucune sortie.
+Run : `grep -rn "GT86\|Mpgs" components/ app/ public/voiture/CREDIT.txt`
+Expected : aucune sortie sur components/, app/ et public/voiture/CREDIT.txt ; tools/voiture/scene.html garde ses comparatifs de réglage GT86 (légitimes, hérités de la Tâche 4) — vérifier qu'aucun n'est de l'attribution.
 
 - [ ] **Step 4 : Fermer le ticket 18**
 

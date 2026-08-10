@@ -8,6 +8,9 @@ l'auteur partout où le travail est partagé, interdit l'usage commercial
 et exige que les adaptations restent sous la même licence. C'est l'objet
 de ce fichier.
 
+En vertu de cette exigence ShareAlike, les 160 images de ce dossier — une
+adaptation du modèle source — sont elles-mêmes sous licence CC BY-NC-SA 4.0.
+
 Attribution requise par la licence
 ----------------------------------
 This work is based on "FREE - McLaren P1 MSO"

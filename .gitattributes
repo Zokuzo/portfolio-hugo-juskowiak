@@ -6,9 +6,10 @@
 
 # `text=auto` détecte les binaires tout seul (octet nul dans les 8 000 premiers)
 # et ces lignes seraient donc redondantes — sauf que `public/voiture/` contient
-# 160 WebP de production qu'aucune commande de ce dépôt ne sait re-fabriquer
-# aujourd'hui : il manque le modèle 3D. Une détection ratée les corromprait
-# sans bruit. Six lignes contre cette perte-là, c'est gratuit.
+# 160 WebP de production : le modèle source vit hors dépôt (~/PP/modeles-3d/)
+# et CREDIT.txt consigne la commande pour les refaire, mais ce sont des heures
+# de rendu. Une détection ratée les corromprait sans bruit. Six lignes contre
+# cette perte-là, c'est gratuit.
 *.png   binary
 *.webp  binary
 *.pdf   binary

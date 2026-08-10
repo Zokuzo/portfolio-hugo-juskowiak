@@ -25,7 +25,7 @@ every design token lives (`.proto-root`). `app/globals.css` declares Tailwind an
 no palette, no radius, no font. That is deliberate: a component that is not restyled to the
 system must render *wrong*, not render blue.
 
-Real-time 3D is also absent by choice. The rotating car is a 120-image WebP sequence rendered
+Real-time 3D is also absent by choice. The rotating car is a 160-image WebP sequence rendered
 offline by `tools/voiture/`; `components/proto/voiture.tsx` documents why a sequence beats a
 WebGL canvas on this frame budget.
 
@@ -57,7 +57,7 @@ components/proto/      one file per sheet + the data
   world.tsx            the fixed 3D-looking backdrop (CSS transforms, not WebGL)
   voiture.tsx          the scroll-driven car sequence
 lib/utils.ts           cn() — for imported components only
-public/voiture/        the 120 rendered frames
+public/voiture/        the 160 rendered frames
 tools/chrome.mjs       finds and drives Chrome over CDP — no npm dependency
 tools/voiture/         the offline render pipeline (Three.js in a headless Chrome)
 tools/banc/frame.mjs   frame-budget bench: `node tools/banc/frame.mjs <url> <label> --tete`
