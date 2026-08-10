@@ -155,6 +155,8 @@ export function Etudes({ lang }: { lang: Lang }) {
             const entree = (
               <motion.li
                 key={e.code}
+                /* L'ancre du retour de fiche (ticket 31), comme en 04. */
+                id={e.fiche ? `carte-${e.fiche}` : undefined}
                 className={`etu-entree${e.fiche ? " a-fiche etu-a-fiche" : ""}`}
                 initial={e.fiche ? false : { opacity: 0, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}

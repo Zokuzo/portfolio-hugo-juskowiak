@@ -121,7 +121,12 @@ export function Experience({ lang }: { lang: Lang }) {
                        les feuilles 03 et 04. Sans elle, le centre d'une ligne 02
                        n'atteignait aucun lien quand celui d'une card 03 ou 04
                        atteignait le sien — trois feuilles, deux grammaires. */
-                    <li key={p.code} className={`xp-produit${p.fiche ? " a-fiche" : ""}`}>
+                    <li
+                      key={p.code}
+                      /* L'ancre du retour de fiche (ticket 31), comme en 04. */
+                      id={p.fiche ? `carte-${p.fiche}` : undefined}
+                      className={`xp-produit${p.fiche ? " a-fiche" : ""}`}
+                    >
                       <span className="mono mono-xs dim xp-code">{p.code}</span>
                       <div>
                         {/* `aka` a disparu avec le renommage Reach-Up :

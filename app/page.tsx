@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Plaque } from "@/components/proto/plaque"
 import { IndexFeuilles } from "@/components/proto/index-feuilles"
 import { Trace } from "@/components/proto/trace"
@@ -38,6 +38,20 @@ import type { Lang } from "@/components/proto/dict"
    récite, il ne la redéclare pas. */
 export default function Page() {
   const [lang, setLang] = useState<Lang>("fr")
+
+  /* Le retour d'une fiche atterrit sur /#carte-<slug> : le défilement est
+     rendu par l'ancre, le FOCUS ne l'est par personne — sans ça, un lecteur
+     au clavier repart du haut et retraverse tout le document au Tab
+     (ticket 31, activeElement=BODY sur les trois chemins). On rend le focus
+     au lien de la card ; `preventScroll` parce que le défilement appartient
+     à l'ancre. Vaut aussi pour une arrivée directe sur l'URL ancrée : ça
+     donne au lien partagé le même point de reprise. */
+  useEffect(() => {
+    const m = /^#carte-(.+)$/.exec(location.hash)
+    if (!m) return
+    const lien = document.querySelector(`#carte-${CSS.escape(m[1])} .fiche-lien`)
+    if (lien instanceof HTMLElement) lien.focus({ preventScroll: true })
+  }, [])
 
   return (
     <main lang={lang}>

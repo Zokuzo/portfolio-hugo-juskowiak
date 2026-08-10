@@ -3271,6 +3271,15 @@ body {
   position: relative;
   transition: box-shadow 0.3s var(--ease);
 }
+/* Le retour d'une fiche vise l'ancre de sa card (ticket 31). La marge
+   d'ancre fait deux choses du même geste : elle pose la card dans le
+   premier tiers de l'écran au lieu de la coller au bord, et elle la met
+   DANS le viewport au moment où React mesure l'élément d'arrivée — sans
+   quoi le nom de transition est retiré et la paire du morph ne se forme
+   pas (mesuré, contrôle 31). */
+.a-fiche[id] {
+  scroll-margin-block-start: 18vh;
+}
 .a-fiche .fiche-lien::after {
   content: "";
   position: absolute;

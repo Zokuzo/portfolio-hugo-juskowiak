@@ -191,7 +191,15 @@ export function FicheProjet({ slug }: { slug: string }) {
         <ViewTransition name={`fiche-${p.slug}`} share="morph" default="none">
           <header className="fp-head">
             <div className="fp-barre">
-              <Link href="/#index" className="mono mono-xs dim fp-retour">
+              {/* Le retour vise l'ANCRE de la card d'origine, pas #index :
+                  atterrir 8 000 px au-dessus de la card qu'on vient de
+                  quitter cassait la reprise de lecture (ticket 31). La même
+                  géométrie fait jouer le morph retour : React ne forme la
+                  paire que si la card d'arrivée est dans le viewport au
+                  commit — l'ancre l'y met. Depuis le pied de fiche, l'en-tête
+                  qui part est hors écran et la paire ne se forme pas : règle
+                  du moteur, assumée. */}
+              <Link href={`/#carte-${p.slug}`} className="mono mono-xs dim fp-retour">
                 <span aria-hidden="true">←</span> {t(lang, "fpRetour")}
               </Link>
               <div className="fp-lang">
@@ -232,7 +240,7 @@ export function FicheProjet({ slug }: { slug: string }) {
         <Corps p={p} lang={lang} reduit={reduit} />
 
         <footer className="fp-pied">
-          <Link href="/#index" className="mono mono-sm fp-retour-bas">
+          <Link href={`/#carte-${p.slug}`} className="mono mono-sm fp-retour-bas">
             <span aria-hidden="true">←</span> {t(lang, "fpRetourDocument")}
           </Link>
         </footer>

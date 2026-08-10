@@ -150,6 +150,9 @@ export function Atelier({ lang }: { lang: Lang }) {
           const carte = (
             <motion.article
               key={p.code}
+              /* L'ancre du retour de fiche (ticket 31) : le lien « Document »
+                 de /work/<slug> vise /#carte-<slug>. */
+              id={p.fiche ? `carte-${p.fiche}` : undefined}
               className={`at-projet${p.fiche ? " a-fiche at-a-fiche" : ""}`}
               initial={p.fiche ? false : { opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
