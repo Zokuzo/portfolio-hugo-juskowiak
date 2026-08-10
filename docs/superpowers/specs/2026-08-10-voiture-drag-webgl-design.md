@@ -374,9 +374,12 @@ une promesse, c'est un booléen.
 
 ## Ce qui reste à trancher par Hugo
 
-1. **Publier le `.glb` optimisé** : le servir, c'est le rendre
-   téléchargeable par quiconque (CC-BY-NC-SA le permet, avec attribution).
-   Oui ou non — et si non, le chantier n'a pas de plan B côté modèle.
+1. ~~**Publier le `.glb` optimisé**~~ — **tranché par Hugo le 2026-08-10 :
+   oui, publier.** Le modèle ne lui appartient pas (« FREE - McLaren P1
+   MSO » par bohmerang) : le servir n'expose aucun bien propre, et
+   CC-BY-NC-SA autorise la redistribution de l'adaptation avec
+   l'attribution que `CREDIT.txt` porte déjà et qui sera étendue au
+   fichier.
 2. **Les bornes de l'axe d'élévation** (autour des 30° du rendu) : à
    régler à l'œil au prototype — trop d'amplitude montre le dessous et le
    toit, des vues que le studio n'a jamais eu à flatter.
