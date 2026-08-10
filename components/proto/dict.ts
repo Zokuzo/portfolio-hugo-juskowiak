@@ -141,14 +141,14 @@ const DICT = {
   },
 
   /* — mention légale de pied —
-     Le crédit du modèle 3D n'est pas décoratif : la GT86 de la séquence
-     est sous CC BY 4.0, qui EXIGE de nommer l'auteur partout où l'œuvre
-     est partagée. L'attribution complète, avec les liens, vit dans
-     public/voiture/CREDIT.txt — une ligne de pied ne peut pas porter
-     trois URL sans se saborder. */
+     Le crédit du modèle 3D n'est pas décoratif : la McLaren P1 de la
+     séquence est sous CC BY-NC-SA 4.0, qui EXIGE de nommer l'auteur
+     partout où l'œuvre est partagée. L'attribution complète, avec les
+     liens, vit dans public/voiture/CREDIT.txt — une ligne de pied ne
+     peut pas porter trois URL sans se saborder. */
   legal: {
-    fr: "Planche technique — document de présentation · Hugo Juskowiak · Ingénieur Full Stack & IA · France · FR/EN/ES/JP · REF.0043-B · REV.2 · 2026 · Modèle 3D GT86 : Mpgs.studio3DModels — CC BY 4.0",
-    en: "Technical plate — presentation document · Hugo Juskowiak · Full Stack & AI Engineer · France · FR/EN/ES/JP · REF.0043-B · REV.2 · 2026 · GT86 3D model: Mpgs.studio3DModels — CC BY 4.0",
+    fr: "Planche technique — document de présentation · Hugo Juskowiak · Ingénieur Full Stack & IA · France · FR/EN/ES/JP · REF.0043-B · REV.2 · 2026 · Modèle 3D McLaren P1 : bohmerang — CC BY-NC-SA 4.0",
+    en: "Technical plate — presentation document · Hugo Juskowiak · Full Stack & AI Engineer · France · FR/EN/ES/JP · REF.0043-B · REV.2 · 2026 · McLaren P1 3D model: bohmerang — CC BY-NC-SA 4.0",
   },
   ref: { fr: "REF.0043-B / REV.2 / 2026", en: "REF.0043-B / REV.2 / 2026" },
 

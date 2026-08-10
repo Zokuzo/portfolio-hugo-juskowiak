@@ -1,32 +1,50 @@
-Séquence 360° de la page d'accueil — 000.webp à 119.webp
+Séquence 360° de la page d'accueil — 000.webp à 159.webp
 ========================================================
 
-Les 120 images de ce dossier sont un rendu réalisé pour ce site à partir
+Les 160 images de ce dossier sont un rendu réalisé pour ce site à partir
 d'un modèle 3D tiers. Le modèle est sous licence Creative Commons
-Attribution, qui impose de créditer son auteur partout où le travail est
-partagé. C'est l'objet de ce fichier.
+Attribution - NonCommercial - ShareAlike : elle impose de créditer
+l'auteur partout où le travail est partagé, interdit l'usage commercial
+et exige que les adaptations restent sous la même licence. C'est l'objet
+de ce fichier.
 
 Attribution requise par la licence
 ----------------------------------
-This work is based on "Toyota GT86 3D Model (Free)"
-(https://sketchfab.com/3d-models/toyota-gt86-3d-model-free-ec05296ddf2f4c22a570512245d1fba0)
-by Mpgs.studio3DModels (https://sketchfab.com/mpgs.studio)
-licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+This work is based on "FREE - McLaren P1 MSO"
+(https://sketchfab.com/3d-models/free-mclaren-p1-mso-c7687064e08c4be9a0af88e98bcf0a8e)
+by bohmerang (https://sketchfab.com/bohmerang)
+licensed under CC-BY-NC-SA-4.0
+(http://creativecommons.org/licenses/by-nc-sa/4.0/)
 
 Fabrication
 -----------
 Rendu three.js dans Chrome headless, studio noir éclairé par neuf bandes
-lumineuses, sans lumière diffuse ni ombre au sol. 120 images à 3°, caméra
-fixe à 30° d'élévation, seule la voiture tourne. Rendu en 2000×2000 puis
-réduit à 1000×1000, encodé en WebP avec alpha sous un plafond de 30 Ko
-par image (le plus lourd des 120 pèse 29 988 octets).
+lumineuses, sans lumière diffuse ni ombre au sol. La carrosserie blanche
+et l'accent bleu MSO sont re-teintés carbone sombre pour le système
+mono-accent du site ; les 34 textures d'origine sont conservées partout
+ailleurs (la livrée MSO est réservée au futur thème clair). 160 images à
+2,25°, caméra fixe à 30° d'élévation, seule la voiture tourne. Rendu en
+2000×2000 puis réduit à 1000×1000, encodé en WebP avec alpha (ffmpeg,
+libwebp) sous un plafond de 30 Ko par image — la plus lourde pèse
+29 954 octets, la séquence entière 4 224 588 octets.
+
+La rugosité de la carrosserie vaut 0,08 et non 0,14 : la P1 n'a ni
+chrome ni jante claire, et à 0,14 les neuf bandes s'étalaient en nappe
+grise au lieu de dessiner un trait. Ce réglage est écrit en DÉFAUT de
+`--rugosite` dans tools/voiture/scene.html, pas passé en drapeau —
+c'est pourquoi la commande ci-dessous ne le montre pas. Un drapeau
+aurait dû être recopié à l'identique à chaque passe, donc oublié un
+jour ; un défaut vit à un seul endroit et il est commité.
+
+Le modèle source vit hors du dépôt (67 Mo) :
+    ~/PP/modeles-3d/free_-_mclaren_p1_mso.glb
 
 Pour régénérer la séquence :
-    node tools/voiture/rendu.mjs <chemin>/scene.gltf \
-      --nb=120 --rendu=2000 --elevation=30 --poids=30000
+    node tools/voiture/rendu.mjs ~/PP/modeles-3d/free_-_mclaren_p1_mso.glb \
+      --nb=160 --rendu=2000 --elevation=30 --poids=30000 --encodeur=ffmpeg
 
 L'élévation à 30° n'est pas un réglage de goût : la changer impose de
 revoir INCLINAISON dans components/proto/voiture.tsx.
 
-Toyota et GT86 sont des marques de Toyota Motor Corporation, citées ici
+McLaren et P1 sont des marques de McLaren Automotive Limited, citées ici
 à titre descriptif. Aucune affiliation.
