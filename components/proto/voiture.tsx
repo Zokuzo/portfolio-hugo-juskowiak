@@ -252,17 +252,33 @@ export function Voiture() {
   const fondu = useTransform(lisse, [0, 0.5, 0.9, 1], [1, 0.64, 0.42, 0])
 
   /* ── LA RESPIRATION ───────────────────────────────────────────────
-     La boucle n'écrit QUE des valeurs de transform : elle ne touche pas
-     à la toile, donc elle ne déclenche aucun repeint et le compositeur
-     absorbe tout. Et elle ne dépend pas du scroll — une chose qui flotte
-     flotte aussi quand on ne touche à rien, ce qui est tout l'intérêt
-     ici : entre deux images, l'œil garde du mouvement à suivre.
+     ELLE COÛTE UNE FRACTION DE FRAME, SUR LE FIL PRINCIPAL, et c'est le
+     prix consenti au gate du 2026-08-10. La flottaison CSS qu'elle
+     remplace tournait, elle, sur le compositeur — gratuite pour le fil
+     principal — mais elle était jugée trop discrète et son amplitude ne
+     se règle pas sans réécrire des keyframes. Ici : deux sinus, deux
+     `.set()` et un pas de rendu de framer par frame. La PEINTURE reste
+     absorbée par le compositeur, puisqu'on n'écrit que du transform et
+     qu'on ne touche jamais à la toile — mais le CALCUL, lui, est bien
+     sur le fil principal. Le budget est déjà tendu (témoin du
+     2026-08-06 : p90 7,40 ms, 6,13 % de frames au-dessus de 8,3 ms) :
+     c'est la Tâche 8 qui dit si ce prix passe, pas ce commentaire.
+
+     ELLE NE TOURNE QUE QUAND LA VOITURE SE VOIT. `fondu` tombe à 0 au
+     bout du tracé, et il reste huit feuilles de page après : y faire
+     battre une boucle à 60 fps pour un élément à `opacity: 0`, ce serait
+     payer le seul coût qu'on vient d'admettre là où il n'achète rien.
+     On s'abonne donc au fondu — il ne bouge que pendant le scroll, la
+     bascule est gratuite le reste du temps.
+
+     Elle ne dépend PAS du scroll pour autant : une chose qui flotte
+     flotte aussi quand on ne touche à rien, et c'est tout l'intérêt ici
+     — entre deux images, l'œil garde du mouvement à suivre.
 
      UN rAF NU PLUTÔT QUE `useAnimationFrame` : le hook s'enregistre
      toujours, donc la boucle de frames tournerait même quand il n'y a
      rien à faire, pour n'y faire qu'un retour anticipé. Ici, mouvement
-     réduit = rien ne démarre du tout, et c'est la seule coupure dont
-     cette respiration a besoin : elle est le mouvement, pas son décor.
+     réduit ou voiture effacée = rien ne tourne du tout.
 
      LE TRANSFORM RESTE SUR L'ÉLÉMENT QUI PORTE DÉJÀ L'ASSIETTE.
      L'envelopper dans une couche de plus insérerait un ancêtre
@@ -280,15 +296,26 @@ export function Voiture() {
       derive.set(FLOT.dy * Math.sin((s * TAU) / FLOT.p3))
       id = requestAnimationFrame(battre)
     }
-    id = requestAnimationFrame(battre)
-    return () => {
+    // Les deux gardes sur `id` rendent marche/arrêt IDEMPOTENTS : le
+    // fondu émet plusieurs valeurs non nulles d'affilée pendant le
+    // scroll, et sans elles chacune lancerait une boucle de plus.
+    const marche = () => { if (!id) id = requestAnimationFrame(battre) }
+    const arret = () => {
+      if (!id) return
       cancelAnimationFrame(id)
-      // Reposer l'assiette : sans ça, un démontage en plein sinus
-      // laisserait la pose figée de travers.
+      id = 0
+      // Reposer l'assiette : sans ça, un arrêt en plein sinus laisserait
+      // la pose figée de travers pour le retour en arrière.
       assiette.set(INCLINAISON)
       derive.set(0)
     }
-  }, [reduit, assiette, derive])
+    if (fondu.get() > 0) marche()
+    const stop = fondu.on("change", (o) => (o > 0 ? marche() : arret()))
+    return () => {
+      stop()
+      arret()
+    }
+  }, [reduit, assiette, derive, fondu])
 
   /* ── POURQUOI DES ImageBitmap ET PAS DES BALISES IMAGE ────────────
      MESURÉ, sur build de production, trois essais alternés dans le même
