@@ -3820,14 +3820,6 @@ body {
   pointer-events: none;
   will-change: transform, opacity;
 }
-/* La flottaison vit désormais dans voiture.tsx, en JS : jugée trop
-   discrète ici, et deux couches qui flottent auraient additionné leurs
-   tangages. Cette classe ne porte plus que la taille de la toile. */
-.voiture-flotte {
-  width: 100%;
-  height: 100%;
-}
-
 .voiture-toile {
   display: block;
   width: 100%;
@@ -3849,11 +3841,12 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  /* Le composant coupe déjà le trajet, la rotation ET la flottaison —
-     celle-ci ayant migré en JS, il n'y a plus rien à éteindre ici. Ne
-     reste que le `will-change` : promettre au compositeur un transform
-     qui ne viendra jamais, c'est lui faire réserver une couche pour
-     rien. */
+  /* Le composant coupe la rotation ET la flottaison — celle-ci ayant
+     migré en JS, la partie TRANSFORM ne bougera plus jamais ici, et
+     c'est elle que `will-change: auto` retire. L'OPACITÉ, elle, reste
+     liée au scroll dans les deux modes : le fondu de profondeur n'est
+     pas une décoration qu'on éteint sous `reduce`, c'est un repère de
+     position — elle continue donc d'animer, sans hint dédié. */
   .voiture {
     will-change: auto;
   }

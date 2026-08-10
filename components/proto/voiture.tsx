@@ -84,8 +84,9 @@ const TOURS = 1          // tours complets sur l'axe pendant le trajet
    départ, environ 28° sur l'horizontale, à 40° plus franche.
 
    LE CHANGEMENT DE VOITURE N'A PAS DÉPLACÉ CETTE DIAGONALE. Mesurée sur
-   la silhouette de la pose, elle tombe à 0,4° de celle de la séquence
-   qu'elle remplace — sous ce que l'œil distingue sur une image en
+   la silhouette de la pose, l'écart avec celle de la séquence qu'elle
+   remplace vaut 0,4 à 0,6° selon la méthode de mesure (axe PCA ou
+   diagonale de boîte) — sous ce que l'œil distingue sur une image en
    retrait. L'assiette se reporte donc telle quelle : rien à réajuster.
 
    CES CHIFFRES SONT SOLIDAIRES DU RENDU. Changer l'élévation ou le
@@ -288,7 +289,10 @@ export function Voiture() {
   const derive = useMotionValue(0)
 
   useEffect(() => {
-    if (reduit) return
+    // `absente` peut passer à true tard (404 après montage) : sans elle ici
+    // ET dans les dépendances, la boucle déjà lancée continuerait de battre
+    // pour un composant qui ne rend plus rien.
+    if (reduit || absente) return
     let id = 0
     const battre = (t: number) => {
       const s = t / 1000
@@ -315,7 +319,7 @@ export function Voiture() {
       stop()
       arret()
     }
-  }, [reduit, assiette, derive, fondu])
+  }, [reduit, absente, assiette, derive, fondu])
 
   /* ── POURQUOI DES ImageBitmap ET PAS DES BALISES IMAGE ────────────
      MESURÉ, sur build de production, trois essais alternés dans le même
@@ -348,7 +352,8 @@ export function Voiture() {
 
      `veille` est rejouée à chaque changement d'index. Sans mémoire des
      échecs, elle redemandait sans fin ce qui ne répond pas : mesuré,
-     1 422 requêtes sur une descente au lieu de 120 quand le réseau tombe.
+     1 422 requêtes sur une descente au lieu de 120 quand le réseau tombe
+     (mesuré à 120 images).
      Mais abandonner au PREMIER échec est l'excès inverse — un hoquet
      serveur condamnait l'image pour toute la session. D'où un compte :
      trois essais, puis on laisse tomber cette image-là. */
@@ -486,8 +491,8 @@ export function Voiture() {
      que les cinq images d'ARRIERE devant lui ; passé ces cinq, le parcours
      arrière faisait le tour complet et retombait sur le bord AVANT de la
      fenêtre, à vingt images de là. Mesuré : 12 peintures sur 130 à 60° de
-     la bonne, alternant avec les bonnes — un stroboscope, pas un repli
-     grossier. En descente, zéro sur 109.
+     la bonne (mesuré à 120 images), alternant avec les bonnes — un
+     stroboscope, pas un repli grossier. En descente, zéro sur 109.
 
      Le `??` garde la préférence pour l'arrière à écart égal, ce qui reste
      le bon pari ; il BORNE simplement l'erreur à l'image réellement la
@@ -594,15 +599,7 @@ export function Voiture() {
          devant un `position: fixed`. */
       style={{ rotate: assiette, y: derive, opacity: fondu }}
     >
-      {/* Cette couche ne flotte plus : elle ne fait que porter la toile.
-          Son animation CSS a été retirée de planche.css au profit de la
-          respiration en JS ci-dessus — cumulées, les deux tangages se
-          seraient additionnés, et le CSS ajoutait une échelle qui pulse
-          que le JS n'a délibérément pas. La div reste parce que la toile
-          a besoin d'un bloc à sa taille, pas parce qu'elle bouge. */}
-      <div className="voiture-flotte">
-        <canvas ref={canvas} className="voiture-toile" />
-      </div>
+      <canvas ref={canvas} className="voiture-toile" />
     </motion.div>
   )
 }
