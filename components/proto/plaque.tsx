@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import { motion, useReducedMotion, useScroll, useTransform } from "motion/react"
+import { motion, useMotionValue, useReducedMotion, useScroll, useTransform, type MotionValue } from "motion/react"
 import type { Lang } from "./dict"
 import { t } from "./dict"
 
@@ -26,13 +26,27 @@ export function Plaque({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => vo
     offset: ["start start", "end start"],
   })
 
+  /* Doctrine de l'issue #9 (cf. planche.css, ACCESSIBILITÉ) : la
+     plongée de la plaque est du mouvement que le scroll CAUSE, pas un
+     état de lecture — sous `reduce`, elle se coupe. Même porte
+     multiplicative que world.tsx : `useReducedMotion()` rend null au
+     SSR puis un booléen, on ne branche jamais un hook dessus, on
+     l'injecte dans une MotionValue. Sous `reduce`, `prog` vaut 0 en
+     permanence — la plaque défile comme un contenu ordinaire. */
+  const reduit = useReducedMotion()
+  const gate = useMotionValue(1)
+  useEffect(() => {
+    gate.set(reduit ? 0 : 1)
+  }, [reduit, gate])
+  const prog = useTransform([scrollYProgress, gate] as MotionValue<number>[], ([v, g]) => (v as number) * (g as number))
+
   /* La plaque ne « fade » plus : elle S'ENFONCE. Le fondu s'arrête à
      0,15 — le résidu visible derrière elle est précisément ce qui
      fait la continuité avec le décor. Sans lui on retombe sur un
      cross-fade. */
-  const depth = useTransform(scrollYProgress, [0, 1], [0, -180])
-  const scale = useTransform(scrollYProgress, [0, 1], [1, 0.88])
-  const fade = useTransform(scrollYProgress, [0, 0.62, 1], [1, 0.5, 0.15])
+  const depth = useTransform(prog, [0, 1], [0, -180])
+  const scale = useTransform(prog, [0, 1], [1, 0.88])
+  const fade = useTransform(prog, [0, 0.62, 1], [1, 0.5, 0.15])
   /* Le flou est QUANTIFIÉ au pixel entier. Un `filter: blur()` qui
      varie en continu re-rastérise toute la plaque à chaque frame :
      c'était de loin le poste le plus cher de la page (p90 17ms
@@ -40,7 +54,7 @@ export function Plaque({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => vo
      quatre rastérisations sur toute la transition — et un saut d'un
      pixel de flou, sur un élément qui s'efface et recule, est
      invisible. */
-  const blur = useTransform(scrollYProgress, (v) => `blur(${Math.round(v * 4)}px)`)
+  const blur = useTransform(prog, (v) => `blur(${Math.round(v * 4)}px)`)
 
   /* La réflexion du chrome suit le scroll ET le pointeur.
      1,6em = deux cycles du motif : l'horizon traverse deux fois.
@@ -52,7 +66,7 @@ export function Plaque({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => vo
      ça repeignait à chaque frame de scroll ; par pas, quarante fois
      sur toute la sortie de plaque — 5 % de la période du motif par
      pas, sous le seuil visible. */
-  const chromeYBrut = useTransform(scrollYProgress, [0, 1], [0, 1.6])
+  const chromeYBrut = useTransform(prog, [0, 1], [0, 1.6])
   const chromeY = useTransform(chromeYBrut, (v) => (Math.round(v * 25) / 25).toFixed(2) + "em")
 
   useEffect(() => {
@@ -121,9 +135,7 @@ export function Plaque({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => vo
      sans attendre le scroll : c'est donc la révélation la plus visible
      sous `reduce`, et la seule qu'on ait pu mesurer sans faire défiler la
      page (contrôle 23). Le CSS n'atteint pas framer — cf. planche.css,
-     ACCESSIBILITÉ. */
-  const reduit = useReducedMotion()
-
+     ACCESSIBILITÉ. `reduit` est déclaré plus haut, avec la porte. */
   const rise = (delay: number) => ({
     initial: { opacity: 0, y: 22 },
     animate: { opacity: 1, y: 0 },

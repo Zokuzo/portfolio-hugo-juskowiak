@@ -1519,10 +1519,23 @@ body {
    donc à l'état de départ jusqu'à l'hydratation, sous `reduce` comme
    sans — puis se pose d'un coup au lieu de glisser.
 
+   CE QUI SE COUPE, ET CE QUI RESTE — la doctrine du défilement,
+   tranchée à l'issue #9. Le mouvement que le défilement CAUSE
+   (parallaxe du décor, séquence de la voiture, plongée et reflet de
+   la plaque) est du mouvement au sens de la préférence : il se coupe.
+   L'état que le défilement EST (barre de progression, nœuds et
+   compteur du tracé) est un retour de lecture : il reste, et seul le
+   passage d'un état à l'autre devient instantané. Trois mécanismes
+   selon le canal : la porte multiplicative pour une MotionValue
+   dérivée du scroll (world.tsx, plaque.tsx — jamais de hook
+   conditionnel), le retour anticipé pour une boucle rAF
+   (voiture.tsx), la branche de durée pour une révélation framer
+   (les 14 sites ci-dessus).
+
    Contrôles :
      grep -rn "duration:" components/proto/*.tsx | grep -vc "reduit ?"
        → 0 : aucune durée d'animation sans sa branche de coupure
-     node .scratch/planche-profonde/recherches/23-controle-reduce.mjs */
+     node tools/controles/controle-reduce.mjs */
 @media (prefers-reduced-motion: reduce) {
   .proto-root *,
   .proto-root *::before,
@@ -2409,6 +2422,30 @@ body {
   color: var(--g-100);
 }
 
+/* Les captures d'interface : le même cadre que le schéma — une pièce
+   posée sur un lit d'encre, jamais une « galerie ». Les dimensions
+   sont dans le balisage, l'image arrive dans une place déjà réservée. */
+.fp-captures {
+  list-style: none;
+  display: grid;
+  gap: clamp(1.2rem, 3vh, 2rem);
+  margin: 0;
+  padding: 0;
+}
+.fp-captures figure {
+  margin: 0;
+}
+.fp-captures img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: var(--rule) solid var(--line-2);
+  background: var(--ink-2);
+}
+.fp-captures figcaption {
+  margin-top: 0.5rem;
+}
+
 .fp-pied {
   margin-top: clamp(3rem, 9vh, 5.5rem);
   padding-top: clamp(1.2rem, 3vh, 2rem);
@@ -2684,6 +2721,11 @@ body {
   font-size: 1rem;
   line-height: 1.68;
   color: var(--g-300);
+}
+/* Le second goût est un nouveau sujet, pas la suite de la chute :
+   l'écart supérieur le dit — même voix, autre paragraphe. */
+.op-design {
+  margin-top: clamp(1.8rem, 4.5vh, 3rem);
 }
 .op-champs {
   display: grid;
