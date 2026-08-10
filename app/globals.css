@@ -26,12 +26,15 @@
    ============================================================ */
 @import "tailwindcss";
 
-/* `.scratch/` n'est ni suivi ni ignoré par git, donc la détection
-   automatique de Tailwind v4 le balaie comme du source. Les noms de
-   classes CITÉS dans les documents de travail — `bg-primary`,
-   `rounded-2xl`, `from-cyan-400` — y devenaient de vraies règles CSS
-   servies en production : 17 731 octets, 23,7 % du chunk. Un document
-   qui parle de CSS ne doit pas en fabriquer. */
+/* `.scratch/` est ignoré par git depuis l'issue #8, ce qui suffit à
+   la détection automatique de Tailwind v4 — mais la directive reste :
+   une protection qui survit au déplacement du dossier ou à une ligne
+   de .gitignore retirée vaut mieux qu'une qui n'y survit pas. Le
+   précédent est mesuré : les noms de classes CITÉS dans les documents
+   de travail — `bg-primary`, `rounded-2xl`, `from-cyan-400` —
+   devenaient de vraies règles CSS servies en production, 17 731
+   octets, 23,7 % du chunk. Un document qui parle de CSS ne doit pas
+   en fabriquer. */
 @source not "../.scratch";
 
 /* Conservé seul de l'ancien fichier : `<html class="dark">` est posé

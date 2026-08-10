@@ -27,3 +27,9 @@ yarn-error.log*
 next-env.d.ts
 # artefacts de debogage playwright (captures, snapshots, journaux)
 .playwright-mcp
+
+# la carte de travail : recherches, tickets locaux, rendus intermédiaires.
+# Tranché à l'issue #8 : la prose décrit l'intérieur de produits
+# d'employeurs et reste hors de l'historique d'un dépôt public ; les
+# scripts de contrôle rejouables, eux, ont été versés dans tools/.
+.scratch/

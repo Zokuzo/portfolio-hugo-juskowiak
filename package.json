@@ -5,7 +5,8 @@
   "scripts": {
     "build": "next build",
     "dev": "next dev",
-    "start": "next start"
+    "start": "next start",
+    "banc": "node tools/banc/frame.mjs"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
@@ -22,6 +23,8 @@
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "jiti": "^2.7.0",
+    "playwright-core": "^1.62.1",
     "postcss": "^8.5",
     "tailwindcss": "^4.1.9",
     "typescript": "^5"
