@@ -114,6 +114,51 @@ export function studio(THREE) {
   return s
 }
 
+/* ── LE STUDIO CLAIR (#13) ────────────────────────────────────────
+   Boîte CLAIRE, bandes SOMBRES : sur une carrosserie blanche, c'est
+   la bande sombre qui dessine l'arête — « une arête ne se voit que
+   si elle a une bande à réfléchir », le principe survit au signe.
+   GÉOMÉTRIE IDENTIQUE au studio sombre (mêmes positions, mêmes
+   tailles : le cadrage et le galbe sont calés dessus) ; seules la
+   boîte et la teinte des bandes s'inversent — la force HDR du sombre
+   devient une PROFONDEUR d'encre : la bande la plus forte (9) est la
+   plus sombre. Teintes CANDIDATES, réglées à l'œil à l'essai 8 vues
+   — gate Hugo. */
+export function studioClair(THREE) {
+  const s = new THREE.Scene()
+  s.add(new THREE.Mesh(
+    new THREE.BoxGeometry(40, 24, 40),
+    new THREE.MeshBasicMaterial({ color: 0xf2f0ec, side: THREE.BackSide })
+  ))
+  const bande = (w, h, pos, rot, teinte) => {
+    const m = new THREE.MeshBasicMaterial({ color: teinte, side: THREE.DoubleSide })
+    const p = new THREE.Mesh(new THREE.PlaneGeometry(w, h), m)
+    p.position.set(...pos); p.rotation.set(...rot); s.add(p)
+  }
+  const H = Math.PI / 2
+  bande(0.8, 30, [    0, 12.0,  0], [ H,  0, 0], 0x07080b)
+  bande(0.6, 28, [-3.4, 12.0,  0], [ H,  0, 0], 0x171b2e)
+  bande(0.6, 28, [ 3.4, 12.0,  0], [ H,  0, 0], 0x171b2e)
+  // Flancs : le trait sombre qui court le long de la caisse blanche.
+  bande(0.9, 30, [-9.5, 2.6,  0], [ 0,  H, 0], 0x0b0e14)
+  bande(0.9, 30, [ 9.5, 2.6,  0], [ 0, -H, 0], 0x0b0e14)
+  bande(1.1, 30, [-7.0, 0.35, 0], [ 0,  H, 0], 0x10131c)
+  bande(1.1, 30, [ 7.0, 0.35, 0], [ 0, -H, 0], 0x10131c)
+  // Fond et face : décollent la silhouette claire du papier.
+  bande(16, 0.7, [ 0, 3.0, -12], [0, 0, 0], 0x2a2d36)
+  bande(16, 0.7, [ 0, 3.0,  12], [0, Math.PI, 0], 0x2a2d36)
+  return s
+}
+
+/* La livrée MSO d'origine EST le but du thème clair : ni
+   WhitePaintjob ni Blue ne se retouchent — le blanc du modèle est le
+   défaut glTF, le bleu est le #0080e7 que le thème prend pour accent.
+   Table vide ; si l'essai 8 vues montre un vitrage ou un accent à
+   reprendre, il s'ajoute ICI, seul endroit. */
+export function retouchesClair() {
+  return {}
+}
+
 /* Normalisation du modèle : échelle à 4 unités D'ABORD, recentrage
    ENSUITE — L'ORDRE COMPTE. `position` s'applique dans l'espace du
    parent tandis que `scale` s'applique à la géométrie : recentrer

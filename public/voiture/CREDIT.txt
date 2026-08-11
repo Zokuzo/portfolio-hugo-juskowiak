@@ -76,6 +76,23 @@ fractions du rendu carré, IRREJOUABLE au client qui l'applique au
 viewport de sa caméra (components/proto/voiture-drag.ts) :
     x=0.14017  y=0.16378  c=0.71967
 
+La séquence claire — clair/000.webp à clair/159.webp
+----------------------------------------------------
+Les 160 images de clair/ sont la MÊME rotation rendue pour le thème
+clair du site (chantier #13) : livrée MSO d'origine (carrosserie
+blanche, accent bleu #0080e7 — aucune retouche matériau), studio
+INVERSÉ (boîte papier, neuf bandes d'encre : sur une carrosserie
+blanche, c'est la bande sombre qui dessine l'arête). Mêmes réglages
+de caméra, même pose, même cadre — relevé identique au millième.
+4 466 188 octets pour 160 fichiers, la plus lourde (113.webp) pèse
+29 986 octets — mesuré le 2026-08-11. Une adaptation de plus du même modèle de bohmerang,
+même licence CC BY-NC-SA 4.0, même attribution.
+
+Fabriquée le 2026-08-11 par :
+    node tools/voiture/rendu.mjs ~/PP/modeles-3d/free_-_mclaren_p1_mso.glb \
+      --nb=160 --rendu=2000 --elevation=30 --poids=30000 --encodeur=ffmpeg \
+      --studio=clair --dest=public/voiture/clair
+
 Le modèle source vit hors du dépôt (67 Mo) :
     ~/PP/modeles-3d/free_-_mclaren_p1_mso.glb
 

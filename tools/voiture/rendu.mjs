@@ -151,7 +151,7 @@ async function main() {
   const port = srv.address().port
 
   const q = new URLSearchParams({ modele: "/" + path.basename(glb), nb: String(NB), sortie: String(SORTIE) })
-  for (const k of ["rendu", "fov", "elevation", "depart", "sens", "env", "marge", "carrosserie", "rugosite"]) {
+  for (const k of ["rendu", "fov", "elevation", "depart", "sens", "env", "marge", "carrosserie", "rugosite", "studio"]) {
     if (opt[k] !== undefined) q.set(k, opt[k])
   }
   const page = `http://127.0.0.1:${port}/scene.html?${q}`

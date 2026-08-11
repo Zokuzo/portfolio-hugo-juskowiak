@@ -25,7 +25,7 @@ import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js"
    PARTAGÉ avec le client (chantier #12) — servi par l'alias de
    rendu.mjs. Il n'y a plus qu'un studio, et ses commentaires de
    doctrine ont déménagé avec lui. */
-import { studio, retouches, regleRenderer, prepareModele, appliqueRetouches, placeCamera,
+import { studio, studioClair, retouches, retouchesClair, regleRenderer, prepareModele, appliqueRetouches, placeCamera,
          FOV as FOV_DEFAUT, FLOU_PMREM, CARROSSERIE, RUGOSITE } from "/studio.mjs"
 
 const P = new URLSearchParams(location.search)
@@ -42,6 +42,7 @@ const ENV    = n("env", 1)
 const MARGE  = n("marge", 1.02)     // respiration autour du cadrage automatique
 const CARRO  = P.get("carrosserie") || CARROSSERIE
 const RUGO   = n("rugosite", RUGOSITE)
+const STUDIO = P.get("studio") || "sombre"   // clair : boîte papier, bandes d'encre, livrée d'origine (#13)
 
 const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true })
 renderer.setPixelRatio(1)
@@ -53,7 +54,7 @@ scene.background = null          // le fond transparent, c'est tout l'intérêt 
 const camera = new THREE.PerspectiveCamera(FOV, 1, 0.01, 5000)
 
 const pmrem = new THREE.PMREMGenerator(renderer)
-scene.environment = pmrem.fromScene(studio(THREE), FLOU_PMREM).texture
+scene.environment = pmrem.fromScene(STUDIO === "clair" ? studioClair(THREE) : studio(THREE), FLOU_PMREM).texture
 scene.environmentIntensity = ENV
 // Aucune lumière ajoutée : tout vient de l'environnement. C'est ce qui
 // garantit qu'il n'y a ni ombre au sol ni éclairage diffus.
@@ -130,7 +131,7 @@ loader.load(MODELE, (gltf) => {
   const m = gltf.scene
   voiture.add(m)
   const rayon = prepareModele(THREE, m)
-  materiaux = appliqueRetouches(m, retouches({ carrosserie: CARRO, rugosite: RUGO }))
+  materiaux = appliqueRetouches(m, STUDIO === "clair" ? retouchesClair() : retouches({ carrosserie: CARRO, rugosite: RUGO }))
   window.materiaux = materiaux
   placeCamera(THREE, camera, rayon, ELEV)
   cadre = mesure(360)
