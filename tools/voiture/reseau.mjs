@@ -59,23 +59,32 @@ try {
     await pause(1000)
   }
 
-  const toutes = JSON.parse(await cdp.evalue(
-    'JSON.stringify(performance.getEntriesByType("resource").map((e) => e.name))'
+  const entrees = JSON.parse(await cdp.evalue(
+    'JSON.stringify(performance.getEntriesByType("resource").map((e) => ({ n: e.name, o: e.decodedBodySize })))'
   ))
-  const nouvelles = toutes.slice(avant)
-  const glb = toutes.filter((u) => u.includes(".glb"))
-  const chunks = nouvelles.filter((u) => /\/_next\/.*\.js/.test(u))
+  const toutes = entrees.map((e) => e.n)
+  const nouvelles = entrees.slice(avant)
+  const glb = toutes.filter((u) => u.includes(".glb") || u.includes("/voiture/draco/"))
   const sequence = toutes.filter((u) => /\/voiture\/\d{3}\.webp/.test(u))
+  /* Next préfetch les chunks de route quand leurs liens entrent au
+     viewport pendant le défilement (mesuré : /work/[slug], 17 Ko) —
+     c'est un comportement préexistant, pas le régime drag. On ne
+     condamne donc que les chunks à la TAILLE du régime (three seul
+     pèse 730 Ko décodés ; les chunks de route, quelques dizaines de
+     Ko). ponytail: seuil naïf à 200 Ko — si un jour une route devient
+     obèse, ce gate la signalera et on affinera par contenu. */
+  const chunksJs = nouvelles.filter((e) => /\/_next\/.*\.js/.test(e.n))
+  const lourds = chunksJs.filter((e) => e.o > 200000)
 
   let echec = false
-  if (glb.length) { console.log(`✗ ${glb.length} requête(s) vers le .glb sans drag — ${glb[0]}`); echec = true }
-  else console.log("✓ zéro requête vers le .glb")
+  if (glb.length) { console.log(`✗ ${glb.length} requête(s) vers le .glb ou le décodeur sans drag — ${glb[0]}`); echec = true }
+  else console.log("✓ zéro requête vers le .glb ou le décodeur Draco")
   if (opt.reduce) {
     if (sequence.length === 1) console.log("✓ sous reduce : une seule image de la séquence au montage")
     else { console.log(`✗ sous reduce : ${sequence.length} images chargées au lieu d'une`); echec = true }
   } else {
-    if (chunks.length) { console.log(`✗ ${chunks.length} chunk(s) JS déclenché(s) par le défilement — ${chunks.join(", ")}`); echec = true }
-    else console.log("✓ aucun chunk JS déclenché par le défilement")
+    if (lourds.length) { console.log(`✗ ${lourds.length} chunk(s) à la taille du régime drag pendant le défilement — ${lourds.map((e) => `${e.n} (${e.o} o)`).join(", ")}`); echec = true }
+    else console.log(`✓ aucun chunk du régime drag déclenché par le défilement (${chunksJs.length} préfetch(s) de route, toléré(s))`)
     console.log(`  ${sequence.length} images de séquence, ${toutes.length} requêtes en tout`)
   }
   process.exitCode = echec ? 1 : 0
