@@ -78,10 +78,15 @@
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
 
   /* — échelles du mobilier d'affiche —
-       plancher typographique double : 9px absolu, réservé aux gris
-       >= 8:1 avec interlettrage >= .2em ; 10px courant ; 12px max. */
-  --f-nano: 0.5625rem; /* 9px  */
-  --f-micro: 0.625rem; /* 10px */
+       Planchers REMONTÉS au retour Hugo (#13) : à l'écran réel, le
+       9px historique restait illisible même après la montée de la
+       base — les descriptions d'index en mono-xs se perdaient. La
+       règle des gris >= 8:1 + interlettrage >= .2em pour le plus
+       petit cran tient toujours. Base 19px : nano ≈ 11,9px,
+       micro ≈ 13,1px, corps .mono ≈ 13,1px — le dim fait la
+       hiérarchie quand les tailles se rejoignent. */
+  --f-nano: 0.625rem; /* ~12px */
+  --f-micro: 0.6875rem; /* ~13px */
 
   /* — pointeur, alimenté en JS (−1 → 1) — */
   --px: 0;
@@ -96,6 +101,22 @@
 
   background: var(--ink);
   color: var(--paper);
+  /* LE FLOU QUI DÉTACHE L'ÉCRITURE (retour Hugo, #13) : un halo
+     gaussien porté par le glyphe lui-même — text-shadow, rasterisé
+     avec le texte, ZÉRO coût par frame là où un backdrop-filter
+     paierait une surface de rendu à chaque défilement (l'interdit
+     mesuré du grain vaut ici aussi). La couleur est var(--ink) : le
+     halo est le FOND du thème — encre en nuit, papier en jour — il
+     creuse la place du texte dans le décor sans introduire de teinte.
+     Hérité par tout le document ; le chrome et les cartouches s'en
+     exemptent (leur lit garantit déjà leur contraste).
+     UNE COUCHE COURTE, et c'est mesuré : la première version portait
+     deux couches dont une à 9px de rayon — le banc est passé de
+     0,05 % à 11,28 % de frames au-dessus du budget en sombre. Le
+     noyau gaussien se paie à chaque bande repeinte du défilement et
+     à chaque pas de rampe du titre. À 3px, le texte se détache
+     encore ; au-delà, c'est le budget qui se détache. */
+  text-shadow: 0 0 3px var(--ink);
   font-family: var(--f-display), ui-sans-serif, system-ui, sans-serif;
   font-synthesis-weight: none;
   -webkit-font-smoothing: antialiased;
@@ -108,6 +129,16 @@
 html,
 body {
   background: #07080b;
+}
+
+/* LISIBILITÉ AU-DESSUS DU DÉCOR (retour Hugo, chantier #13) : le
+   corps monte — tout le système est en rem/em, chaque taille suit,
+   les deux thèmes ensemble. C'est LE bouton : 100 % = l'ancien
+   réglage, chaque +6,25 % vaut +1px sur la base. Le premier essai à
+   106,25 % était invisible à l'écran (constaté sur capture) : le
+   corps mono passe ici de 11 à ~13px. */
+html {
+  font-size: 118.75%; /* 19px */
 }
 
 /* FOCUS — aucune couleur nouvelle, alias de --paper. C'est le seul
@@ -234,6 +265,9 @@ body {
   color: transparent;
   /* l'arête qui accroche la lumière */
   -webkit-text-stroke: 0.5px rgba(255, 255, 255, 0.22);
+  /* pas de halo sur le métal : l'ombre se dessinerait DERRIÈRE le
+     remplissage clippé et boufferait la déchirure de la rampe */
+  text-shadow: none;
 }
 
 /* La chaleur monte du DESSOUS du titre et sort du cadre (centre à
@@ -1163,6 +1197,7 @@ body {
 .ref {
   background: var(--paper);
   color: var(--sig);
+  text-shadow: none; /* l'îlot porte son lit : le halo hérité salirait le cartouche */
   font-family: var(--f-mono), monospace;
   font-size: var(--f-micro);
   letter-spacing: 0.14em;
@@ -1284,6 +1319,7 @@ body {
 .count {
   background: var(--paper);
   color: var(--sig);
+  text-shadow: none; /* même exemption que .ref : le lit garantit déjà le contraste */
   font-family: var(--f-mono), monospace;
   font-size: 0.6875rem;
   letter-spacing: 0.12em;
