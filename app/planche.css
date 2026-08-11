@@ -35,6 +35,7 @@
   --line: rgba(226, 232, 240, 0.1);
   --line-2: rgba(226, 232, 240, 0.18);
   --line-3: rgba(226, 232, 240, 0.34);
+  --chip: rgba(226, 232, 240, 0.08); /* le lit des puces — 5 sites, promu au chantier #13 */
 
   /* — LE ROUGE — deux états de matière, jamais un éclaircissement — */
   --sig: #c8102e; /* ENCRE  — 5,169:1 sur --paper (AA).
@@ -289,9 +290,10 @@ body {
   --vis-struts: 0.9;
 }
 
-/* isolation:isolate ⇒ les mix-blend-mode:screen (grain, poussière)
-   se résolvent contre .p-void (encre opaque) et non contre le
-   backdrop de la page — sinon ils virent au blanc plein.
+/* isolation:isolate ⇒ le mix-blend-mode du grain (seul blend du
+   monde — .p-dust n'en porte aucun) se résout contre .p-void (encre
+   opaque) et non contre le backdrop de la page — sinon il vire au
+   blanc plein.
    contain:strict est légitime ici : .world EST l'élément fixed, il
    ne devient le bloc conteneur de rien d'autre. */
 .world {
@@ -383,6 +385,19 @@ body {
   inset: 0;
   width: 100%;
   height: 100%;
+}
+/* Les traits des arcs, sortis des attributs SVG (chantier #13) : un
+   attribut de présentation ne consomme pas de var() et resterait
+   clair sur papier. t3 est exactement --line ; t1 et t2 gardent
+   leurs densités propres, le bloc clair les redéfinit. */
+.arcs-t1 {
+  stroke: rgba(226, 232, 240, 0.16);
+}
+.arcs-t2 {
+  stroke: rgba(226, 232, 240, 0.13);
+}
+.arcs-t3 {
+  stroke: var(--line);
 }
 .arcs-lent,
 .arcs-inverse {
@@ -1365,7 +1380,7 @@ body {
   stroke-width: 1;
 }
 .node .chip {
-  fill: rgba(226, 232, 240, 0.08);
+  fill: var(--chip);
   stroke: none;
 }
 /* La boîte allumée ne s'entoure PAS de rouge : un contour de 470px
@@ -1759,7 +1774,7 @@ body {
    planche est réservé au plan de coupe, qui est le seul impératif. */
 .ov-mark {
   padding: 3px 6px;
-  background: rgba(226, 232, 240, 0.08);
+  background: var(--chip);
   color: var(--g-100);
 }
 
@@ -1945,7 +1960,7 @@ body {
 /* L'alésage est du VIDE : il prend le noir du fond, pas une teinte. */
 .ov-bore-hole {
   fill: var(--ink);
-  stroke: rgba(226, 232, 240, 0.34);
+  stroke: var(--line-3);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
@@ -2290,7 +2305,7 @@ body {
   cursor: pointer;
 }
 .fp-lang button[aria-pressed="true"] {
-  background: rgba(226, 232, 240, 0.08);
+  background: var(--chip);
   color: var(--paper);
 }
 
@@ -2302,7 +2317,7 @@ body {
 }
 .fp-mark {
   padding: 3px 6px;
-  background: rgba(226, 232, 240, 0.08);
+  background: var(--chip);
   color: var(--g-100);
 }
 .fp-nom {
@@ -3636,7 +3651,7 @@ body {
    plaque, pas comme un mot du paragraphe. Même fond que .fp-mark. */
 .at-code {
   padding: 2px 6px;
-  background: rgba(226, 232, 240, 0.08);
+  background: var(--chip);
   color: var(--g-100);
 }
 .at-etat {

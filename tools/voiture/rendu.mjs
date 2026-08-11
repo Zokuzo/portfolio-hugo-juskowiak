@@ -1,7 +1,7 @@
 /* ==================================================================
    GÉNÉRATEUR DE LA SÉQUENCE — NB WebP à fond transparent. NB vient de
-   --nb (60 par défaut) ; la séquence en production en compte 120
-   (`ls public/voiture/*.webp | wc -l` → 120).
+   --nb (60 par défaut) ; la séquence en production en compte 160
+   (`ls public/voiture/[0-9]*.webp | wc -l` → 160).
 
    Chaîne : Chrome headless rend la scène three.js (scene.html) en
    2000×2000 avec alpha → recadrage/réduction à 1000×1000 dans la page

@@ -186,20 +186,20 @@ export function World() {
           plus haut vise donc les <svg> eux-mêmes. */}
       <motion.div className="p-arcs" style={{ y: pArcs.y }}>
         <svg className="arcs-c arcs-lent" viewBox="0 0 100 100">
-          <g fill="none" stroke="rgba(226,232,240,0.16)" strokeWidth="0.09">
+          <g className="arcs-t1" fill="none" strokeWidth="0.09">
             <circle cx="50" cy="50" r="49" strokeDasharray="0.6 2.4" />
             <circle cx="50" cy="50" r="41" strokeDasharray="14 5 2 5" />
             <circle cx="50" cy="50" r="26.5" />
           </g>
         </svg>
         <svg className="arcs-c arcs-inverse" viewBox="0 0 100 100">
-          <g fill="none" stroke="rgba(226,232,240,0.13)" strokeWidth="0.09">
+          <g className="arcs-t2" fill="none" strokeWidth="0.09">
             <circle cx="50" cy="50" r="34" strokeDasharray="40 8" />
             <circle className="ring-sig" cx="50" cy="50" r="18" strokeDasharray="1 3" />
           </g>
         </svg>
         <svg className="arcs-c" viewBox="0 0 100 100">
-          <g stroke="rgba(226,232,240,0.1)" strokeWidth="0.09">
+          <g className="arcs-t3" strokeWidth="0.09">
             <line x1="50" y1="0.5" x2="50" y2="99.5" strokeDasharray="2 4" />
             <line x1="0.5" y1="50" x2="99.5" y2="50" strokeDasharray="2 4" />
           </g>
