@@ -314,6 +314,13 @@ async function ouvre() {
   await cdp.envoie("Page.enable")
   // et la page doit se croire au premier plan, sinon le compositeur s'endort
   await cdp.envoie("Emulation.setFocusEmulationEnabled", { enabled: true })
+  if (opt.clair) {
+    /* le thème clair (#13), posé comme le ferait un visiteur qui a
+       déjà choisi — avant la première peinture */
+    await cdp.envoie("Page.addScriptToEvaluateOnNewDocument", {
+      source: 'try{localStorage.setItem("theme","clair")}catch(e){}',
+    })
+  }
   await cdp.envoie("Emulation.setDeviceMetricsOverride", {
     width: LARGEUR, height: HAUTEUR, deviceScaleFactor: 1, mobile: false,
   })
