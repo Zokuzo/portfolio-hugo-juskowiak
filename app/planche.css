@@ -1582,6 +1582,193 @@ body {
   }
 }
 
+/* ============================================================
+   THÈME CLAIR — McLaren P1 MSO (chantier #13)
+   ------------------------------------------------------------
+   L'INVERSION PURE des neutres : --ink devient le papier du système,
+   --paper son encre — le couple écriture/fond garde EXACTEMENT ses
+   17,596:1 et aucune teinte neuve n'entre. Les NOMS mentent en clair
+   (--ink est blanc) : c'est le prix pour ne toucher AUCUN des ~300
+   sites consommateurs.
+
+   LE BLEU REMPLACE LE ROUGE — un thème, un accent : le verrou
+   mono-accent tient dans les deux mondes. La teinte vient du modèle
+   3D lui-même (matériau Blue du .glb : #0080e7 en sRGB).
+
+   LA LOI TRANSPOSÉE : SUR LE PAPIER, LE BLEU DÉSIGNE — IL N'ÉCRIT EN
+   VIF JAMAIS. POUR ALLUMER LE BLEU, POSER D'ABORD DU CARBONE. Le
+   bleu vif ne passe pas le seuil texte sur papier (3,520 < 4,5) :
+   --sig est son assombrissement iso-teinte, et les deux seuls îlots
+   où le vif écrit sont les cartouches, devenus carbone.
+
+   Chaque valeur ci-dessous est GATÉE par
+   `node tools/controles/contrastes.mjs` — parité de ratio avec le
+   sombre à ±0,05, seuils WCAG en plancher.
+
+   :where() : spécificité 0,1,0 — identique au bloc de base, pour que
+   prefers-contrast et forced-colors, plus bas, gardent le dernier
+   mot par ordre de fichier. Le piège inverse serait silencieux : il
+   ne casserait que chez les visiteurs qui cumulent les préférences.
+   ============================================================ */
+:where(html.clair) .proto-root {
+  --ink: #f2f0ec; /* le papier du système, inchangé — le FOND du thème  */
+  --ink-2: #edebe7; /* 1,046:1 — un cran vers l'encre, même décollement */
+  --paper: #07080b; /* l'encre du système — l'ÉCRITURE, 17,596:1 gardés */
+  --g-100: #1e2126; /* 14,185:1                                         */
+  --g-300: #434549; /*  8,440:1 — plancher du 9px tenu                  */
+  --g-500: #646567; /*  5,126:1 — plancher absolu du texte              */
+  --g-700: #bbbab9; /*  1,703:1 — FILET, jamais de glyphe               */
+  --g-800: #e0dfdb; /*  1,172:1 — lit neutre (0 site, recalculé quand même) */
+  /* --steel ne bouge PAS : il devient le PLANCHER de la rampe claire
+     (14,968:1 contre le papier) — en plein jour c'est la bande SOMBRE
+     qui dessine l'arête du métal. */
+
+  /* filets : parité de DENSITÉ COMPOSITE, pas d'alpha — 1,206 / 1,524
+     / 2,641 contre 1,206 / 1,522 / 2,642 en sombre. Base rgb(23,27,46),
+     le steel : l'encre froide. Le 1,206 n'est pas décoratif, c'est le
+     ratio qui distingue le plan du bâti dans le tracé. */
+  --line: rgba(23, 27, 46, 0.095);
+  --line-2: rgba(23, 27, 46, 0.205);
+  --line-3: rgba(23, 27, 46, 0.43);
+  --chip: rgba(23, 27, 46, 0.075);
+
+  /* le bleu MSO — deux états de matière, substrats disjoints
+     (1,462:1 entre eux : au contact, un bug de rendu) */
+  --sig: #0066b7; /* ENCRE — 5,148:1 sur papier (parité 5,169)          */
+  --sig-hot: #0080e7; /* LAMPE — 3,520:1 sur papier (≥ 3, non-textuel) ;
+                       4,999:1 sur carbone : là, et là seulement, il
+                       écrit (les deux cartouches).                     */
+  --sig-dim: #a4ccea; /* LIT — 1,488 puis dim→hot 2,366. L'escalier
+                       clair est plus court que le sombre (2,366 contre
+                       2,658) : assumé, le vif plafonne sur papier.     */
+  --sig-ember: #f0efec; /* BRAISE — 1,010:1 : chaleur sans couleur      */
+  --sig-rail: rgba(0, 128, 231, 0.3);
+  --sig-glow: rgba(0, 128, 231, 0.3); /* LUEUR ATTÉNUÉE — décision Hugo
+                       2026-08-11 : la lampe survit au jour, dosée à
+                       l'œil (0,3 contre 0,55 en sombre)                */
+  --sig-veil: rgba(0, 102, 183, 0.1);
+  --off: #9b9b9b; /* 2,442:1 */
+
+  /* la rampe chrome sur papier : même STRUCTURE (douze arrêts, mêmes
+     em, même cyclicité — tout ce que .chrome, .f-num et .ov-face
+     supposent), PLAGE déplacée vers le sombre — le spéculaire blanc
+     ferait 1,138:1, invisible en plein jour. Plancher --steel,
+     plafond ~#b6b6bd (1,772 : assez pour se voir, assez peu pour
+     rester un reflet). CANDIDATS — les arrêts se règlent à l'œil,
+     gate Hugo : du métal, pas une rayure grise. */
+  --chrome-ramp: repeating-linear-gradient(
+    178deg,
+    #8e8e95 0em,
+    #33333a 0.08em,
+    var(--steel) 0.15em,
+    #b6b6bd 0.23em,
+    #6e6e75 0.31em,
+    #a6a6ad 0.35em,
+    #4f4f55 0.4em,
+    #24283a 0.48em,
+    var(--steel) 0.55em,
+    #9a9aa1 0.64em,
+    #5b5b62 0.72em,
+    #8e8e95 0.8em
+  );
+}
+
+/* le fond hors .proto-root : la règle jumelle de html,body */
+html.clair,
+html.clair body {
+  background: #f2f0ec;
+}
+
+/* ── surcharges de site du thème clair — le modèle forced-colors :
+      des jetons, plus une poignée de règles assumées ──────────── */
+
+/* Les cartouches s'INVERSENT : les deux seuls îlots papier du sombre
+   deviennent les deux seuls îlots carbone du clair (le plafond de
+   DEUX vaut dans les deux sens) — leur lit var(--paper) devient
+   carbone tout seul, et c'est là que le bleu vif écrit : 4,999:1.
+   Sans cette règle, l'encre bleue sur carbone tombe à 3,297 — échec. */
+:where(html.clair) .proto-root .ref,
+:where(html.clair) .proto-root .count {
+  color: var(--sig-hot);
+}
+
+/* Sélection : le texte doit être le clair du thème — sans cette
+   règle, carbone sur bleu foncé, 3,297, échec. Avec : 5,148. */
+:where(html.clair) .proto-root ::selection {
+  color: var(--ink);
+}
+
+/* Le grain ASSOMBRIT sur papier : multiply au lieu de screen. La
+   texture biaisée claire (moyenne 176,5) pose ~2,6 % de voile moyen
+   sous multiply à 0,085 — si ça se voit, la retouche se fait DANS la
+   texture (recuisson, tools/monde/cuire.md), jamais en filter. Gate
+   à l'œil : du grain, pas un voile. */
+:where(html.clair) .p-grain {
+  mix-blend-mode: multiply;
+}
+
+/* Les lobes d'atmosphère, VERSION ENCRE — décision Hugo 2026-08-11 :
+   la lumière du soir devient l'ombre portée du jour. L'encre marque
+   plus fort sur papier que le blanc sur encre : alphas divisés par
+   deux (candidats, à l'œil — le plafond du sombre vaut toujours :
+   au-delà, l'ombre acquiert un bord et devient un objet). */
+:where(html.clair) .p-void {
+  background:
+    radial-gradient(85% 42% at 50% 100%, rgba(7, 8, 11, 0.1), transparent 70%),
+    radial-gradient(140% 70% at 50% 106%, rgba(7, 8, 11, 0.045), transparent 62%),
+    var(--ink);
+}
+
+/* L'arête du chrome : d'encre en plein jour. */
+:where(html.clair) .chrome {
+  -webkit-text-stroke: 0.5px rgba(7, 8, 11, 0.22);
+}
+
+/* La chaleur sous le titre : le voile suit déjà --sig-veil ; seule
+   la lueur froide écrite en dur passe à l'encre froide. */
+:where(html.clair) .chrome-bed::before {
+  background:
+    radial-gradient(120% 70% at 50% 118%, var(--sig-veil) 0%, transparent 62%),
+    radial-gradient(60% 70% at 50% 52%, rgba(23, 27, 46, 0.055), transparent 72%);
+}
+
+/* Les jumelles du §6b — chaque valeur d'encre-sur-papier reprend la
+   densité de sa sœur papier-sur-encre. */
+:where(html.clair) .floor-grid {
+  --floor-line: rgba(23, 27, 46, 0.42);
+}
+:where(html.clair) .p-dust {
+  background-image: radial-gradient(circle at 30% 40%, rgba(7, 8, 11, 0.5) 0 1px, transparent 1.7px);
+}
+/* Le voile devient papier : il assoit le plancher de contraste du
+   texte au-dessus du décor, rôle inchangé, signe inversé. */
+:where(html.clair) .p-scrim {
+  background: radial-gradient(72% 58% at 50% 50%, rgb(242 240 236 / 0.92) 0%, rgb(242 240 236 / 0.55) 55%, transparent 88%);
+}
+:where(html.clair) .node.on rect {
+  stroke: rgba(23, 27, 46, 0.62);
+}
+:where(html.clair) .node.on .chip {
+  fill: rgba(23, 27, 46, 0.16);
+}
+/* l'escalier de la télémétrie garde ses rapports */
+:where(html.clair) .tel-b0 {
+  fill: rgba(7, 8, 11, 0.022);
+}
+:where(html.clair) .tel-b1 {
+  fill: rgba(7, 8, 11, 0.045);
+}
+:where(html.clair) .tel-b2 {
+  fill: rgba(7, 8, 11, 0.07);
+}
+/* les traits des arcs (t3 suit --line tout seul) */
+:where(html.clair) .arcs-t1 {
+  stroke: rgba(23, 27, 46, 0.28);
+}
+:where(html.clair) .arcs-t2 {
+  stroke: rgba(23, 27, 46, 0.23);
+}
+
 /* On épaissit et on éclaircit les NEUTRES ; on ne touche jamais à la
    saturation des deux rouges. */
 @media (prefers-contrast: more) {
@@ -1592,6 +1779,21 @@ body {
     --rail-w: 3px;
     --line: rgba(226, 232, 240, 0.16);
     --line-2: rgba(226, 232, 240, 0.28);
+  }
+  /* La contrepartie CLAIRE (chantier #13) : le bloc ci-dessus est
+     calibré pour le sombre (--g-500 #8f949e est un gris CLAIR) — un
+     visiteur en contraste renforcé + thème clair recevrait des
+     valeurs d'encre. Mêmes gestes contre le papier, à parité mesurée
+     (contrastes.mjs) : 6,66 / 3,99 / 1,60 / 1,43 / 2,20 contre
+     6,58 / 4,02 / 1,60 / 1,43 / 2,14 en sombre. APRÈS le bloc sombre
+     pour gagner par ordre à spécificité égale. */
+  :where(html.clair) .proto-root {
+    --g-500: #535456;
+    --off: #767677;
+    --sig-rail: rgba(0, 128, 231, 0.38);
+    --rail-w: 3px;
+    --line: rgba(23, 27, 46, 0.175);
+    --line-2: rgba(23, 27, 46, 0.36);
   }
 }
 
