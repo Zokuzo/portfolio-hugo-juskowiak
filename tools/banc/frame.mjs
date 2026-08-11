@@ -302,6 +302,13 @@ async function ouvre() {
       "--disable-background-timer-throttling",
       "--disable-backgrounding-occluded-windows",
       "--disable-renderer-backgrounding",
+      /* Un Chrome piloté en CDP (surtout headless) se déclare sans pointeur
+         fin, et le composant refuse alors — à raison — le régime drag qu'on
+         vient précisément mesurer. `Emulation.setEmulatedMedia` ne couvre
+         pas hover/pointer (mesuré : matchMedia restait false) ; ces
+         blink-settings, si. On déclare ce que le banc EST : une souris
+         fine qui survole. */
+      ...(opt.drag ? ["--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4"] : []),
     ],
   })
   await cdp.envoie("Page.enable")
