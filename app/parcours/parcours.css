@@ -1,0 +1,125 @@
+/* ==================================================================
+   /PARCOURS — squelette (phase 1, chantier #6).
+   Feuille chargée par app/parcours/page.tsx seulement — mais JAMAIS
+   retirée à la navigation (doc CSS App Router embarquée) : tout
+   sélecteur d'ici est scopé .pc- pour ne rien fuir sur l'accueil.
+   Monde à part en devenir : aucun décor du site, aucune couleur
+   nouvelle — les jetons de .proto-root portent la page sobre, les
+   univers les remplaceront chapitre par chapitre, planche par
+   planche. Rien n'anime : reduce n'a rien à couper ici.
+   ================================================================== */
+
+.pc-root {
+  max-width: 68rem;
+  margin: 0 auto;
+  padding: calc(var(--gutter) * 1.5) var(--gutter) 8rem;
+}
+
+/* ---- la barre : sortir / langue / thème ---- */
+.pc-barre {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+.pc-barre > :last-child {
+  margin-left: auto;
+}
+.pc-lang {
+  display: flex;
+  gap: 0.6rem;
+}
+.pc-lang button {
+  opacity: 0.55;
+}
+.pc-lang button[aria-pressed="true"] {
+  opacity: 1;
+  text-decoration: underline;
+  text-underline-offset: 0.3em;
+}
+
+/* ---- la couverture sobre ---- */
+.pc-couverture {
+  min-height: 55vh;
+}
+.pc-titre {
+  margin-top: 4rem;
+  font-family: var(--f-display);
+  font-stretch: 84%;
+  font-weight: 700;
+  font-size: clamp(2.6rem, 7vw, 4.6rem);
+  line-height: 1;
+  text-transform: uppercase;
+}
+.pc-arc {
+  margin-top: 0.75rem;
+}
+.pc-sommaire {
+  margin-top: 3.5rem;
+  list-style: none;
+  padding: 0;
+}
+.pc-sommaire-lien {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  padding-block: 0.55rem;
+  border-top: var(--rule) solid var(--line);
+}
+.pc-sommaire li:last-child .pc-sommaire-lien {
+  border-bottom: var(--rule) solid var(--line);
+}
+.pc-sommaire-nom {
+  font-family: var(--f-display);
+  font-stretch: 84%;
+  font-weight: 600;
+  font-size: 1.3rem;
+}
+.pc-sommaire-lien > :last-child {
+  margin-left: auto;
+}
+
+/* ---- les chapitres, à plat sur leurs ancres ---- */
+.pc-chapitre {
+  max-width: 46rem;
+  margin-top: 24vh;
+  /* L'ancre atterrit DANS le chapitre : l'en-tête posé sous le bord,
+     jamais collé — et de la marge pour les zones de frontière à
+     venir (phase 3). */
+  scroll-margin-block-start: 10vh;
+  display: grid;
+  gap: 1.1rem;
+}
+.pc-seuil {
+  font-style: italic;
+  max-width: 34rem;
+}
+.pc-tete {
+  display: grid;
+  gap: 0.35rem;
+}
+.pc-nom {
+  font-family: var(--f-display);
+  font-stretch: 84%;
+  font-weight: 700;
+  font-size: clamp(1.9rem, 4.5vw, 3rem);
+  line-height: 1.02;
+  text-transform: uppercase;
+}
+.pc-chapitre h3 {
+  margin-top: 1.4rem;
+}
+.pc-chapitre h4 {
+  font-weight: 600;
+}
+.pc-liste {
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.4rem;
+}
+.pc-liste li {
+  list-style: "— ";
+}
+.pc-travail {
+  display: grid;
+  gap: 0.25rem;
+}

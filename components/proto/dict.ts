@@ -701,6 +701,14 @@ const DICT = {
   fpTravaux: { fr: "Travaux marquants", en: "Notable work" },
   fpCompetences: { fr: "Compétences & outils", en: "Skills & tools" },
 
+  /* ----------- /parcours — couverture (chantier #6) ----------- */
+  pcTitre: { fr: "Parcours", en: "Journey" },
+  pcArc: {
+    fr: "La discipline → le métier → le souffle → la modernité",
+    en: "Discipline → craft → breath → modernity",
+  },
+  pcSommaire: { fr: "Sommaire des chapitres", en: "Chapter contents" },
+
   /* Annexes de l'index : les fiches d'unité ne sont pas des feuilles du
      jeu, ce sont des pièces détachées — d'où un bloc distinct et une
      référence en U-0n. */
