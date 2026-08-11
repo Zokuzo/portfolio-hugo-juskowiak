@@ -39,6 +39,43 @@ c'est pourquoi la commande ci-dessous ne le montre pas. Un drapeau
 aurait dû être recopié à l'identique à chaque passe, donc oublié un
 jour ; un défaut vit à un seul endroit et il est commité.
 
+Le modèle optimisé distribué — modele-web.glb
+---------------------------------------------
+modele-web.glb est le même modèle, optimisé pour le régime drag de la
+page d'accueil (chantier #12) : géométrie compressée Draco, textures
+ramenées à 512 px et transcodées WebP, matériaux dédoublonnés sans
+fusion de palette (les trois matériaux de la livrée — WhitePaintjob,
+Blue, Glass — doivent garder leur nom pour recevoir les retouches).
+5 824 244 octets contre 70 471 356 à la source. C'est une adaptation
+du même modèle de bohmerang, distribuée sous la même licence
+CC BY-NC-SA 4.0, couverte par l'attribution ci-dessus. Décision de
+publier prise le 2026-08-10 : le modèle est libre (« FREE - McLaren
+P1 MSO »), servir le dérivé n'expose aucun bien propre.
+
+Fabriqué le 2026-08-11 par :
+    npx -y @gltf-transform/cli@4.4.2 optimize <source> modele-web.glb \
+      --compress draco --texture-compress webp --texture-size 512 \
+      --simplify false --palette false
+Draco et non meshopt, arbitré aux chiffres : meshopt plafonne à 11 Mo
+sur cette géométrie (1,55 M de sommets), Draco descend à 5,8 Mo SANS
+simplification — le levier le moins destructeur. Son décodeur
+(draco/, wasm + wrapper, 250 876 octets, extraits de three 0.169.0)
+n'est servi qu'au drag ; le repli asm.js n'est volontairement pas
+publié — un navigateur sans WASM retombe sur le drag séquence, sans
+erreur.
+
+Vérifié en re-rendant les 160 vues du pipeline depuis ce fichier et
+en les comparant aux images de ce dossier : RMSE normalisé moyenne
+0,00428, max 0,00597 (image 023), pour un plancher de bruit du
+pipeline de 0,00165 / 0,00307 (mesuré en re-rendant depuis la source
+sur la même machine) — écart invisible au côte-à-côte pleine
+résolution, cadrage identique au relevé près.
+
+Le cadre de recadrage commun aux 160 vues, relevé le 2026-08-11 —
+fractions du rendu carré, IRREJOUABLE au client qui l'applique au
+viewport de sa caméra (components/proto/voiture-drag.ts) :
+    x=0.14017  y=0.16378  c=0.71967
+
 Le modèle source vit hors du dépôt (67 Mo) :
     ~/PP/modeles-3d/free_-_mclaren_p1_mso.glb
 

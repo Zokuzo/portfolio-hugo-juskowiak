@@ -16,3 +16,4 @@
 *.woff  binary
 *.woff2 binary
 *.glb   binary
+*.wasm  binary
