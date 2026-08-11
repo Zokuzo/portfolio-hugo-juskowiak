@@ -692,11 +692,27 @@ export function Voiture() {
         .catch(() => {})
     }
 
-    const rendGl = () => {
+    /* AU PLUS UN TRAVAIL PAR FRAME, séquence comme WebGL. La souris
+       émet plus vite que l'écran (mesuré au banc : 125 mousemove/s) :
+       peindre ou faire glisser la veille PAR ÉVÉNEMENT, c'était
+       plusieurs drawImage pleine toile et des dizaines de fetches par
+       frame — 31 % de frames au-dessus du budget. Les événements ne
+       font que poser l'état ; cette frame-ci le consomme une fois. */
+    const rendUneFrame = () => {
       if (renduPrevu) return
       renduPrevu = requestAnimationFrame(() => {
         renduPrevu = 0
-        sceneGl.current?.rend(azimut, elevation)
+        if (!tenue.current) return
+        if (enGl) sceneGl.current?.rend(azimut, elevation)
+        else peindre(azimutVersIndex(azimut, NB))
+        /* La veille suit l'azimut du drag POUR QUE L'IMAGE DU
+           RELÂCHEMENT SOIT DÉCODÉE — c'est à la pose qu'elle sert,
+           pas pendant le balayage. Sous un cran par frame, la main
+           ralentit : on recentre. Au-dessus, on laisse filer — suivre
+           un balayage à 450°/s coûtait 200 fetches et décodages par
+           seconde, et c'était les pointes du banc (mesuré : p90 à
+           17,7 ms, pics de ramasse-miettes). */
+        if (Math.abs(vitesse) < CRAN) veille(azimutVersIndex(azimut, NB))
       })
     }
 
@@ -738,17 +754,10 @@ export function Voiture() {
     const bouge = (x: number, y: number) => {
       vitesse = (x - dernierX) * SENS_AZIMUT
       azimut += vitesse
-      if (enGl) {
-        elevation = Math.min(ELEV_MAX, Math.max(ELEV_MIN, elevation + (dernierY - y) * SENS_ELEV))
-        rendGl()
-      } else {
-        peindre(azimutVersIndex(azimut, NB)) // le drag pilote la séquence : zéro octet nouveau
-      }
-      /* La veille SUIT l'azimut du drag : l'image du relâchement sera
-         déjà décodée. La fenêtre glisse, l'empreinte ne bouge pas. */
-      veille(azimutVersIndex(azimut, NB))
+      if (enGl) elevation = Math.min(ELEV_MAX, Math.max(ELEV_MIN, elevation + (dernierY - y) * SENS_ELEV))
       dernierX = x
       dernierY = y
+      rendUneFrame()
     }
 
     /* Réconciliation au relâchement : inertie (coupée sous reduce),
@@ -768,6 +777,7 @@ export function Voiture() {
         }
         tenue.current = false
         peindre(index.get(), true)
+        veille(index.get()) // la fenêtre se recentre sur l'image posée
         saisie.set(0)
       }
       if (reduit) {
@@ -786,7 +796,7 @@ export function Voiture() {
         if (posee) elevation = ELEV_REPOS
         if (enGl) sceneGl.current?.rend(azimut, elevation)
         else peindre(azimutVersIndex(azimut, NB))
-        veille(azimutVersIndex(azimut, NB))
+        if (Math.abs(vitesse) < CRAN) veille(azimutVersIndex(azimut, NB))
         if (Math.abs(vitesse) < 0.02 && posee) return fini()
         inertie = requestAnimationFrame(decroit)
       }
@@ -815,6 +825,14 @@ export function Voiture() {
     }
 
     const surMousemove = (e: MouseEvent) => {
+      /* Un relâchement HORS de la fenêtre ne produit ni mouseup ni
+         blur : sans ce contrôle du bouton, le pointeur revenait avec
+         une prise fantôme — la voiture collée à une main ouverte. */
+      if ((tenue.current || candidat) && !(e.buttons & 1)) {
+        candidat = null
+        if (tenue.current) pose()
+        return
+      }
       if (tenue.current) return bouge(e.clientX, e.clientY)
       if (candidat) {
         if (Math.hypot(e.clientX - candidat.x, e.clientY - candidat.y) < SEUIL_DRAG) return

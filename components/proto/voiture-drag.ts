@@ -46,7 +46,12 @@ export async function creeScene(toile: HTMLCanvasElement, surPerte?: () => void)
      renoncement propre que le composant applique à sa séquence. */
   let renderer: THREE.WebGLRenderer
   try {
-    renderer = new THREE.WebGLRenderer({ canvas: toile, alpha: true, antialias: true })
+    /* SANS MSAA, et c'est mesuré : avec antialias, le drag tenait à
+       6,9 ms de p50 sur l'iGPU de référence — la moitié du budget pour
+       le seul rendu. La toile est déjà sur-échantillonnée à DPR 1,5
+       (voiture.tsx), ce qui fait office d'anti-aliasing ; c'est le
+       gate humain au raccord qui juge les arêtes, pas ce commentaire. */
+    renderer = new THREE.WebGLRenderer({ canvas: toile, alpha: true, antialias: false })
   } catch {
     return null
   }
