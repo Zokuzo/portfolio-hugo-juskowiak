@@ -68,7 +68,7 @@ const loader = new GLTFLoader()
 const draco = new DRACOLoader()
 draco.setDecoderPath("https://unpkg.com/three@0.169.0/examples/jsm/libs/draco/gltf/")
 loader.setDRACOLoader(draco)
-loader.setMeshoptDecoder(MeshoptDecoder)   // le .glb optimisé arrive compressé meshopt (#12)
+loader.setMeshoptDecoder(MeshoptDecoder)   // meshopt ET Draco branchés : l'outil relit tout candidat (#12 a tranché Draco)
 
 function pose(i) {
   voiture.rotation.y = THREE.MathUtils.degToRad(DEPART + SENS * i * 360 / NB)

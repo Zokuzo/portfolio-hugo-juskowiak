@@ -3911,7 +3911,10 @@ body {
   .voiture {
     --taille: min(88vw, 52vh);
   }
-  .voiture-toile {
+  /* Les DEUX toiles : une fenêtre desktop étroite garde son pointeur
+     fin — une bascule 0,5 → 0,72 cesserait d'être invisible. */
+  .voiture-toile,
+  .voiture-toile-gl {
     opacity: 0.5;
   }
 }

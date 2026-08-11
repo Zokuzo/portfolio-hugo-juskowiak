@@ -185,7 +185,8 @@ export function Voiture() {
   const canvas = useRef<HTMLCanvasElement>(null)
   const conteneur = useRef<HTMLDivElement>(null)
   const toileGl = useRef<HTMLCanvasElement>(null)
-  const tenue = useRef(false)
+  const tenue = useRef(false)   // la main tient la voiture — et RIEN d'autre : l'inertie, c'est `roule`
+  const roule = useRef(false)   // la décrue d'inertie court (main partie) — confondre les deux empilait des boucles
   const sceneGl = useRef<import("./voiture-drag").SceneDrag | null>(null)
   const chargementGl = useRef<Promise<void> | null>(null)
   const dernier = useRef(-1)
@@ -526,6 +527,12 @@ export function Voiture() {
       vivant.current = false
       for (const bm of bitmaps.current) bm?.close()
       bitmaps.current = []
+      /* La scène du drag vit avec le COMPOSANT, pas avec l'effet de
+         saisie : le détruire à chaque re-exécution de l'effet (un
+         basculement de `reduit`) recréerait un renderer sur la même
+         toile — deux moteurs pour un seul contexte. */
+      sceneGl.current?.detruit()
+      sceneGl.current = null
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -605,11 +612,11 @@ export function Voiture() {
        ne jamais avoir besoin des 159 autres images. Une seule requête au
        montage au lieu de cent soixante.
 
-       PENDANT LE GESTE, LA MAIN PEINT — pas le scroll (voir l'effet de
-       saisie) : sans cette garde, un coup de molette en pleine prise
-       repeindrait l'image que le ressort dicte sous celle que la main
-       tient. */
-    if (reduit || !pretes || tenue.current) return
+       PENDANT LE GESTE ET SA DÉCRUE, LA MAIN PEINT — pas le scroll
+       (voir l'effet de saisie) : sans ces gardes, un coup de molette
+       en pleine prise ou pendant l'inertie repeindrait l'image que le
+       ressort dicte sous celle que la main a laissée. */
+    if (reduit || !pretes || tenue.current || roule.current) return
     peindre(i)
     veille(i)
   })
@@ -681,6 +688,7 @@ export function Voiture() {
             }
           })
           if (!s) return // contexte refusé ou modèle en échec : le drag azimut-seul reste
+          if (!vivant.current) return s.detruit() // démonté pendant le téléchargement : rien ne fuit
           sceneGl.current = s
           /* Relevés par le banc (--drag) : le régime et l'empreinte
              GPU réelle — des chiffres mesurés, pas estimés. */
@@ -728,8 +736,13 @@ export function Voiture() {
            ELLE EST — azimut et élévation gardent leurs valeurs. */
         cancelAnimationFrame(inertie)
         inertie = 0
+        roule.current = false
       } else {
-        azimut = index.get() * CRAN
+        /* On part de l'image AFFICHÉE (`dernier`), pas de l'index que
+           le scroll dicte : sous reduce la toile est figée pendant que
+           le ressort continue de suivre la page — saisir depuis
+           index.get() téléportait la voiture d'un demi-tour. */
+        azimut = (dernier.current >= 0 ? dernier.current : index.get()) * CRAN
         elevation = ELEV_REPOS
       }
       vitesse = 0
@@ -767,17 +780,26 @@ export function Voiture() {
        élastique vers l'azimut du scroll : ramener l'objet annulerait
        le geste qu'on vient d'offrir. */
     const pose = () => {
+      /* La main est PARTIE — l'inertie n'est pas une prise. Confondre
+         les deux (un seul drapeau) faisait ré-entrer pose() à chaque
+         mousemove de la décrue et empilait des boucles concurrentes. */
+      tenue.current = false
       document.documentElement.classList.remove("voiture-saisie")
       const fini = () => {
         inertie = 0
+        roule.current = false
         decalage.set(offsetAuRelachement(azimut, lisse.get(), { nb: NB, pose: POSE, tours: TOURS }))
         if (enGl) {
           c2d.style.visibility = "visible"
           toileGl.current!.style.visibility = "hidden"
         }
-        tenue.current = false
-        peindre(index.get(), true)
-        veille(index.get()) // la fenêtre se recentre sur l'image posée
+        /* On peint l'azimut QUE LA MAIN A LAISSÉ, jamais index.get() :
+           la transform combinée ne consomme decalage qu'à la frame
+           suivante (framer la planifie), et sous reduce jamais — lire
+           l'index ici repeignait l'image d'AVANT le geste et
+           l'annulait visuellement. */
+        peindre(azimutVersIndex(azimut, NB), true)
+        veille(azimutVersIndex(azimut, NB)) // la fenêtre se recentre sur l'image posée
         saisie.set(0)
       }
       if (reduit) {
@@ -800,6 +822,7 @@ export function Voiture() {
         if (Math.abs(vitesse) < 0.02 && posee) return fini()
         inertie = requestAnimationFrame(decroit)
       }
+      roule.current = true
       inertie = requestAnimationFrame(decroit)
     }
 
@@ -827,7 +850,9 @@ export function Voiture() {
     const surMousemove = (e: MouseEvent) => {
       /* Un relâchement HORS de la fenêtre ne produit ni mouseup ni
          blur : sans ce contrôle du bouton, le pointeur revenait avec
-         une prise fantôme — la voiture collée à une main ouverte. */
+         une prise fantôme — la voiture collée à une main ouverte.
+         `tenue` seul : pendant la décrue la main est déjà partie, et
+         rappeler pose() ici empilait une boucle par mousemove. */
       if ((tenue.current || candidat) && !(e.buttons & 1)) {
         candidat = null
         if (tenue.current) pose()
@@ -865,10 +890,14 @@ export function Voiture() {
       if (sondePrevue) cancelAnimationFrame(sondePrevue)
       document.documentElement.classList.remove("voiture-saisie", "voiture-survol")
       tenue.current = false
+      roule.current = false
       saisie.set(0)
-      sceneGl.current?.detruit()
-      sceneGl.current = null
-      chargementGl.current = null
+      /* Rendre les toiles à leur CSS : un re-run en pleine prise GL
+         laissait la 2D cachée en inline — voiture invisible. La scène
+         et son chargement, eux, survivent : ils appartiennent au
+         composant (voir l'effet de montage). */
+      c2d.style.visibility = ""
+      if (toileGl.current) toileGl.current.style.visibility = ""
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pretes, absente, reduit])
