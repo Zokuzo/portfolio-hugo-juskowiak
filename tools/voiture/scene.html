@@ -4,10 +4,11 @@
 <title>rendu — séquence voiture</title>
 <style>html,body{margin:0;height:100%;background:#111}canvas{display:block}</style>
 
-<!-- three.js est tiré du CDN et non installé : ce fichier est un OUTIL de
-     build, pas du code livré. Ajouter `three` aux dépendances du portfolio
-     pour fabriquer des images qu'on fabrique une fois, ce serait payer un
-     poids permanent pour un besoin ponctuel. -->
+<!-- three.js est tiré du CDN ici : cette page tourne dans un Chrome nu,
+     sans bundler. Depuis le chantier #12, `three` est AUSSI une dépendance
+     du site (le drag est un besoin de runtime) — épinglée à la MÊME version
+     0.169.0 que cet importmap : un pipeline et un client sur deux versions
+     seraient un raccord qui dérive sans qu'aucun code n'ait bougé. -->
 <script type="importmap">
 { "imports": {
   "three": "https://unpkg.com/three@0.169.0/build/three.module.js",
