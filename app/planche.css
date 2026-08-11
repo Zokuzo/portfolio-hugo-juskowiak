@@ -1012,6 +1012,17 @@ html {
   margin: 0;
   text-transform: uppercase;
 }
+/* LE TITRE EN 3D (#13, retour Hugo) : une plaque qui pivote sous le
+   pointeur — perspective propre à l'élément, angles tirés des mêmes
+   --px/--py que le sol et les arcs (déjà lissés, quantifiés et
+   éteints sous reduce par la boucle de plaque.tsx). Transform pur sur
+   couche promue : le compositeur seul, zéro repeinture — la
+   repeinture du titre reste la propriété exclusive de la rampe. */
+.name-3d {
+  display: block;
+  transform: perspective(1100px) rotateX(calc(var(--py, 0) * -5deg)) rotateY(calc(var(--px, 0) * 8deg));
+  will-change: transform;
+}
 .name .given {
   display: block;
   font-size: 0.291em;

@@ -60,15 +60,16 @@ export function Plaque({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => vo
   /* La réflexion du chrome suit le scroll ET le pointeur.
      1,6em = deux cycles du motif : l'horizon traverse deux fois.
 
-     PAR PAS DE 0,04em, et c'est le remède au scintillement du titre
-     sous Firefox : chaque changement de --chrome-y repeint le dégradé
-     À TRAVERS les glyphes (background-clip: text), un des rares coûts
-     que la promotion de .plaque-body ne peut pas absorber. En continu,
-     ça repeignait à chaque frame de scroll ; par pas, quarante fois
-     sur toute la sortie de plaque — 5 % de la période du motif par
-     pas, sous le seuil visible. */
+     CONTINUE depuis le retour Hugo (#13) : les pas de 0,04em — posés
+     contre un scintillement Firefox — se VOYAIENT au défilement, le
+     reflet avançait image par image. Chaque changement de --chrome-y
+     repeint le dégradé à travers les glyphes (background-clip: text) ;
+     en continu c'est une repeinture par frame de scroll DE CE SEUL
+     ÉLÉMENT, mesurée au banc du même jour : la campagne titre reste
+     dans la bande témoin. Si le scintillement Firefox revient, le
+     remède sera un arrondi FIN (0,005em), pas les gros pas. */
   const chromeYBrut = useTransform(prog, [0, 1], [0, 1.6])
-  const chromeY = useTransform(chromeYBrut, (v) => (Math.round(v * 25) / 25).toFixed(2) + "em")
+  const chromeY = useTransform(chromeYBrut, (v) => v.toFixed(4) + "em")
 
   useEffect(() => {
     const el = root.current
@@ -240,10 +241,15 @@ export function Plaque({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => vo
           </motion.div>
 
           <motion.h1 className="name chrome-bed" {...rise(0.42)}>
-            <span className="given">HUGO</span>
-            <motion.span className="chrome" style={{ ["--chrome-y" as string]: chromeY }}>
-              JUSKOWIAK
-            </motion.span>
+            {/* Le volume du titre (#13) : la 3D vit sur ce wrapper et
+                pas sur le h1 — framer y écrit déjà son transform
+                d'entrée, deux écritures se disputeraient la case. */}
+            <span className="name-3d">
+              <span className="given">HUGO</span>
+              <motion.span className="chrome" style={{ ["--chrome-y" as string]: chromeY }}>
+                JUSKOWIAK
+              </motion.span>
+            </span>
           </motion.h1>
 
           <motion.div className="subline" {...rise(0.56)}>

@@ -5,8 +5,13 @@ import { motion, useMotionValue, useMotionValueEvent, useReducedMotion, useScrol
 import { azimutVersIndex, offsetAuRelachement } from "./geste.mjs"
 
 /* ==================================================================
-   VOITURE — séquence d'images pilotée par le scroll, en rotation sur
-   son axe. Elle ne se déplace PAS : elle tourne sur place, au centre.
+   VOITURE — une séquence d'images pour la pose et le drag, un
+   engloutissement au défilement. LA ROTATION APPARTIENT À LA MAIN
+   depuis le retour Hugo du 2026-08-11 (#13) : le scroll ne tourne
+   plus l'objet — le cran de 2,25° se voyait au défilement lent — le
+   FOND LE MANGE (un iris qui se referme pendant qu'il s'enfonce,
+   façon transition de wallpaper Hyprland). La séquence sert la pose de départ, le drag d'amorce
+   (#12) et l'angle où la main l'a posée.
 
    POURQUOI PAS DE 3D TEMPS RÉEL. Le décor consomme déjà la totalité du
    budget par frame : mesuré en production, p90 16,7ms avec le monde
@@ -299,27 +304,58 @@ function VoitureSequence() {
     }
   }, [p, lisse, scrollY])
 
-  /* Un tour complet, à partir de la pose de départ.
+  /* LE SCROLL NE TOURNE PLUS LA VOITURE (retour Hugo, #13) : à 160
+     images, le cran de 2,25° se voyait au défilement lent — le remède
+     n'était ni un fondu (rejeté, il dédouble les arêtes) ni plus
+     d'images (le poids), c'était de retirer la rotation au scroll.
+     LA ROTATION APPARTIENT À LA MAIN : le drag (séquence puis WebGL
+     continu, régime #12) est le seul à tourner l'objet — et lui n'a
+     pas de crans une fois promu. Le scroll, lui, fait DÉCOLLER la
+     voiture (voir L'ENVOL plus bas).
 
-     LE MODULO N'EST PAS DÉFENSIF, IL EST STRUCTUREL : partir de POSE=140
-     et ajouter jusqu'à 160 donne 300, très au-delà de la dernière image.
-     Boucler est ici le comportement JUSTE, l'image 159 et l'image 000
-     étant voisines de 2,25°. Le second `+ NB` couvre le cas d'une valeur
-     négative, que le `%` de JavaScript propagerait — le ressort étant
-     sur-amorti il ne dépasse pas, mais un index négatif rendrait
-     `undefined` en silence et figerait la toile, ce qui ne vaut pas
-     l'économie d'une addition. */
-  const index = useTransform([lisse, decalage], ([v, off]: number[]) => ((POSE + Math.round(v * TOURS * NB) + off) % NB + NB) % NB)
+     L'index ne dépend donc plus que de l'offset laissé par la main.
+     Le second `+ NB` couvre les valeurs négatives, que le `%` de
+     JavaScript propagerait. */
+  const index = useTransform(decalage, (off: number) => ((POSE + off) % NB + NB) % NB)
 
-  /* Elle s'efface tard et par paliers : au-dessus de la nomenclature et
-     du tracé, deux feuilles denses, elle doit rester lisible SANS
-     concurrencer le texte qu'elle traverse.
+  /* UNE SEULE DISPARITION (#13, retour Hugo) : l'engloutissement.
+     L'ancien fondu par paliers faisait pâlir la voiture PENDANT que
+     l'iris la mangeait — recouverte puis évanouie, deux animations
+     pour une seule mort. Pleine présence jusqu'à la fermeture (0,5),
+     puis l'opacité tombe sur ce qui n'existe déjà plus (fermé à 22 %
+     de la course : ensevelie avant que l'index n'occupe l'écran —
+     retours Hugo) : en mode
+     normal cette chute est invisible (l'iris a tout mangé), sous
+     reduce — où l'iris est coupé — elle EST la sortie, brève et liée
+     au scroll comme le veut la doctrine du repère de position.
+     Ce facteur se multiplie toujours au dosage CSS de la toile. */
+  const fondu = useTransform(lisse, [0, 0.22, 0.3, 1], [1, 1, 0, 0])
 
-     Ces valeurs sont un FACTEUR, pas une opacité finale : la toile porte
-     déjà son dosage de 0,72 en CSS et les deux se multiplient. Partir de
-     0,72 ici sortirait la voiture à 0,52 dans le hero, soit un tiers plus
-     pâle qu'avant sans que personne l'ait demandé. */
-  const fondu = useTransform(lisse, [0, 0.5, 0.9, 1], [1, 0.64, 0.42, 0])
+  /* ── L'ENGLOUTISSEMENT (#13, retour Hugo) ─────────────────────────
+     Au défilement, LE FOND MANGE LA VOITURE — un iris se referme sur
+     elle pendant qu'elle s'enfonce et recule d'un souffle : la
+     transition de wallpaper d'Hyprland, transposée. Le cercle part
+     au-delà de la demi-diagonale (75 % > 70,7 % : rien n'est rogné au
+     repos) et se ferme à 30 % de la course, le centre glissant vers le bas —
+     on l'ensevelit, on ne l'efface pas.
+
+     LE PRIX EST DIT : un clip-path qui bouge repeint la couche de la
+     voiture à chaque frame de défilement où elle est visible — le
+     même ordre de coût que l'ancienne rotation par images (un
+     drawImage par cran), et c'est MESURÉ au banc, pas supposé. Le
+     fondu continue de faire le repère de position. SOUS REDUCE,
+     l'engloutissement est un mouvement que le défilement CAUSE :
+     coupé (doctrine de l'issue #9) — l'iris reste ouvert, le fondu
+     seul raconte la profondeur. Bornes identiques dans les deux cas :
+     le style du premier rendu est le même, serveur et client. */
+  const envY = useTransform(lisse, [0, 0.22], reduit ? ["0vh", "0vh"] : ["0vh", "14vh"])
+    /* L'engloutissement vit DANS la toile (destination-in au dessin) et
+     jamais en clip-path CSS : un clip-path animé re-rasterise toute la
+     couche transformée à chaque frame — mesuré au banc : 11,85 % de
+     frames hors budget, rejeté. Le repeint de la toile par frame, lui,
+     est l'ancien coût de la rotation par crans : 2 %, validé. */
+  const irisRef = useRef(1)
+  const irisPrevu = useRef(0)
 
   /* ── LA RESPIRATION ───────────────────────────────────────────────
      ELLE COÛTE UNE FRACTION DE FRAME, SUR LE FIL PRINCIPAL, et c'est le
@@ -356,6 +392,9 @@ function VoitureSequence() {
      page.tsx signale pour le décor comme pour la voiture. */
   const assiette = useMotionValue(INCLINAISON)
   const derive = useMotionValue(0)
+  /* la dérive de respiration (px) et l'envol (vh) se composent en un
+     seul canal y — deux valeurs, une écriture */
+  const yTotal = useTransform([derive, envY] as unknown as MotionValue<number>[], (v: unknown[]) => `calc(${v[0]}px + ${v[1]})`)
 
   useEffect(() => {
     // `absente` peut passer à true tard (404 après montage) : sans elle ici
@@ -548,6 +587,8 @@ function VoitureSequence() {
     else veille(index.get())
     return () => {
       vivant.current = false
+      if (irisPrevu.current) cancelAnimationFrame(irisPrevu.current)
+      irisPrevu.current = 0
       for (const bm of bitmaps.current) bm?.close()
       bitmaps.current = []
       /* La scène du drag vit avec le COMPOSANT, pas avec l'effet de
@@ -596,9 +637,29 @@ function VoitureSequence() {
     dernier.current = i
     const { width: w, height: h } = c
     ctx.clearRect(0, 0, w, h)
+    /* Iris FERMÉ : on ne peint rien du tout. Le piège est réel et
+       mesuré : arc(rayon 0) est un chemin VIDE, son fill() un no-op —
+       le destination-in ne s'appliquait jamais et le drawImage frais
+       restait entier : la voiture REVENAIT pile après la fermeture. */
+    if (irisRef.current <= 0) return
     // `contain` : la voiture ne doit jamais être rognée par le cadre
     const e = Math.min(w / im.width, h / im.height)
     ctx.drawImage(im, (w - im.width * e) / 2, (h - im.height * e) / 2, im.width * e, im.height * e)
+    /* L'ENGLOUTISSEMENT (#13) : sous 1, un iris se referme sur la
+       voiture — destination-in circulaire, le fond la recouvre par les
+       bords pendant qu'elle s'enfonce, façon transition de wallpaper
+       Hyprland. Deux variantes montrées à Hugo le 2026-08-11 : la
+       ligne de sol qui monte, et ce cercle — LE CERCLE EST SON CHOIX.
+       0,78×côté : juste au-dessus de la demi-diagonale, à 1 rien n'est
+       rogné ; le centre glisse vers le bas en se fermant. */
+    const f = irisRef.current
+    if (f < 1) {
+      ctx.globalCompositeOperation = "destination-in"
+      ctx.beginPath()
+      ctx.arc(w / 2, h * (0.55 + 0.07 * (1 - f)), Math.max(0, f * 0.78 * Math.max(w, h)), 0, TAU)
+      ctx.fill()
+      ctx.globalCompositeOperation = "source-over"
+    }
   }
 
   /* Dessin. Séparé du chargement : il doit pouvoir se relancer au
@@ -642,6 +703,25 @@ function VoitureSequence() {
     if (reduit || !pretes || tenue.current || roule.current) return
     peindre(i)
     veille(i)
+  })
+
+  /* L'iris suit le ressort : AU PLUS UN repeint par frame, et
+     seulement quand la fraction change — au repos comme passé la
+     mi-course, zéro travail (les deux bouts de la rampe se figent).
+     Sous reduce : rien, l'engloutissement est un mouvement que le
+     défilement cause. Pendant un geste, la main peint déjà : l'iris
+     s'appliquera à son dessin. */
+  useMotionValueEvent(lisse, "change", (v) => {
+    if (reduit || !pretes) return
+    const f = v <= 0.03 ? 1 : v >= 0.22 ? 0 : 1 - (v - 0.03) / 0.19
+    if (f === irisRef.current) return
+    irisRef.current = f
+    if (tenue.current || roule.current) return
+    if (irisPrevu.current) return
+    irisPrevu.current = requestAnimationFrame(() => {
+      irisPrevu.current = 0
+      peindre(index.get(), true)
+    })
   })
 
   /* ── LA SAISIE (#12) ──────────────────────────────────────────────
@@ -811,7 +891,9 @@ function VoitureSequence() {
       const fini = () => {
         inertie = 0
         roule.current = false
-        decalage.set(offsetAuRelachement(azimut, lisse.get(), { nb: NB, pose: POSE, tours: TOURS }))
+        /* le scroll ne dicte plus d'azimut (l'envol a remplacé la
+           rotation) : l'offset EST le cran posé, sans terme de ressort */
+        decalage.set(offsetAuRelachement(azimut, 0, { nb: NB, pose: POSE, tours: TOURS }))
         if (enGl) {
           c2d.style.visibility = "visible"
           toileGl.current!.style.visibility = "hidden"
@@ -965,7 +1047,7 @@ function VoitureSequence() {
          MotionValues d'un même `style` en un seul transform : il n'y a
          rien à se disputer, et surtout pas un ancêtre transformé de plus
          devant un `position: fixed`. */
-      style={{ rotate: assiette, y: derive, opacity: fondu }}
+      style={{ rotate: assiette, y: yTotal, opacity: fondu }}
     >
       <canvas ref={canvas} className="voiture-toile" />
       {/* La toile du régime drag (#12) : même cadre, même dosage,
