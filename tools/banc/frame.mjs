@@ -383,6 +383,27 @@ async function passe(n) {
     await pause(1500)                       // échauffement : polices, images, hydratation
     const repos = await mesure(cdp, 1500)
 
+    if (opt["drag-main"]) {
+      /* La VRAIE main mesure ce que l'injection ne peut pas : un vrai
+         geste traverse le compositeur et tient la cadence (#11), là où
+         un mousemove réel sur une fenêtre en pleine injection CDP
+         relâche le drag (le garde anti-prise-fantôme). Ici le banc ne
+         touche pas à la souris : il chronomètre la main de Hugo. */
+      const duree = +(opt["drag-main"] === "1" ? 60 : opt["drag-main"]) * 1000
+      console.log(`\n  À TOI : saisis la voiture et joue avec pendant ${duree / 1000} s (drag, relâchés, inertie, élévation)…`)
+      const main = await mesure(cdp, duree)
+      const gpu = JSON.parse(await cdp.evalue(`JSON.stringify({
+        geometries: document.querySelector('.voiture')?.dataset.glGeometries ?? null,
+        textures: document.querySelector('.voiture')?.dataset.glTextures ?? null,
+      })`))
+      const promu = await cdp.evalue("document.querySelector('.voiture')?.dataset.regime === 'gl'")
+      console.log(`  passe ${n} — plancher ${r2(plancher)} ms${melange ? " (MÉLANGE)" : ""} · ${main.couts.length} frames à la main · régime ${promu ? "WebGL" : "séquence (pas de promotion ?)"} · GPU ${gpu.geometries} géométries, ${gpu.textures} textures`)
+      /* Les intervalles PENDANT le geste réel valent aussi relevé : ils
+         disent si la vraie main tient la cadence de l'écran. */
+      console.log(`            intervalle pendant le geste p50/p90 : ${r2(pct(main.intervalles, 50))} / ${r2(pct(main.intervalles, 90))} ms`)
+      return { plancher, melange, env, repos: main, scroll: main, drag: main, gpu }
+    }
+
     if (opt.drag) {
       /* Premier geste : l'AMORCE — déclenche le chunk et le .glb,
          pilote la séquence. Non mesurée : c'est le régime WebGL qu'on
