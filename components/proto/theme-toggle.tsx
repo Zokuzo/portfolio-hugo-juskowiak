@@ -13,8 +13,25 @@ export function ThemeToggle({ lang }: { lang: Lang }) {
   const [clair, setClair] = useState<boolean | null>(null)
   useEffect(() => {
     setClair(document.documentElement.classList.contains("clair"))
+    /* Décision (c) : tant que la main n'a pas choisi, l'OS décide —
+       Y COMPRIS en cours de session. Dès qu'un choix est mémorisé,
+       ce suiveur se tait. */
+    const mq = window.matchMedia("(prefers-color-scheme: light)")
+    const suit = (e: MediaQueryListEvent) => {
+      try {
+        if (localStorage.getItem("theme")) return
+      } catch {}
+      setClair(e.matches)
+      document.documentElement.classList.toggle("clair", e.matches)
+      window.dispatchEvent(new Event("themechange"))
+    }
+    mq.addEventListener("change", suit)
+    return () => mq.removeEventListener("change", suit)
   }, [])
   const choisit = (v: boolean) => () => {
+    /* re-cliquer le thème déjà actif ne fait RIEN : dispatcher quand
+       même remonterait la voiture (refenêtrage ~660 Ko) pour un no-op */
+    if (v === clair) return
     setClair(v)
     document.documentElement.classList.toggle("clair", v)
     /* localStorage et pas un cookie : le site est statique, seul le

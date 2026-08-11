@@ -1733,7 +1733,9 @@ html.clair body {
 }
 
 /* Les jumelles du §6b — chaque valeur d'encre-sur-papier reprend la
-   densité de sa sœur papier-sur-encre. */
+   densité de sa sœur papier-sur-encre. (Base AVANT jumelle, toujours :
+   floor-grid :458, p-dust :555, p-scrim :567, node.on :1389 — toutes
+   plus haut que ce bloc, l'ordre les sert.) */
 :where(html.clair) .floor-grid {
   --floor-line: rgba(23, 27, 46, 0.42);
 }
@@ -1751,37 +1753,21 @@ html.clair body {
 :where(html.clair) .node.on .chip {
   fill: rgba(23, 27, 46, 0.16);
 }
-/* l'escalier de la télémétrie garde ses rapports */
-:where(html.clair) .tel-b0 {
-  fill: rgba(7, 8, 11, 0.022);
-}
-:where(html.clair) .tel-b1 {
-  fill: rgba(7, 8, 11, 0.045);
-}
-:where(html.clair) .tel-b2 {
-  fill: rgba(7, 8, 11, 0.07);
-}
-/* les traits des arcs (t3 suit --line tout seul) */
+/* les traits des arcs (t3 suit --line tout seul) — parité de densité
+   composite mesurée : 1,426/1,31 contre 1,429/1,307 en sombre, gatée
+   par contrastes.mjs */
 :where(html.clair) .arcs-t1 {
-  stroke: rgba(23, 27, 46, 0.28);
+  stroke: rgba(23, 27, 46, 0.175);
 }
 :where(html.clair) .arcs-t2 {
-  stroke: rgba(23, 27, 46, 0.23);
+  stroke: rgba(23, 27, 46, 0.135);
 }
 
-/* Une carrosserie blanche sur papier s'efface à 0,72 : le dosage
-   clair remonte — CANDIDAT, gate Hugo à l'œil. Les deux toiles
-   ensemble : la bascule drag doit rester invisible aussi en clair. */
-:where(html.clair) .voiture-toile,
-:where(html.clair) .voiture-toile-gl {
-  opacity: 0.85;
-}
-@media (max-width: 720px) {
-  :where(html.clair) .voiture-toile,
-  :where(html.clair) .voiture-toile-gl {
-    opacity: 0.62;
-  }
-}
+/* Les jumelles claires de la TÉLÉMÉTRIE et de la VOITURE ne sont pas
+   ici : leurs règles de base vivent plus BAS dans le fichier, et une
+   jumelle :where() (0,1,0) placée avant sa base (0,1,0) perd la
+   cascade par ordre — mesuré à la revue du chantier. Chacune est
+   posée immédiatement APRÈS sa règle de base. */
 
 /* On épaissit et on éclaircit les NEUTRES ; on ne touche jamais à la
    saturation des deux rouges. */
@@ -1838,6 +1824,14 @@ html.clair body {
   /* CanvasText et non LinkText : le relevé d'un axe n'est pas un lien */
   .t-axis text {
     fill: CanvasText;
+  }
+  /* Le cumul clair + forced-colors (#13) : la surcharge claire des
+     cartouches (0,2,0) battrait ce bloc et écrirait en Highlight sur
+     Canvas — une paire qu'aucune palette système ne garantit. Ici,
+     et le système reprend la main dans les deux thèmes. */
+  .ref,
+  .count {
+    color: CanvasText;
   }
   /* la lumière disparaît — elle ne portait aucune information */
   .p-void {
@@ -3158,6 +3152,18 @@ html.clair body {
 .tel-b2 {
   fill: rgba(226, 232, 240, 0.07);
 }
+/* Les jumelles claires vivent ICI et pas dans le bloc thème : une
+   jumelle :where() (0,1,0) placée avant sa base (0,1,0) perdrait la
+   cascade par ordre. L'escalier d'encre garde ses rapports. */
+:where(html.clair) .tel-b0 {
+  fill: rgba(7, 8, 11, 0.022);
+}
+:where(html.clair) .tel-b1 {
+  fill: rgba(7, 8, 11, 0.045);
+}
+:where(html.clair) .tel-b2 {
+  fill: rgba(7, 8, 11, 0.07);
+}
 .tel-sep {
   stroke: var(--line);
   stroke-width: 1;
@@ -4147,6 +4153,21 @@ html.clair body {
   .voiture-toile,
   .voiture-toile-gl {
     opacity: 0.5;
+  }
+}
+
+/* Le dosage CLAIR vit ICI, après les règles de base : une jumelle
+   :where() placée avant perdrait la cascade par ordre (mesuré à la
+   revue #13). Une carrosserie blanche sur papier s'efface à 0,72 :
+   le dosage remonte — CANDIDAT, gate Hugo à l'œil. */
+:where(html.clair) .voiture-toile,
+:where(html.clair) .voiture-toile-gl {
+  opacity: 0.85;
+}
+@media (max-width: 720px) {
+  :where(html.clair) .voiture-toile,
+  :where(html.clair) .voiture-toile-gl {
+    opacity: 0.62;
   }
 }
 

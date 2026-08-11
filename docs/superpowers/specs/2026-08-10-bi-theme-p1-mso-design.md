@@ -135,7 +135,7 @@ Ratios calculés, au chiffre près :
 
 | Jeton clair | Candidat | Ratio | Rôle et seuil |
 |---|---|---|---|
-| `--sig-hot` | `#0080e7` (le bleu du modèle, tel quel) | 3,520 sur papier · 4,821 sur carbone | marque d'état non textuelle, seuil 3:1 (WCAG 1.4.11) — passe sur les deux substrats |
+| `--sig-hot` | `#0080e7` (le bleu du modèle, tel quel) | 3,520 sur papier · 4,999 sur carbone (4,821 à l'origine était calculé contre un mauvais carbone — corrigé à l'implémentation, `contrastes.mjs` fait foi) | marque d'état non textuelle, seuil 3:1 (WCAG 1.4.11) — passe sur les deux substrats |
 | `--sig` | `#0066b7` (le même bleu, assombri à iso-teinte) | 5,148 sur papier | texte accentué, seuil 4,5:1 — parité avec les 5,169 du rouge |
 | `--sig-dim` | `#a4ccea` | 1,488 sur papier · dim→hot 2,366 | le lit anti-vibration, parité avec 1,491 |
 | `--sig-ember` | `#f0efec` | 1,010 sur papier | la braise : chaleur sans couleur, parité avec 1,011 |

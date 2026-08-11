@@ -72,7 +72,7 @@ export default function RootLayout({
             aujourd'hui) — le thème vit sur `clair`. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{var t=localStorage.getItem("theme");if(t?t==="clair":matchMedia("(prefers-color-scheme: light)").matches)document.documentElement.classList.add("clair")}catch(e){}`,
+            __html: `var t=null;try{t=localStorage.getItem("theme")}catch(e){}try{if(t?t==="clair":matchMedia("(prefers-color-scheme: light)").matches)document.documentElement.classList.add("clair")}catch(e){}`,
           }}
         />
       </head>

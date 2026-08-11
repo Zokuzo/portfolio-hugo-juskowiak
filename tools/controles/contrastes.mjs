@@ -75,6 +75,8 @@ const GATES = [
   ["--line-3 composite parité 2,642 (~2,641)", "rgba(23,27,46,0.43)", PAPER, 2.59, 2.69],
   ["--sig-rail composite (~1,446)", "rgba(0,128,231,0.30)", PAPER, 1.40, 1.50],
   ["--sig-veil composite (~1,151)", "rgba(0,102,183,0.10)", PAPER, 1.10, 1.20],
+  ["arcs-t1 clair parité 1,429 (~1,426)", "rgba(23,27,46,0.175)", PAPER, 1.38, 1.48],
+  ["arcs-t2 clair parité 1,307 (~1,31)", "rgba(23,27,46,0.135)", PAPER, 1.26, 1.36],
   ["focus carbone sur papier (≥ 3)", INK, PAPER, 3, null],
   ["focus carbone sur bleu vif (≥ 3)", INK, "#0080e7", 3, null],
   ["::selection papier-clair sur --sig (≥ 4,5)", PAPER, "#0066b7", 4.5, null],
