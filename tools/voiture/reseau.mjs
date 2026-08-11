@@ -3,7 +3,11 @@
    Rechargement + défilement complet sans drag : zéro requête vers le
    chunk du régime drag et le .glb. Sous --reduce : le montage ne
    charge qu'UNE image de la séquence (voiture.tsx, veille).
-   usage : node tools/voiture/reseau.mjs <url> [--tete] [--reduce]
+   Depuis #13, chaque thème a SA séquence : --clair force le thème
+   clair (localStorage posé avant la première peinture) et le gate
+   vérifie la non-CONTAMINATION — en clair, zéro requête vers la
+   séquence racine ; en sombre, zéro vers clair/.
+   usage : node tools/voiture/reseau.mjs <url> [--tete] [--reduce] [--clair]
    ================================================================== */
 import { lanceChrome, attends, pause } from "../chrome.mjs"
 
@@ -37,6 +41,13 @@ try {
       features: [{ name: "prefers-reduced-motion", value: "reduce" }],
     })
   }
+  if (opt.clair) {
+    /* posé AVANT la première peinture, comme le ferait un visiteur qui
+       a déjà choisi — le script anti-FOUC de layout.tsx fait le reste */
+    await cdp.envoie("Page.addScriptToEvaluateOnNewDocument", {
+      source: 'try{localStorage.setItem("theme","clair")}catch(e){}',
+    })
+  }
   await cdp.envoie("Page.navigate", { url: URL_ })
   await attends(async () => await cdp.evalue("document.readyState === 'complete'"), 30000, "chargement de " + URL_)
   await pause(2500) // hydratation, polices, veille du montage
@@ -65,7 +76,10 @@ try {
   const toutes = entrees.map((e) => e.n)
   const nouvelles = entrees.slice(avant)
   const glb = toutes.filter((u) => u.includes(".glb") || u.includes("/voiture/draco/"))
-  const sequence = toutes.filter((u) => /\/voiture\/\d{3}\.webp/.test(u))
+  const racine = toutes.filter((u) => /\/voiture\/\d{3}\.webp/.test(u))
+  const claire = toutes.filter((u) => /\/voiture\/clair\/\d{3}\.webp/.test(u))
+  const sequence = opt.clair ? claire : racine
+  const etrangere = opt.clair ? racine : claire
   /* Next préfetch les chunks de route quand leurs liens entrent au
      viewport pendant le défilement (mesuré : /work/[slug], 17 Ko) —
      c'est un comportement préexistant, pas le régime drag. On ne
@@ -79,6 +93,8 @@ try {
   let echec = false
   if (glb.length) { console.log(`✗ ${glb.length} requête(s) vers le .glb ou le décodeur sans drag — ${glb[0]}`); echec = true }
   else console.log("✓ zéro requête vers le .glb ou le décodeur Draco")
+  if (etrangere.length) { console.log(`✗ ${etrangere.length} requête(s) vers la séquence de L'AUTRE thème — ${etrangere[0]}`); echec = true }
+  else console.log(`✓ aucune contamination : la séquence ${opt.clair ? "sombre" : "claire"} n'est pas touchée`)
   if (opt.reduce) {
     if (sequence.length === 1) console.log("✓ sous reduce : une seule image de la séquence au montage")
     else { console.log(`✗ sous reduce : ${sequence.length} images chargées au lieu d'une`); echec = true }

@@ -41,7 +41,10 @@ import { azimutVersIndex, offsetAuRelachement } from "./geste.mjs"
    ───────────────────────────────────────────────────────────────── */
 const SEQUENCE_LIVREE = true
 
-const SRC = (i: number) => `/voiture/${String(i).padStart(3, "0")}.webp`
+/* Chaque thème a SA séquence (#13) : la sombre à la racine, la MSO
+   claire dans clair/ — et chaque thème ne télécharge que la sienne,
+   propriété acquise : tout part d'un fetch à la demande. */
+const SRC = (i: number, clair: boolean) => `/voiture/${clair ? "clair/" : ""}${String(i).padStart(3, "0")}.webp`
 
 /* Le canvas est plafonné à 1,5× le CSS et non au devicePixelRatio réel :
    sur un écran 3×, une toile de 3000px coûterait trois fois plus de
@@ -181,7 +184,21 @@ const AMORTI = 0.94      // décroissance de l'inertie par frame — coupée sou
 const RETOUR_ELEV = 0.8  // fraction d'écart d'élévation restante par frame au retour
 const INTERACTIFS = "a,button,input,textarea,select,summary,label,[contenteditable],[role=button]"
 
+/* Le wrapper exporté : la bascule de thème REMONTE la séquence par la
+   clé — le démontage ferme déjà tous les bitmaps et détruit la scène
+   GL (acquis de #12), le remontage lit le thème frais. Coût d'une
+   bascule : le refenêtrage, ~660 Ko. */
 export function Voiture() {
+  const [cle, setCle] = useState(0)
+  useEffect(() => {
+    const f = () => setCle((c) => c + 1)
+    window.addEventListener("themechange", f)
+    return () => window.removeEventListener("themechange", f)
+  }, [])
+  return <VoitureSequence key={cle} />
+}
+
+function VoitureSequence() {
   const canvas = useRef<HTMLCanvasElement>(null)
   const conteneur = useRef<HTMLDivElement>(null)
   const toileGl = useRef<HTMLCanvasElement>(null)
@@ -194,6 +211,12 @@ export function Voiture() {
   const [pretes, setPretes] = useState(false)
   const [absente, setAbsente] = useState(false)
   const reduit = useReducedMotion()
+  /* Le thème au MONTAGE, une fois — la bascule à mi-session remonte le
+     composant par la clé du wrapper, qui relit. Lazy initializer :
+     l'état ne sert qu'aux fetches, jamais au HTML, donc pas d'écart
+     d'hydratation (le serveur rend false, le client aussi au premier
+     rendu... côté client la valeur est lue AVANT le premier fetch). */
+  const [clair] = useState(() => typeof document !== "undefined" && document.documentElement.classList.contains("clair"))
 
   const { scrollY } = useScroll()
 
@@ -417,7 +440,7 @@ export function Voiture() {
   const charge = (i: number) => {
     if (bitmaps.current[i] || enVol.current.has(i) || perdues.current.has(i)) return
     enVol.current.add(i)
-    fetch(SRC(i))
+    fetch(SRC(i, clair))
       /* On distingue « le fichier n'existe pas » de « ça n'a pas marché ».
          Rejeter tout statut non-ok sous le même nom faisait traiter un 503
          — un redémarrage de serveur, une purge de CDN — comme un 404 : la

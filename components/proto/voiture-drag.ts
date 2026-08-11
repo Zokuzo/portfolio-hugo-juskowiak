@@ -20,14 +20,15 @@
 import * as THREE from "three"
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js"
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js"
-import { studio, retouches, regleRenderer, prepareModele, appliqueRetouches, placeCamera,
+import { studio, studioClair, retouches, retouchesClair, regleRenderer, prepareModele, appliqueRetouches, placeCamera,
          FOV, FLOU_PMREM, INTENSITE_ENV } from "../../tools/voiture/studio.mjs"
 
 /* Le cadre de recadrage de la séquence en production — l'union des
    pixels opaques sur les 160 vues, IRREJOUABLE ici (CREDIT.txt,
    campagne du 2026-08-11). Appliqué au viewport de la caméra : sans
    lui la voiture serait à la bonne pose mais pas à la bonne place
-   dans la toile. */
+   dans la toile. Même géométrie, même caméra : le cadre CLAIR mesuré
+   à la campagne du même jour est identique. */
 export const CADRE = { x: 0.14017, y: 0.16378, c: 0.71967 }
 
 const MODELE = "/voiture/modele-web.glb"
@@ -58,11 +59,17 @@ export async function creeScene(toile: HTMLCanvasElement, surPerte?: () => void)
   renderer.setPixelRatio(1) // les pixels sont gérés par taille(), comme la toile 2D
   regleRenderer(THREE, renderer)
 
+  /* Le thème AU MOMENT DE LA CRÉATION : la scène vit avec le
+     composant, et la bascule le remonte (#13) — studio clair et
+     livrée MSO d'origine en plein jour, sinon la saisie montrerait
+     la voiture carbone sur la séquence claire. */
+  const clair = document.documentElement.classList.contains("clair")
+
   const scene = new THREE.Scene()
   scene.background = null
   const camera = new THREE.PerspectiveCamera(FOV, 1, 0.01, 5000)
   const pmrem = new THREE.PMREMGenerator(renderer)
-  scene.environment = pmrem.fromScene(studio(THREE), FLOU_PMREM).texture
+  scene.environment = pmrem.fromScene(clair ? studioClair(THREE) : studio(THREE), FLOU_PMREM).texture
   scene.environmentIntensity = INTENSITE_ENV
   const voiture = new THREE.Group()
   scene.add(voiture)
@@ -80,7 +87,7 @@ export async function creeScene(toile: HTMLCanvasElement, surPerte?: () => void)
     return null
   }
   const rayon = prepareModele(THREE, gltf.scene)
-  appliqueRetouches(gltf.scene, retouches())
+  appliqueRetouches(gltf.scene, clair ? retouchesClair() : retouches())
   voiture.add(gltf.scene)
 
   camera.setViewOffset(1, 1, CADRE.x, CADRE.y, CADRE.c, CADRE.c)

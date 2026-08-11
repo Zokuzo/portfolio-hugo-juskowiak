@@ -1769,6 +1769,20 @@ html.clair body {
   stroke: rgba(23, 27, 46, 0.23);
 }
 
+/* Une carrosserie blanche sur papier s'efface à 0,72 : le dosage
+   clair remonte — CANDIDAT, gate Hugo à l'œil. Les deux toiles
+   ensemble : la bascule drag doit rester invisible aussi en clair. */
+:where(html.clair) .voiture-toile,
+:where(html.clair) .voiture-toile-gl {
+  opacity: 0.85;
+}
+@media (max-width: 720px) {
+  :where(html.clair) .voiture-toile,
+  :where(html.clair) .voiture-toile-gl {
+    opacity: 0.62;
+  }
+}
+
 /* On épaissit et on éclaircit les NEUTRES ; on ne touche jamais à la
    saturation des deux rouges. */
 @media (prefers-contrast: more) {
