@@ -33,6 +33,19 @@ const DICT = {
     fr: "Ingénieur Full Stack & IA",
     en: "Full Stack & AI Engineer",
   },
+  /* l'interrupteur de thème (#13) — le jumeau du langtoggle */
+  themeLabel: {
+    fr: "Thème / Theme",
+    en: "Thème / Theme",
+  },
+  themeSombre: {
+    fr: "NUIT",
+    en: "DARK",
+  },
+  themeClair: {
+    fr: "JOUR",
+    en: "LIGHT",
+  },
   status: {
     fr: "En poste · France",
     en: "Employed · France",

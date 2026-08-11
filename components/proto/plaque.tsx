@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react"
 import { motion, useMotionValue, useReducedMotion, useScroll, useTransform, type MotionValue } from "motion/react"
 import type { Lang } from "./dict"
 import { t } from "./dict"
+import { ThemeToggle } from "./theme-toggle"
 
 /* Le code-barres est décoratif : une suite de barres stable, pas un
    vrai EAN. Motif figé en dur pour qu'il soit identique serveur et
@@ -173,6 +174,7 @@ export function Plaque({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => vo
                 EN
               </button>
             </div>
+            <ThemeToggle lang={lang} />
           </div>
         </motion.header>
 
