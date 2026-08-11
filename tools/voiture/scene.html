@@ -19,6 +19,13 @@
 import * as THREE from "three"
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js"
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js"
+import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js"
+/* Le studio, les retouches et la mise en place viennent du module
+   PARTAGÉ avec le client (chantier #12) — servi par l'alias de
+   rendu.mjs. Il n'y a plus qu'un studio, et ses commentaires de
+   doctrine ont déménagé avec lui. */
+import { studio, retouches, regleRenderer, prepareModele, appliqueRetouches, placeCamera,
+         FOV as FOV_DEFAUT, FLOU_PMREM, CARROSSERIE, RUGOSITE } from "/studio.mjs"
 
 const P = new URLSearchParams(location.search)
 const n      = (k, d) => { const v = P.get(k); return v === null ? d : +v }
@@ -26,102 +33,26 @@ const MODELE = P.get("modele")
 const NB     = n("nb", 60)
 const RENDU  = n("rendu", 2000)     // on rend grand pour redescendre : c'est l'antialiasing le moins cher
 const SORTIE = n("sortie", 1000)
-const FOV    = n("fov", 22)
-const ELEV   = n("elevation", 13)   // degrés au-dessus de l'horizon
+const FOV    = n("fov", FOV_DEFAUT)
+const ELEV   = n("elevation", 13)   // degrés au-dessus de l'horizon (la production passe 30)
 const DEPART = n("depart", 0)       // azimut de l'image 000
 const SENS   = n("sens", 1)
 const ENV    = n("env", 1)
 const MARGE  = n("marge", 1.02)     // respiration autour du cadrage automatique
-const CARRO  = P.get("carrosserie") || "0b0e14"      // hex de la carrosserie
-/* 0,08 et non les 0,14 de la GT86. La GT86 tenait sa brillance de ses
-   chromes et de ses jantes argent ; la P1 MSO n'a que du carbone mat et
-   des jantes noires, et à 0,14 les neuf bandes s'y étalaient en nappe
-   grise au lieu de dessiner un trait. Mesuré sur le rendu d'essai à 8
-   vues : le p99 de luminance des pixels opaques passe de 93 à 120 sur
-   `000` et de 120 à 138 sur `007`, pendant que la médiane DESCEND de 12,0
-   à 9,4 — plus de noir ET plus de trait, c'est-à-dire du galbe. */
-const RUGO   = n("rugosite", 0.08)
-
-/* ── RETOUCHES MATÉRIAUX ──────────────────────────────────────────
-   Propres au modèle McLaren P1 MSO de bohmerang. Contrairement à la
-   GT86, le .glb arrive TEXTURÉ (34 textures) : on ne recolore que les
-   matériaux de couleur pure qui portent la livrée. La carrosserie
-   blanche et l'accent bleu MSO passent au carbone sombre parce que le
-   système du site est mono-accent : le bleu y serait une teinte
-   étrangère, et une carrosserie blanche un phare derrière le titre.
-   La livrée MSO d'origine est réservée au futur thème clair.
-   Aucun des trois matériaux ci-dessous ne porte de texture — les 34
-   textures du modèle restent donc toutes intactes. Si on change de
-   modèle, on réécrit ce tableau, c'est le seul endroit.
-   ───────────────────────────────────────────────────────────────── */
-const RETOUCHES = {
-  "WhitePaintjob": { couleur: CARRO,    metal: 0.90, rugo: RUGO, vernis: 1 },
-  "Blue":          { couleur: "121317", metal: 0.30, rugo: 0.45 }, // accent MSO neutralisé
-  "Glass":         { couleur: "04060a", metal: 0.00, rugo: 0.06 }, // vitrage teinté, même geste que la GT86
-}
+const CARRO  = P.get("carrosserie") || CARROSSERIE
+const RUGO   = n("rugosite", RUGOSITE)
 
 const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true })
 renderer.setPixelRatio(1)
-renderer.setClearAlpha(0)
-renderer.outputColorSpace = THREE.SRGBColorSpace
-renderer.toneMapping = THREE.ACESFilmicToneMapping
-renderer.toneMappingExposure = 1
+regleRenderer(THREE, renderer)
 document.body.appendChild(renderer.domElement)
 
 const scene = new THREE.Scene()
 scene.background = null          // le fond transparent, c'est tout l'intérêt du format
 const camera = new THREE.PerspectiveCamera(FOV, 1, 0.01, 5000)
 
-/* ── STUDIO SOMBRE ────────────────────────────────────────────────
-   Pas d'HDRI téléchargée : une boîte noire et quelques bandes
-   lumineuses suffisent, et c'est exactement ce qu'on veut. Ce qui
-   fait lire le chrome, ce n'est pas la quantité de lumière, c'est le
-   CONTRASTE entre des bandes très claires et un noir profond : une
-   arête ne se voit que si elle a une bande à réfléchir. Une lumière
-   diffuse remplirait la carrosserie d'un gris uniforme et effacerait
-   précisément ce qu'on cherche.
-   ───────────────────────────────────────────────────────────────── */
-function studio() {
-  const s = new THREE.Scene()
-  s.add(new THREE.Mesh(
-    new THREE.BoxGeometry(40, 24, 40),
-    new THREE.MeshBasicMaterial({ color: 0x04060a, side: THREE.BackSide })
-  ))
-  const bande = (w, h, pos, rot, force) => {
-    const m = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide })
-    m.color.multiplyScalar(force)  // >1 : on alimente le PMREM en valeurs HDR
-    const p = new THREE.Mesh(new THREE.PlaneGeometry(w, h), m)
-    p.position.set(...pos); p.rotation.set(...rot); s.add(p)
-  }
-  const H = Math.PI / 2
-  /* Les bandes sont FINES et HAUTES, et c'est tout le réglage. Une bande
-     large se reflète en nappe : elle noie le capot et le pare-brise d'un
-     dégradé blanc et efface le galbe, exactement ce qu'on ne veut pas.
-     Une bande fine se reflète en TRAIT, qui suit l'arête et la dessine.
-     Trop fine en revanche (moins de ~3° vus du sujet) elle passe sous la
-     résolution du cube PMREM et se met à scintiller d'une image à
-     l'autre — d'où ces largeurs-là et pas moins. */
-  bande(0.8, 30, [    0, 12.0,  0], [ H,  0, 0], 9)
-  bande(0.6, 28, [-3.4, 12.0,  0], [ H,  0, 0], 6)
-  bande(0.6, 28, [ 3.4, 12.0,  0], [ H,  0, 0], 6)
-  // Flancs : le trait qui court le long de la caisse et détache l'épaule.
-  bande(0.9, 30, [-9.5, 2.6,  0], [ 0,  H, 0], 8)
-  bande(0.9, 30, [ 9.5, 2.6,  0], [ 0, -H, 0], 8)
-  /* Deux traits bas, et RAPPROCHÉS. Sans eux les bas de caisse, les
-     pneus et les jantes tombent dans le noir : la voiture se lit comme
-     une masse coupée aux genoux. Rapprochés parce que ce qui compte
-     n'est pas la puissance mais la taille angulaire vue du sujet — une
-     bande lointaine, même forte, n'éclaire qu'un liseré. */
-  bande(1.1, 30, [-7.0, 0.35, 0], [ 0,  H, 0], 7)
-  bande(1.1, 30, [ 7.0, 0.35, 0], [ 0, -H, 0], 7)
-  // Fond et face : décollent la silhouette du noir de profil.
-  bande(16, 0.7, [ 0, 3.0, -12], [0, 0, 0], 3)
-  bande(16, 0.7, [ 0, 3.0,  12], [0, Math.PI, 0], 3)
-  return s
-}
-
 const pmrem = new THREE.PMREMGenerator(renderer)
-scene.environment = pmrem.fromScene(studio(), 0.02).texture
+scene.environment = pmrem.fromScene(studio(THREE), FLOU_PMREM).texture
 scene.environmentIntensity = ENV
 // Aucune lumière ajoutée : tout vient de l'environnement. C'est ce qui
 // garantit qu'il n'y a ni ombre au sol ni éclairage diffus.
@@ -136,6 +67,7 @@ const loader = new GLTFLoader()
 const draco = new DRACOLoader()
 draco.setDecoderPath("https://unpkg.com/three@0.169.0/examples/jsm/libs/draco/gltf/")
 loader.setDRACOLoader(draco)
+loader.setMeshoptDecoder(MeshoptDecoder)   // le .glb optimisé arrive compressé meshopt (#12)
 
 function pose(i) {
   voiture.rotation.y = THREE.MathUtils.degToRad(DEPART + SENS * i * 360 / NB)
@@ -196,55 +128,10 @@ window.rendreFrame = (i) => {
 loader.load(MODELE, (gltf) => {
   const m = gltf.scene
   voiture.add(m)
-
-  /* Normaliser l'échelle D'ABORD : les modèles arrivent en mètres, en
-     pouces ou en rien du tout, et on ramène tout à 4 unités de long.
-     L'ORDRE COMPTE. `position` s'applique dans l'espace du parent tandis
-     que `scale` s'applique à la géométrie : recentrer avant de mettre à
-     l'échelle décale d'un facteur (k-1) et envoie la voiture hors cadre.
-     On mesure donc la boîte une seconde fois, après mise à l'échelle. */
-  const t0 = new THREE.Box3().setFromObject(m).getSize(new THREE.Vector3())
-  m.scale.setScalar(4 / Math.max(t0.x, t0.y, t0.z))
-  m.updateMatrixWorld(true)
-
-  // Recentrer sur l'origine : c'est l'axe de rotation. Un modèle décentré
-  // décrirait un cercle au lieu de pivoter.
-  const boite = new THREE.Box3().setFromObject(m)
-  m.position.sub(boite.getCenter(new THREE.Vector3()))
-  m.updateMatrixWorld(true)
-  const rayon = boite.getBoundingSphere(new THREE.Sphere()).radius
-
-  m.traverse((o) => {
-    if (!o.isMesh) return
-    o.frustumCulled = false
-    for (const mat of (Array.isArray(o.material) ? o.material : [o.material])) {
-      if (!mat) continue
-      materiaux.push({ mesh: o.name, mat: mat.name, type: mat.type })
-      if (!mat.isMeshStandardMaterial) continue
-      mat.envMapIntensity = 1
-      const r = RETOUCHES[mat.name]
-      if (!r) continue
-      /* Vider la texture est OPT-IN : d'office, recolorer un matériau
-         texturé détruirait sa texture — la GT86 n'en avait aucune, la
-         P1 en a 34. `masquer` éteint un matériau entier (les Decals
-         d'une livrée qu'on ne garde pas) sans toucher à la géométrie. */
-      if (r.couleur !== undefined) { mat.color.setHex(parseInt(r.couleur, 16)); if (r.sansTexture) mat.map = null }
-      if (r.masquer) mat.visible = false
-      if (r.metal !== undefined) mat.metalness = r.metal
-      if (r.rugo !== undefined) mat.roughness = r.rugo
-      if (r.vernis !== undefined && "clearcoat" in mat) { mat.clearcoat = r.vernis; mat.clearcoatRoughness = 0.04 }
-    }
-  })
+  const rayon = prepareModele(THREE, m)
+  materiaux = appliqueRetouches(m, retouches({ carrosserie: CARRO, rugosite: RUGO }))
   window.materiaux = materiaux
-
-  // Placement caméra : la sphère englobante rentre dans le champ, puis le
-  // recadrage se charge du reste.
-  const d = (rayon / Math.sin(THREE.MathUtils.degToRad(FOV / 2))) * 1.25
-  const e = THREE.MathUtils.degToRad(ELEV)
-  camera.position.set(0, Math.sin(e) * d, Math.cos(e) * d)
-  camera.lookAt(0, 0, 0)
-  camera.updateProjectionMatrix()
-
+  placeCamera(THREE, camera, rayon, ELEV)
   cadre = mesure(360)
   window.cadre = cadre
   window.pret = true

@@ -106,6 +106,7 @@ const MIME = {
   ".html": "text/html", ".glb": "model/gltf-binary", ".gltf": "model/gltf+json",
   ".bin": "application/octet-stream", ".png": "image/png", ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg", ".webp": "image/webp", ".ktx2": "image/ktx2",
+  ".mjs": "text/javascript",   // le studio partagé est un module ES : sans ce MIME, Chrome refuse l'import
 }
 /* On sert la page ET tout le dossier du modèle. Sketchfab livre du glTF
    éclaté — scene.gltf, scene.bin, textures/ — et le loader va chercher
@@ -135,7 +136,7 @@ function servir(alias, dossier) {
 async function main() {
   /* L'encodeur se cherche AVANT le rendu : découvrir qu'il manque après
      quarante minutes de calcul 3D serait une mauvaise plaisanterie. */
-  if (!opt.materiaux) { ENCODEUR = await trouveEncodeur(); console.log("encodeur :", ENCODEUR) }
+  if (!opt.materiaux && !opt.cadre) { ENCODEUR = await trouveEncodeur(); console.log("encodeur :", ENCODEUR) }
 
   // Reprise : les PNG existent déjà, on ne refait que l'encodage.
   if (opt.depuis) return encodeTout(path.resolve(opt.depuis))
@@ -144,7 +145,7 @@ async function main() {
   if (!existsSync(glb)) throw new Error("modèle introuvable : " + glb)
 
   const srv = await servir(
-    { "/scene.html": path.join(ICI, "scene.html") },
+    { "/scene.html": path.join(ICI, "scene.html"), "/studio.mjs": path.join(ICI, "studio.mjs") },
     path.dirname(glb)
   )
   const port = srv.address().port
@@ -187,6 +188,12 @@ async function main() {
 
     const cadre = await cdp.evalue("JSON.stringify(window.cadre)")
     console.log("cadrage commun :", cadre)
+
+    /* --cadre : consignation seule. Le cadre vient d'être imprimé —
+       c'est l'union des pixels opaques sur les NB vues, irrejouable au
+       client (spec #12, décision 4) : ce mode le relève sans payer le
+       rendu ni l'encodage. */
+    if (opt.cadre) return
 
     /* Le dossier des PNG intermédiaires est nommé lui aussi d'après le
        port. Il était partagé, et comme on le VIDE au démarrage, lancer
