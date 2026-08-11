@@ -3880,6 +3880,31 @@ body {
   opacity: 0.72;
 }
 
+/* La seconde toile du régime drag (#12) : même cadre, même dosage,
+   échangée SEC avec la toile 2D à la saisie — le fondu croisé a été
+   rejeté au côte-à-côte du 2026-08-10, il dédouble les arêtes.
+   `visibility` et non `display` : l'échange ne doit pas invalider la
+   mise en page en plein geste. Jamais montrée sans pointeur fin. */
+.voiture-toile-gl {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  visibility: hidden;
+  opacity: 0.72; /* le même dosage que la toile 2D : deux toiles, un seul retrait */
+}
+
+/* L'affordance du drag, et rien d'autre : le curseur. Les classes
+   sont posées sur <html> par le composant — la couche voiture garde
+   pointer-events: none, la saisie s'écoute au document. Pendant la
+   prise, la sélection ne doit pas se dessiner sous la main : le
+   mousedown n'est pas neutralisé (un clic doit rester un clic), c'est
+   la sélection elle-même qu'on suspend, le temps du geste. */
+.voiture-survol { cursor: grab; }
+.voiture-saisie { user-select: none; }
+.voiture-saisie, .voiture-saisie * { cursor: grabbing !important; }
+
 @media (max-width: 720px) {
   /* Sur un écran étroit, la plaque est déjà dense : la voiture recule
      encore pour ne pas concurrencer le nom sur 360px de large. */

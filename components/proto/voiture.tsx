@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { motion, useMotionValue, useMotionValueEvent, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from "motion/react"
+import { azimutVersIndex, offsetAuRelachement } from "./geste.mjs"
 
 /* ==================================================================
    VOITURE — séquence d'images pilotée par le scroll, en rotation sur
@@ -151,8 +152,42 @@ const FLOT = {
 }
 const TAU = Math.PI * 2
 
+/* ── LE RÉGIME DRAG (#12) ─────────────────────────────────────────
+   La doctrine anti-3D de l'en-tête ne tombe pas, elle se précise :
+   c'est un argument de RÉGIME. Pendant un drag la page ne défile pas,
+   la parallaxe est immobile, la respiration est suspendue, et le rendu
+   3D est déclenché par l'événement de pointeur — au plus un rendu par
+   frame quand la main bouge, ZÉRO quand elle ne bouge pas. Le même
+   motif marche/arrêt que la respiration.
+
+   Rien ne se télécharge sans un geste de saisie : mousedown sur un
+   pixel opaque + déplacement au-delà du seuil. Pendant que le modèle
+   arrive, le geste pilote la SÉQUENCE en azimut (zéro octet nouveau) ;
+   la promotion WebGL attend le relâchement — jamais de changement de
+   régime en cours de geste. Ce mode séquence est aussi le repli
+   permanent : contexte refusé, perdu, chargement en échec — le drag
+   azimut-seul reste, sans un message. */
+const DRAG_LIVRE = true  // retirer le régime drag sans toucher au reste
+const ELEV_REPOS = 30    // l'élévation de la séquence (CREDIT.txt) : la seule où elle existe
+const ELEV_MIN = 18      // bornes de l'axe d'élévation — PROPOSÉES, à régler à l'œil par Hugo
+const ELEV_MAX = 42      //   (décision n°2 du spec) : trop d'amplitude montre le dessous et le toit
+const SENS_AZIMUT = 0.45 // °/px — un tour en ~800 px de glissement, à régler à l'œil
+const SENS_ELEV = 0.12   // °/px vertical
+const CRAN = 360 / NB    // 2,25°
+const SEUIL_DRAG = 4     // px avant qu'un mousedown ne devienne un drag avéré — un clic reste un clic
+const SEUIL_ALPHA = 32   // alpha minimal d'un pixel « saisissable » : le halo anti-aliasé ne compte pas
+const SEUIL_FONDU = 0.05 // sous ce fondu la voiture est invisible : rien à saisir
+const AMORTI = 0.94      // décroissance de l'inertie par frame — coupée sous reduce
+const RETOUR_ELEV = 0.8  // fraction d'écart d'élévation restante par frame au retour
+const INTERACTIFS = "a,button,input,textarea,select,summary,label,[contenteditable],[role=button]"
+
 export function Voiture() {
   const canvas = useRef<HTMLCanvasElement>(null)
+  const conteneur = useRef<HTMLDivElement>(null)
+  const toileGl = useRef<HTMLCanvasElement>(null)
+  const tenue = useRef(false)
+  const sceneGl = useRef<import("./voiture-drag").SceneDrag | null>(null)
+  const chargementGl = useRef<Promise<void> | null>(null)
   const dernier = useRef(-1)
   const fin = useRef(0)
   const [pretes, setPretes] = useState(false)
@@ -179,6 +214,16 @@ export function Voiture() {
 
      Déclaré AVANT l'effet de mesure, qui en a besoin — voir `saut`. */
   const lisse = useSpring(p, RESSORT)
+
+  /* L'offset en crans laissé par la main au relâchement (#12) : la
+     voiture reste où on l'a posée, et le scroll continue de la tourner
+     à partir de là. MotionValue et non ref : l'index en dépend, et
+     c'est son changement qui déclenche la repeinture au relâchement. */
+  const decalage = useMotionValue(0)
+  /* 1 pendant la prise : la respiration s'arrête (une chose que la
+     main tient ne flotte pas) et la peinture au fil de l'index se
+     suspend — pendant le geste c'est la main qui peint, pas le scroll. */
+  const saisie = useMotionValue(0)
 
   useEffect(() => {
     const avance = () => {
@@ -240,7 +285,7 @@ export function Voiture() {
      sur-amorti il ne dépasse pas, mais un index négatif rendrait
      `undefined` en silence et figerait la toile, ce qui ne vaut pas
      l'économie d'une addition. */
-  const index = useTransform(lisse, (v) => ((POSE + Math.round(v * TOURS * NB)) % NB + NB) % NB)
+  const index = useTransform([lisse, decalage], ([v, off]: number[]) => ((POSE + Math.round(v * TOURS * NB) + off) % NB + NB) % NB)
 
   /* Elle s'efface tard et par paliers : au-dessus de la nomenclature et
      du tracé, deux feuilles denses, elle doit rester lisible SANS
@@ -313,13 +358,19 @@ export function Voiture() {
       assiette.set(INCLINAISON)
       derive.set(0)
     }
-    if (fondu.get() > 0) marche()
-    const stop = fondu.on("change", (o) => (o > 0 ? marche() : arret()))
+    /* Deux raisons de s'arrêter, une seule règle : la respiration ne
+       tourne que si la voiture se voit ET que la main ne la tient pas
+       — une chose tenue ne flotte pas (spec #12, décision 3). */
+    const evalue = () => ((fondu.get() > 0 && !saisie.get()) ? marche() : arret())
+    evalue()
+    const stopF = fondu.on("change", evalue)
+    const stopS = saisie.on("change", evalue)
     return () => {
-      stop()
+      stopF()
+      stopS()
       arret()
     }
-  }, [reduit, absente, assiette, derive, fondu])
+  }, [reduit, absente, assiette, derive, fondu, saisie])
 
   /* ── POURQUOI DES ImageBitmap ET PAS DES BALISES IMAGE ────────────
      MESURÉ, sur build de production, trois essais alternés dans le même
@@ -552,16 +603,263 @@ export function Voiture() {
 
        On sort AVANT la veille, et c'est voulu : ne jamais tourner, c'est
        ne jamais avoir besoin des 159 autres images. Une seule requête au
-       montage au lieu de cent soixante. */
-    if (reduit || !pretes) return
+       montage au lieu de cent soixante.
+
+       PENDANT LE GESTE, LA MAIN PEINT — pas le scroll (voir l'effet de
+       saisie) : sans cette garde, un coup de molette en pleine prise
+       repeindrait l'image que le ressort dicte sous celle que la main
+       tient. */
+    if (reduit || !pretes || tenue.current) return
     peindre(i)
     veille(i)
   })
+
+  /* ── LA SAISIE (#12) ──────────────────────────────────────────────
+     Écoutée au DOCUMENT : `pointer-events: none` de la couche ne bouge
+     pas (c'est ce qui protège le texte que la voiture traverse), donc
+     c'est la page qu'on écoute, et la géométrie qui décide — cible non
+     interactive ET pixel opaque de la toile. Desktop au pointeur fin
+     seulement : au tactile, le drag se disputerait la page avec le
+     scroll, le contraire d'une bascule invisible. */
+  useEffect(() => {
+    if (!DRAG_LIVRE || !pretes || absente) return
+    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return
+    const cont = conteneur.current
+    const c2d = canvas.current
+    if (!cont || !c2d) return
+
+    /* Coordonnées de page → pixel de toile. getBoundingClientRect
+       subit l'assiette : on passe par le CENTRE (invariant par
+       rotation) puis on tourne le vecteur de -assiette ; la dérive
+       verticale est déjà dans le rect, et offsetWidth donne la taille
+       CSS non transformée. Un getImageData d'un pixel — pas de coût
+       mesurable, et jamais plus d'un par frame (voir survole). */
+    const surVoiture = (x: number, y: number) => {
+      if (fondu.get() <= SEUIL_FONDU) return false // invisible = insaisissable
+      const r = cont.getBoundingClientRect()
+      const vx = x - (r.left + r.width / 2)
+      const vy = y - (r.top + r.height / 2)
+      const a = (-assiette.get() * Math.PI) / 180
+      const ech = c2d.width / cont.offsetWidth
+      const px = Math.round((vx * Math.cos(a) - vy * Math.sin(a) + cont.offsetWidth / 2) * ech)
+      const py = Math.round((vx * Math.sin(a) + vy * Math.cos(a) + cont.offsetHeight / 2) * ech)
+      if (px < 0 || py < 0 || px >= c2d.width || py >= c2d.height) return false
+      const ctx = c2d.getContext("2d", { alpha: true })
+      return !!ctx && ctx.getImageData(px, py, 1, 1).data[3] >= SEUIL_ALPHA
+    }
+
+    let candidat: { x: number; y: number } | null = null
+    let azimut = 0        // degrés, continu pendant le geste et l'inertie
+    let elevation = ELEV_REPOS
+    let vitesse = 0       // °/frame, pour l'inertie du relâchement
+    let dernierX = 0
+    let dernierY = 0
+    let enGl = false      // CE geste-ci est rendu en WebGL
+    let inertie = 0       // rAF de la décrue en cours, 0 sinon
+    let renduPrevu = 0    // au plus un rendu WebGL par frame
+    let sondePrevue = 0   // au plus un test de survol par frame
+
+    const chargeRegime = () => {
+      if (chargementGl.current) return
+      /* Le premier geste avéré est le SEUL déclencheur du chunk et du
+         modèle — jamais le survol (tout le monde survole le centre de
+         l'écran), jamais l'idle, jamais le clic nu. */
+      chargementGl.current = import("./voiture-drag")
+        .then(async (m) => {
+          const t = toileGl.current
+          if (!t) return
+          const s = await m.creeScene(t, () => {
+            /* Perte de contexte : retour SILENCIEUX au mode séquence,
+               jamais un écran vide — le renoncement propre de
+               l'en-tête, appliqué au WebGL. */
+            delete cont.dataset.regime
+            if (tenue.current && enGl) {
+              enGl = false
+              c2d.style.visibility = "visible"
+              t.style.visibility = "hidden"
+              peindre(azimutVersIndex(azimut, NB), true)
+            }
+          })
+          if (!s) return // contexte refusé ou modèle en échec : le drag azimut-seul reste
+          sceneGl.current = s
+          /* Relevés par le banc (--drag) : le régime et l'empreinte
+             GPU réelle — des chiffres mesurés, pas estimés. */
+          cont.dataset.regime = "gl"
+          const inf = s.info()
+          cont.dataset.glGeometries = String(inf.geometries)
+          cont.dataset.glTextures = String(inf.textures)
+        })
+        .catch(() => {})
+    }
+
+    const rendGl = () => {
+      if (renduPrevu) return
+      renduPrevu = requestAnimationFrame(() => {
+        renduPrevu = 0
+        sceneGl.current?.rend(azimut, elevation)
+      })
+    }
+
+    const saisit = (x: number, y: number) => {
+      tenue.current = true
+      saisie.set(1)
+      document.documentElement.classList.remove("voiture-survol")
+      document.documentElement.classList.add("voiture-saisie")
+      window.getSelection()?.removeAllRanges()
+      chargeRegime()
+      if (inertie) {
+        /* Reprise en pleine décrue : la main récupère la voiture LÀ OÙ
+           ELLE EST — azimut et élévation gardent leurs valeurs. */
+        cancelAnimationFrame(inertie)
+        inertie = 0
+      } else {
+        azimut = index.get() * CRAN
+        elevation = ELEV_REPOS
+      }
+      vitesse = 0
+      dernierX = x
+      dernierY = y
+      /* La promotion s'est décidée ENTRE les gestes : si le modèle est
+         arrivé, ce geste-ci est WebGL — bascule sèche, au même azimut,
+         même cadre. Sinon, séquence — et jamais de changement en cours
+         de geste : une main qui découvre un axe de plus au milieu d'un
+         mouvement, c'est une surprise, pas une bascule invisible. */
+      enGl = !!sceneGl.current && !sceneGl.current.estPerdu()
+      if (enGl) {
+        const t = toileGl.current!
+        const d = Math.min(DPR_MAX, window.devicePixelRatio || 1)
+        sceneGl.current!.taille(Math.round(t.offsetWidth * d), Math.round(t.offsetHeight * d))
+        sceneGl.current!.rend(azimut, elevation)
+        t.style.visibility = "visible"
+        c2d.style.visibility = "hidden"
+      }
+    }
+
+    const bouge = (x: number, y: number) => {
+      vitesse = (x - dernierX) * SENS_AZIMUT
+      azimut += vitesse
+      if (enGl) {
+        elevation = Math.min(ELEV_MAX, Math.max(ELEV_MIN, elevation + (dernierY - y) * SENS_ELEV))
+        rendGl()
+      } else {
+        peindre(azimutVersIndex(azimut, NB)) // le drag pilote la séquence : zéro octet nouveau
+      }
+      /* La veille SUIT l'azimut du drag : l'image du relâchement sera
+         déjà décodée. La fenêtre glisse, l'empreinte ne bouge pas. */
+      veille(azimutVersIndex(azimut, NB))
+      dernierX = x
+      dernierY = y
+    }
+
+    /* Réconciliation au relâchement : inertie (coupée sous reduce),
+       retour d'élévation vers ELEV_REPOS (instantané sous reduce — la
+       séquence n'existe qu'à cette élévation), aimantation au cran, et
+       L'ANGLE LAISSÉ PAR LA MAIN PERSISTE via l'offset. Pas de retour
+       élastique vers l'azimut du scroll : ramener l'objet annulerait
+       le geste qu'on vient d'offrir. */
+    const pose = () => {
+      document.documentElement.classList.remove("voiture-saisie")
+      const fini = () => {
+        inertie = 0
+        decalage.set(offsetAuRelachement(azimut, lisse.get(), { nb: NB, pose: POSE, tours: TOURS }))
+        if (enGl) {
+          c2d.style.visibility = "visible"
+          toileGl.current!.style.visibility = "hidden"
+        }
+        tenue.current = false
+        peindre(index.get(), true)
+        saisie.set(0)
+      }
+      if (reduit) {
+        /* Sous reduce, rien ne continue après la main : pas d'inertie,
+           élévation reposée d'un coup. Le drag lui-même reste — c'est
+           de l'interaction, pas une animation. */
+        elevation = ELEV_REPOS
+        if (enGl) sceneGl.current?.rend(azimut, elevation)
+        return fini()
+      }
+      const decroit = () => {
+        azimut += vitesse
+        vitesse *= AMORTI
+        elevation = ELEV_REPOS + (elevation - ELEV_REPOS) * RETOUR_ELEV
+        const posee = Math.abs(elevation - ELEV_REPOS) < 0.05
+        if (posee) elevation = ELEV_REPOS
+        if (enGl) sceneGl.current?.rend(azimut, elevation)
+        else peindre(azimutVersIndex(azimut, NB))
+        veille(azimutVersIndex(azimut, NB))
+        if (Math.abs(vitesse) < 0.02 && posee) return fini()
+        inertie = requestAnimationFrame(decroit)
+      }
+      inertie = requestAnimationFrame(decroit)
+    }
+
+    const survole = (e: MouseEvent) => {
+      if (sondePrevue) return
+      const { clientX: x, clientY: y } = e
+      const cible = e.target as Element | null
+      sondePrevue = requestAnimationFrame(() => {
+        sondePrevue = 0
+        const dessus = !cible?.closest?.(INTERACTIFS) && surVoiture(x, y)
+        document.documentElement.classList.toggle("voiture-survol", dessus)
+      })
+    }
+
+    const surMousedown = (e: MouseEvent) => {
+      if (e.button !== 0 || tenue.current) return
+      if ((e.target as Element | null)?.closest?.(INTERACTIFS)) return
+      if (!surVoiture(e.clientX, e.clientY)) return
+      /* Pas le mousedown nu : un clic pour poser le focus ou dissiper
+         une sélection ne doit pas coûter des mégaoctets. Candidat
+         seulement — le drag est avéré au-delà du seuil. */
+      candidat = { x: e.clientX, y: e.clientY }
+    }
+
+    const surMousemove = (e: MouseEvent) => {
+      if (tenue.current) return bouge(e.clientX, e.clientY)
+      if (candidat) {
+        if (Math.hypot(e.clientX - candidat.x, e.clientY - candidat.y) < SEUIL_DRAG) return
+        const dep = candidat
+        candidat = null
+        saisit(dep.x, dep.y)
+        bouge(e.clientX, e.clientY)
+        return
+      }
+      survole(e)
+    }
+
+    const surMouseup = () => {
+      candidat = null
+      if (tenue.current) pose()
+    }
+
+    document.addEventListener("mousedown", surMousedown)
+    document.addEventListener("mousemove", surMousemove)
+    window.addEventListener("mouseup", surMouseup)
+    window.addEventListener("blur", surMouseup) // un alt-tab en pleine prise est un relâchement
+
+    return () => {
+      document.removeEventListener("mousedown", surMousedown)
+      document.removeEventListener("mousemove", surMousemove)
+      window.removeEventListener("mouseup", surMouseup)
+      window.removeEventListener("blur", surMouseup)
+      if (inertie) cancelAnimationFrame(inertie)
+      if (renduPrevu) cancelAnimationFrame(renduPrevu)
+      if (sondePrevue) cancelAnimationFrame(sondePrevue)
+      document.documentElement.classList.remove("voiture-saisie", "voiture-survol")
+      tenue.current = false
+      saisie.set(0)
+      sceneGl.current?.detruit()
+      sceneGl.current = null
+      chargementGl.current = null
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pretes, absente, reduit])
 
   if (absente) return null
 
   return (
     <motion.div
+      ref={conteneur}
       className="voiture"
       aria-hidden="true"
       /* PLUS DE BRANCHE SUR `reduit` ICI, et c'est la suppression de la
@@ -600,6 +898,11 @@ export function Voiture() {
       style={{ rotate: assiette, y: derive, opacity: fondu }}
     >
       <canvas ref={canvas} className="voiture-toile" />
+      {/* La toile du régime drag (#12) : même cadre, même dosage,
+          échangée SEC avec la 2D à la saisie. Toujours dans le DOM —
+          un canvas sans contexte ne coûte rien, et serveur et client
+          écrivent ainsi le même HTML. */}
+      <canvas ref={toileGl} className="voiture-toile-gl" />
     </motion.div>
   )
 }
