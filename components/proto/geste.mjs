@@ -16,9 +16,8 @@ export const mod = (i, nb) => ((i % nb) + nb) % nb
 export const azimutVersIndex = (azimutDeg, nb) => mod(Math.round(azimutDeg / (360 / nb)), nb)
 
 /* L'offset en crans qui fait persister l'angle laissé par la main :
-   le delta entre le cran du relâchement et le cran que le scroll
-   dicte à cet instant (v = valeur courante du ressort). Absorbe aussi
-   un scroll survenu pendant le geste — on recalcule contre v, rien
-   d'autre. */
-export const offsetAuRelachement = (azimutDeg, v, { nb, pose, tours }) =>
-  mod(Math.round(azimutDeg / (360 / nb)) - pose - Math.round(v * tours * nb), nb)
+   le delta entre le cran du relâchement et la pose de départ. Le terme
+   de ressort a disparu avec la rotation au scroll (#13) : le scroll ne
+   dicte plus d'azimut, l'angle posé est l'angle affiché. */
+export const offsetAuRelachement = (azimutDeg, { nb, pose }) =>
+  mod(Math.round(azimutDeg / (360 / nb)) - pose, nb)

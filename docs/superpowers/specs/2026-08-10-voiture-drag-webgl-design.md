@@ -322,7 +322,13 @@ une promesse, c'est un booléen.
 - **Parité clavier : assumée absente, et argumentée.** La voiture est
   décorative et `aria-hidden` (`voiture.tsx:566`) ; le drag n'expose aucune
   information ni fonction qui n'existe pas déjà (la rotation est au
-  scroll, accessible au clavier). Pas d'équivalent clavier à inventer pour
+  scroll, accessible au clavier).
+  > MISE À JOUR 2026-08-11 (#13, retour Hugo) : la rotation au scroll a
+  > été retirée — le cran de 2,25° se voyait au défilement lent — la
+  > rotation n'existe plus qu'au drag. L'argument se reformule sans
+  > changer de conclusion : la voiture reste décorative et aria-hidden,
+  > le drag n'expose toujours aucune information — il n'y a simplement
+  > plus d'équivalent scroll dont réclamer la parité. Pas d'équivalent clavier à inventer pour
   une manipulation bonus d'un élément décoratif — mais si un jour le drag
   devient porteur d'information, cette phrase devient fausse et le
   chantier rouvre.

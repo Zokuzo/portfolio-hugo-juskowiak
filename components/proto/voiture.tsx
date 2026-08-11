@@ -26,8 +26,8 @@ import { azimutVersIndex, offsetAuRelachement } from "./geste.mjs"
    pouvoir se poser sur une image précise. Des fichiers, pas un flux.
 
    CONTRAT D'INTÉGRATION — les images vivent dans /public/voiture/ et
-   se nomment 000.webp à 159.webp, fond transparent. La rotation en
-   parcourt la TOTALITÉ ; c'est l'absence de l'image de départ qui fait
+   se nomment 000.webp à 159.webp, fond transparent. Le DRAG peut en
+   parcourir la totalité ; c'est l'absence de l'image de départ qui fait
    renoncer le composant : il ne rend alors RIEN et la page est intacte.
 
    BUDGET : aucun mix-blend-mode, aucun filter, aucun masque. Un seul
@@ -45,6 +45,13 @@ import { azimutVersIndex, offsetAuRelachement } from "./geste.mjs"
    deviner ce qu'on sait déjà, ça ne se paie pas.
    ───────────────────────────────────────────────────────────────── */
 const SEQUENCE_LIVREE = true
+
+/* L'iris de l'engloutissement, fonction PURE de la course : la valeur
+   se lit à la source (lisse) au moment de peindre — un cache écrit par
+   événement restait périmé au F5 garé à mi-course (revue du
+   2026-08-11 : la voiture s'affichait entière là où elle devait être
+   avalée). Fermé sur [3 %, 22 %] de la course. */
+const irisDe = (v: number) => (v <= 0.03 ? 1 : v >= 0.22 ? 0 : 1 - (v - 0.03) / 0.19)
 
 /* Chaque thème a SA séquence (#13) : la sombre à la racine, la MSO
    claire dans clair/ — et chaque thème ne télécharge que la sienne,
@@ -74,7 +81,6 @@ const DPR_MAX = 1.5
    à la fois, et c'est ce qui donnait l'impression de tourbillon.
    ───────────────────────────────────────────────────────────────── */
 const NB = 160           // images de la séquence, une tous les 2,25°
-const TOURS = 1          // tours complets sur l'axe pendant le trajet
 
 /* ── LA POSE DE DÉPART ────────────────────────────────────────────
    Le tour est COMPLET, mais il ne commence pas n'importe où. L'image
@@ -107,11 +113,10 @@ const POSE = 140         // image de départ : le trois-quarts avant
 const INCLINAISON = -12  // assiette fixe : redresse la diagonale à 40°
 
 /* ── LE RESSORT ───────────────────────────────────────────────────
-   La progression n'attaque plus la rotation en direct. Un scroll n'est
-   pas lisse : molette crantée, trackpad par à-coups, barre d'espace
-   qui saute un écran. Branché tel quel, chaque secousse devenait une
-   secousse de la voiture, et sur une séquence d'images le défaut est
-   deux fois visible puisque le volume saute d'un cran de 2,25° d'un coup.
+   Il ne pilote plus une rotation (#13) : il lisse tout ce qui SUIT la
+   course — fondu, enfoncement, iris. Un scroll n'est pas lisse
+   (molette crantée, trackpad par à-coups) : branché en direct, l'iris
+   se refermerait par secousses.
 
    Le ressort absorbe ça : il POURSUIT la valeur du scroll au lieu de
    l'épouser.
@@ -335,8 +340,8 @@ function VoitureSequence() {
      Au défilement, LE FOND MANGE LA VOITURE — un iris se referme sur
      elle pendant qu'elle s'enfonce et recule d'un souffle : la
      transition de wallpaper d'Hyprland, transposée. Le cercle part
-     au-delà de la demi-diagonale (75 % > 70,7 % : rien n'est rogné au
-     repos) et se ferme à 30 % de la course, le centre glissant vers le bas —
+     au-delà de la demi-diagonale (0,78×côté > 0,707 : rien n'est rogné au
+     repos) et se ferme à 22 % de la course — l'index arrive propre —, le centre glissant vers le bas —
      on l'ensevelit, on ne l'efface pas.
 
      LE PRIX EST DIT : un clip-path qui bouge repeint la couche de la
@@ -354,7 +359,7 @@ function VoitureSequence() {
      couche transformée à chaque frame — mesuré au banc : 11,85 % de
      frames hors budget, rejeté. Le repeint de la toile par frame, lui,
      est l'ancien coût de la rotation par crans : 2 %, validé. */
-  const irisRef = useRef(1)
+  const irisPeint = useRef(1) // le dernier iris effectivement peint — dédoublonne les repeints
   const irisPrevu = useRef(0)
 
   /* ── LA RESPIRATION ───────────────────────────────────────────────
@@ -424,13 +429,15 @@ function VoitureSequence() {
     /* Deux raisons de s'arrêter, une seule règle : la respiration ne
        tourne que si la voiture se voit ET que la main ne la tient pas
        — une chose tenue ne flotte pas (spec #12, décision 3). */
-    const evalue = () => ((fondu.get() > 0 && !saisie.get()) ? marche() : arret())
+    const evalue = () => ((fondu.get() > 0 && irisDe(lisse.get()) > 0 && !saisie.get()) ? marche() : arret())
     evalue()
     const stopF = fondu.on("change", evalue)
     const stopS = saisie.on("change", evalue)
+    const stopL = lisse.on("change", evalue) // la toile avalée (iris 0) mais au fondu encore > 0 ne respire pas
     return () => {
       stopF()
       stopS()
+      stopL()
       arret()
     }
   }, [reduit, absente, assiette, derive, fondu, saisie])
@@ -583,7 +590,11 @@ function VoitureSequence() {
        payer six cent soixante kilooctets à quelqu'un qui a précisément
        demandé qu'on lui en fasse moins. */
     setPretes(true)
-    if (reduit) charge(index.get())
+    /* L'index est IMMOBILE sans drag (#13) : la fenêtre de 26 images
+       (~660 Ko) ne sert plus qu'à chauffer la PREMIÈRE prise. Sans
+       pointeur fin, aucune prise n'existera jamais — le tactile ne
+       charge que la pose, comme reduce (revue du 2026-08-11). */
+    if (reduit || !window.matchMedia("(hover: hover) and (pointer: fine)").matches) charge(index.get())
     else veille(index.get())
     return () => {
       vivant.current = false
@@ -641,7 +652,9 @@ function VoitureSequence() {
        mesuré : arc(rayon 0) est un chemin VIDE, son fill() un no-op —
        le destination-in ne s'appliquait jamais et le drawImage frais
        restait entier : la voiture REVENAIT pile après la fermeture. */
-    if (irisRef.current <= 0) return
+    const f = irisDe(lisse.get())
+    irisPeint.current = f
+    if (f <= 0) return
     // `contain` : la voiture ne doit jamais être rognée par le cadre
     const e = Math.min(w / im.width, h / im.height)
     ctx.drawImage(im, (w - im.width * e) / 2, (h - im.height * e) / 2, im.width * e, im.height * e)
@@ -652,7 +665,6 @@ function VoitureSequence() {
        ligne de sol qui monte, et ce cercle — LE CERCLE EST SON CHOIX.
        0,78×côté : juste au-dessus de la demi-diagonale, à 1 rien n'est
        rogné ; le centre glisse vers le bas en se fermant. */
-    const f = irisRef.current
     if (f < 1) {
       ctx.globalCompositeOperation = "destination-in"
       ctx.beginPath()
@@ -713,13 +725,15 @@ function VoitureSequence() {
      s'appliquera à son dessin. */
   useMotionValueEvent(lisse, "change", (v) => {
     if (reduit || !pretes) return
-    const f = v <= 0.03 ? 1 : v >= 0.22 ? 0 : 1 - (v - 0.03) / 0.19
-    if (f === irisRef.current) return
-    irisRef.current = f
+    if (irisDe(v) === irisPeint.current) return
     if (tenue.current || roule.current) return
     if (irisPrevu.current) return
     irisPrevu.current = requestAnimationFrame(() => {
       irisPrevu.current = 0
+      /* re-vérifié DANS la frame : une prise a pu commencer entre la
+         planification et l'exécution — repeindre l'angle d'avant-geste
+         sous la main serait un flash (revue du 2026-08-11) */
+      if (tenue.current || roule.current) return
       peindre(index.get(), true)
     })
   })
@@ -746,6 +760,11 @@ function VoitureSequence() {
        mesurable, et jamais plus d'un par frame (voir survole). */
     const surVoiture = (x: number, y: number) => {
       if (fondu.get() <= SEUIL_FONDU) return false // invisible = insaisissable
+      /* Une proie à moitié avalée ne se saisit pas : le rendu WebGL ne
+         connaît pas l'iris — saisir pendant l'engloutissement ferait
+         RESSURGIR la voiture entière d'un coup (revue du 2026-08-11).
+         La saisie n'existe que hors de la gueule du fond. */
+      if (irisDe(lisse.get()) < 1) return false
       const r = cont.getBoundingClientRect()
       const vx = x - (r.left + r.width / 2)
       const vy = y - (r.top + r.height / 2)
@@ -893,7 +912,7 @@ function VoitureSequence() {
         roule.current = false
         /* le scroll ne dicte plus d'azimut (l'envol a remplacé la
            rotation) : l'offset EST le cran posé, sans terme de ressort */
-        decalage.set(offsetAuRelachement(azimut, 0, { nb: NB, pose: POSE, tours: TOURS }))
+        decalage.set(offsetAuRelachement(azimut, { nb: NB, pose: POSE }))
         if (enGl) {
           c2d.style.visibility = "visible"
           toileGl.current!.style.visibility = "hidden"

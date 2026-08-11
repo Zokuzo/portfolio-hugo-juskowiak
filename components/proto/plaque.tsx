@@ -101,14 +101,18 @@ export function Plaque({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => vo
       // pixel près
       cx += (tx - cx) * 0.06
       cy += (ty - cy) * 0.06
-      // le monde est en position:fixed, hors de la plaque : les
-      // variables de pointeur vivent donc sur la racine du document.
+      // SUR .proto-root ET PAS SUR <html> : .proto-root déclare
+      // `--px: 0` comme défaut, et une déclaration de classe MASQUE
+      // pour tout le sous-arbre une valeur posée plus haut — écrites
+      // sur <html>, les variables de pointeur étaient mortes-nées
+      // (mesuré à la revue #13 : le parallaxe pointeur n'a jamais
+      // marché). L'inline sur l'élément même bat sa classe.
       // PAR PAS DE 0,02, et seulement SI la valeur change : une custom
-      // property écrite sur la racine invalide le style de tout ce qui
-      // la consomme (sol, arcs), et --chrome-x repeint le dégradé du
-      // titre à travers ses glyphes. Écrire quatre décimales par frame
-      // de souris salissait tout ça pour des déplacements sub-pixel.
-      const rootStyle = document.documentElement.style
+      // property écrite là invalide le style de tout ce qui la
+      // consomme (sol, arcs, titre 3D). Écrire quatre décimales par
+      // frame de souris salissait tout ça pour des déplacements
+      // sub-pixel.
+      const rootStyle = (el.closest(".proto-root") as HTMLElement | null ?? document.documentElement).style
       const qx = (Math.round(cx * 50) / 50).toFixed(2)
       const qy = (Math.round(cy * 50) / 50).toFixed(2)
       if (rootStyle.getPropertyValue("--px") !== qx) rootStyle.setProperty("--px", qx)

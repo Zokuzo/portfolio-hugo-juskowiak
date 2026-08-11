@@ -256,10 +256,12 @@ html {
 }
 
 .chrome {
-  --chrome-y: 0em;
-  --chrome-x: 0em;
+  /* PAS de déclaration --chrome-x/-y ici : une valeur posée sur
+     l'élément par sa propre classe MASQUE celle que plaque.tsx écrit
+     sur la section — l'inclinaison latérale au pointeur était
+     morte-née (revue #13). Les défauts vivent dans les fallbacks. */
   background-image: var(--chrome-ramp);
-  background-position: var(--chrome-x) var(--chrome-y);
+  background-position: var(--chrome-x, 0em) var(--chrome-y, 0em);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -1022,6 +1024,14 @@ html {
   display: block;
   transform: perspective(1100px) rotateX(calc(var(--py, 0) * -5deg)) rotateY(calc(var(--px, 0) * 8deg));
   will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* la boucle pointeur est coupée : un titre figé ne paie pas une
+     couche promue permanente */
+  .name-3d {
+    transform: none;
+    will-change: auto;
+  }
 }
 .name .given {
   display: block;
@@ -4121,7 +4131,8 @@ html.clair body {
 }
 
 /* ------------------------------------------------------------
-   VOITURE — la séquence en tourbillon sur les trois premières feuilles.
+   VOITURE — la pose saisissable, engloutie par le fond au défilement
+   (#13 : la rotation appartient au drag, le scroll ne tourne plus).
 
    Elle est FIXE et vit au niveau de la page, pas dans la plaque : son
    trajet dépasse largement le hero. Elle se pose au-dessus du monde
@@ -4219,7 +4230,7 @@ html.clair body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  /* Le composant coupe la rotation ET la flottaison — celle-ci ayant
+  /* Le composant coupe l'engloutissement ET la flottaison — celle-ci ayant
      migré en JS, la partie TRANSFORM ne bougera plus jamais ici, et
      c'est elle que `will-change: auto` retire. L'OPACITÉ, elle, reste
      liée au scroll dans les deux modes : le fondu de profondeur n'est
