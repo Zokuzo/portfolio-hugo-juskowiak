@@ -53,7 +53,12 @@
 
    Options : --passes=3 --seuil=8.3 --plancher=<ms> --tolerance=0.45
              --largeur=1440 --hauteur=900 --sortie=<fichier.json>
-             --chrome=<chemin> --tete
+             --chrome=<chemin> --tete --drag
+
+   --drag (#12) : une amorce non mesurée (déclenche chunk + .glb),
+   attente de la promotion WebGL, puis un drag MESURÉ (gate 1) et le
+   défilement d'après (gate 3). Le mode sans --drag reste le témoin
+   du gate 2.
 
    Contrôle du banc lui-même (il doit rendre ~5 ms) :
      node tools/banc/frame.mjs --etalon
@@ -180,6 +185,38 @@ async function defile(cdp) {
   }
   const { ech, duree } = await cdp.evalue("JSON.stringify(window.__banc.arrete())").then(JSON.parse)
   return { couts: ech.map((e) => e[0]), intervalles: ech.map((e) => e[1]).filter(Boolean), duree, pas }
+}
+
+/* ── scénario drag (#12) ─────────────────────────────────────────────
+   Mousedown au centre de la voiture en haut de page (fondu = 1),
+   balayage en azimut sur plusieurs tours avec une sinusoïde
+   d'élévation — les deux axes travaillent — puis relâchement. Même
+   sonde, même unité que le défilement. L'injection CDP ne traverse
+   pas le compositeur comme une vraie souris (#11) : le POURCENTAGE
+   au-dessus du seuil à plancher égal reste comparable, la cadence
+   présentée non. */
+async function drague(cdp, mesurer = true) {
+  const cx = LARGEUR / 2, cy = HAUTEUR / 2
+  const souris = (type, x, y, extra = {}) => cdp.envoie("Input.dispatchMouseEvent", {
+    type, x, y, button: "left", buttons: 1, clickCount: 1, ...extra,
+  })
+  if (mesurer) await cdp.evalue("window.__banc.demarre()")
+  await souris("mousePressed", cx, cy)
+  /* ~3 tours d'azimut (0,45 °/px) en crans de 8 px, l'élévation
+     balayée à ±80 px, en rebondissant aux bords de la fenêtre. */
+  let x = cx
+  let sens = 1
+  for (let i = 0; i < 300; i++) {
+    x += sens * 8
+    if (x > LARGEUR - 40 || x < 40) { sens = -sens; x += sens * 16 }
+    await souris("mouseMoved", x, cy + Math.sin(i / 18) * 80)
+    await pause(8)
+  }
+  await souris("mouseReleased", x, cy, { buttons: 0 })
+  await pause(700) // l'inertie fait encore des frames après la main
+  if (!mesurer) return null
+  const { ech, duree } = await cdp.evalue("JSON.stringify(window.__banc.arrete())").then(JSON.parse)
+  return { couts: ech.map((e) => e[0]), intervalles: ech.map((e) => e[1]).filter(Boolean), duree }
 }
 
 /* Le plancher de cadence, mesuré sur la page témoin : c'est la vsync de
@@ -338,6 +375,29 @@ async function passe(n) {
 
     await pause(1500)                       // échauffement : polices, images, hydratation
     const repos = await mesure(cdp, 1500)
+
+    if (opt.drag) {
+      /* Premier geste : l'AMORCE — déclenche le chunk et le .glb,
+         pilote la séquence. Non mesurée : c'est le régime WebGL qu'on
+         juge. La promotion se lit sur data-regime (posé par le
+         composant à l'arrivée du modèle). */
+      await drague(cdp, false)
+      await attends(async () =>
+        await cdp.evalue("document.querySelector('.voiture')?.dataset.regime === 'gl'"),
+        30000, "promotion WebGL (le modèle ne charge pas ?)")
+      await pause(500)
+      const drag = await drague(cdp)        // gate 1 : pendant le drag
+      const scroll = await defile(cdp)      // gate 3 : le défilement APRÈS le premier drag
+      const gpu = JSON.parse(await cdp.evalue(`JSON.stringify({
+        geometries: document.querySelector('.voiture')?.dataset.glGeometries ?? null,
+        textures: document.querySelector('.voiture')?.dataset.glTextures ?? null,
+      })`))
+      console.log(`  passe ${n} — plancher ${r2(plancher)} ms${melange ? " (MÉLANGE)" : ""} · drag ${drag.couts.length} frames · scroll après drag ${scroll.couts.length} frames`)
+      console.log(`            écran ${env.ecran} · ${env.webgl} · GPU ${gpu.geometries} géométries, ${gpu.textures} textures`)
+      console.log(`            intervalles du plancher : ${histo}`)
+      return { plancher, melange, env, repos, scroll, drag, gpu }
+    }
+
     const scroll = await defile(cdp)
 
     console.log(`  passe ${n} — plancher ${r2(plancher)} ms${melange ? " (MÉLANGE)" : ""} · ${scroll.couts.length} frames au défilement · ${scroll.pas} crans de molette`)
@@ -369,6 +429,8 @@ async function main() {
   const reposP90 = pct(bonnes.flatMap((b) => b.repos.couts), 90)
   const duree = bonnes.reduce((s, b) => s + b.scroll.duree, 0)
   const depassent = couts.filter((c) => c > SEUIL).length
+  const drags = bonnes.flatMap((b) => b.drag?.couts ?? [])
+  const dragDepassent = drags.filter((c) => c > SEUIL).length
 
   const bilan = {
     etiquette: ETIQUETTE, url: URL_, passes: bonnes.length, rejets,
@@ -381,6 +443,13 @@ async function main() {
     intervalleP50: pct(intervalles, 50), intervalleP90: pct(intervalles, 90),
     fpsPresentes: (couts.length / duree) * 1000,
     partAuDessusDuSeuilPct: (depassent / couts.length) * 100,
+    ...(drags.length ? {
+      dragFrames: drags.length,
+      dragCoutP50: pct(drags, 50),
+      dragCoutP90: pct(drags, 90),
+      dragPartAuDessusDuSeuilPct: (dragDepassent / drags.length) * 100,
+      gpu: bonnes[0].gpu,
+    } : {}),
     seuilMs: SEUIL,
   }
 
@@ -395,6 +464,14 @@ async function main() {
   frames > ${SEUIL} ms        ${r2(bilan.partAuDessusDuSeuilPct)} %   (${depassent}/${couts.length})
 
   marge au p90          ${r2(SEUIL - bilan.coutP90)} ms sur ${SEUIL}`)
+
+  if (drags.length) {
+    console.log(`
+  drag — coût p50 / p90   ${r2(bilan.dragCoutP50)} / ${r2(bilan.dragCoutP90)} ms
+  drag — frames > ${SEUIL} ms  ${r2(bilan.dragPartAuDessusDuSeuilPct)} %   (${dragDepassent}/${drags.length})
+  GPU après promotion     ${bilan.gpu.geometries} géométries · ${bilan.gpu.textures} textures
+  (en mode --drag, le bloc scroll ci-dessus est le défilement APRÈS le premier drag — gate 3)`)
+  }
 
   console.log(bilan.coutP90 <= SEUIL
     ? `\n  ✓ la cible tient — ${r2(SEUIL - bilan.coutP90)} ms de marge au p90.`
