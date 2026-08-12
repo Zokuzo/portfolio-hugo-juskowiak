@@ -238,3 +238,44 @@ cadre d'ingénierie qui la rend payable, validé au grilling :
 3. La couverture.
 4. MBDS : verre vivant ou statique-malin — le banc proposera, l'œil
    disposera.
+
+## Addendum 2026-08-12 — gate pris et directives nouvelles
+
+**Planche ESTIA ×2 thèmes : GATÉE** (« c'est parfait », séance du
+2026-08-12 ; v2.3, `.scratch/planches-parcours/estia.html`). Valeurs
+contractuelles issues du gate :
+
+- **NUIT — le tirage cyanotype** : bichrome STRICT. Prusse `#0e2a4a`
+  (bord surexposé `#081c33`, papier nu `#dfe3e6`), trait `#e9eef5`
+  (12,434), annotation `#a9bed6` (7,609), chimie inégale (champ +
+  bord d'émulsion brossé).
+- **JOUR — la table d'architecte** : papier machine `#f0e9d8` sous
+  flaque de lampe (chaud, retombée vers les bords), table sombre
+  `#6e6350` autour, ombre du bras de lampe sur un coin ; encre
+  `#1c3a5e` (9,554), annotation `#48617f` (5,271) ; **la sanguine
+  `#a83c22` (5,204) est RÉSERVÉE aux révisions** (nuage, RÉV., tampon)
+  — la NUIT n'y a pas droit, c'est sa chimie.
+- **Composition « feuille de travail »** : rien d'empilé — les pièces
+  se posent où il y a de la place, échelles variées, chevauchements.
+  Règle de lisibilité : les cadres peuvent se toucher, **les textes
+  jamais** (pièces opaques sur la feuille).
+- **Typo : celle du site** (Archivo wdth · JetBrains Mono · Noto JP) —
+  le chapitre-mère parle la langue d'origine, zéro fonte neuve.
+- Appareil sémantique : cote = les vraies dates, nomenclature =
+  compétences, tampon = état, cartouche = langue REF/REV, nuage de
+  révision sur la seconde voie (RÉV. 2024.09).
+
+**Directive Hugo (2026-08-12, contractuelle pour la suite)** :
+
+1. **Chaque univers porte SES animations et transitions, dans sa
+   langue propre** — pas une grammaire de mouvement commune. ESTIA
+   trace ses traits, Hokkaido respire, MBDS réfracte : le mouvement
+   EST la matière du monde.
+2. **Chaque univers porte de l'INTERACTIVITÉ propre** (au-delà du
+   scroll) — pointer fine ; sous `reduce` et au tactile, tout se pose.
+3. **Les frontières (phase 3) parlent la langue des DEUX mondes**
+   qu'elles relient — la transition n'est pas un fondu neutre.
+4. Ces trois points valent aussi pour le chantier `/work` (#14).
+
+Les gates existants (banc ≤ 10 %, `reduce`, contrastes) restent le
+filet de sortie de chaque univers, interactivité comprise.
