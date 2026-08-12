@@ -279,3 +279,49 @@ contractuelles issues du gate :
 
 Les gates existants (banc ≤ 10 %, `reduce`, contrastes) restent le
 filet de sortie de chaque univers, interactivité comprise.
+
+## Addendum 2026-08-12 (suite) — planche CPGE gatée
+
+**Planche CPGE ×2 thèmes : GATÉE** (« parfait pour la planche cpge »,
+séance du 2026-08-12 ; v1, `.scratch/planches-parcours/cpge.html`).
+Valeurs contractuelles issues du gate :
+
+- **Le parti : la grille stricte du typographe, corrigée en rouge
+  par-dessus.** La couche imprimée se cale au quadrillage fort (petits
+  carreaux 18 px, ligne appuyée toutes les 5 = 90 px — c'est le papier
+  ET la grille de mise en page) ; **seule la couche du correcteur a le
+  droit d'être de travers.** C'est la CPGE : discipline, puis
+  correction publique.
+- **NUIT — le tableau noir** : salle `#0c100f`, ardoise vert-noir
+  `#1b2422` (cadre aluminium `#333a36`), craie `#eef1ef` (13,966),
+  fusain `#9fb0aa` (7,008), craie rouge `#e89286` (6,722 — corrections
+  seules), carreaux peints `rgba(238,241,239,.07/.14)`, équations du
+  programme TSI réel au fusain `rgba(238,241,239,.20)` à moitié
+  mangées par l'éponge ; porte-craie et « NE PAS EFFACER »
+  n'existent qu'en NUIT.
+- **JOUR — la copie double sous néon** : formica `#8f9691`, copie
+  blanc froid `#f2f4ef`, **trois encres** — impression noire `#1d211f`
+  (14,704 : l'énoncé, la structure), **Bic bleu `#1e3f9f` (8,365 : la
+  voix de l'étudiant)**, Bic en retrait `#44598f` (6,174), **rouge
+  `#c0271c` (5,344 : le correcteur SEUL)** ; carreaux
+  `rgba(110,130,185,.20/.34)`, marge de copie `rgba(198,68,80,.50)`,
+  cadre réservé à la correction (JOUR seul) — le correcteur y écrit
+  son verdict, sous le libellé imprimé.
+- **La pliure de la copie double = le joint des deux panneaux du
+  tableau en NUIT** — même géométrie, deux matières.
+- **Fonte : Caveat (OFL) GATÉE**, réservée à la main du correcteur
+  seule — quatrième fonte du dépôt, chargée par la route /parcours
+  uniquement.
+- Appareil sémantique : en-tête de copie = cartouche (+ les trois
+  besoins de navigation), verdict manuscrit encerclé = résultat,
+  parties I./II./III. = contexte/programme/travaux, barème =
+  compétences, résultat encadré à la règle, tampon VALIDÉE = état ;
+  la voix du correcteur (« Admis → ESTIA », ✓✓, « c'est le métier »)
+  met en scène le résultat et l'état RÉELS — aucune note chiffrée
+  inventée.
+- **Langue de mouvement gatée** : l'encre s'écrit, la correction tombe
+  APRÈS coup, décalée ; NUIT la craie trace et s'estompe.
+  **Interactivité gatée** : JOUR souligner à la règle sous le
+  pointeur, NUIT l'éponge efface et la craie se redessine ; le tampon
+  se réimprime. Sous `reduce` et au tactile : tout posé.
+- Textes jamais l'un sur l'autre ; les cadres peuvent se toucher.
