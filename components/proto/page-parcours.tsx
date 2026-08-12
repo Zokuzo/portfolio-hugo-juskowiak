@@ -10,13 +10,25 @@
    ================================================================== */
 
 import { useState } from "react"
+import type { ReactElement } from "react"
 import { useReducedMotion } from "motion/react"
 import Link from "next/link"
 import { Smooth } from "./smooth"
 import { ThemeToggle } from "./theme-toggle"
+import { UniversCpge } from "./univers-cpge"
 import { UniversEstia } from "./univers-estia"
-import { chapitres } from "./chapitres"
+import { chapitres, type Chapitre } from "./chapitres"
 import { t, type Lang } from "./dict"
+
+/* Chaque univers remplace son chapitre sobre quand sa planche est
+   gatée — le pattern CORPS[slug] des fiches, transposé. Le Record
+   promis au premier univers est là depuis le deuxième ; hokkaido et
+   mbds s'y ajouteront, planche par planche. */
+type UniversProps = { c: Chapitre; lang: Lang; setLang: (l: Lang) => void; reduit: boolean | null }
+const UNIVERS: Partial<Record<Chapitre["ancre"], (props: UniversProps) => ReactElement>> = {
+  cpge: UniversCpge,
+  estia: UniversEstia,
+}
 
 export function PageParcours() {
   const [lang, setLang] = useState<Lang>("fr")
@@ -61,12 +73,10 @@ export function PageParcours() {
         </nav>
       </header>
 
-      {liste.map((c) =>
-        /* Chaque univers remplace son chapitre sobre quand sa planche est
-           gatée — le pattern CORPS[slug] des fiches, transposé. Un Record
-           viendra quand un DEUXIÈME univers existera. */
-        c.ancre === "estia" ? (
-          <UniversEstia key="estia" c={c} lang={lang} setLang={setLang} reduit={reduit} />
+      {liste.map((c) => {
+        const Univers = UNIVERS[c.ancre]
+        return Univers ? (
+          <Univers key={c.ancre} c={c} lang={lang} setLang={setLang} reduit={reduit} />
         ) : (
           <section key={c.ancre} id={c.ancre} className="pc-chapitre" aria-labelledby={`pc-titre-${c.ancre}`}>
             <p className="pc-seuil dim">{c.seuil}</p>
@@ -122,7 +132,7 @@ export function PageParcours() {
             </p>
           </section>
         )
-      )}
+      })}
     </main>
   )
 }
