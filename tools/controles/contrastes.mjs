@@ -91,6 +91,16 @@ const GATES = [
      (--ue-trait-2), zéro couleur neuve ; --ue-legende est constant aux
      deux thèmes, posé sur le papier nu du tirage */
   ["ESTIA légende #48617f sur papier nu (texte ≥ 4,5)", "#48617f", "#dfe3e6", 4.5, null],
+  /* ---- univers CPGE (/parcours) — gate planche v1, addendum du spec ---- */
+  ["CPGE nuit craie #eef1ef sur ardoise (texte ≥ 7)", "#eef1ef", "#1b2422", 7, null],
+  ["CPGE nuit fusain #9fb0aa sur ardoise (texte ≥ 4,5)", "#9fb0aa", "#1b2422", 4.5, null],
+  ["CPGE nuit craie rouge #e89286 sur ardoise (texte ≥ 4,5)", "#e89286", "#1b2422", 4.5, null],
+  ["CPGE nuit craie rouge #e89286 sur ardoise (non-textuel ≥ 3)", "#e89286", "#1b2422", 3, null],
+  ["CPGE jour encre #1d211f sur copie (texte ≥ 7)", "#1d211f", "#f2f4ef", 7, null],
+  ["CPGE jour Bic #1e3f9f sur copie (texte ≥ 7)", "#1e3f9f", "#f2f4ef", 7, null],
+  ["CPGE jour Bic retrait #44598f sur copie (texte ≥ 4,5)", "#44598f", "#f2f4ef", 4.5, null],
+  ["CPGE jour rouge #c0271c sur copie (texte ≥ 4,5)", "#c0271c", "#f2f4ef", 4.5, null],
+  ["CPGE jour rouge #c0271c sur copie (non-textuel ≥ 3)", "#c0271c", "#f2f4ef", 3, null],
 ]
 
 const args = process.argv.slice(2)

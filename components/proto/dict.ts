@@ -745,6 +745,31 @@ const DICT = {
   ueEcole: { fr: "École", en: "School" },
   ueHomologations: { fr: "Homologations", en: "Accreditations" },
 
+  /* ---------------- univers CPGE — l'appareil de la copie (chantier #6) ---------------- */
+  ucEpreuve: { fr: "Épreuve", en: "Paper" },
+  ucCentre: { fr: "Centre", en: "Centre" },
+  ucSession: { fr: "Session", en: "Session" },
+  ucUniversNom: { fr: "Style typographique international", en: "International Typographic Style" },
+  ucCadreReserve: {
+    fr: "Cadre réservé à la correction — ne rien écrire",
+    en: "Reserved for marking — do not write",
+  },
+  /* la voix du correcteur : mise en scène du résultat et de l'état
+     RÉELS (gate planche v1) — aucune note chiffrée inventée */
+  ucVerdict: { fr: "Admis — cycle ingénieur ESTIA", en: "Admitted — ESTIA engineering cycle" },
+  ucVoir: { fr: "→ voir CH.02", en: "→ see CH.02" },
+  ucCeQuiReste: { fr: "Ce qui reste", en: "What remains" },
+  ucMetier: { fr: "c'est le métier —", en: "that's the job —" },
+  ucBareme: { fr: "Barème — compétences construites", en: "Marking scheme — skills built" },
+  ucEtatCol: { fr: "État", en: "Status" },
+  ucAcquis: { fr: "Acquis", en: "Acquired" },
+  ucResultatEncadre: { fr: "Résultat — encadré à la règle", en: "Result — ruled box" },
+  ucSuite: {
+    fr: "La suite du parcours — CH.02, le rail principal.",
+    en: "The journey continues — CH.02, the main rail.",
+  },
+  ucNePasEffacer: { fr: "Ne pas effacer", en: "Do not erase" },
+
   /* Annexes de l'index : les fiches d'unité ne sont pas des feuilles du
      jeu, ce sont des pièces détachées — d'où un bloc distinct et une
      référence en U-0n. */
