@@ -59,7 +59,12 @@
 /* ---- la copie double / les deux panneaux du tableau ---- */
 .uc-copie {
   position: relative;
-  max-width: 1240px;
+  /* largeur FIGÉE : la composition gatée vit à 1240 exactement — en
+     dessous, la feuille se réduit à la photocopieuse (zoom, paliers
+     plus bas), elle ne se recompose jamais. Positions % + largeurs px
+     dérivaient sous 1240 : la sonde de chevauchements a compté les
+     collisions (retour Hugo 2026-08-12). */
+  width: 1240px;
   height: 1880px;
   margin: 0 auto;
   background: var(--uc-copie);
@@ -155,8 +160,11 @@
 }
 .uc-entete div { display: grid; grid-template-columns: 7.5em 1fr; border-top: 1px solid var(--uc-carreau-fort); }
 .uc-entete div:first-child { border-top: 0; }
-.uc-entete dt { padding: 0.42em 0.7em; border-right: 1px solid var(--uc-carreau-fort); color: var(--uc-chair-2); text-transform: uppercase; font-size: 0.6rem; }
-.uc-entete dd { padding: 0.42em 0.7em; text-transform: uppercase; margin: 0; }
+/* rangées resserrées (0.34em) : à 1rem = 19px l'en-tête descendait
+   sous la barre grasse du titre — le rem du site rend ~19 % plus haut
+   que la planche (16px), la sonde l'a mesuré */
+.uc-entete dt { padding: 0.34em 0.7em; border-right: 1px solid var(--uc-carreau-fort); color: var(--uc-chair-2); text-transform: uppercase; font-size: 0.6rem; }
+.uc-entete dd { padding: 0.34em 0.7em; text-transform: uppercase; margin: 0; }
 .uc-nav { display: flex; align-items: center; gap: 0.7rem; }
 .uc-nav button {
   font: inherit; background: none; border: 0; cursor: pointer;
@@ -197,14 +205,23 @@
 .uc-verdict svg { position: absolute; inset: -13px -10px auto -16px; height: 58px; width: calc(100% + 26px); pointer-events: none; }
 .uc-verdict svg path { fill: none; stroke: var(--uc-correction); stroke-width: 1.6; }
 
-/* le titre : la barre grasse suisse, le display massif condensé */
-.uc-titre { top: 12.45%; left: 7.26%; right: 7.26%; color: var(--uc-structure); }
-.uc-barre { height: 7px; background: var(--uc-structure); margin-bottom: 1.4rem; transform-origin: left center; }
+/* le titre : la barre grasse suisse, le display massif condensé.
+   top 14.36% = 270px : la barre se pose sur la 3e ligne forte du
+   quadrillage (le parti), 20px sous l'en-tête resserré — à 12.45%
+   elle tranchait ses dernières rangées (rem 19px, sonde) */
+.uc-titre { top: 14.36%; left: 7.26%; right: 7.26%; color: var(--uc-structure); }
+/* retrait 22px = le 1.4rem de la planche à 16px — la feuille est
+   figée, ses retraits aussi */
+.uc-barre { height: 7px; background: var(--uc-structure); margin-bottom: 22px; transform-origin: left center; }
 .uc-nom {
   font-family: var(--f-display);
   font-stretch: 62%;
   font-weight: 900;
-  font-size: clamp(6rem, 15vw, 12.5rem);
+  /* taille FIXE : dans une feuille figée à 1240, un display en vw
+     changeait de hauteur selon l'écran et poussait le bloc titre
+     sous II. PROGRAMME (sonde). Géométrie planche, pas typographie
+     fluide — la photocopieuse s'occupe des petits écrans. */
+  font-size: 190px;
   line-height: 0.8;
   letter-spacing: 0.005em;
   text-transform: uppercase;
@@ -386,9 +403,21 @@
   .uc-tampon { cursor: pointer; }
 }
 
+/* ---- la photocopieuse : sous 1330px de fenêtre, la feuille 1240
+   n'entre plus (marges de .uc comprises) — elle se RÉDUIT d'un bloc,
+   texte et carreaux ensemble (zoom = mise en page, pas transform :
+   les marges auto centrent la boîte réduite ; coût nul par frame).
+   Jamais de recomposition : la géométrie gatée est la seule. ---- */
+@media (min-width: 1180px) and (max-width: 1329px) {
+  .uc-copie { zoom: 0.88; }
+}
+@media (min-width: 1000px) and (max-width: 1179px) {
+  .uc-copie { zoom: 0.75; }
+}
+
 /* ---- petit écran : la copie redevient un flux ---- */
 @media (max-width: 1000px) {
-  .uc-copie { height: auto; padding: 1.5rem; }
+  .uc-copie { width: auto; height: auto; padding: 1.5rem; }
   .uc-page { position: static; transform: none !important; }
   .uc-piece { position: static; width: auto !important; max-width: 34rem; transform: none !important; margin-bottom: 1.6rem; }
   .uc-pli, .uc-marge-g, .uc-marge-d, .uc-halo, .uc-rail, .uc-eq, .uc-no-page, .uc-souligne, .uc-reserve, .uc-ne-pas-effacer { display: none; }

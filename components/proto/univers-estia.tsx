@@ -59,8 +59,12 @@ export function UniversEstia({
      l'écran (voir rapport Tâche 3) — sans ce recalage le calque restait
      visiblement décalé de la feuille posée de la Tâche 2. Amplitude du
      CAP conservée (-4,2° / -38px), seule l'origine bouge. */
-  const rotCalque = useTransform([souleve, porte], ([p, g]: number[]) => -4.6 + g * p * -4.2)
-  const yCalque = useTransform([souleve, porte], ([p, g]: number[]) => g * p * -38)
+  /* amplitudes tempérées (-4,2°/-38px → -2,4°/-14px) : au plus fort
+     du soulèvement, le coin du calque tourné montait dans le bloc
+     contexte — mesuré par la sonde de chevauchements (retour Hugo
+     2026-08-12). La POSE gatée (-4,6°, y 0) ne bouge pas. */
+  const rotCalque = useTransform([souleve, porte], ([p, g]: number[]) => -4.6 + g * p * -2.4)
+  const yCalque = useTransform([souleve, porte], ([p, g]: number[]) => g * p * -14)
 
   /* le rail se mesure : scaleY 0,15→1, origine haut — 0,15 en tête de
      lecture (porte ouverte, p=0), plein sous reduce (porte fermée, la

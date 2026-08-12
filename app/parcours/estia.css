@@ -57,7 +57,11 @@
 /* ---- la feuille ---- */
 .ue-tirage {
   position: relative;
-  max-width: 1240px;
+  /* largeur FIGÉE : positions % + largeurs px dérivaient sous 1240
+     (calque sur contexte, D-01 sur D-02 — sonde de chevauchements,
+     retour Hugo 2026-08-12). Le tirage se réduit à la photocopieuse
+     (zoom, paliers en fin de feuille), il ne se recompose jamais. */
+  width: 1240px;
   margin: 0 auto;
   background: var(--ue-papier-nu);
   padding: 14px;
@@ -77,7 +81,13 @@
 
 .ue-emulsion {
   position: relative;
-  height: 1830px;
+  /* 1830 → 2172 (×1,1875) : la planche est composée à 16px/rem, le
+     site rend à 19px — les blocs de texte sont 19 % plus hauts et la
+     feuille avait perdu son air (le calque touchait le contexte,
+     sonde de chevauchements, retour Hugo 2026-08-12). Les ancres %
+     s'écartent d'autant : proportions de la planche gatée retrouvées,
+     au rem du site. Le viewBox des rappels s'étire (none). */
+  height: 2172px;
   background:
     radial-gradient(140% 110% at 30% 12%, rgba(255, 255, 255, 0.06), transparent 60%),
     radial-gradient(120% 140% at 85% 95%, rgba(0, 0, 0, 0.18), transparent 55%),
@@ -283,6 +293,7 @@
   /* rotate(-4.6deg) vit dans la pose de rotCalque (JS) : le style
      framer est permanent depuis la porte multiplicative, ce transform
      CSS ne s'exécuterait plus jamais */
+  /* la pose gatée (l'air vient de la hauteur d'émulsion rétablie) */
   top: 31.5%; left: 31%;
   width: 368px;
   background: var(--ue-calque-fond);
@@ -373,8 +384,20 @@
   .ue-calque { will-change: auto; cursor: default; }
 }
 
+/* ---- la photocopieuse : sous 1330px de fenêtre, le tirage 1240
+   n'entre plus (marges de .ue comprises) — il se réduit d'un bloc,
+   texte et trame ensemble (zoom = mise en page ; coût nul par frame).
+   Mêmes paliers que la copie CPGE. ---- */
+@media (min-width: 1180px) and (max-width: 1329px) {
+  .ue-tirage { zoom: 0.88; }
+}
+@media (min-width: 1000px) and (max-width: 1179px) {
+  .ue-tirage { zoom: 0.75; }
+}
+
 /* ---- petit écran : la feuille redevient un flux ---- */
 @media (max-width: 1000px) {
+  .ue-tirage { width: auto; }
   .ue-emulsion { height: auto; padding: 1.5rem; }
   .ue-piece { position: static; width: auto !important; max-width: 34rem; transform: none !important; margin-bottom: 1.6rem; }
   .ue-poche, .ue-rappels, .ue-cote-v, .ue-nuage, .ue-lampe { display: none; }
