@@ -297,6 +297,17 @@
 .ue-nav .langtoggle button { font-size: 0.66rem; color: var(--ue-trait-2); background: none; border: 0; }
 .ue-nav .langtoggle button[data-on="true"] { background: var(--ue-trait); color: var(--ue-feuille); padding: 0 0.5em; }
 
+/* le repère s'allume quand on est chez lui — l'œil trouve la vue */
+.ue-ctx:hover .ue-vue, .ue-prog:hover .ue-vue,
+.ue-ctx:focus-within .ue-vue, .ue-prog:focus-within .ue-vue {
+  background: var(--ue-trait);
+  color: var(--ue-feuille);
+}
+.ue-calque { will-change: transform; }
+@media (prefers-reduced-motion: reduce) {
+  .ue-calque { will-change: auto; cursor: default; }
+}
+
 /* ---- petit écran : la feuille redevient un flux ---- */
 @media (max-width: 1000px) {
   .ue-emulsion { height: auto; padding: 1.5rem; }

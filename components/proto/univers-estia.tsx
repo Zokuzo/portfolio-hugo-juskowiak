@@ -11,6 +11,8 @@
    l'amorce littérale de la frontière vers CH.03 (phase 3).
    ================================================================== */
 
+import { useEffect, useRef, useState } from "react"
+import { motion, useScroll, useSpring, useTransform } from "motion/react"
 import Link from "next/link"
 import { ThemeToggle } from "./theme-toggle"
 import type { Chapitre } from "./chapitres"
@@ -30,6 +32,44 @@ export function UniversEstia({
   /* la fin de période, pour le tampon : « 2022.09 → 2025.10 » → « 2025.10 » */
   const findePeriode = c.periode.split("→").pop()!.trim()
 
+  const feuille = useRef<HTMLDivElement>(null)
+  /* le calque suit le scroll — FONCTION PURE : le F5 en pleine feuille
+     rend l'état exact (leçon de l'iris, revue #13) */
+  const { scrollYProgress } = useScroll({ target: feuille, offset: ["start end", "end start"] })
+  const souleve = useSpring(scrollYProgress, { stiffness: 90, damping: 24 })
+  /* la plage démarre EXACTEMENT sur l'état posé (CSS rotate(-4.6deg),
+     aucune translation) plutôt qu'à -2,2°/12px : SSR fige scrollYProgress
+     à 0, et sous reduce le style motion se foreclot à ce gel — vérifié à
+     l'écran (voir rapport Tâche 3) — sans ce recalage le calque restait
+     visiblement décalé de la feuille posée de la Tâche 2. Amplitude du
+     CAP conservée (-4,2° / -38px), seule l'origine bouge. */
+  const rotCalque = useTransform(souleve, [0, 1], [-4.6, -8.8])
+  const yCalque = useTransform(souleve, [0, 1], [0, -38])
+
+  /* la main n'existe qu'au pointeur fin — au tactile le drag volerait
+     le scroll de la page */
+  const [pointeurFin, setPointeurFin] = useState(false)
+  useEffect(() => {
+    setPointeurFin(matchMedia("(hover: hover) and (pointer: fine)").matches)
+  }, [])
+
+  const EASE = [0.22, 1, 0.36, 1] as const
+  /* un filet qui se trace ; sous reduce : posé (le CSS n'atteint pas
+     framer — doctrine planche.css:1570) */
+  const traceur = (delai = 0) => ({
+    initial: reduit ? false : ({ scaleX: 0 } as const),
+    whileInView: { scaleX: 1 },
+    viewport: { once: true, amount: 0.5 } as const,
+    transition: reduit ? { duration: 0 } : { duration: 0.7, delay: delai, ease: EASE },
+    style: { transformOrigin: "left center" } as const,
+  })
+  const encre = (delai = 0) => ({
+    initial: reduit ? false : ({ opacity: 0, y: 8 } as const),
+    whileInView: { opacity: 1, y: 0 },
+    viewport: { once: true, amount: 0.35 } as const,
+    transition: reduit ? { duration: 0 } : { duration: 0.5, delay: delai, ease: EASE },
+  })
+
   return (
     <section id="estia" data-univers="estia" className="ue" aria-labelledby="pc-titre-estia">
       <div className="ue-tirage">
@@ -39,7 +79,7 @@ export function UniversEstia({
           <span className="v" style={{ top: "16.6%" }}>A</span><span className="v" style={{ top: "50%" }}>B</span><span className="v" style={{ top: "83.3%" }}>C</span>
           <span className="v d" style={{ top: "16.6%" }}>A</span><span className="v d" style={{ top: "50%" }}>B</span><span className="v d" style={{ top: "83.3%" }}>C</span>
         </div>
-        <div className="ue-emulsion">
+        <div className="ue-emulsion" ref={feuille}>
           <div className="ue-poche" aria-hidden="true"></div>
 
           <svg className="ue-rappels" aria-hidden="true" viewBox="0 0 1210 1830" preserveAspectRatio="none">
@@ -49,13 +89,13 @@ export function UniversEstia({
             <circle cx="660" cy="812" r="2.5"></circle>
           </svg>
 
-          <aside className="ue-piece ue-liminaire">
+          <motion.aside className="ue-piece ue-liminaire" {...encre(0)}>
             <span className="mono mono-xs dim">{t(lang, "ueNote")}</span>
             {c.seuil}
-          </aside>
+          </motion.aside>
 
           <header className="ue-piece ue-elevation">
-            <p className="ue-cote mono mono-xs"><i aria-hidden="true">⟨</i>{c.periode}<i aria-hidden="true">⟩</i></p>
+            <motion.p className="ue-cote mono mono-xs" {...traceur()}><i aria-hidden="true">⟨</i>{c.periode}<i aria-hidden="true">⟩</i></motion.p>
             <h2 id="pc-titre-estia" className="ue-nom">{c.nom}</h2>
             <div className="ue-el-ligne">
               <span className="jp ue-el-jp" lang="ja">{c.jp}</span>
@@ -66,65 +106,80 @@ export function UniversEstia({
 
           <div className="ue-piece ue-cote-v" aria-hidden="true"><span>{t(lang, "ueRail")}</span></div>
 
-          <div className="ue-piece ue-ctx">
-            <div className="ue-vue-tete">
+          <motion.div className="ue-piece ue-ctx" {...encre(0.04)}>
+            <motion.div className="ue-vue-tete" {...traceur()}>
               <span className="ue-vue" aria-hidden="true"><i>A</i><b>02</b></span>
               <h3>{t(lang, "fpContexte")}</h3>
               <span className="ue-fil" aria-hidden="true"></span>
-            </div>
+            </motion.div>
             <p>{c.contexte}</p>
-          </div>
+          </motion.div>
 
-          <div className="ue-piece ue-prog">
-            <div className="ue-vue-tete">
+          <motion.div className="ue-piece ue-prog" {...encre(0.08)}>
+            <motion.div className="ue-vue-tete" {...traceur()}>
               <span className="ue-vue" aria-hidden="true"><i>B</i><b>02</b></span>
               <h3>{t(lang, "fpProgramme")}</h3>
-            </div>
+            </motion.div>
             <ul>
               {c.programme.map((ligne) => (
                 <li key={ligne}>{ligne}</li>
               ))}
             </ul>
-          </div>
+          </motion.div>
 
-          <article className="ue-piece ue-detail ue-d01">
+          <motion.article className="ue-piece ue-detail ue-d01" {...encre(0.12)}>
             <span className="mono mono-xs dim">{t(lang, "ueDetail")} D-01 · {t(lang, "fpTravaux")}</span>
             <h4>{c.travaux[0].titre}</h4>
             <p>{c.travaux[0].texte}</p>
-          </article>
+          </motion.article>
 
-          <article className="ue-piece ue-detail ue-d02" aria-hidden="true">
+          <motion.article className="ue-piece ue-detail ue-d02" aria-hidden="true" {...encre(0.16)}>
             <span className="mono mono-xs dim">{t(lang, "ueDetail")} D-02 — {t(lang, "ueVoirCalque")}</span>
             <h4>{c.travaux[1].titre}</h4>
             <p>{t(lang, "ueGhost")}</p>
-          </article>
+          </motion.article>
 
-          <article className="ue-piece ue-detail ue-d03">
+          <motion.article className="ue-piece ue-detail ue-d03" {...encre(0.2)}>
             <svg className="ue-nuage" viewBox="0 0 420 240" preserveAspectRatio="none" aria-hidden="true">
-              <path d="M30,30 Q45,8 62,26 Q80,4 98,24 Q118,4 136,24 Q156,4 174,24 Q194,6 212,26 Q232,6 250,26 Q270,8 288,26 Q308,8 326,28 Q346,10 362,30 Q382,16 388,42 Q404,52 392,72 Q408,88 392,106 Q406,124 390,140 Q404,158 386,172 Q398,192 378,200 Q368,222 346,210 Q330,230 310,214 Q292,232 272,214 Q252,232 232,214 Q212,232 192,214 Q172,230 152,212 Q132,228 112,210 Q92,226 74,208 Q52,220 44,198 Q22,192 30,170 Q12,156 28,138 Q12,120 30,104 Q14,86 32,70 Q18,52 30,30 Z"></path>
+              <motion.path
+                d="M30,30 Q45,8 62,26 Q80,4 98,24 Q118,4 136,24 Q156,4 174,24 Q194,6 212,26 Q232,6 250,26 Q270,8 288,26 Q308,8 326,28 Q346,10 362,30 Q382,16 388,42 Q404,52 392,72 Q408,88 392,106 Q406,124 390,140 Q404,158 386,172 Q398,192 378,200 Q368,222 346,210 Q330,230 310,214 Q292,232 272,214 Q252,232 232,214 Q212,232 192,214 Q172,230 152,212 Q132,228 112,210 Q92,226 74,208 Q52,220 44,198 Q22,192 30,170 Q12,156 28,138 Q12,120 30,104 Q14,86 32,70 Q18,52 30,30 Z"
+                initial={reduit ? false : { pathLength: 0 }}
+                whileInView={{ pathLength: 1 }}
+                viewport={{ once: true, amount: 0.6 }}
+                transition={reduit ? { duration: 0 } : { duration: 1.2, ease: "easeInOut" }}
+              ></motion.path>
               {/* 2024.09 : l'entrée du MBDS — la date de la révision au plan */}
               <text x="330" y="16">{t(lang, "ueRev")} 2024.09</text>
             </svg>
             <span className="mono mono-xs dim">{t(lang, "ueDetail")} D-03 — {t(lang, "ueSecondeVoie")}</span>
             <h4>{c.travaux[2].titre}</h4>
             <p>{c.travaux[2].texte}</p>
-          </article>
+          </motion.article>
 
-          <aside className="ue-piece ue-calque">
+          <motion.aside
+            className="ue-piece ue-calque"
+            style={reduit ? undefined : { rotate: rotCalque, y: yCalque }}
+            drag={pointeurFin && !reduit}
+            dragConstraints={{ left: -14, right: 14, top: -10, bottom: 10 }}
+            dragElastic={0.18}
+            dragSnapToOrigin
+            whileDrag={{ scale: 1.015 }}
+            whileHover={pointeurFin && !reduit ? { rotate: -7.5 } : undefined}
+          >
             <span className="mono mono-xs dim">{t(lang, "ueCalque")} — {t(lang, "ueDetail")} D-02 · {t(lang, "ueEchappee")}</span>
             <h4>{c.travaux[1].titre}</h4>
             <p>{c.travaux[1].texte}</p>
             <span className="jp ue-calque-jp" lang="ja">{t(lang, "ueCalqueJp")}</span>
-          </aside>
+          </motion.aside>
 
           {c.resultat && (
-            <p className="ue-piece ue-resultat">
+            <motion.p className="ue-piece ue-resultat" {...encre(0.24)}>
               <span className="mono mono-xs dim">{t(lang, "fpResultat")}</span>
               {c.resultat}
-            </p>
+            </motion.p>
           )}
 
-          <div className="ue-piece ue-nomenclature">
+          <motion.div className="ue-piece ue-nomenclature" {...encre(0.28)}>
             <table>
               <caption className="mono mono-xs">{t(lang, "ueNomenclature")}</caption>
               <thead>
@@ -136,15 +191,23 @@ export function UniversEstia({
                 ))}
               </tbody>
             </table>
-          </div>
+          </motion.div>
 
-          <div className="ue-piece ue-tampon" role="img" aria-label={`${c.etat} — ${findePeriode}`}>
+          <motion.div
+            className="ue-piece ue-tampon"
+            role="img"
+            aria-label={`${c.etat} — ${findePeriode}`}
+            initial={reduit ? false : { opacity: 0, scale: 1.35 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true, amount: 0.8 }}
+            transition={reduit ? { duration: 0 } : { duration: 0.18, ease: "easeOut" }}
+          >
             <b>{c.etat}</b>
             <span>{findePeriode} — {t(lang, "ueVisa")}</span>
-          </div>
+          </motion.div>
 
           {/* le cartouche est la navigation de l'univers : langue, thème, sortie */}
-          <dl className="ue-piece ue-cartouche">
+          <motion.dl className="ue-piece ue-cartouche" {...encre(0.32)}>
             <div><dt>{t(lang, "ueProjet")}</dt><dd>{t(lang, "pcTitre")} — CH.{c.numero} / 04</dd></div>
             <div><dt>{t(lang, "ueObjet")}</dt><dd>{c.nom}</dd></div>
             <div><dt>{t(lang, "ueUnivers")}</dt><dd>{t(lang, "ueUniversNom")}</dd></div>
@@ -165,7 +228,7 @@ export function UniversEstia({
                 </Link>
               </dd>
             </div>
-          </dl>
+          </motion.dl>
         </div>
       </div>
     </section>
