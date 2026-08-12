@@ -722,6 +722,10 @@ const DICT = {
   ueCalqueJp: { fr: "北海道 — 間", en: "北海道 — 間" },
   ueSecondeVoie: { fr: "seconde voie", en: "second track" },
   ueRev: { fr: "RÉV.", en: "REV." },
+  /* = début de période MBDS — vérifiée par le garde-fou humain à la
+     bascule (le derive runtime coûterait un import croisé pour une
+     constante) */
+  ueRevDate: { fr: "2024.09", en: "2024.09" },
   ueVisa: { fr: "visa", en: "visa" },
   ueRail: { fr: "3 ans — le rail", en: "3 years — the rail" },
   ueNomenclature: { fr: "Nomenclature — compétences & outils", en: "Parts list — skills & tools" },

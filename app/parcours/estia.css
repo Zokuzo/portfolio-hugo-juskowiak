@@ -21,6 +21,7 @@
   --ue-lampe: none;
   --ue-ombre: none;
   --ue-revision: #e9eef5; /* la NUIT reste bichrome : sa chimie */
+  --ue-repere: #5b6b80; /* bande de papier nu — même valeur aux deux thèmes */
 
   background: var(--ue-table);
   color: var(--ue-trait);
@@ -45,6 +46,7 @@
     linear-gradient(115deg, transparent 58%, rgba(66, 52, 28, 0.07) 64%, rgba(66, 52, 28, 0.15) 100%),
     radial-gradient(130% 110% at 35% 8%, transparent 55%, rgba(66, 52, 28, 0.10) 100%);
   --ue-revision: #a83c22; /* le crayon gras des corrections — JOUR seulement */
+  --ue-repere: #5b6b80; /* bande de papier nu — même valeur qu'en nuit */
 }
 
 /* les utilitaires du site (.mono/.dim/.jp) gardent leurs tailles ;
@@ -64,7 +66,7 @@
 
 .ue-reperes {
   position: absolute; inset: 0; pointer-events: none;
-  font-family: var(--f-mono); font-size: 9px; line-height: 14px; color: #5b6b80;
+  font-family: var(--f-mono); font-size: 9px; line-height: 14px; color: var(--ue-repere);
 }
 .ue-reperes span { position: absolute; }
 .ue-reperes .h { top: 0; transform: translateX(-50%); }

@@ -39,7 +39,7 @@
 .pc-couverture {
   min-height: 55vh;
   max-width: calc(68rem - 2 * var(--gutter));
-  margin-inline: auto;
+  margin-inline: max(calc((100% - 68rem + 2 * var(--gutter)) / 2), var(--gutter));
 }
 .pc-titre {
   margin-top: 4rem;
@@ -82,6 +82,7 @@
 .pc-chapitre {
   max-width: 46rem;
   margin-left: max(calc((100% - 68rem + 2 * var(--gutter)) / 2), var(--gutter));
+  margin-right: var(--gutter);
   margin-top: 24vh;
   /* L'ancre atterrit DANS le chapitre : l'en-tête posé sous le bord,
      jamais collé — et de la marge pour les zones de frontière à

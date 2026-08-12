@@ -15,7 +15,7 @@ import { useEffect, useRef, useState } from "react"
 import { motion, useScroll, useSpring, useTransform } from "motion/react"
 import Link from "next/link"
 import { ThemeToggle } from "./theme-toggle"
-import type { Chapitre } from "./chapitres"
+import { ANCRES, type Chapitre } from "./chapitres"
 import { t, type Lang } from "./dict"
 
 export function UniversEstia({
@@ -108,7 +108,7 @@ export function UniversEstia({
 
           <motion.div className="ue-piece ue-ctx" {...encre(0.04)}>
             <motion.div className="ue-vue-tete" {...traceur()}>
-              <span className="ue-vue" aria-hidden="true"><i>A</i><b>02</b></span>
+              <span className="ue-vue" aria-hidden="true"><i>A</i><b>{c.numero}</b></span>
               <h3>{t(lang, "fpContexte")}</h3>
               <span className="ue-fil" aria-hidden="true"></span>
             </motion.div>
@@ -117,7 +117,7 @@ export function UniversEstia({
 
           <motion.div className="ue-piece ue-prog" {...encre(0.08)}>
             <motion.div className="ue-vue-tete" {...traceur()}>
-              <span className="ue-vue" aria-hidden="true"><i>B</i><b>02</b></span>
+              <span className="ue-vue" aria-hidden="true"><i>B</i><b>{c.numero}</b></span>
               <h3>{t(lang, "fpProgramme")}</h3>
             </motion.div>
             <ul>
@@ -148,8 +148,8 @@ export function UniversEstia({
                 viewport={{ once: true, amount: 0.6 }}
                 transition={reduit ? { duration: 0 } : { duration: 1.2, ease: "easeInOut" }}
               ></motion.path>
-              {/* 2024.09 : l'entrée du MBDS — la date de la révision au plan */}
-              <text x="330" y="16">{t(lang, "ueRev")} 2024.09</text>
+              {/* l'entrée du MBDS — la date de la révision au plan, dérivée du dict (M-2) */}
+              <text x="330" y="16">{t(lang, "ueRev")} {t(lang, "ueRevDate")}</text>
             </svg>
             <span className="mono mono-xs dim">{t(lang, "ueDetail")} D-03 — {t(lang, "ueSecondeVoie")}</span>
             <h4>{c.travaux[2].titre}</h4>
@@ -159,17 +159,24 @@ export function UniversEstia({
           <motion.aside
             className="ue-piece ue-calque"
             style={reduit ? undefined : { rotate: rotCalque, y: yCalque }}
-            drag={pointeurFin && !reduit}
-            dragConstraints={{ left: -14, right: 14, top: -10, bottom: 10 }}
-            dragElastic={0.18}
-            dragSnapToOrigin
-            whileDrag={{ scale: 1.015 }}
-            whileHover={pointeurFin && !reduit ? { rotate: -7.5 } : undefined}
           >
-            <span className="mono mono-xs dim">{t(lang, "ueCalque")} — {t(lang, "ueDetail")} D-02 · {t(lang, "ueEchappee")}</span>
-            <h4>{c.travaux[1].titre}</h4>
-            <p>{c.travaux[1].texte}</p>
-            <span className="jp ue-calque-jp" lang="ja">{t(lang, "ueCalqueJp")}</span>
+            {/* le drag vit sur ce div intérieur, jamais sur l'aside : son
+                origine 0 est correcte (celle de l'aside est une MotionValue
+                dérivée du scroll — dragSnapToOrigin y ramènerait y à 0,
+                cassant la pose au relâchement, cf. I-2 de la revue) */}
+            <motion.div
+              drag={pointeurFin && !reduit}
+              dragConstraints={{ left: -14, right: 14, top: -10, bottom: 10 }}
+              dragElastic={0.18}
+              dragSnapToOrigin
+              whileDrag={{ scale: 1.015 }}
+              whileHover={pointeurFin && !reduit ? { rotate: -2.5 } : undefined}
+            >
+              <span className="mono mono-xs dim">{t(lang, "ueCalque")} — {t(lang, "ueDetail")} D-02 · {t(lang, "ueEchappee")}</span>
+              <h4>{c.travaux[1].titre}</h4>
+              <p>{c.travaux[1].texte}</p>
+              <span className="jp ue-calque-jp" lang="ja">{t(lang, "ueCalqueJp")}</span>
+            </motion.div>
           </motion.aside>
 
           {c.resultat && (
@@ -208,7 +215,7 @@ export function UniversEstia({
 
           {/* le cartouche est la navigation de l'univers : langue, thème, sortie */}
           <motion.dl className="ue-piece ue-cartouche" {...encre(0.32)}>
-            <div><dt>{t(lang, "ueProjet")}</dt><dd>{t(lang, "pcTitre")} — CH.{c.numero} / 04</dd></div>
+            <div><dt>{t(lang, "ueProjet")}</dt><dd>{t(lang, "pcTitre")} — CH.{c.numero} / {String(ANCRES.length).padStart(2, "0")}</dd></div>
             <div><dt>{t(lang, "ueObjet")}</dt><dd>{c.nom}</dd></div>
             <div><dt>{t(lang, "ueUnivers")}</dt><dd>{t(lang, "ueUniversNom")}</dd></div>
             <div><dt>{t(lang, "ueEchelle")}</dt><dd>{t(lang, "ueEchelleVal")}</dd></div>
