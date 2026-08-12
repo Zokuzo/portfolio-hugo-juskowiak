@@ -1,0 +1,304 @@
+/* ==================================================================
+   UNIVERS CH.02 — ESTIA (cyanotype / blueprint d'atelier).
+   Feuille chargée par app/parcours/page.tsx, jamais retirée à la
+   navigation : tout est scopé .ue. Valeurs = gate planche v2.3
+   (addendum du spec 2026-08-12). NUIT en base ; JOUR sous html.clair.
+   Ratios : nuit 12,434 / 7,609 · jour 9,554 / 5,271 · sanguine 5,204
+   (gates armés dans tools/controles/contrastes.mjs).
+   ================================================================== */
+
+.ue {
+  --ue-table: #050d18;
+  --ue-feuille: #0e2a4a;
+  --ue-feuille-bord: #081c33;
+  --ue-papier-nu: #dfe3e6;
+  --ue-trait: #e9eef5;
+  --ue-trait-2: #a9bed6;
+  --ue-ligne: rgba(233, 238, 245, 0.30);
+  --ue-ligne-2: rgba(233, 238, 245, 0.14);
+  --ue-calque-fond: rgba(233, 238, 245, 0.07);
+  --ue-calque-bord: rgba(233, 238, 245, 0.38);
+  --ue-lampe: none;
+  --ue-ombre: none;
+  --ue-revision: #e9eef5; /* la NUIT reste bichrome : sa chimie */
+
+  background: var(--ue-table);
+  color: var(--ue-trait);
+  padding: clamp(2rem, 6vw, 5rem) clamp(0.75rem, 3vw, 2.5rem);
+  scroll-margin-block-start: 0; /* le monde est plein écran : l'ancre pose la feuille en haut */
+  margin-top: 24vh;
+}
+
+:where(html.clair) .ue {
+  --ue-table: #6e6350;
+  --ue-feuille: #f0e9d8;
+  --ue-feuille-bord: #e6ddc8;
+  --ue-papier-nu: #f0e9d8;
+  --ue-trait: #1c3a5e;
+  --ue-trait-2: #48617f;
+  --ue-ligne: rgba(28, 58, 94, 0.34);
+  --ue-ligne-2: rgba(28, 58, 94, 0.14);
+  --ue-calque-fond: rgba(255, 253, 247, 0.55);
+  --ue-calque-bord: rgba(28, 58, 94, 0.35);
+  --ue-lampe: radial-gradient(95% 75% at 35% 6%, rgba(255, 242, 205, 0.95), rgba(255, 242, 205, 0) 58%);
+  --ue-ombre:
+    linear-gradient(115deg, transparent 58%, rgba(66, 52, 28, 0.07) 64%, rgba(66, 52, 28, 0.15) 100%),
+    radial-gradient(130% 110% at 35% 8%, transparent 55%, rgba(66, 52, 28, 0.10) 100%);
+  --ue-revision: #a83c22; /* le crayon gras des corrections — JOUR seulement */
+}
+
+/* les utilitaires du site (.mono/.dim/.jp) gardent leurs tailles ;
+   seule la couleur suit l'univers */
+.ue .dim { color: var(--ue-trait-2); }
+
+/* ---- la feuille ---- */
+.ue-tirage {
+  position: relative;
+  max-width: 1240px;
+  margin: 0 auto;
+  background: var(--ue-papier-nu);
+  padding: 14px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+}
+:where(html.clair) .ue-tirage { box-shadow: 0 40px 90px rgba(30, 22, 8, 0.5); }
+
+.ue-reperes {
+  position: absolute; inset: 0; pointer-events: none;
+  font-family: var(--f-mono); font-size: 9px; line-height: 14px; color: #5b6b80;
+}
+.ue-reperes span { position: absolute; }
+.ue-reperes .h { top: 0; transform: translateX(-50%); }
+.ue-reperes .h.b { top: auto; bottom: 0; }
+.ue-reperes .v { left: 0; width: 14px; text-align: center; transform: translateY(-50%); }
+.ue-reperes .v.d { left: auto; right: 0; }
+
+.ue-emulsion {
+  position: relative;
+  height: 1830px;
+  background:
+    var(--ue-lampe),
+    radial-gradient(140% 110% at 30% 12%, rgba(255, 255, 255, 0.06), transparent 60%),
+    radial-gradient(120% 140% at 85% 95%, rgba(0, 0, 0, 0.18), transparent 55%),
+    var(--ue-feuille);
+  outline: 1px solid var(--ue-ligne);
+  overflow: hidden;
+}
+.ue-emulsion::before {
+  content: "";
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    linear-gradient(90deg, var(--ue-feuille-bord), transparent 2.5%),
+    linear-gradient(-90deg, var(--ue-feuille-bord), transparent 3%),
+    linear-gradient(180deg, var(--ue-feuille-bord), transparent 2%),
+    linear-gradient(0deg, var(--ue-feuille-bord), transparent 3.5%);
+  opacity: 0.8;
+}
+:where(html.clair) .ue-emulsion::before { opacity: 0.35; }
+/* JOUR : l'ombre du bras de lampe + la retombée de lumière — au-dessus
+   des pièces, comme la vraie lumière ; alphas ≤ .15, ratios tenus */
+.ue-emulsion::after {
+  content: "";
+  position: absolute; inset: 0; pointer-events: none;
+  background: var(--ue-ombre);
+}
+
+.ue-poche {
+  position: absolute;
+  left: -4%; top: 31.5%;
+  width: 112%; height: 90px;
+  transform: rotate(-3.2deg);
+  background-image: repeating-linear-gradient(45deg, var(--ue-ligne-2) 0 1px, transparent 1px 8px);
+  border-top: 1px solid var(--ue-ligne-2);
+  border-bottom: 1px solid var(--ue-ligne-2);
+}
+
+.ue-rappels { position: absolute; inset: 0; pointer-events: none; }
+.ue-rappels line { stroke: var(--ue-ligne); stroke-width: 1; }
+.ue-rappels circle { fill: var(--ue-trait-2); }
+
+/* ---- grammaire ---- */
+.ue-vue {
+  display: inline-grid; place-items: center; grid-template-rows: 1fr 1fr;
+  width: 2.1em; height: 2.1em;
+  border: 1px solid var(--ue-trait); border-radius: 50%;
+  font-family: var(--f-mono); font-size: 0.625rem; line-height: 1;
+  position: relative; flex: none;
+}
+.ue-vue::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px solid var(--ue-trait); }
+.ue-vue i { font-style: normal; padding-bottom: 0.2em; }
+.ue-vue b { font-weight: 400; padding-top: 0.25em; color: var(--ue-trait-2); }
+
+.ue-vue-tete { display: flex; align-items: center; gap: 0.8rem; border-bottom: 1px solid var(--ue-ligne); padding-bottom: 0.55rem; margin-bottom: 0.9rem; }
+.ue-vue-tete h3 { font-family: var(--f-mono); font-size: 0.6875rem; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 500; }
+.ue-vue-tete .ue-fil { flex: 1; height: 6px; background-image: repeating-linear-gradient(45deg, var(--ue-ligne-2) 0 1px, transparent 1px 7px); }
+
+/* ---- les pièces ---- */
+.ue-piece { position: absolute; }
+
+.ue-liminaire {
+  top: 3.2%; right: 4.5%;
+  width: 21.5rem;
+  transform: rotate(0.6deg);
+  border: 1px solid var(--ue-ligne);
+  border-left: 2px solid var(--ue-trait);
+  padding: 0.9rem 1.1rem;
+  font-style: italic;
+  font-size: 0.95rem;
+  color: var(--ue-trait-2);
+  background: var(--ue-feuille);
+}
+.ue-liminaire .mono-xs { display: block; font-style: normal; margin-bottom: 0.45rem; }
+
+.ue-elevation { top: 7.5%; left: 4.5%; width: 62%; }
+.ue-cote {
+  display: flex; align-items: center; gap: 0.8rem;
+  color: var(--ue-trait-2);
+  width: 138%;
+}
+.ue-cote::before, .ue-cote::after { content: ""; flex: 1; border-top: 1px solid var(--ue-ligne); }
+.ue-cote i { font-style: normal; flex: none; }
+.ue-nom {
+  font-family: var(--f-display);
+  font-stretch: 78%;
+  font-weight: 800;
+  font-size: clamp(4rem, 12.5vw, 10rem);
+  line-height: 0.9;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  margin: 1rem 0 0.5rem -0.045em;
+}
+.ue-el-ligne { display: flex; align-items: baseline; gap: 1.2rem; flex-wrap: wrap; }
+.ue-el-jp { font-size: 1.05rem; letter-spacing: 0.42em; color: var(--ue-trait-2); }
+.ue-el-sous { font-size: 1.06rem; font-weight: 500; margin-top: 0.6rem; max-width: 30rem; }
+
+.ue-cote-v {
+  top: 36.5%; right: 1.8%;
+  height: 300px; width: 1px;
+  border-right: 1px solid var(--ue-ligne);
+  display: flex; align-items: center;
+}
+.ue-cote-v span {
+  transform: rotate(90deg); white-space: nowrap;
+  font-family: var(--f-mono); font-size: 0.625rem; letter-spacing: 0.3em;
+  color: var(--ue-trait-2); background: var(--ue-feuille); padding: 0 0.8em; margin-left: -2.4em;
+}
+.ue-cote-v::before, .ue-cote-v::after { content: ""; position: absolute; right: -3px; width: 7px; border-top: 1px solid var(--ue-ligne); }
+.ue-cote-v::before { top: 0; }
+.ue-cote-v::after { bottom: 0; }
+
+.ue-ctx { top: 20.5%; left: 53%; width: 26rem; }
+.ue-ctx p { font-size: 0.98rem; }
+
+.ue-prog { top: 42%; right: 4.5%; width: 16.5rem; }
+.ue-prog ul { list-style: none; margin: 0; padding: 0; }
+.ue-prog li { font-size: 0.88rem; color: var(--ue-trait-2); padding-left: 1.2rem; position: relative; margin-bottom: 0.7rem; }
+.ue-prog li::before { content: "—"; position: absolute; left: 0; }
+
+.ue-detail { background: var(--ue-feuille); }
+.ue-detail .mono-xs { display: block; margin-bottom: 0.6rem; }
+.ue-detail h4 { font-size: 1rem; font-weight: 600; margin-bottom: 0.45rem; }
+.ue-detail p { font-size: 0.92rem; color: var(--ue-trait-2); }
+.ue-detail::before, .ue-detail::after {
+  content: ""; position: absolute; width: 9px; height: 9px; border: 0 solid var(--ue-trait);
+}
+.ue-detail::before { top: -1px; left: -1px; border-top-width: 1px; border-left-width: 1px; }
+.ue-detail::after { bottom: -1px; right: -1px; border-bottom-width: 1px; border-right-width: 1px; }
+
+.ue-d01 { top: 46%; left: 4.5%; width: 29rem; border: 1px solid var(--ue-ligne); padding: 1.2rem 1.3rem 1.4rem; }
+.ue-d02 { top: 48.5%; left: 45.5%; width: 17rem; border: 1px dashed var(--ue-ligne); padding: 1rem 1.1rem; }
+.ue-d02 h4, .ue-d02 p { opacity: 0.4; }
+.ue-d03 {
+  top: 60%; left: 27%; width: 22rem;
+  border: 1px solid var(--ue-ligne); border-left: 3px double var(--ue-trait);
+  padding: 1.1rem 1.2rem 1.3rem;
+  transform: rotate(-0.5deg);
+}
+
+.ue-nuage { position: absolute; inset: -26px -30px; pointer-events: none; overflow: visible; }
+.ue-nuage path { fill: none; stroke: var(--ue-revision); stroke-width: 1; opacity: 0.7; }
+.ue-nuage text { font-family: var(--f-mono); font-size: 10px; fill: var(--ue-revision); letter-spacing: 0.1em; }
+
+.ue-calque {
+  top: 31.5%; left: 31%;
+  width: 23rem;
+  transform: rotate(-4.6deg);
+  background: var(--ue-calque-fond);
+  border: 1px solid var(--ue-calque-bord);
+  backdrop-filter: blur(1.5px);
+  padding: 1rem 1.15rem 2.3rem;
+  box-shadow: -14px 18px 28px rgba(0, 0, 0, 0.28);
+  cursor: grab;
+}
+:where(html.clair) .ue-calque { box-shadow: -14px 18px 22px rgba(43, 34, 16, 0.18); }
+.ue-calque::after {
+  content: ""; position: absolute; right: -1px; bottom: -1px; width: 26px; height: 26px;
+  background: linear-gradient(315deg, transparent 48%, var(--ue-calque-bord) 49%, var(--ue-calque-fond) 52%);
+}
+.ue-calque .mono-xs { display: block; margin-bottom: 0.5rem; }
+.ue-calque h4 { font-size: 0.98rem; font-weight: 600; margin-bottom: 0.35rem; }
+.ue-calque p { font-size: 0.88rem; color: var(--ue-trait-2); }
+.ue-calque-jp { letter-spacing: 0.3em; display: block; margin-top: 0.7rem; color: var(--ue-trait-2); font-size: 0.8rem; }
+
+.ue-resultat {
+  left: 4.5%; bottom: 14.5%;
+  max-width: 30rem;
+  font-size: 0.92rem;
+  color: var(--ue-trait-2);
+}
+.ue-resultat .mono-xs { display: block; margin-bottom: 0.35rem; }
+
+.ue-nomenclature { left: 4.5%; bottom: 3.5%; width: 30rem; max-width: 40%; }
+.ue-nomenclature table { border-collapse: collapse; width: 100%; font-family: var(--f-mono); font-size: 0.72rem; letter-spacing: 0.06em; }
+.ue-nomenclature caption { text-align: left; letter-spacing: 0.2em; text-transform: uppercase; padding-bottom: 0.55rem; font-weight: 500; }
+.ue-nomenclature th, .ue-nomenclature td { border: 1px solid var(--ue-ligne); padding: 0.45em 0.8em; text-align: left; font-weight: 400; }
+.ue-nomenclature th { color: var(--ue-trait-2); text-transform: uppercase; font-size: 0.625rem; letter-spacing: 0.14em; }
+.ue-nomenclature td:first-child { width: 3.5em; color: var(--ue-trait-2); }
+
+.ue-tampon {
+  right: 30%; bottom: 13%;
+  transform: rotate(-7deg);
+  color: var(--ue-revision);
+  border: 2px solid var(--ue-revision);
+  outline: 1px solid var(--ue-ligne);
+  outline-offset: 3px;
+  padding: 0.7rem 1.3rem;
+  text-align: center;
+  font-family: var(--f-mono);
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  z-index: 2;
+}
+.ue-tampon b { display: block; font-size: 1.05rem; font-weight: 700; }
+.ue-tampon span { font-size: 0.625rem; color: var(--ue-trait-2); letter-spacing: 0.2em; }
+:where(html.clair) .ue-tampon span { color: var(--ue-revision); }
+
+.ue-cartouche {
+  right: 4.5%; bottom: 3.5%; width: 26rem;
+  border: 1px solid var(--ue-trait);
+  font-family: var(--f-mono); font-size: 0.66rem; letter-spacing: 0.1em;
+  background: var(--ue-feuille);
+  margin: 0;
+}
+.ue-cartouche div { display: grid; grid-template-columns: 7em 1fr; border-top: 1px solid var(--ue-ligne); }
+.ue-cartouche div:first-child { border-top: 0; }
+.ue-cartouche dt { padding: 0.42em 0.7em; border-right: 1px solid var(--ue-ligne); color: var(--ue-trait-2); text-transform: uppercase; font-size: 0.6rem; }
+.ue-cartouche dd { padding: 0.42em 0.7em; text-transform: uppercase; margin: 0; }
+.ue-nav { display: flex; align-items: center; gap: 0.7rem; }
+.ue-nav button {
+  font: inherit; background: none; border: 0; cursor: pointer;
+  color: var(--ue-trait-2); padding: 0; letter-spacing: inherit; text-transform: inherit;
+}
+.ue-nav button[aria-pressed="true"] { color: var(--ue-trait); text-decoration: underline; text-underline-offset: 0.3em; }
+.ue-nav button:focus-visible, .ue-sortie:focus-visible { outline: 2px solid var(--ue-trait); outline-offset: 2px; }
+.ue-sortie { color: var(--ue-trait); text-decoration: none; }
+/* le ThemeToggle du site, à l'échelle du cartouche */
+.ue-nav .langtoggle { display: flex; gap: 0.7rem; }
+.ue-nav .langtoggle button { font-size: 0.66rem; }
+
+/* ---- petit écran : la feuille redevient un flux ---- */
+@media (max-width: 1000px) {
+  .ue-emulsion { height: auto; padding: 1.5rem; }
+  .ue-piece { position: static; width: auto !important; max-width: 34rem; transform: none !important; margin-bottom: 1.6rem; }
+  .ue-poche, .ue-rappels, .ue-cote-v, .ue-nuage { display: none; }
+  .ue-cote { width: 100%; }
+}

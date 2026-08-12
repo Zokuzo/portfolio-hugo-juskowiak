@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { PageParcours } from "@/components/proto/page-parcours"
 import "./parcours.css"
+import "./estia.css"
 
 /* FR en dur — même règle que le layout : le HTML est statique, la
    langue est un état client, le title ne bascule pas. Premières

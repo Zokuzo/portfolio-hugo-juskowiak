@@ -10,14 +10,17 @@
    ================================================================== */
 
 import { useState } from "react"
+import { useReducedMotion } from "motion/react"
 import Link from "next/link"
 import { Smooth } from "./smooth"
 import { ThemeToggle } from "./theme-toggle"
+import { UniversEstia } from "./univers-estia"
 import { chapitres } from "./chapitres"
 import { t, type Lang } from "./dict"
 
 export function PageParcours() {
   const [lang, setLang] = useState<Lang>("fr")
+  const reduit = useReducedMotion()
   const liste = chapitres(lang)
 
   return (
@@ -58,61 +61,68 @@ export function PageParcours() {
         </nav>
       </header>
 
-      {liste.map((c) => (
-        <section key={c.ancre} id={c.ancre} className="pc-chapitre" aria-labelledby={`pc-titre-${c.ancre}`}>
-          <p className="pc-seuil dim">{c.seuil}</p>
+      {liste.map((c) =>
+        /* Chaque univers remplace son chapitre sobre quand sa planche est
+           gatée — le pattern CORPS[slug] des fiches, transposé. Un Record
+           viendra quand un DEUXIÈME univers existera. */
+        c.ancre === "estia" ? (
+          <UniversEstia key="estia" c={c} lang={lang} setLang={setLang} reduit={reduit} />
+        ) : (
+          <section key={c.ancre} id={c.ancre} className="pc-chapitre" aria-labelledby={`pc-titre-${c.ancre}`}>
+            <p className="pc-seuil dim">{c.seuil}</p>
 
-          <header className="pc-tete">
-            <p className="mono mono-xs dim">
-              {c.numero} · {c.periode} · {c.etat}
+            <header className="pc-tete">
+              <p className="mono mono-xs dim">
+                {c.numero} · {c.periode} · {c.etat}
+              </p>
+              <h2 id={`pc-titre-${c.ancre}`} className="pc-nom">
+                {c.nom}
+              </h2>
+              <p className="jp dim pc-jp">{c.jp}</p>
+              <p className="pc-intitule">{c.intitule}</p>
+              <p className="mono mono-xs dim-2">{c.cadre}</p>
+            </header>
+
+            <h3 className="mono mono-sm dim">{t(lang, "fpContexte")}</h3>
+            <p>{c.contexte}</p>
+
+            <h3 className="mono mono-sm dim">{t(lang, "fpProgramme")}</h3>
+            <ul className="pc-liste">
+              {c.programme.map((ligne) => (
+                <li key={ligne}>{ligne}</li>
+              ))}
+            </ul>
+
+            <h3 className="mono mono-sm dim">{t(lang, "fpTravaux")}</h3>
+            {c.travaux.map((tr) => (
+              <div key={tr.titre} className="pc-travail">
+                <h4>{tr.titre}</h4>
+                <p>{tr.texte}</p>
+              </div>
+            ))}
+
+            <h3 className="mono mono-sm dim">{t(lang, "fpCompetences")}</h3>
+            <ul className="mono mono-xs pc-liste">
+              {c.competences.map((o) => (
+                <li key={o}>{o}</li>
+              ))}
+            </ul>
+
+            {c.resultat && (
+              <>
+                <h3 className="mono mono-sm dim">{t(lang, "fpResultat")}</h3>
+                <p>{c.resultat}</p>
+              </>
+            )}
+
+            <p>
+              <Link href={`/#carte-${c.ancre}`} className="mono mono-xs dim pc-retour">
+                <span aria-hidden="true">←</span> {t(lang, "fpRetourDocument")}
+              </Link>
             </p>
-            <h2 id={`pc-titre-${c.ancre}`} className="pc-nom">
-              {c.nom}
-            </h2>
-            <p className="jp dim pc-jp">{c.jp}</p>
-            <p className="pc-intitule">{c.intitule}</p>
-            <p className="mono mono-xs dim-2">{c.cadre}</p>
-          </header>
-
-          <h3 className="mono mono-sm dim">{t(lang, "fpContexte")}</h3>
-          <p>{c.contexte}</p>
-
-          <h3 className="mono mono-sm dim">{t(lang, "fpProgramme")}</h3>
-          <ul className="pc-liste">
-            {c.programme.map((ligne) => (
-              <li key={ligne}>{ligne}</li>
-            ))}
-          </ul>
-
-          <h3 className="mono mono-sm dim">{t(lang, "fpTravaux")}</h3>
-          {c.travaux.map((tr) => (
-            <div key={tr.titre} className="pc-travail">
-              <h4>{tr.titre}</h4>
-              <p>{tr.texte}</p>
-            </div>
-          ))}
-
-          <h3 className="mono mono-sm dim">{t(lang, "fpCompetences")}</h3>
-          <ul className="mono mono-xs pc-liste">
-            {c.competences.map((o) => (
-              <li key={o}>{o}</li>
-            ))}
-          </ul>
-
-          {c.resultat && (
-            <>
-              <h3 className="mono mono-sm dim">{t(lang, "fpResultat")}</h3>
-              <p>{c.resultat}</p>
-            </>
-          )}
-
-          <p>
-            <Link href={`/#carte-${c.ancre}`} className="mono mono-xs dim pc-retour">
-              <span aria-hidden="true">←</span> {t(lang, "fpRetourDocument")}
-            </Link>
-          </p>
-        </section>
-      ))}
+          </section>
+        )
+      )}
     </main>
   )
 }
