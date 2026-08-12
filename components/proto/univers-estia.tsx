@@ -41,8 +41,17 @@ export function UniversEstia({
      valeur = pose + porte × progression × amplitude. Le SSR rend la
      pose (souleve fige à 0) ; sous reduce, cette même formule ÉCRIT la
      pose — plus de résidu, plus de style={reduit ? undefined : …} à
-     entretenir pièce par pièce. */
-  const porte = useMotionValue(1)
+     entretenir pièce par pièce.
+     Naît FERMÉE (0), pas ouverte : le rail (scaleLigne, amplitude
+     maximale à p=0) et les lettres B/C (opacité 0,35 à p=0) cuisent
+     sinon leur pose « ouverte » au SSR, et un utilisateur reduce voit
+     un flash de quelques frames avant que l'effet ci-dessous ne
+     referme la porte (relecture, sonde $SCRATCH/sonde-rail-flash.mjs).
+     Porte fermée à la naissance : le HTML statique est reduce-safe par
+     construction, et les utilisateurs animés engagent le mouvement à
+     l'hydratation plutôt que l'inverse — jamais de pose qui se voit
+     après coup. */
+  const porte = useMotionValue(0)
   useEffect(() => { porte.set(reduit ? 0 : 1) }, [reduit, porte])
   /* la plage démarre EXACTEMENT sur l'état posé (CSS rotate(-4.6deg),
      aucune translation) plutôt qu'à -2,2°/12px : SSR fige scrollYProgress
