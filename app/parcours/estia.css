@@ -137,8 +137,9 @@
 
 .ue-liminaire {
   top: 3.2%; right: 4.5%;
-  width: 21.5rem;
+  width: 344px;
   transform: rotate(0.6deg);
+  z-index: 1;
   border: 1px solid var(--ue-ligne);
   border-left: 2px solid var(--ue-trait);
   padding: 0.9rem 1.1rem;
@@ -169,7 +170,7 @@
 }
 .ue-el-ligne { display: flex; align-items: baseline; gap: 1.2rem; flex-wrap: wrap; }
 .ue-el-jp { font-size: 1.05rem; letter-spacing: 0.42em; color: var(--ue-trait-2); }
-.ue-el-sous { font-size: 1.06rem; font-weight: 500; margin-top: 0.6rem; max-width: 30rem; }
+.ue-el-sous { font-size: 1.06rem; font-weight: 500; margin-top: 0.6rem; max-width: 480px; }
 
 .ue-cote-v {
   top: 36.5%; right: 1.8%;
@@ -186,10 +187,10 @@
 .ue-cote-v::before { top: 0; }
 .ue-cote-v::after { bottom: 0; }
 
-.ue-ctx { top: 20.5%; left: 53%; width: 26rem; }
+.ue-ctx { top: 20.5%; left: 53%; width: 416px; }
 .ue-ctx p { font-size: 0.98rem; }
 
-.ue-prog { top: 42%; right: 4.5%; width: 16.5rem; }
+.ue-prog { top: 42%; right: 4.5%; width: 264px; }
 .ue-prog ul { list-style: none; margin: 0; padding: 0; }
 .ue-prog li { font-size: 0.88rem; color: var(--ue-trait-2); padding-left: 1.2rem; position: relative; margin-bottom: 0.7rem; }
 .ue-prog li::before { content: "—"; position: absolute; left: 0; }
@@ -204,11 +205,11 @@
 .ue-detail::before { top: -1px; left: -1px; border-top-width: 1px; border-left-width: 1px; }
 .ue-detail::after { bottom: -1px; right: -1px; border-bottom-width: 1px; border-right-width: 1px; }
 
-.ue-d01 { top: 46%; left: 4.5%; width: 29rem; border: 1px solid var(--ue-ligne); padding: 1.2rem 1.3rem 1.4rem; }
-.ue-d02 { top: 48.5%; left: 45.5%; width: 17rem; border: 1px dashed var(--ue-ligne); padding: 1rem 1.1rem; }
+.ue-d01 { top: 46%; left: 4.5%; width: 464px; border: 1px solid var(--ue-ligne); padding: 1.2rem 1.3rem 1.4rem; }
+.ue-d02 { top: 48.5%; left: 45.5%; width: 272px; border: 1px dashed var(--ue-ligne); padding: 1rem 1.1rem; }
 .ue-d02 h4, .ue-d02 p { opacity: 0.4; }
 .ue-d03 {
-  top: 60%; left: 27%; width: 22rem;
+  top: 60%; left: 27%; width: 352px;
   border: 1px solid var(--ue-ligne); border-left: 3px double var(--ue-trait);
   padding: 1.1rem 1.2rem 1.3rem;
   transform: rotate(-0.5deg);
@@ -220,7 +221,7 @@
 
 .ue-calque {
   top: 31.5%; left: 31%;
-  width: 23rem;
+  width: 368px;
   transform: rotate(-4.6deg);
   background: var(--ue-calque-fond);
   border: 1px solid var(--ue-calque-bord);
@@ -240,14 +241,14 @@
 .ue-calque-jp { letter-spacing: 0.3em; display: block; margin-top: 0.7rem; color: var(--ue-trait-2); font-size: 0.8rem; }
 
 .ue-resultat {
-  left: 4.5%; bottom: 14.5%;
-  max-width: 30rem;
+  left: 4.5%; bottom: 17.5%;
+  max-width: 480px;
   font-size: 0.92rem;
   color: var(--ue-trait-2);
 }
 .ue-resultat .mono-xs { display: block; margin-bottom: 0.35rem; }
 
-.ue-nomenclature { left: 4.5%; bottom: 3.5%; width: 30rem; max-width: 40%; }
+.ue-nomenclature { left: 4.5%; bottom: 3.5%; width: 480px; max-width: 40%; }
 .ue-nomenclature table { border-collapse: collapse; width: 100%; font-family: var(--f-mono); font-size: 0.72rem; letter-spacing: 0.06em; }
 .ue-nomenclature caption { text-align: left; letter-spacing: 0.2em; text-transform: uppercase; padding-bottom: 0.55rem; font-weight: 500; }
 .ue-nomenclature th, .ue-nomenclature td { border: 1px solid var(--ue-ligne); padding: 0.45em 0.8em; text-align: left; font-weight: 400; }
@@ -255,7 +256,7 @@
 .ue-nomenclature td:first-child { width: 3.5em; color: var(--ue-trait-2); }
 
 .ue-tampon {
-  right: 30%; bottom: 13%;
+  right: 30%; bottom: 17%;
   transform: rotate(-7deg);
   color: var(--ue-revision);
   border: 2px solid var(--ue-revision);
@@ -273,7 +274,7 @@
 :where(html.clair) .ue-tampon span { color: var(--ue-revision); }
 
 .ue-cartouche {
-  right: 4.5%; bottom: 3.5%; width: 26rem;
+  right: 4.5%; bottom: 3.5%; width: 416px;
   border: 1px solid var(--ue-trait);
   font-family: var(--f-mono); font-size: 0.66rem; letter-spacing: 0.1em;
   background: var(--ue-feuille);
@@ -293,7 +294,8 @@
 .ue-sortie { color: var(--ue-trait); text-decoration: none; }
 /* le ThemeToggle du site, à l'échelle du cartouche */
 .ue-nav .langtoggle { display: flex; gap: 0.7rem; }
-.ue-nav .langtoggle button { font-size: 0.66rem; }
+.ue-nav .langtoggle button { font-size: 0.66rem; color: var(--ue-trait-2); background: none; border: 0; }
+.ue-nav .langtoggle button[data-on="true"] { background: var(--ue-trait); color: var(--ue-feuille); padding: 0 0.5em; }
 
 /* ---- petit écran : la feuille redevient un flux ---- */
 @media (max-width: 1000px) {

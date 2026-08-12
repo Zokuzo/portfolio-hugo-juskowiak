@@ -10,8 +10,6 @@
    ================================================================== */
 
 .pc-root {
-  max-width: 68rem;
-  margin: 0 auto;
   padding: calc(var(--gutter) * 1.5) var(--gutter) 8rem;
 }
 
@@ -40,6 +38,8 @@
 /* ---- la couverture sobre ---- */
 .pc-couverture {
   min-height: 55vh;
+  max-width: 68rem;
+  margin-inline: auto;
 }
 .pc-titre {
   margin-top: 4rem;
@@ -80,7 +80,8 @@
 
 /* ---- les chapitres, à plat sur leurs ancres ---- */
 .pc-chapitre {
-  max-width: 46rem;
+  max-width: 68rem;
+  margin-inline: auto;
   margin-top: 24vh;
   /* L'ancre atterrit DANS le chapitre : l'en-tête posé sous le bord,
      jamais collé — et de la marge pour les zones de frontière à
