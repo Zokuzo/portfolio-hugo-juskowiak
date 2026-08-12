@@ -843,7 +843,18 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 - Consumes: tout la Tâche 2 ; `motion/react` (dep existante).
 - Produces: la même `UniversCpge({ c, lang, setLang, reduit })` — rien d'autre ne change pour les voisins.
 
-**La langue du mouvement (gate planche v1)** : l'IMPRESSION paraît d'un bloc (`imprime`), l'ENCRE s'écrit gauche→droite (`ecrit`, clip-path one-shot), la CORRECTION tombe APRÈS coup, décalée (`corrige`, le pattern du tampon ESTIA) ; les traits se tirent à la règle (`trace`). Respiration scroll-liée derrière la **porte multiplicative née FERMÉE** : les deux pages de la copie respirent autour du pli (±8px), les équations dérivent, la couche du correcteur flotte, le néon balaie (JOUR). Interactivité pointeur fin : souligner à la règle (JOUR), l'éponge efface (NUIT), le tampon se réimprime. **Règle absolue : tout transform CSS d'une pièce pilotée par framer migre dans le style framer** (l'inline écrase toujours la feuille de style).
+**La langue du mouvement (gate planche v1)** : l'IMPRESSION paraît d'un bloc (`imprime`), l'ENCRE s'écrit gauche→droite (`ecrit`, clip-path one-shot), la CORRECTION tombe APRÈS coup, décalée (`corrige`, le pattern du tampon ESTIA) ; les traits se tirent à la règle (`trace`).
+
+> **AMENDEMENT D'EXÉCUTION (2026-08-12, contrôleur — commit `aaafbbd`)** : le
+> pattern `clipPath` + `whileInView` est INERTE sous motion 12.43 (prouvé en
+> exécution : transcription byte-exacte, frères opacity/scale/scaleX vivants
+> sur la même page, expérience « insets sans négatifs » réfutée aussi). Le
+> repli contractuel de ce plan est adopté : `ecrit()` = balayage d'encre
+> `opacity 0→1, x -8→0`, mêmes viewport/transition ; aucun `clip-path` au
+> composant ; sites d'usage audités sans conflit de transform. La sonde
+> filtre l'artefact local `_vercel/insights` (404 d'`<Analytics/>` hors
+> Vercel) et vérifie l'opacité du seuil. Le code ci-dessous reste le texte
+> d'origine — le commit fait foi. Respiration scroll-liée derrière la **porte multiplicative née FERMÉE** : les deux pages de la copie respirent autour du pli (±8px), les équations dérivent, la couche du correcteur flotte, le néon balaie (JOUR). Interactivité pointeur fin : souligner à la règle (JOUR), l'éponge efface (NUIT), le tampon se réimprime. **Règle absolue : tout transform CSS d'une pièce pilotée par framer migre dans le style framer** (l'inline écrase toujours la feuille de style).
 
 - [ ] **Step 1 : le composant final `components/proto/univers-cpge.tsx`** (remplace le fichier de la Tâche 2 en entier)
 
