@@ -950,3 +950,40 @@ Le `style={reduit ? undefined : …}` du calque DISPARAÎT (le style est toujour
 - [ ] contrôle `$SCRATCH` : sous reduce, `.ue-calque`, la ligne de cote-v et `.ue-lampe` rendent UN transform distinct sur 1,2 s ; sans reduce, chacun bouge au scroll ; F5 en milieu de section → état exact (fonction pure)
 - [ ] gates : `npm run build`, garde-fous, **banc `--tete` NUIT et JOUR repassés** (mouvement continu ajouté — consigner les nouveaux %) ; captures traversée × 2 thèmes
 - [ ] commit : « La feuille respire au scroll — le rail se mesure, les strates dérivent, les repères savent où tu es, la lampe suit la lecture »
+
+---
+
+### Tâche 6 : les pièces jointes — la photo, l'école, les homologations (ajout du 2026-08-12 soir, demande Hugo)
+
+**Files:**
+- Create: `public/parcours/estia/batiment-cyanotype.webp`, `logo-estia-encre.webp`, `homologations-encre.webp` (cuits d'avance, fournis dans `$SCRATCH/assets/`)
+- Modify: `components/proto/chapitres.ts` (type + entrées estia FR/EN)
+- Modify: `tools/controles/garde-fous-chapitres.mjs` (parité des champs neufs)
+- Modify: `components/proto/dict.ts` (+2 clés), `tools/controles/contrastes.mjs` (+1 gate)
+- Modify: `components/proto/univers-estia.tsx`, `app/parcours/estia.css`
+
+**Le modèle de données (l'invariant d'abord)** — `type Chapitre` gagne trois champs optionnels :
+
+```ts
+  lien?: { role: string; url: string }              // l'école — role traduit, url identique FR/EN
+  photos?: { src: string; alt: string; legende: string }[]  // src identiques FR/EN, alt/legende traduits
+  marques?: { src: string; alt: string }[]          // [0] logotype (cartouche) · [1] homologations (nomenclature)
+```
+
+Entrée estia FR : `lien: { role: "Site de l'école", url: "https://www.estia.fr/" }` ; `photos: [{ src: "/parcours/estia/batiment-cyanotype.webp", alt: "Le bâtiment de l'ESTIA à Bidart — coque blanche aux courbes de navire, parvis en gradins", legende: "Le campus de Bidart — la vue photographique, passée dans la chimie du chapitre" }]` ; `marques: [{ src: "/parcours/estia/logo-estia-encre.webp", alt: "ESTIA — Institute of Technology" }, { src: "/parcours/estia/homologations-encre.webp", alt: "Habilitation CTI · Groupe ISAE, partenaire · Conférence des grandes écoles" }]`.
+Entrée estia EN : mêmes `src`/`url` ; `role: "School website"` ; `alt: "The ESTIA building in Bidart — white hull-like curves, stepped forecourt"` ; `legende: "The Bidart campus — the photographic view, run through the chapter's chemistry"` ; marques alt : idem [0], `"CTI accreditation · ISAE Group, partner · Conférence des grandes écoles"`.
+Commentaire de tête à compléter : ces champs sont de la CHAIR NOUVELLE (comme `seuil`), hors table de correspondance avec projets.ts.
+
+**Garde-fou** (bloc parité, PAS le bloc croisé) : pour chaque chapitre, présence de `lien`/`photos`/`marques` identique FR/EN ; mêmes comptes ; `src`/`url` STRICTEMENT identiques FR/EN (langue-neutres, comme les slugs) ; `alt`/`legende`/`role` non vides des deux côtés.
+
+**dict** : `ueEcole: { fr: "École", en: "School" }` ; `ueHomologations: { fr: "Homologations", en: "Accreditations" }`.
+
+**contrastes** : `["ESTIA légende #48617f sur papier nu (texte ≥ 4,5)", "#48617f", "#dfe3e6", 4.5, null]` — la légende réutilise l'annotation JOUR, zéro couleur neuve ; jeton `--ue-legende: #48617f` (identique aux deux thèmes — il vit sur le papier nu du tirage, constant).
+
+**Mise en scène (univers-estia.tsx / estia.css)** :
+1. **Le tirage épinglé** — `motion.figure.ue-piece.ue-photo` avec `{...encre(0.3)}`, posé dans le vide du tiers C : `left: 58%; top: 57.5%; width: 370px; transform: rotate(1.4deg)` ; marge de papier (`background: var(--ue-papier-nu); padding: 10px 10px 8px`), ombre portée comme le calque ; deux bouts de scotch translucides en pseudos (`::before/::after`, rgba clair, rotate ∓4°) ; `<img src alt width={500} height={333} loading="lazy" decoding="async">` pleine largeur ; `<figcaption class="mono mono-xs">` en `--ue-legende` SUR la marge de papier. Mobile : la règle `.ue-piece` statique existante suffit.
+2. **Cartouche, rangée ÉCOLE** (avant LANGUE) : `<dt>{t(lang,"ueEcole")}</dt>` ; dd `.ue-nav` avec `<img class="ue-logo" src={c.marques[0].src} alt="" height={16}>` (décoratif ici — le lien porte le sens) + `<a href={c.lien.url} target="_blank" rel="noreferrer" aria-label={c.lien.role} class="mono mono-xs ue-sortie">{new URL(c.lien.url).hostname.replace("www.", "")} <span aria-hidden="true">↗</span></a>`. Tout conditionné à `c.lien`.
+3. **Homologations** — dans la pièce `.ue-nomenclature`, sous la table : `<figure class="ue-homologations"><figcaption class="mono mono-xs dim">{t(lang,"ueHomologations")}</figcaption><img src={c.marques[1].src} alt={c.marques[1].alt} height={32} loading="lazy"></figure>` ; CSS : `margin-top: 0.9rem`, img `height: 32px; width: auto; opacity: 0.9`.
+
+**Vérifs** : `tsc` 0 ; `node tools/controles/contrastes.mjs` 0 (31 gates) ; `node tools/controles/garde-fous-chapitres.mjs` 0 ; `npm run build` vert ; HTML pré-rendu : `batiment-cyanotype.webp` présent avec `loading="lazy"`, lien `https://www.estia.fr/` présent ; sonde : la photo n'ajoute AUCUN mouvement scroll-lié (encre one-shot seulement) — pas de re-banc, consigner pourquoi (aucun coût par frame nouveau, images composées une fois).
+**Commit** : « Les pièces jointes entrent au dossier — le campus tiré au cyanotype, l'école au cartouche, les homologations sous la nomenclature »
