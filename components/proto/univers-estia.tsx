@@ -12,7 +12,7 @@
    ================================================================== */
 
 import { useEffect, useRef, useState } from "react"
-import { motion, useScroll, useSpring, useTransform } from "motion/react"
+import { motion, useMotionValue, useScroll, useSpring, useTransform } from "motion/react"
 import Link from "next/link"
 import { ThemeToggle } from "./theme-toggle"
 import { ANCRES, type Chapitre } from "./chapitres"
@@ -37,14 +37,47 @@ export function UniversEstia({
      rend l'état exact (leçon de l'iris, revue #13) */
   const { scrollYProgress } = useScroll({ target: feuille, offset: ["start end", "end start"] })
   const souleve = useSpring(scrollYProgress, { stiffness: 90, damping: 24 })
+  /* porte multiplicative (s'applique à TOUT le scroll-lié) : chaque
+     valeur = pose + porte × progression × amplitude. Le SSR rend la
+     pose (souleve fige à 0) ; sous reduce, cette même formule ÉCRIT la
+     pose — plus de résidu, plus de style={reduit ? undefined : …} à
+     entretenir pièce par pièce. */
+  const porte = useMotionValue(1)
+  useEffect(() => { porte.set(reduit ? 0 : 1) }, [reduit, porte])
   /* la plage démarre EXACTEMENT sur l'état posé (CSS rotate(-4.6deg),
      aucune translation) plutôt qu'à -2,2°/12px : SSR fige scrollYProgress
      à 0, et sous reduce le style motion se foreclot à ce gel — vérifié à
      l'écran (voir rapport Tâche 3) — sans ce recalage le calque restait
      visiblement décalé de la feuille posée de la Tâche 2. Amplitude du
      CAP conservée (-4,2° / -38px), seule l'origine bouge. */
-  const rotCalque = useTransform(souleve, [0, 1], [-4.6, -8.8])
-  const yCalque = useTransform(souleve, [0, 1], [0, -38])
+  const rotCalque = useTransform([souleve, porte], ([p, g]: number[]) => -4.6 + g * p * -4.2)
+  const yCalque = useTransform([souleve, porte], ([p, g]: number[]) => g * p * -38)
+
+  /* le rail se mesure : scaleY 0,15→1, origine haut — 0,15 en tête de
+     lecture (porte ouverte, p=0), plein sous reduce (porte fermée, la
+     pose ne doit jamais paraître amputée) */
+  const scaleLigne = useTransform([souleve, porte], ([p, g]: number[]) => 1 - g * (1 - p) * 0.85)
+
+  /* les strates dérivent : parallaxe ≤ 20px, pose à 0 — pièces neuves,
+     rien à recaler comme pour le calque. Le poché et la liminaire ont
+     un tilt CSS existant (-3,2deg / 0,6deg) : framer pilotant x/y sur
+     ces pièces écrase leur transform CSS (l'inline gagne toujours sur
+     la feuille de style), donc le rotate migre dans le style framer. */
+  const yTitre = useTransform([souleve, porte], ([p, g]: number[]) => g * p * -12)
+  const yLiminaire = useTransform([souleve, porte], ([p, g]: number[]) => g * p * -18)
+  const xPoche = useTransform([souleve, porte], ([p, g]: number[]) => -14 + g * p * 28)
+
+  /* la lampe suit la lecture (JOUR seul — en nuit --ue-lampe vaut none,
+     la couche ne peint rien mais continue de se translater sans coût :
+     transform pur, compositor) */
+  const yLampe = useTransform([souleve, porte], ([p, g]: number[]) => g * p * 90)
+
+  /* les repères savent où tu es : 3 paliers sur la progression brute,
+     la porte multiplie l'ATTÉNUATION (pas la présence) — sous reduce
+     (g=0) les trois lettres restent à 1, aucune ne s'éteint */
+  const opaciteA = useTransform([souleve, porte], ([p, g]: number[]) => (p < 1 / 3 ? 1 : 1 - g * 0.65))
+  const opaciteB = useTransform([souleve, porte], ([p, g]: number[]) => (p >= 1 / 3 && p < 2 / 3 ? 1 : 1 - g * 0.65))
+  const opaciteC = useTransform([souleve, porte], ([p, g]: number[]) => (p >= 2 / 3 ? 1 : 1 - g * 0.65))
 
   /* la main n'existe qu'au pointeur fin — au tactile le drag volerait
      le scroll de la page */
@@ -76,11 +109,12 @@ export function UniversEstia({
         <div className="ue-reperes" aria-hidden="true">
           <span className="h" style={{ left: "12.5%" }}>1</span><span className="h" style={{ left: "37.5%" }}>2</span><span className="h" style={{ left: "62.5%" }}>3</span><span className="h" style={{ left: "87.5%" }}>4</span>
           <span className="h b" style={{ left: "12.5%" }}>1</span><span className="h b" style={{ left: "37.5%" }}>2</span><span className="h b" style={{ left: "62.5%" }}>3</span><span className="h b" style={{ left: "87.5%" }}>4</span>
-          <span className="v" style={{ top: "16.6%" }}>A</span><span className="v" style={{ top: "50%" }}>B</span><span className="v" style={{ top: "83.3%" }}>C</span>
-          <span className="v d" style={{ top: "16.6%" }}>A</span><span className="v d" style={{ top: "50%" }}>B</span><span className="v d" style={{ top: "83.3%" }}>C</span>
+          <motion.span className="v" style={{ top: "16.6%", opacity: opaciteA }}>A</motion.span><motion.span className="v" style={{ top: "50%", opacity: opaciteB }}>B</motion.span><motion.span className="v" style={{ top: "83.3%", opacity: opaciteC }}>C</motion.span>
+          <motion.span className="v d" style={{ top: "16.6%", opacity: opaciteA }}>A</motion.span><motion.span className="v d" style={{ top: "50%", opacity: opaciteB }}>B</motion.span><motion.span className="v d" style={{ top: "83.3%", opacity: opaciteC }}>C</motion.span>
         </div>
         <div className="ue-emulsion" ref={feuille}>
-          <div className="ue-poche" aria-hidden="true"></div>
+          <motion.div className="ue-lampe" aria-hidden="true" style={{ y: yLampe }}></motion.div>
+          <motion.div className="ue-poche" aria-hidden="true" style={{ x: xPoche, rotate: -3.2 }}></motion.div>
 
           <svg className="ue-rappels" aria-hidden="true" viewBox="0 0 1210 1830" preserveAspectRatio="none">
             <line x1="650" y1="390" x2="548" y2="330"></line>
@@ -89,12 +123,12 @@ export function UniversEstia({
             <circle cx="660" cy="812" r="2.5"></circle>
           </svg>
 
-          <motion.aside className="ue-piece ue-liminaire" {...encre(0)}>
+          <motion.aside className="ue-piece ue-liminaire" style={{ y: yLiminaire, rotate: 0.6 }} {...encre(0)}>
             <span className="mono mono-xs dim">{t(lang, "ueNote")}</span>
             {c.seuil}
           </motion.aside>
 
-          <header className="ue-piece ue-elevation">
+          <motion.header className="ue-piece ue-elevation" style={{ y: yTitre }}>
             <motion.p className="ue-cote mono mono-xs" {...traceur()}><i aria-hidden="true">⟨</i>{c.periode}<i aria-hidden="true">⟩</i></motion.p>
             <h2 id="pc-titre-estia" className="ue-nom">{c.nom}</h2>
             <div className="ue-el-ligne">
@@ -102,9 +136,12 @@ export function UniversEstia({
               <span className="mono mono-xs dim">{c.cadre} · {c.etat}</span>
             </div>
             <p className="ue-el-sous">{c.intitule}</p>
-          </header>
+          </motion.header>
 
-          <div className="ue-piece ue-cote-v" aria-hidden="true"><span>{t(lang, "ueRail")}</span></div>
+          <div className="ue-piece ue-cote-v" aria-hidden="true">
+            <motion.span className="ue-cote-v-rail" style={{ scaleY: scaleLigne }}></motion.span>
+            <span className="ue-cote-v-label">{t(lang, "ueRail")}</span>
+          </div>
 
           <motion.div className="ue-piece ue-ctx" {...encre(0.04)}>
             <motion.div className="ue-vue-tete" {...traceur()}>
@@ -158,7 +195,7 @@ export function UniversEstia({
 
           <motion.aside
             className="ue-piece ue-calque"
-            style={reduit ? undefined : { rotate: rotCalque, y: yCalque }}
+            style={{ rotate: rotCalque, y: yCalque }}
           >
             {/* le drag vit sur ce div intérieur, jamais sur l'aside : son
                 origine 0 est correcte (celle de l'aside est une MotionValue

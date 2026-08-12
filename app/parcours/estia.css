@@ -78,12 +78,22 @@
   position: relative;
   height: 1830px;
   background:
-    var(--ue-lampe),
     radial-gradient(140% 110% at 30% 12%, rgba(255, 255, 255, 0.06), transparent 60%),
     radial-gradient(120% 140% at 85% 95%, rgba(0, 0, 0, 0.18), transparent 55%),
     var(--ue-feuille);
   outline: 1px solid var(--ue-ligne);
   overflow: hidden;
+}
+/* la lampe qui suit la lecture (JOUR seul — --ue-lampe vaut none en
+   nuit) : gradient peint une fois sur sa propre couche, translaté au
+   scroll par transform (compositor) plutôt que repeint dans le fond
+   de .ue-emulsion. Sous ::after (l'ombre) et sous les pièces : posée
+   avant elles dans le DOM, sans z-index, elle reste au fond. */
+.ue-lampe {
+  position: absolute;
+  inset: -12%;
+  pointer-events: none;
+  background: var(--ue-lampe);
 }
 .ue-emulsion::before {
   content: "";
@@ -105,10 +115,11 @@
 }
 
 .ue-poche {
+  /* rotate(-3.2deg) vit dans le style framer (parallaxe x) : un
+     transform inline écrase toujours celui de la feuille de style */
   position: absolute;
   left: -4%; top: 31.5%;
   width: 112%; height: 90px;
-  transform: rotate(-3.2deg);
   background-image: repeating-linear-gradient(45deg, var(--ue-ligne-2) 0 1px, transparent 1px 8px);
   border-top: 1px solid var(--ue-ligne-2);
   border-bottom: 1px solid var(--ue-ligne-2);
@@ -138,9 +149,10 @@
 .ue-piece { position: absolute; }
 
 .ue-liminaire {
+  /* rotate(0.6deg) vit dans le style framer (parallaxe y) : un
+     transform inline écrase toujours celui de la feuille de style */
   top: 3.2%; right: 4.5%;
   width: 344px;
-  transform: rotate(0.6deg);
   z-index: 1;
   border: 1px solid var(--ue-ligne);
   border-left: 2px solid var(--ue-trait);
@@ -177,10 +189,21 @@
 .ue-cote-v {
   top: 36.5%; right: 1.8%;
   height: 300px; width: 1px;
-  border-right: 1px solid var(--ue-ligne);
   display: flex; align-items: center;
 }
-.ue-cote-v span {
+/* le rail se mesure : élément dédié plutôt que le border-right d'avant
+   — un scaleY anime une boîte, pas l'épaisseur d'une bordure. Origine
+   haut : le rail se déploie depuis le sommet, jamais depuis le centre. */
+.ue-cote-v-rail {
+  position: absolute; inset: 0;
+  background: var(--ue-ligne);
+  transform-origin: top;
+}
+/* z-index : au-dessus du rail (positionné, z-index:auto → sous toute
+   pièce à z-index positif) pour que le fond du label masque la ligne
+   sous le texte, comme avant avec le border-right */
+.ue-cote-v-label {
+  position: relative; z-index: 1;
   transform: rotate(90deg); white-space: nowrap;
   font-family: var(--f-mono); font-size: 0.625rem; letter-spacing: 0.3em;
   color: var(--ue-trait-2); background: var(--ue-feuille); padding: 0 0.8em; margin-left: -2.4em;
@@ -222,9 +245,11 @@
 .ue-nuage text { font-family: var(--f-mono); font-size: 10px; fill: var(--ue-revision); letter-spacing: 0.1em; }
 
 .ue-calque {
+  /* rotate(-4.6deg) vit dans la pose de rotCalque (JS) : le style
+     framer est permanent depuis la porte multiplicative, ce transform
+     CSS ne s'exécuterait plus jamais */
   top: 31.5%; left: 31%;
   width: 368px;
-  transform: rotate(-4.6deg);
   background: var(--ue-calque-fond);
   border: 1px solid var(--ue-calque-bord);
   backdrop-filter: blur(1.5px);
@@ -314,6 +339,6 @@
 @media (max-width: 1000px) {
   .ue-emulsion { height: auto; padding: 1.5rem; }
   .ue-piece { position: static; width: auto !important; max-width: 34rem; transform: none !important; margin-bottom: 1.6rem; }
-  .ue-poche, .ue-rappels, .ue-cote-v, .ue-nuage { display: none; }
+  .ue-poche, .ue-rappels, .ue-cote-v, .ue-nuage, .ue-lampe { display: none; }
   .ue-cote { width: 100%; }
 }
