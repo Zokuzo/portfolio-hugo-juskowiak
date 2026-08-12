@@ -709,6 +709,34 @@ const DICT = {
   },
   pcSommaire: { fr: "Sommaire des chapitres", en: "Chapter contents" },
 
+  /* ---------------- univers ESTIA — l'appareil du dessin (chantier #6) ---------------- */
+  ueNote: { fr: "Note liminaire — l'entrée du chapitre", en: "Preliminary note — entering the chapter" },
+  ueDetail: { fr: "Détail", en: "Detail" },
+  ueVoirCalque: { fr: "voir calque", en: "see tracing sheet" },
+  ueGhost: {
+    fr: "L'échappée vit sur le calque, posé sur le tirage.",
+    en: "The escape lives on the tracing sheet, laid over the print.",
+  },
+  ueCalque: { fr: "Calque", en: "Tracing sheet" },
+  ueEchappee: { fr: "l'échappée", en: "the escape" },
+  ueCalqueJp: { fr: "北海道 — 間", en: "北海道 — 間" },
+  ueSecondeVoie: { fr: "seconde voie", en: "second track" },
+  ueRev: { fr: "RÉV.", en: "REV." },
+  ueVisa: { fr: "visa", en: "visa" },
+  ueRail: { fr: "3 ans — le rail", en: "3 years — the rail" },
+  ueNomenclature: { fr: "Nomenclature — compétences & outils", en: "Parts list — skills & tools" },
+  ueRep: { fr: "Rep", en: "Ref" },
+  ueDesignation: { fr: "Désignation", en: "Designation" },
+  ueProjet: { fr: "Projet", en: "Project" },
+  ueObjet: { fr: "Objet", en: "Subject" },
+  ueUnivers: { fr: "Univers", en: "Universe" },
+  ueUniversNom: { fr: "Cyanotype / blueprint d'atelier", en: "Cyanotype / workshop blueprint" },
+  ueEchelle: { fr: "Échelle", en: "Scale" },
+  ueEchelleVal: { fr: "1:1 — données seules", en: "1:1 — data only" },
+  ueLangue: { fr: "Langue", en: "Language" },
+  ueTheme: { fr: "Thème", en: "Theme" },
+  ueSortie: { fr: "Sortie", en: "Exit" },
+
   /* Annexes de l'index : les fiches d'unité ne sont pas des feuilles du
      jeu, ce sont des pièces détachées — d'où un bloc distinct et une
      référence en U-0n. */

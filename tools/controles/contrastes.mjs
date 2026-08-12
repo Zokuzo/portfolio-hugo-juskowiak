@@ -80,6 +80,13 @@ const GATES = [
   ["focus carbone sur papier (≥ 3)", INK, PAPER, 3, null],
   ["focus carbone sur bleu vif (≥ 3)", INK, "#0080e7", 3, null],
   ["::selection papier-clair sur --sig (≥ 4,5)", PAPER, "#0066b7", 4.5, null],
+  /* ---- univers ESTIA (/parcours) — gate planche v2.3, addendum du spec ---- */
+  ["ESTIA nuit trait #e9eef5 sur Prusse (texte ≥ 7)", "#e9eef5", "#0e2a4a", 7, null],
+  ["ESTIA nuit annotation #a9bed6 sur Prusse (texte ≥ 4,5)", "#a9bed6", "#0e2a4a", 4.5, null],
+  ["ESTIA jour encre #1c3a5e sur papier (texte ≥ 7)", "#1c3a5e", "#f0e9d8", 7, null],
+  ["ESTIA jour annotation #48617f sur papier (texte ≥ 4,5)", "#48617f", "#f0e9d8", 4.5, null],
+  ["ESTIA jour sanguine #a83c22 sur papier (texte ≥ 4,5)", "#a83c22", "#f0e9d8", 4.5, null],
+  ["ESTIA jour sanguine #a83c22 sur papier (non-textuel ≥ 3)", "#a83c22", "#f0e9d8", 3, null],
 ]
 
 const args = process.argv.slice(2)
