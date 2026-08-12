@@ -914,3 +914,39 @@ Commenter l'issue #6 : univers ESTIA construit derrière ses gates, banc chiffr�
 - **`pathLength`** anime le paint du SVG — petit élément, once ; le banc a le dernier mot.
 - **`position: static` du fallback mobile** neutralise le drag/scroll-transform proprement (transform: none !important) — vérifier qu'aucun motion value ne le ré-écrase (le `style` framer gagne sur la feuille : sous 1000px, passer `style={undefined}`… NON : garder simple, le `!important` du CSS ne tient pas contre le style inline framer ; la bonne coupe est `reduit`/`pointeurFin` + accepter le léger scroll-lift sur tablette paysage > 1000px).
 - Le cartouche contient des boutons dans un `<dl>` — valide (dd accepte du flux), garder `aria-pressed` cohérent.
+
+---
+
+### Tâche 5 : la feuille respire au scroll (ajout du 2026-08-12 soir — directive Hugo : « encore du mouvement »)
+
+**Files:**
+- Modify: `components/proto/univers-estia.tsx`
+- Modify: `app/parcours/estia.css`
+
+**Le CAP — quatre mouvements continus, fonction pure du scroll (`souleve`), amplitudes discrètes :**
+
+| Mouvement | Pièce | Plage | Mécanique |
+|---|---|---|---|
+| le rail se mesure | ligne de la cote-v | `scaleY 0.15 → 1`, origine haut | ligne = élément dédié (motion.span absolu dans `.ue-cote-v`) — le label rotaté ne se déforme JAMAIS ; les pointes (::before/::after) restent posées |
+| les strates dérivent | titre (`.ue-elevation`), note (`.ue-liminaire`), poché | titre `y 0→-12` ; note `y 0→-18` ; poché `x -14→14` | parallaxe ≤ 20px — de la profondeur, pas du spectacle |
+| les repères savent où tu es | les 6 lettres A/B/C des marges | opacité 0,35 → 1 sur le tiers courant | 3 paliers de `useTransform(souleve)` (0-1/3 → A, 1/3-2/3 → B, sinon C) ; les chiffres 1-4 restent statiques |
+| la lampe suit la lecture (JOUR seul) | couche `.ue-lampe` neuve | `y 0 → 90px` | le radial de `--ue-lampe` passe du fond de `.ue-emulsion` à une div absolue (`inset: -12%`, pointer-events none, sous ::after) translatée — gradient peint une fois, transform compositor ; en NUIT la couche est transparente |
+
+**Migration porte multiplicative (règle gravée au ledger, s'applique à TOUT le scroll-lié, calque compris) :**
+
+```tsx
+const porte = useMotionValue(1)
+useEffect(() => { porte.set(reduit ? 0 : 1) }, [reduit, porte])
+/* chaque valeur : pose + porte × progression × amplitude — le SSR rend
+   la pose, reduce ÉCRIT la pose (plus jamais de résidu) */
+const rotCalque = useTransform([souleve, porte], ([p, g]: number[]) => -4.6 + g * p * -4.2)
+const yCalque = useTransform([souleve, porte], ([p, g]: number[]) => g * p * -38)
+```
+
+Le `style={reduit ? undefined : …}` du calque DISPARAÎT (le style est toujours actif, la porte fait le travail). Idem pour les quatre mouvements neufs. Les révélations one-shot (encre/traceur/tampon/nuage) ne changent pas.
+
+**Steps :**
+- [ ] les crochets + la couche lampe + la ligne de cote-v dédiée ; `npx tsc --noEmit` → 0
+- [ ] contrôle `$SCRATCH` : sous reduce, `.ue-calque`, la ligne de cote-v et `.ue-lampe` rendent UN transform distinct sur 1,2 s ; sans reduce, chacun bouge au scroll ; F5 en milieu de section → état exact (fonction pure)
+- [ ] gates : `npm run build`, garde-fous, **banc `--tete` NUIT et JOUR repassés** (mouvement continu ajouté — consigner les nouveaux %) ; captures traversée × 2 thèmes
+- [ ] commit : « La feuille respire au scroll — le rail se mesure, les strates dérivent, les repères savent où tu es, la lampe suit la lecture »
