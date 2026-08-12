@@ -10,7 +10,7 @@
    ================================================================== */
 
 .pc-root {
-  padding: calc(var(--gutter) * 1.5) var(--gutter) 8rem;
+  padding-block: calc(var(--gutter) * 1.5) 8rem;
 }
 
 /* ---- la barre : sortir / langue / thème ---- */
@@ -38,7 +38,7 @@
 /* ---- la couverture sobre ---- */
 .pc-couverture {
   min-height: 55vh;
-  max-width: 68rem;
+  max-width: calc(68rem - 2 * var(--gutter));
   margin-inline: auto;
 }
 .pc-titre {
@@ -80,8 +80,8 @@
 
 /* ---- les chapitres, à plat sur leurs ancres ---- */
 .pc-chapitre {
-  max-width: 68rem;
-  margin-inline: auto;
+  max-width: 46rem;
+  margin-left: max(calc((100% - 68rem + 2 * var(--gutter)) / 2), var(--gutter));
   margin-top: 24vh;
   /* L'ancre atterrit DANS le chapitre : l'en-tête posé sous le bord,
      jamais collé — et de la marge pour les zones de frontière à
