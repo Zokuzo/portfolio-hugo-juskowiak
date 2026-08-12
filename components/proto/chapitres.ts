@@ -4,8 +4,12 @@ import type { Lang } from "./dict"
    LES QUATRE CHAPITRES DE /PARCOURS — le récit, pas la fiche.
    Contenu repris des quatre entrées `genre:"formation"` de projets.ts
    et RESTRUCTURÉ pour la page-monde (spec 2026-08-11, chantier #6) :
-   - `seuil` est la seule chair nouvelle — la frontière racontée
-     (quitter le rail vers Hokkaido, la seconde voie MBDS) ;
+   - `seuil` était la seule chair nouvelle du premier jet — la frontière
+     racontée (quitter le rail vers Hokkaido, la seconde voie MBDS) ;
+   - `lien`, `photos` et `marques` (tâche 6) en sont une seconde vague :
+     l'école, le tirage photographique, les homologations. Chair neuve
+     elle aussi, comme `seuil` — hors table de correspondance avec
+     projets.ts, garde-fou de fidélité inclus ;
    - le reste est le contenu des fiches, renommé pour le récit
      (contraintes → programme, decisions → travaux, parc → compétences).
    Jusqu'à la bascule (phase 4 du spec), les fiches /work/<slug> vivent
@@ -36,6 +40,9 @@ export type Chapitre = {
   travaux: { titre: string; texte: string }[]
   competences: string[]
   resultat?: string
+  lien?: { role: string; url: string } // l'école — role traduit, url identique FR/EN
+  photos?: { src: string; alt: string; legende: string }[] // src identiques FR/EN, alt/legende traduits
+  marques?: { src: string; alt: string }[] // [0] logotype (cartouche) · [1] homologations (nomenclature)
 }
 
 const FR: Chapitre[] = [
@@ -105,6 +112,21 @@ const FR: Chapitre[] = [
     competences: ["Informatique", "Génie industriel", "FR / EN / ES", "Gestion de projet"],
     resultat:
       "Diplôme d'ingénieur obtenu en 2025, avec un semestre d'échange au Japon et un second master mené en parallèle.",
+    lien: { role: "Site de l'école", url: "https://www.estia.fr/" },
+    photos: [
+      {
+        src: "/parcours/estia/batiment-cyanotype.webp",
+        alt: "Le bâtiment de l'ESTIA à Bidart — coque blanche aux courbes de navire, parvis en gradins",
+        legende: "Le campus de Bidart — la vue photographique, passée dans la chimie du chapitre",
+      },
+    ],
+    marques: [
+      { src: "/parcours/estia/logo-estia-encre.webp", alt: "ESTIA — Institute of Technology" },
+      {
+        src: "/parcours/estia/homologations-encre.webp",
+        alt: "Habilitation CTI · Groupe ISAE, partenaire · Conférence des grandes écoles",
+      },
+    ],
   },
   /* hokkaido — contenu : projets.ts l.410-435 (PAS de resultat) */
   {
@@ -237,6 +259,21 @@ const EN: Chapitre[] = [
     competences: ["Computer science", "Industrial engineering", "FR / EN / ES", "Project management"],
     resultat:
       "Engineering degree obtained in 2025, with an exchange semester in Japan and a second master's run in parallel.",
+    lien: { role: "School website", url: "https://www.estia.fr/" },
+    photos: [
+      {
+        src: "/parcours/estia/batiment-cyanotype.webp",
+        alt: "The ESTIA building in Bidart — white hull-like curves, stepped forecourt",
+        legende: "The Bidart campus — the photographic view, run through the chapter's chemistry",
+      },
+    ],
+    marques: [
+      { src: "/parcours/estia/logo-estia-encre.webp", alt: "ESTIA — Institute of Technology" },
+      {
+        src: "/parcours/estia/homologations-encre.webp",
+        alt: "CTI accreditation · ISAE Group, partner · Conférence des grandes écoles",
+      },
+    ],
   },
   /* hokkaido : l.792-817 (pas de resultat) */
   {

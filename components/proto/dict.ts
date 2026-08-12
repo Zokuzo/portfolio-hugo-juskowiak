@@ -740,6 +740,10 @@ const DICT = {
   ueLangue: { fr: "Langue", en: "Language" },
   ueTheme: { fr: "Thème", en: "Theme" },
   ueSortie: { fr: "Sortie", en: "Exit" },
+  /* pièces jointes (tâche 6) : l'école au cartouche, les homologations
+     sous la nomenclature */
+  ueEcole: { fr: "École", en: "School" },
+  ueHomologations: { fr: "Homologations", en: "Accreditations" },
 
   /* Annexes de l'index : les fiches d'unité ne sont pas des feuilles du
      jeu, ce sont des pièces détachées — d'où un bloc distinct et une

@@ -87,6 +87,10 @@ const GATES = [
   ["ESTIA jour annotation #48617f sur papier (texte ≥ 4,5)", "#48617f", "#f0e9d8", 4.5, null],
   ["ESTIA jour sanguine #a83c22 sur papier (texte ≥ 4,5)", "#a83c22", "#f0e9d8", 4.5, null],
   ["ESTIA jour sanguine #a83c22 sur papier (non-textuel ≥ 3)", "#a83c22", "#f0e9d8", 3, null],
+  /* tâche 6 — la légende du tirage photo : réutilise l'annotation JOUR
+     (--ue-trait-2), zéro couleur neuve ; --ue-legende est constant aux
+     deux thèmes, posé sur le papier nu du tirage */
+  ["ESTIA légende #48617f sur papier nu (texte ≥ 4,5)", "#48617f", "#dfe3e6", 4.5, null],
 ]
 
 const args = process.argv.slice(2)

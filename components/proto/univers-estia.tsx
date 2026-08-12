@@ -202,6 +202,23 @@ export function UniversEstia({
             <p>{c.travaux[2].texte}</p>
           </motion.article>
 
+          {/* le tirage épinglé (tâche 6) — encre one-shot seulement,
+              posé dans le vide du tiers C : aucun mouvement scroll-lié
+              ajouté, la porte multiplicative ne le touche pas */}
+          {c.photos && (
+            <motion.figure className="ue-piece ue-photo" {...encre(0.3)}>
+              <img
+                src={c.photos[0].src}
+                alt={c.photos[0].alt}
+                width={500}
+                height={333}
+                loading="lazy"
+                decoding="async"
+              />
+              <figcaption className="mono mono-xs">{c.photos[0].legende}</figcaption>
+            </motion.figure>
+          )}
+
           <motion.aside
             className="ue-piece ue-calque"
             style={{ rotate: rotCalque, y: yCalque }}
@@ -244,6 +261,12 @@ export function UniversEstia({
                 ))}
               </tbody>
             </table>
+            {c.marques && (
+              <figure className="ue-homologations">
+                <figcaption className="mono mono-xs dim">{t(lang, "ueHomologations")}</figcaption>
+                <img src={c.marques[1].src} alt={c.marques[1].alt} height={32} loading="lazy" />
+              </figure>
+            )}
           </motion.div>
 
           <motion.div
@@ -265,6 +288,23 @@ export function UniversEstia({
             <div><dt>{t(lang, "ueObjet")}</dt><dd>{c.nom}</dd></div>
             <div><dt>{t(lang, "ueUnivers")}</dt><dd>{t(lang, "ueUniversNom")}</dd></div>
             <div><dt>{t(lang, "ueEchelle")}</dt><dd>{t(lang, "ueEchelleVal")}</dd></div>
+            {c.lien && (
+              <div>
+                <dt>{t(lang, "ueEcole")}</dt>
+                <dd className="ue-nav">
+                  <img className="ue-logo" src={c.marques![0].src} alt="" height={16} />
+                  <a
+                    href={c.lien.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={c.lien.role}
+                    className="mono mono-xs ue-sortie"
+                  >
+                    {new URL(c.lien.url).hostname.replace("www.", "")} <span aria-hidden="true">↗</span>
+                  </a>
+                </dd>
+              </div>
+            )}
             <div>
               <dt>{t(lang, "ueLangue")}</dt>
               <dd className="ue-nav">

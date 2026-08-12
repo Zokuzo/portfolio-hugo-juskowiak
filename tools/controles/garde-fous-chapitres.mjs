@@ -49,6 +49,59 @@ for (let i = 0; i < 4; i++) {
       dire(typeof v === "string" && v.trim().length > 0, `${f.ancre} : ${champ} ${langue} non vide`)
     }
   }
+
+  /* --- pièces jointes (tâche 6) : lien/photos/marques — présence,
+     comptes et src/url identiques FR/EN au caractère près (langue-
+     neutres, comme les slugs) ; alt/legende/role non vides des deux
+     côtés. */
+  dire(Boolean(f.lien) === Boolean(e.lien), `${f.ancre} : lien présent des deux côtés ou d'aucun`)
+  if (f.lien && e.lien) {
+    dire(f.lien.url === e.lien.url, `${f.ancre} : lien.url identique FR/EN`, `${f.lien.url} / ${e.lien.url}`)
+    dire(
+      Boolean(f.lien.role.trim()) && Boolean(e.lien.role.trim()),
+      `${f.ancre} : lien.role non vide des deux côtés`,
+    )
+  }
+
+  dire(Boolean(f.photos) === Boolean(e.photos), `${f.ancre} : photos présentes des deux côtés ou d'aucune`)
+  if (f.photos && e.photos) {
+    dire(
+      f.photos.length === e.photos.length,
+      `${f.ancre} : photos au même compte`,
+      `${f.photos.length} / ${e.photos.length}`,
+    )
+    for (let j = 0; j < Math.max(f.photos.length, e.photos.length); j++) {
+      const pf = f.photos[j]
+      const pe = e.photos[j]
+      dire(pf?.src === pe?.src, `${f.ancre} : photos[${j}].src identique FR/EN`, `${pf?.src} / ${pe?.src}`)
+      dire(
+        Boolean(pf?.alt.trim()) && Boolean(pe?.alt.trim()),
+        `${f.ancre} : photos[${j}].alt non vide des deux côtés`,
+      )
+      dire(
+        Boolean(pf?.legende.trim()) && Boolean(pe?.legende.trim()),
+        `${f.ancre} : photos[${j}].legende non vide des deux côtés`,
+      )
+    }
+  }
+
+  dire(Boolean(f.marques) === Boolean(e.marques), `${f.ancre} : marques présentes des deux côtés ou d'aucune`)
+  if (f.marques && e.marques) {
+    dire(
+      f.marques.length === e.marques.length,
+      `${f.ancre} : marques au même compte`,
+      `${f.marques.length} / ${e.marques.length}`,
+    )
+    for (let j = 0; j < Math.max(f.marques.length, e.marques.length); j++) {
+      const mf = f.marques[j]
+      const me = e.marques[j]
+      dire(mf?.src === me?.src, `${f.ancre} : marques[${j}].src identique FR/EN`, `${mf?.src} / ${me?.src}`)
+      dire(
+        Boolean(mf?.alt.trim()) && Boolean(me?.alt.trim()),
+        `${f.ancre} : marques[${j}].alt non vide des deux côtés`,
+      )
+    }
+  }
 }
 
 /* --- fidélité à la source, champ par champ : chapitres.ts est une MISE

@@ -22,6 +22,7 @@
   --ue-ombre: none;
   --ue-revision: #e9eef5; /* la NUIT reste bichrome : sa chimie */
   --ue-repere: #5b6b80; /* bande de papier nu — même valeur aux deux thèmes */
+  --ue-legende: #48617f; /* légende du tirage (tâche 6) — réutilise l'annotation JOUR, constant aux deux thèmes */
 
   background: var(--ue-table);
   color: var(--ue-trait);
@@ -244,6 +245,40 @@
 .ue-nuage path { fill: none; stroke: var(--ue-revision); stroke-width: 1; opacity: 0.7; }
 .ue-nuage text { font-family: var(--f-mono); font-size: 10px; fill: var(--ue-revision); letter-spacing: 0.1em; }
 
+/* ---- le tirage épinglé (tâche 6) — posé dans le vide du tiers C ---- */
+.ue-photo {
+  /* top ajusté de 57,5 % (valeur du brief) à 61 % : à 57,5 % la pièce
+     chevauchait .ue-prog (mesuré : prog finit à y≈1113px, la pièce
+     commençait à y≈1052px dans une feuille de 1830px) — 61 % la pose
+     sous prog et au-dessus du tampon (qui commence à y≈1430px), avec
+     une marge measurée d'environ 4-5px des deux côtés */
+  left: 58%; top: 61%;
+  width: 370px;
+  margin: 0;
+  transform: rotate(1.4deg);
+  background: var(--ue-papier-nu);
+  padding: 10px 10px 8px;
+  box-shadow: -14px 18px 28px rgba(0, 0, 0, 0.28);
+}
+:where(html.clair) .ue-photo { box-shadow: -14px 18px 22px rgba(43, 34, 16, 0.18); }
+/* deux bouts de scotch translucides */
+.ue-photo::before, .ue-photo::after {
+  content: "";
+  position: absolute;
+  top: -9px;
+  width: 46px; height: 18px;
+  background: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+.ue-photo::before { left: 14px; transform: rotate(-4deg); }
+.ue-photo::after { right: 14px; transform: rotate(4deg); }
+.ue-photo img { display: block; width: 100%; height: auto; }
+.ue-photo figcaption {
+  display: block;
+  margin-top: 0.5rem;
+  color: var(--ue-legende);
+}
+
 .ue-calque {
   /* rotate(-4.6deg) vit dans la pose de rotCalque (JS) : le style
      framer est permanent depuis la porte multiplicative, ce transform
@@ -281,6 +316,8 @@
 .ue-nomenclature th, .ue-nomenclature td { border: 1px solid var(--ue-ligne); padding: 0.45em 0.8em; text-align: left; font-weight: 400; }
 .ue-nomenclature th { color: var(--ue-trait-2); text-transform: uppercase; font-size: 0.625rem; letter-spacing: 0.14em; }
 .ue-nomenclature td:first-child { width: 3.5em; color: var(--ue-trait-2); }
+.ue-homologations { margin-top: 0.9rem; }
+.ue-homologations img { height: 32px; width: auto; opacity: 0.9; }
 
 .ue-tampon {
   right: 30%; bottom: 17%;
@@ -312,6 +349,7 @@
 .ue-cartouche dt { padding: 0.42em 0.7em; border-right: 1px solid var(--ue-ligne); color: var(--ue-trait-2); text-transform: uppercase; font-size: 0.6rem; }
 .ue-cartouche dd { padding: 0.42em 0.7em; text-transform: uppercase; margin: 0; }
 .ue-nav { display: flex; align-items: center; gap: 0.7rem; }
+.ue-logo { height: 16px; width: auto; display: block; }
 .ue-nav button {
   font: inherit; background: none; border: 0; cursor: pointer;
   color: var(--ue-trait-2); padding: 0; letter-spacing: inherit; text-transform: inherit;
