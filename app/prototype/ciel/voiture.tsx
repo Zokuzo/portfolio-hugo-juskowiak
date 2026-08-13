@@ -40,8 +40,14 @@ export default function Voiture() {
   })
 
   return (
-    <group ref={groupe} rotation={[0, -Math.PI / 5, 0]}>
-      <primitive object={modele} />
+    /* extérieur : la respiration ; milieu : le cap ; intérieur : le piqué
+       nez vers le bas de la photo de référence (verdict #21) */
+    <group ref={groupe}>
+      <group rotation={[0, -Math.PI / 5, 0]}>
+        <group rotation={[1.0, 0, 0]}>
+          <primitive object={modele} />
+        </group>
+      </group>
     </group>
   )
 }

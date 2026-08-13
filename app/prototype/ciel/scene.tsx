@@ -13,7 +13,13 @@ import Switcher from "./switcher"
 export default function Scene() {
   const router = useRouter()
   const params = useSearchParams()
-  const cle = params.get("variant") ?? "a"
+  const cle = params.get("variant") ?? "b"
+  /* bouton de réglage du prototype : ?cam=x,y,z place la caméra de départ */
+  const brut = params.get("cam")?.split(",").map(Number)
+  const cam: [number, number, number] =
+    brut && brut.length === 3 && brut.every(Number.isFinite)
+      ? (brut as [number, number, number])
+      : [8.2, 0, 3]
   const choisir = useCallback(
     (c: string) => router.replace(`?variant=${c}`, { scroll: false }),
     [router],
@@ -21,7 +27,7 @@ export default function Scene() {
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "#241a3d" }}>
-      <Canvas camera={{ position: [5.4, 1.4, 6.6], fov: 38 }} dpr={[1, 2]}>
+      <Canvas camera={{ position: cam, fov: 38 }} dpr={[1, 2]}>
         <Suspense fallback={null}>
           {cle === "b" ? <VarianteB /> : cle === "c" ? <VarianteC /> : <VarianteA />}
           <Voiture />
