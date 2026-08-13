@@ -1,10 +1,10 @@
 "use client"
 
 import { useLoader } from "@react-three/fiber"
-import { Cloud, Clouds, Environment, Lightformer } from "@react-three/drei"
+import { Environment, Lightformer } from "@react-three/drei"
 import { RGBELoader } from "three-stdlib"
 import * as THREE from "three"
-import { REDUIT } from "./voiture"
+import MerDeNuages from "./mer-de-nuages"
 
 /* B — « Pellicule » : la vraie photo, gradée. HDRI qwantani_dusk_2_puresky
    (Poly Haven, CC0, 1k, 1,2 Mo) auto-hébergée — un crépuscule lavande au
@@ -13,20 +13,9 @@ import { REDUIT } from "./voiture"
    Les puresky natifs ne sont jamais rosé-orangé une fois tone-mappés —
    la teinte est le concept, pas un pis-aller. */
 
-/* la ceinture « plein » : une couronne complète autour de l'horizon, seize
-   nappes vaporeuses à rayon/hauteur/teinte variés — douce mais habitée */
-const CEINTURE = Array.from({ length: 16 }, (_, i) => {
-  const angle = (i / 16) * Math.PI * 2
-  const rayon = 38 + (i % 4) * 8
-  return {
-    seed: i * 7 + 3,
-    position: [Math.sin(angle) * rayon, -7 - (i % 3) * 3, Math.cos(angle) * rayon] as [number, number, number],
-    bounds: [14 + (i % 3) * 4, 2 + (i % 2), 7 + (i % 2)] as [number, number, number],
-    volume: 9 + (i % 4),
-    opacity: 0.12 + (i % 3) * 0.03,
-    color: ["#fff3ea", "#ffe9e0", "#fff0e6", "#ffeadd"][i % 4],
-  }
-})
+/* le soleil de la pellicule (aligné sur la directionnelle) — il sculpte
+   les crêtes du banc de nuages */
+const SOLEIL = new THREE.Vector3(-0.6, 0.06, -0.76)
 
 export default function VarianteB({ nuages = "plein" }: { nuages?: string }) {
   /* bouton de réglage du prototype : ?rot=0.25 (en unités de π) tourne le
@@ -81,29 +70,21 @@ export default function VarianteB({ nuages = "plein" }: { nuages?: string }) {
       </Environment>
       <directionalLight position={[-8, 2, -10]} intensity={1.4} color="#ffa05a" />
       <hemisphereLight args={["#e8b8d8", "#ff9a6b", 0.6]} />
-      {/* les nuages Lambert tournent le dos au soleil : sans ambiante ils
-          virent fumée — on les garde crème */}
+      {/* débouche l'habitacle derrière le verre fumé */}
       <ambientLight intensity={0.55} color="#ffe2d2" />
 
-      {/* gate ter : deux alternatives — « plein » (couronne complète) ou
-          « sans » (ciel nu, la pellicule seule) ; l'entre-deux est mort */}
+      {/* gate quater : les billboards cotonneux rendent les armes — le
+          « plein » devient le banc de nuages raymarché de la variante C,
+          accordé à la palette de la pellicule ; « sans » = ciel nu */}
       {nuages !== "sans" && (
-        <Clouds limit={400}>
-          {CEINTURE.map((n) => (
-            <Cloud
-              key={n.seed}
-              seed={n.seed}
-              bounds={n.bounds}
-              segments={12}
-              volume={n.volume}
-              growth={6}
-              speed={REDUIT ? 0 : 0.03}
-              opacity={n.opacity}
-              color={n.color}
-              position={n.position}
-            />
-          ))}
-        </Clouds>
+        <MerDeNuages
+          soleil={SOLEIL}
+          crete="#ffe3c4"
+          ombre="#c28f92"
+          loin="#eba48e"
+          sommet={-5}
+          fond={-11}
+        />
       )}
     </>
   )
