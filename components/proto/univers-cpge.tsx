@@ -124,6 +124,25 @@ export function UniversCpge({
 
   return (
     <section id="cpge" data-univers="cpge" className="uc" aria-labelledby="pc-titre-cpge">
+      {/* la craie (NUIT) : rugosité des bords par déplacement fractal —
+          définition locale au document, référencée par cpge.css
+          (filter: url(#uc-craie)). Région large : les débords des
+          pièces (soulignement, coches) ne doivent pas être rognés. */}
+      <svg aria-hidden="true" width="0" height="0" style={{ position: "absolute" }}>
+        <defs>
+          <filter id="uc-craie" x="-15%" y="-25%" width="130%" height="150%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.45" numOctaves="2" seed="7" result="grain" />
+            <feDisplacementMap in="SourceGraphic" in2="grain" scale="1.6" xChannelSelector="R" yChannelSelector="G" />
+          </filter>
+          {/* le grain FORT des grands traits : ondulation plus large,
+              déplacement plus franc — le geste de la main se lit sur
+              le display, les têtes, la barre, le tampon */}
+          <filter id="uc-craie-forte" x="-15%" y="-25%" width="130%" height="150%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.12" numOctaves="2" seed="11" result="grain" />
+            <feDisplacementMap in="SourceGraphic" in2="grain" scale="3.2" xChannelSelector="R" yChannelSelector="G" />
+          </filter>
+        </defs>
+      </svg>
       <div className="uc-copie" ref={copie}>
         <motion.div className="uc-halo" aria-hidden="true" style={{ y: yHalo }}></motion.div>
         <div className="uc-pli" aria-hidden="true"></div>

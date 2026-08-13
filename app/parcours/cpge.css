@@ -370,6 +370,29 @@
 .uc-p2 { left: 75%; }
 
 /* ==================================================================
+   LA CRAIE (NUIT seule) — tout ce qui est écrit sur le tableau l'est
+   à la craie : bords rugueux (déplacement fractal #uc-craie, défini
+   dans le composant) + voile de poussière (text-shadow). Le filtre se
+   pose PIÈCE PAR PIÈCE, jamais sur les couches scroll-liées (.uc-page,
+   .uc-eq) : un contenu qui change sous un filtre se re-rasterise à
+   chaque frame — le banc l'interdirait. Les pièces filtrées n'animent
+   que des reveals one-shot ou des transforms (composités après
+   rasterisation). Le quadrillage et le pli restent peints — les
+   lignes d'un vrai tableau le sont. Le JOUR garde son encre nette.
+   ================================================================== */
+:where(html:not(.clair)) .uc :is(.uc-entete, .uc-titre, .uc-seuil, .uc-ctx, .uc-prog, .uc-travail, .uc-bareme, .uc-resultat, .uc-verdict, .uc-no-page) {
+  filter: url(#uc-craie);
+}
+/* les grands traits prennent le grain FORT (les pièces déjà filtrées
+   composent les deux : la rugosité s'additionne, c'est voulu) */
+:where(html:not(.clair)) .uc :is(.uc-nom, .uc-barre, .uc-tete-q, .uc-tampon, .uc-ne-pas-effacer) {
+  filter: url(#uc-craie-forte);
+}
+:where(html:not(.clair)) .uc { text-shadow: 0 0 2px rgba(238, 241, 239, 0.30); }
+:where(html:not(.clair)) .uc-nom { text-shadow: 0 0 4px rgba(238, 241, 239, 0.35), 0 0 10px rgba(238, 241, 239, 0.12); }
+:where(html:not(.clair)) .uc-eq { text-shadow: 0 0 3px rgba(238, 241, 239, 0.18); }
+
+/* ==================================================================
    INTERACTIVITÉ — pointeur fin, mouvement autorisé. Au tactile et
    sous reduce : rien, tout est posé.
    ================================================================== */
