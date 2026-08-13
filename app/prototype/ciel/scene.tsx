@@ -53,7 +53,7 @@ export default function Scene() {
           pointerEvents: "none",
           color: "#241a3d",
           fontFamily: "var(--f-mono)",
-          fontSize: 13,
+          fontSize: 18,
           letterSpacing: "0.08em",
         }}
       >
