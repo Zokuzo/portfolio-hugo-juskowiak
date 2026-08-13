@@ -99,7 +99,8 @@ export default function Voiture({ robe = "origine" }: { robe?: string }) {
     /* extérieur : la respiration ; milieu : le cap ; intérieur : le piqué
        nez vers le bas de la photo de référence (verdict #21) */
     <group ref={groupe}>
-      <group rotation={[0, -Math.PI / 5, 0]}>
+      {/* cap : le −36° d'origine, tourné de 65° vers la gauche au gate */}
+      <group rotation={[0, -Math.PI / 5 - (65 * Math.PI) / 180, 0]}>
         <group rotation={[1.0, 0, 0]}>
           <primitive object={modele} />
         </group>

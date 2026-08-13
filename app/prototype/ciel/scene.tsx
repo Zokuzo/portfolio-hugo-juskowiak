@@ -21,7 +21,7 @@ export default function Scene() {
   const cam: [number, number, number] =
     brut && brut.length === 3 && brut.every(Number.isFinite)
       ? (brut as [number, number, number])
-      : [-3.7, 4.1, 6.9]
+      : [-4.2, -0.4, 7.8]
 
   const maj = useCallback(
     (patch: Record<string, string>) => {
