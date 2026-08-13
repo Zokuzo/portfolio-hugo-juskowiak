@@ -67,15 +67,15 @@ export default function Voiture({ robe = "origine" }: { robe?: string }) {
   const peinture = useMemo(() => {
     const choix = ROBES.find((r) => r.cle === robe)
     if (!choix || choix.cle === "origine") return null
-    /* métallisé-anodisé : rugosité basse et environnement poussé, le
-       couchant doit se lire dans la robe, pas juste la teinter */
+    /* anodisé poli : plus de satiné — miroir métallique, le ciel se
+       découpe dans la robe (gate : « métallisé voire anodisé ») */
     return new THREE.MeshPhysicalMaterial({
       color: choix.teinte,
-      metalness: 0.9,
-      roughness: 0.12,
+      metalness: 1.0,
+      roughness: 0.03,
       clearcoat: 1,
-      clearcoatRoughness: 0.04,
-      envMapIntensity: 3.0,
+      clearcoatRoughness: 0.02,
+      envMapIntensity: 3.5,
     })
   }, [robe])
 

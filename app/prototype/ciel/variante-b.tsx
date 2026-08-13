@@ -1,7 +1,7 @@
 "use client"
 
 import { useLoader } from "@react-three/fiber"
-import { Cloud, Clouds, Environment } from "@react-three/drei"
+import { Cloud, Clouds, Environment, Lightformer } from "@react-three/drei"
 import { RGBELoader } from "three-stdlib"
 import * as THREE from "three"
 import { REDUIT } from "./voiture"
@@ -30,11 +30,40 @@ export default function VarianteB() {
           fog={false}
         />
       </mesh>
+      {/* le ciel brumeux n'a rien de net à mirer — même poli, le métal
+          paraît satin. Les lames de lumière découpent des éclats francs
+          dans la robe et le verre, le fond ne bouge pas. */}
       <Environment
         files="/prototype/crepuscule.hdr"
         environmentIntensity={0.6}
         environmentRotation={[0, rot, 0]}
-      />
+        resolution={512}
+      >
+        <Lightformer
+          form="rect"
+          intensity={12}
+          color="#fff4e2"
+          position={[0, 7, -3]}
+          target={[0, 0, 0]}
+          scale={[20, 2, 1]}
+        />
+        <Lightformer
+          form="rect"
+          intensity={8}
+          color="#ffd9b0"
+          position={[-7, 2, -7]}
+          target={[0, 0, 0]}
+          scale={[12, 1.5, 1]}
+        />
+        <Lightformer
+          form="rect"
+          intensity={4}
+          color="#cdbce8"
+          position={[7, -2.5, 6]}
+          target={[0, 0, 0]}
+          scale={[12, 1.2, 1]}
+        />
+      </Environment>
       <directionalLight position={[-8, 2, -10]} intensity={1.4} color="#ffa05a" />
       <hemisphereLight args={["#e8b8d8", "#ff9a6b", 0.6]} />
       {/* les nuages Lambert tournent le dos au soleil : sans ambiante ils

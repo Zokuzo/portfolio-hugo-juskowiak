@@ -15,7 +15,7 @@ export default function Scene() {
   const router = useRouter()
   const params = useSearchParams()
   const cle = params.get("variant") ?? "b"
-  const robe = params.get("robe") ?? "origine"
+  const robe = params.get("robe") ?? "argent"
   /* bouton de réglage du prototype : ?cam=x,y,z place la caméra de départ */
   const brut = params.get("cam")?.split(",").map(Number)
   const cam: [number, number, number] =
