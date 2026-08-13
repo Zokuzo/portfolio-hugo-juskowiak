@@ -46,9 +46,11 @@ export default function Aura({
             float rayons =
               pow(abs(sin(a * 9.0 + sin(a * 3.0 + uTemps * 0.05) * 1.5)), 3.0) * 0.5 +
               pow(abs(sin(a * 17.0 - uTemps * 0.03)), 6.0) * 0.35;
-            float coeur = exp(-r * 3.2) * 1.6;
-            float voile = exp(-r * 1.2) * 0.35;
-            float alpha = coeur + voile + rayons * smoothstep(1.0, 0.15, r) * 0.5;
+            /* dosage du gate : l'aura souligne le soleil de la pellicule,
+               elle ne le remplace pas */
+            float coeur = exp(-r * 3.2) * 0.7;
+            float voile = exp(-r * 1.2) * 0.15;
+            float alpha = coeur + voile + rayons * smoothstep(1.0, 0.15, r) * 0.28;
             /* vignette circulaire : le quad additif meurt avant ses bords,
                sinon son rectangle se lit en filigrane dans le ciel */
             alpha *= smoothstep(1.0, 0.7, r);

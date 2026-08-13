@@ -98,7 +98,7 @@ export default function VarianteB() {
         couverture={0.5}
         echelle={0.045}
       />
-      <Aura direction={SOLEIL} taille={230} />
+      <Aura direction={SOLEIL} taille={175} />
     </>
   )
 }
