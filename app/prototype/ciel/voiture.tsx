@@ -80,12 +80,15 @@ export default function Voiture({ robe = "origine" }: { robe?: string }) {
   }, [robe])
 
   useEffect(() => {
+    /* la robe couvre la carrosserie ET la jante (étoile + lit extérieur) —
+       demande du gate ; pneus, freins et visserie restent d'origine */
+    const PEINTS = ["Paint", "Stern", "Aussenbeet"]
     const originaux = new Map<THREE.Mesh, THREE.Material | THREE.Material[]>()
     modele.traverse((o) => {
       const mesh = o as THREE.Mesh
       if (!mesh.isMesh) return
       const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
-      if (mats.some((m) => m?.name === "Paint")) {
+      if (mats.some((m) => PEINTS.includes(m?.name ?? ""))) {
         originaux.set(mesh, mesh.material)
         if (peinture) mesh.material = peinture
       }
