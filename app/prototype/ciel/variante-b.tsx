@@ -52,9 +52,9 @@ export default function VarianteB() {
           volume={11}
           growth={6}
           speed={REDUIT ? 0 : 0.04}
-          opacity={0.15}
+          opacity={0.12}
           color="#fff3ea"
-          position={[-28, -8, -30]}
+          position={[-44, -11, -46]}
         />
         <Cloud
           seed={8}
@@ -63,9 +63,9 @@ export default function VarianteB() {
           volume={10}
           growth={6}
           speed={REDUIT ? 0 : 0.03}
-          opacity={0.14}
+          opacity={0.11}
           color="#ffe9e0"
-          position={[26, -9, -26]}
+          position={[40, -12, -42]}
         />
         <Cloud
           seed={13}
@@ -74,9 +74,9 @@ export default function VarianteB() {
           volume={12}
           growth={7}
           speed={REDUIT ? 0 : 0.03}
-          opacity={0.13}
+          opacity={0.11}
           color="#fff0e6"
-          position={[-20, -9, 26]}
+          position={[-32, -12, 42]}
         />
         <Cloud
           seed={5}
@@ -85,9 +85,9 @@ export default function VarianteB() {
           volume={9}
           growth={6}
           speed={REDUIT ? 0 : 0.04}
-          opacity={0.12}
+          opacity={0.1}
           color="#fff6ee"
-          position={[8, -7, -40]}
+          position={[12, -10, -62]}
         />
         <Cloud
           seed={17}
@@ -96,9 +96,9 @@ export default function VarianteB() {
           volume={11}
           growth={6}
           speed={REDUIT ? 0 : 0.03}
-          opacity={0.14}
+          opacity={0.11}
           color="#ffeee4"
-          position={[36, -8, 10]}
+          position={[56, -11, 16]}
         />
         <Cloud
           seed={21}
@@ -107,9 +107,9 @@ export default function VarianteB() {
           volume={10}
           growth={6}
           speed={REDUIT ? 0 : 0.03}
-          opacity={0.13}
+          opacity={0.11}
           color="#fff3ea"
-          position={[-38, -8, 2]}
+          position={[-58, -11, 4]}
         />
       </Clouds>
     </>

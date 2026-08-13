@@ -21,7 +21,7 @@ export const ROBES = [
   { cle: "grenat", nom: "Rouge grenat", teinte: "#a51325" },
   { cle: "nuit", nom: "Bleu nuit", teinte: "#1c2c5e" },
   { cle: "mauve", nom: "Mauve crépuscule", teinte: "#6f5698" },
-  { cle: "canon", nom: "Gunmetal", teinte: "#3a3d42" },
+  { cle: "argent", nom: "Argent", teinte: "#b4b9bf" },
 ] as const
 
 export default function Voiture({ robe = "origine" }: { robe?: string }) {
@@ -37,13 +37,21 @@ export default function Voiture({ robe = "origine" }: { robe?: string }) {
       const mesh = o as THREE.Mesh
       const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
       if (mats.some((m) => m?.name === "Floor")) morts.push(o)
-      /* le soleil doit accrocher les vitres : le verre (clearcoat, BLEND)
-         reçoit l'environnement bien plus fort, quasi poli */
+      /* l'effet glass : on jette la texture du verre (elle portait le
+         bandeau Rocket Bunny — neutralisé au gate) et on pose un vrai
+         verre fumé poli, miroir du couchant, l'habitacle en transparence */
       for (const m of mats) {
         if (m?.name === "Glass") {
           const verre = m as THREE.MeshPhysicalMaterial
-          verre.envMapIntensity = 3.0
-          verre.roughness = 0.06
+          verre.map = null
+          verre.color.set("#161b21")
+          verre.metalness = 0.55
+          verre.roughness = 0.03
+          verre.clearcoat = 1
+          verre.clearcoatRoughness = 0.02
+          verre.envMapIntensity = 3.5
+          verre.transparent = true
+          verre.opacity = 0.8
           verre.needsUpdate = true
         }
       }
@@ -59,13 +67,15 @@ export default function Voiture({ robe = "origine" }: { robe?: string }) {
   const peinture = useMemo(() => {
     const choix = ROBES.find((r) => r.cle === robe)
     if (!choix || choix.cle === "origine") return null
+    /* métallisé-anodisé : rugosité basse et environnement poussé, le
+       couchant doit se lire dans la robe, pas juste la teinter */
     return new THREE.MeshPhysicalMaterial({
       color: choix.teinte,
-      metalness: 0.85,
-      roughness: 0.22,
+      metalness: 0.9,
+      roughness: 0.12,
       clearcoat: 1,
-      clearcoatRoughness: 0.08,
-      envMapIntensity: 1.5,
+      clearcoatRoughness: 0.04,
+      envMapIntensity: 3.0,
     })
   }, [robe])
 
@@ -99,8 +109,8 @@ export default function Voiture({ robe = "origine" }: { robe?: string }) {
     /* extérieur : la respiration ; milieu : le cap ; intérieur : le piqué
        nez vers le bas de la photo de référence (verdict #21) */
     <group ref={groupe}>
-      {/* cap : le −36° d'origine, tourné de 65° vers la gauche au gate */}
-      <group rotation={[0, -Math.PI / 5 - (65 * Math.PI) / 180, 0]}>
+      {/* cap : le −36° d'origine, −65° puis +10° au fil du gate */}
+      <group rotation={[0, -Math.PI / 5 - (55 * Math.PI) / 180, 0]}>
         <group rotation={[1.0, 0, 0]}>
           <primitive object={modele} />
         </group>
