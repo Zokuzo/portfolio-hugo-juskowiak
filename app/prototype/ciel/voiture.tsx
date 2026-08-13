@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useRef } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import { useFrame } from "@react-three/fiber"
 import { useGLTF } from "@react-three/drei"
 import * as THREE from "three"
@@ -11,7 +11,20 @@ export const REDUIT =
   typeof window !== "undefined" &&
   window.matchMedia("(prefers-reduced-motion: reduce)").matches
 
-export default function Voiture() {
+/* Les robes réfléchissantes à essayer — la première garde le matériau
+   d'origine (teal texturé, mat). La teinte des autres vient d'une vraie
+   peinture physique : métal + clearcoat, l'environnement s'y mire. */
+export const ROBES = [
+  { cle: "origine", nom: "Origine", teinte: "#3fd6c0" },
+  { cle: "nacre", nom: "Blanc nacré", teinte: "#f0f2f3" },
+  { cle: "onyx", nom: "Noir onyx", teinte: "#0b0b0e" },
+  { cle: "grenat", nom: "Rouge grenat", teinte: "#a51325" },
+  { cle: "nuit", nom: "Bleu nuit", teinte: "#1c2c5e" },
+  { cle: "mauve", nom: "Mauve crépuscule", teinte: "#6f5698" },
+  { cle: "canon", nom: "Gunmetal", teinte: "#3a3d42" },
+] as const
+
+export default function Voiture({ robe = "origine" }: { robe?: string }) {
   const { scene } = useGLTF("/prototype/gt86.glb")
   const groupe = useRef<THREE.Group>(null)
 
@@ -24,12 +37,55 @@ export default function Voiture() {
       const mesh = o as THREE.Mesh
       const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
       if (mats.some((m) => m?.name === "Floor")) morts.push(o)
+      /* le soleil doit accrocher les vitres : le verre (clearcoat, BLEND)
+         reçoit l'environnement bien plus fort, quasi poli */
+      for (const m of mats) {
+        if (m?.name === "Glass") {
+          const verre = m as THREE.MeshPhysicalMaterial
+          verre.envMapIntensity = 3.0
+          verre.roughness = 0.06
+          verre.needsUpdate = true
+        }
+      }
     })
     morts.forEach((o) => o.removeFromParent())
     const centre = new THREE.Box3().setFromObject(scene).getCenter(new THREE.Vector3())
     scene.position.sub(centre)
     return scene
   }, [scene])
+
+  /* la peinture : on garde l'original sous le coude, on pose une robe
+     physique par-dessus quand un swatch est choisi */
+  const peinture = useMemo(() => {
+    const choix = ROBES.find((r) => r.cle === robe)
+    if (!choix || choix.cle === "origine") return null
+    return new THREE.MeshPhysicalMaterial({
+      color: choix.teinte,
+      metalness: 0.85,
+      roughness: 0.22,
+      clearcoat: 1,
+      clearcoatRoughness: 0.08,
+      envMapIntensity: 1.5,
+    })
+  }, [robe])
+
+  useEffect(() => {
+    const originaux = new Map<THREE.Mesh, THREE.Material | THREE.Material[]>()
+    modele.traverse((o) => {
+      const mesh = o as THREE.Mesh
+      if (!mesh.isMesh) return
+      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+      if (mats.some((m) => m?.name === "Paint")) {
+        originaux.set(mesh, mesh.material)
+        if (peinture) mesh.material = peinture
+      }
+    })
+    return () => {
+      originaux.forEach((mat, mesh) => {
+        mesh.material = mat
+      })
+    }
+  }, [modele, peinture])
 
   useFrame((etat) => {
     if (REDUIT || !groupe.current) return

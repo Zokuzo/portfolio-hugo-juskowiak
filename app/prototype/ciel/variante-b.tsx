@@ -41,74 +41,75 @@ export default function VarianteB() {
           virent fumée — on les garde crème */}
       <ambientLight intensity={0.55} color="#ffe2d2" />
 
-      {/* demande du gate : remplir un peu le fond — nuages légers au loin,
-          teintes de la pellicule, dérive lente */}
+      {/* gate bis : plus doux, repoussés à l'horizon — une ceinture basse
+          et lointaine, opacités faibles, croissance large pour l'effet
+          vaporeux ; rien près de la voiture */}
       <Clouds limit={160}>
         <Cloud
           seed={3}
-          bounds={[12, 2, 5]}
+          bounds={[20, 2.5, 8]}
           segments={14}
-          volume={7}
-          growth={4}
-          speed={REDUIT ? 0 : 0.05}
-          opacity={0.22}
-          color="#fff1e6"
-          position={[-12, -5, -18]}
+          volume={11}
+          growth={6}
+          speed={REDUIT ? 0 : 0.04}
+          opacity={0.15}
+          color="#fff3ea"
+          position={[-28, -8, -30]}
         />
         <Cloud
           seed={8}
-          bounds={[10, 1.5, 5]}
+          bounds={[18, 2, 8]}
           segments={12}
-          volume={6}
-          growth={3}
-          speed={REDUIT ? 0 : 0.04}
-          opacity={0.2}
-          color="#ffe3da"
-          position={[14, -6, -14]}
+          volume={10}
+          growth={6}
+          speed={REDUIT ? 0 : 0.03}
+          opacity={0.14}
+          color="#ffe9e0"
+          position={[26, -9, -26]}
         />
         <Cloud
           seed={13}
-          bounds={[14, 2, 6]}
+          bounds={[22, 2.5, 9]}
           segments={14}
-          volume={8}
-          growth={4}
-          speed={REDUIT ? 0 : 0.04}
-          opacity={0.18}
-          color="#fff0e4"
-          position={[-7, -6, 10]}
+          volume={12}
+          growth={7}
+          speed={REDUIT ? 0 : 0.03}
+          opacity={0.13}
+          color="#fff0e6"
+          position={[-20, -9, 26]}
         />
         <Cloud
           seed={5}
-          bounds={[8, 1.2, 4]}
+          bounds={[16, 2, 7]}
           segments={10}
-          volume={5}
-          growth={3}
-          speed={REDUIT ? 0 : 0.06}
-          opacity={0.18}
-          color="#fff5ec"
-          position={[-4, 3.5, -24]}
+          volume={9}
+          growth={6}
+          speed={REDUIT ? 0 : 0.04}
+          opacity={0.12}
+          color="#fff6ee"
+          position={[8, -7, -40]}
         />
         <Cloud
           seed={17}
-          bounds={[12, 1.8, 5]}
-          segments={14}
-          volume={7}
-          growth={4}
-          speed={REDUIT ? 0 : 0.05}
-          opacity={0.2}
-          color="#ffeadd"
-          position={[0, -6, -28]}
+          bounds={[20, 2, 8]}
+          segments={12}
+          volume={11}
+          growth={6}
+          speed={REDUIT ? 0 : 0.03}
+          opacity={0.14}
+          color="#ffeee4"
+          position={[36, -8, 10]}
         />
         <Cloud
           seed={21}
-          bounds={[10, 1.5, 5]}
+          bounds={[18, 2, 8]}
           segments={12}
-          volume={6}
-          growth={3}
-          speed={REDUIT ? 0 : 0.04}
-          opacity={0.18}
-          color="#fff1e6"
-          position={[-16, -4, 6]}
+          volume={10}
+          growth={6}
+          speed={REDUIT ? 0 : 0.03}
+          opacity={0.13}
+          color="#fff3ea"
+          position={[-38, -8, 2]}
         />
       </Clouds>
     </>
