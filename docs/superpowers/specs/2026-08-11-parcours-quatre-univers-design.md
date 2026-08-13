@@ -381,3 +381,11 @@ Second retour Hugo (planche revue en v3) :
   colophon dit : « Nuit — nuits d'été · Jour — hiver ». Le froid
   CLAIR du JOUR n'est pas le bleu foncé retiré de la NUIT ; ratios
   JOUR v3 : 14,524 / 6,556 / hanko 6,115.
+- **Un geste dessiné PAR THÈME, chacun dans sa matière** (demandé à la
+  suite du retrait du schéma) : NUIT le **chōchin peint** (bord humide
+  par déplacement fractal) · JOUR la **silhouette de la tour d'Ōdori
+  tirée au trait** — ligne nette, aucun filtre, plate-forme et cadran
+  opaques, posée dans une ligne de neige, debout dans le blanc du bas
+  de colonne gauche face au registre des cours. Papier contre acier :
+  **la matière dicte l'outil**, et les deux gestes s'excluent (un seul
+  visible par thème). Règle réutilisable pour les univers restants.
