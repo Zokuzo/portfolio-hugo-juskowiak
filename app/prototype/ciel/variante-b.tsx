@@ -5,6 +5,7 @@ import { Environment, Lightformer } from "@react-three/drei"
 import { RGBELoader } from "three-stdlib"
 import * as THREE from "three"
 import MerDeNuages from "./mer-de-nuages"
+import Aura from "./aura"
 
 /* B — « Pellicule » : la vraie photo, gradée. HDRI qwantani_dusk_2_puresky
    (Poly Haven, CC0, 1k, 1,2 Mo) auto-hébergée — un crépuscule lavande au
@@ -13,9 +14,9 @@ import MerDeNuages from "./mer-de-nuages"
    Les puresky natifs ne sont jamais rosé-orangé une fois tone-mappés —
    la teinte est le concept, pas un pis-aller. */
 
-/* le soleil de la pellicule (aligné sur la directionnelle) — il sculpte
-   les crêtes du banc de nuages */
-const SOLEIL = new THREE.Vector3(-0.6, 0.06, -0.76)
+/* le soleil de la pellicule, placé en haut-gauche du cadre de chargement —
+   il sculpte les crêtes par le dessus et porte le sunburst (réf. Porsche) */
+const SOLEIL = new THREE.Vector3(0.25, 0.6, -1.0)
 
 export default function VarianteB({ nuages = "plein" }: { nuages?: string }) {
   /* bouton de réglage du prototype : ?rot=0.25 (en unités de π) tourne le
@@ -68,23 +69,39 @@ export default function VarianteB({ nuages = "plein" }: { nuages?: string }) {
           scale={[12, 1.2, 1]}
         />
       </Environment>
-      <directionalLight position={[-8, 2, -10]} intensity={1.4} color="#ffa05a" />
+      <directionalLight position={[3, 7, -12]} intensity={1.4} color="#ffa05a" />
       <hemisphereLight args={["#e8b8d8", "#ff9a6b", 0.6]} />
       {/* débouche l'habitacle derrière le verre fumé */}
       <ambientLight intensity={0.55} color="#ffe2d2" />
 
-      {/* gate quater : les billboards cotonneux rendent les armes — le
-          « plein » devient le banc de nuages raymarché de la variante C,
-          accordé à la palette de la pellicule ; « sans » = ciel nu */}
+      {/* gate « aura divine » (réf. Porsche dans les cumulus) : un banc
+          épais et sculpté sous la voiture, des masses éparses au-dessus,
+          et le sunburst — « sans » = ciel nu */}
       {nuages !== "sans" && (
-        <MerDeNuages
-          soleil={SOLEIL}
-          crete="#ffe3c4"
-          ombre="#c28f92"
-          loin="#eba48e"
-          sommet={-5}
-          fond={-11}
-        />
+        <>
+          <MerDeNuages
+            soleil={SOLEIL}
+            crete="#ffe3c4"
+            ombre="#c28f92"
+            loin="#eba48e"
+            sommet={-2}
+            fond={-14}
+            couverture={0.1}
+            echelle={0.03}
+          />
+          <MerDeNuages
+            sens="plafond"
+            soleil={SOLEIL}
+            crete="#fff0da"
+            ombre="#d8a49c"
+            loin="#eba48e"
+            sommet={8}
+            fond={20}
+            couverture={0.5}
+            echelle={0.045}
+          />
+          <Aura direction={SOLEIL} taille={230} />
+        </>
       )}
     </>
   )
