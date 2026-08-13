@@ -47,10 +47,12 @@ export default function VoitureRue(props: { position?: [number, number, number];
           verre.opacity = 0.8
           verre.needsUpdate = true
         }
-        /* les feux : croisement allumé, veilleuses arrière en braise */
+        /* les feux : croisement allumé, veilleuses arrière en braise —
+           hors tone mapping pour que l'optique crève l'écran */
         if (mat?.name === "LightsFront") {
           mat.emissive?.set("#fff3dc")
-          mat.emissiveIntensity = 6
+          mat.emissiveIntensity = 8
+          mat.toneMapped = false
         }
         if (mat?.name === "RedGlow" || mat?.name === "BrakeLight") {
           mat.emissiveIntensity = 1.6

@@ -3,9 +3,9 @@
 import { Suspense, useMemo } from "react"
 import { useSearchParams } from "next/navigation"
 import { Canvas } from "@react-three/fiber"
-import { Environment, Lightformer, Loader, OrbitControls } from "@react-three/drei"
+import { Environment, Lightformer, Loader, OrbitControls, SpotLight as SpotVolumetrique } from "@react-three/drei"
 import * as THREE from "three"
-import Rue from "./rue"
+import Rue, { halo } from "./rue"
 import VoitureRue from "./voiture-rue"
 
 /* La scène du prototype #22 : la GT86 vient d'atterrir dans la rue.
@@ -39,42 +39,36 @@ function Phares() {
 function Phare({ cote, origine, gauche }: { cote: 1 | -1; origine: THREE.Vector3; gauche: THREE.Vector3 }) {
   /* même contrainte que les lampadaires : la cible du spot vit dans le graphe */
   const cible = useMemo(() => new THREE.Object3D(), [])
-  const { p, vise, posCone, quatCone } = useMemo(() => {
+  const { p, vise } = useMemo(() => {
     const p = origine.clone().addScaledVector(gauche, cote * 0.62)
     const vise = p.clone().addScaledVector(AVANT, 9).setY(0)
-    /* le cône (pointe en +Y) se couche sur l'axe du faisceau : pointe au
-       phare, base vers la route */
-    const dir = vise.clone().sub(p).normalize()
-    const quatCone = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, -1, 0), dir)
-    const posCone = p.clone().addScaledVector(dir, 4)
-    return { p, vise, posCone, quatCone }
+    return { p, vise }
   }, [cote, origine, gauche])
   return (
     <group>
       <primitive object={cible} position={vise.toArray()} />
-      <spotLight
+      {/* le faisceau volumétrique de drei : falloff doux (anglePower),
+          fondu en profondeur (attenuation) — fini le cône géométrique */}
+      <SpotVolumetrique
         position={p.toArray()}
         target={cible}
         color="#ffeecb"
         intensity={380}
-        angle={0.42}
-        penumbra={0.55}
+        angle={0.5}
+        penumbra={0.6}
         decay={1.8}
         distance={40}
+        attenuation={9}
+        anglePower={5}
+        radiusTop={0.14}
       />
-      {/* le faisceau visible : cône basique additif, dosé bas —
-          le vrai shader de falloff attendra le verdict */}
-      <mesh position={posCone.toArray()} quaternion={quatCone}>
-        <coneGeometry args={[0.85, 8, 24, 1, true]} />
-        <meshBasicMaterial
-          color="#ffeecb"
-          transparent
-          opacity={0.03}
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-          side={THREE.DoubleSide}
-        />
-      </mesh>
+      {/* l'optique brille : cœur vif serré + éblouissement large et doux */}
+      <sprite position={p.toArray()} scale={[0.55, 0.55, 1]}>
+        <spriteMaterial map={halo()} color="#fffaf0" transparent opacity={0.85} blending={THREE.AdditiveBlending} depthWrite={false} />
+      </sprite>
+      <sprite position={p.toArray()} scale={[2.2, 2.2, 1]}>
+        <spriteMaterial map={halo()} color="#ffeecb" transparent opacity={0.22} blending={THREE.AdditiveBlending} depthWrite={false} />
+      </sprite>
     </group>
   )
 }

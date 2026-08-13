@@ -18,7 +18,7 @@ function graine(n: number) {
 /* un sprite sans map est un CARRÉ — tous les halos partagent ce dégradé
    radial peint une seule fois (module client, jamais exécuté côté serveur) */
 let haloPartage: THREE.CanvasTexture | null = null
-function halo() {
+export function halo() {
   if (!haloPartage) {
     const c = document.createElement("canvas")
     c.width = c.height = 128
@@ -35,6 +35,36 @@ function halo() {
 }
 
 const NEONS = ["#ff4f9a", "#35d6ff", "#ffb400", "#7cffb2"]
+
+/* la carte des flaques (canal vert = rugosité, convention glTF) : blanc =
+   asphalte sec et mat, taches noires = eau immobile qui mire. La pluie ne
+   mouille pas une chaussée uniformément — elle laisse des flaques. */
+let flaquesPartage: THREE.CanvasTexture | null = null
+function flaques() {
+  if (!flaquesPartage) {
+    const c = document.createElement("canvas")
+    c.width = 256
+    c.height = 1024
+    const ctx = c.getContext("2d")!
+    ctx.fillStyle = "#fff"
+    ctx.fillRect(0, 0, 256, 1024)
+    for (let i = 0; i < 26; i++) {
+      const x = 30 + graine(i * 3.1) * 196
+      const y = 20 + graine(i * 7.7) * 984
+      const r = 14 + graine(i * 13.3) * 46
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r)
+      g.addColorStop(0, "rgba(0,0,0,0.95)")
+      g.addColorStop(0.65, "rgba(0,0,0,0.75)")
+      g.addColorStop(1, "rgba(0,0,0,0)")
+      ctx.fillStyle = g
+      ctx.beginPath()
+      ctx.ellipse(x, y, r, r * (0.35 + graine(i * 17.9) * 0.4), 0, 0, Math.PI * 2)
+      ctx.fill()
+    }
+    flaquesPartage = new THREE.CanvasTexture(c)
+  }
+  return flaquesPartage
+}
 
 function Immeuble({ x, z, l, p, h, cote }: { x: number; z: number; l: number; p: number; h: number; cote: 1 | -1 }) {
   /* la longueur l court le long de la rue (Z), la profondeur p s'enfonce
@@ -175,18 +205,21 @@ export default function Rue() {
       <mesh rotation-x={-Math.PI / 2} position={[0, 0, 0]}>
         <planeGeometry args={[13, 90]} />
         {/* recette vérifiée en source (recherche #22) : la réflexion est
-            MULTIPLIÉE par la couleur — noir pur = miroir mort ; gris
-            sombre + mixStrength haut, 512² ≈ 6 % des pixels d'une frame */}
+            MULTIPLIÉE par la couleur — noir pur = miroir mort. Le miroir
+            ne vit que dans les flaques (roughnessMap) : ailleurs le
+            mixBlur 6 étale la réflexion jusqu'à l'éteindre, ne restent
+            que les lumières (verdict Hugo : mouillé = flaques, pas vernis) */}
         <MeshReflectorMaterial
-          blur={[250, 80]}
+          blur={[300, 100]}
           resolution={512}
-          mixBlur={0.7}
+          mixBlur={6}
           mixStrength={8}
-          roughness={0.4}
+          roughness={1}
+          roughnessMap={flaques()}
           depthScale={0}
-          color="#202024"
-          metalness={0.4}
-          mirror={0.8}
+          color="#1a1a1f"
+          metalness={0.35}
+          mirror={0.9}
         />
       </mesh>
       {/* trottoirs : mats — seule la chaussée a bu la pluie */}
