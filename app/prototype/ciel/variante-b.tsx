@@ -5,7 +5,6 @@ import { Environment, Lightformer } from "@react-three/drei"
 import { RGBELoader } from "three-stdlib"
 import * as THREE from "three"
 import MerDeNuages from "./mer-de-nuages"
-import Aura from "./aura"
 
 /* B — « Pellicule » : la vraie photo, gradée. HDRI qwantani_dusk_2_puresky
    (Poly Haven, CC0, 1k, 1,2 Mo) auto-hébergée — un crépuscule lavande au
@@ -15,7 +14,7 @@ import Aura from "./aura"
    la teinte est le concept, pas un pis-aller. */
 
 /* le soleil de la pellicule, placé en haut-gauche du cadre de chargement —
-   il sculpte les crêtes par le dessus et porte le sunburst (réf. Porsche) */
+   il sculpte les crêtes par le dessus */
 const SOLEIL = new THREE.Vector3(0.25, 0.6, -1.0)
 
 export default function VarianteB() {
@@ -74,15 +73,18 @@ export default function VarianteB() {
       {/* débouche l'habitacle derrière le verre fumé */}
       <ambientLight intensity={0.55} color="#ffe2d2" />
 
-      {/* le verdict « aura divine » (réf. Porsche dans les cumulus) : un
-          banc épais et sculpté sous la voiture, des masses éparses
-          au-dessus, le sunburst qui perce */}
+      {/* réf. Porsche dans les cumulus : un banc épais et sculpté sous la
+          voiture, des masses éparses au-dessus — le soleil reste celui de
+          la pellicule (l'aura additive découpait la voiture au passage) */}
       <MerDeNuages
         soleil={SOLEIL}
         crete="#ffe3c4"
         ombre="#c28f92"
         loin="#eba48e"
-        sommet={-2}
+        /* -2,6 : le nez piqué descend à ~-2,1 au creux de la houle — sous
+           l'ancien sommet (-2), le raymarch ignorait la voiture et le banc
+           lui mangeait la carrosserie */
+        sommet={-2.6}
         fond={-14}
         couverture={0.1}
         echelle={0.03}
@@ -98,7 +100,6 @@ export default function VarianteB() {
         couverture={0.5}
         echelle={0.045}
       />
-      <Aura direction={SOLEIL} taille={175} />
     </>
   )
 }

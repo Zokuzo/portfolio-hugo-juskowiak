@@ -7,7 +7,7 @@ import { Loader, OrbitControls } from "@react-three/drei"
 import Voiture from "./voiture"
 import VarianteB from "./variante-b"
 
-/* La scène finale du prototype : Pellicule + aura divine, robe Argent —
+/* La scène finale du prototype : Pellicule, robe Argent —
    les variantes A/C, le testeur de robes et l'interrupteur nuages ont été
    supprimés au verdict. Restent deux boutons de réglage : ?cam=x,y,z et
    ?rot= (unités de π). dpr plafonné à 1,5 : le raymarch double-couche
