@@ -393,6 +393,25 @@
 :where(html:not(.clair)) .uc-eq { text-shadow: 0 0 3px rgba(238, 241, 239, 0.18); }
 
 /* ==================================================================
+   LE STYLO (JOUR seule) — la voix de l'étudiant s'écrit à la plume
+   (Dancing Script, --f-plume, demande Hugo 2026-08-13) ; l'énoncé,
+   le barème et l'appareil restent imprimés — la sémantique de la
+   copie : TROIS mains, l'imprimeur (noir net), l'étudiant (Bic bleu
+   à la plume), le correcteur (rouge Caveat). Tailles relevées : une
+   cursive a le petit œil ; les ratios de couleur ne bougent pas.
+   ================================================================== */
+:where(html.clair) .uc :is(.uc-seuil, .uc-ctx p, .uc-prog li p, .uc-travail h4, .uc-travail p, .uc-resultat p) {
+  font-family: var(--f-plume), cursive;
+}
+:where(html.clair) .uc-seuil { font-size: 1.35rem; font-weight: 600; }
+:where(html.clair) .uc-ctx p { font-size: 1.25rem; font-weight: 500; }
+:where(html.clair) .uc-prog li p { font-size: 1.2rem; font-weight: 500; }
+:where(html.clair) .uc-travail h4 { font-size: 1.35rem; font-weight: 700; }
+:where(html.clair) .uc-travail p { font-size: 1.2rem; font-weight: 500; }
+:where(html.clair) .uc-resultat p { font-size: 1.35rem; font-weight: 600; }
+:where(html.clair) .uc-resultat .uc-suite { font-size: 1.1rem; font-weight: 500; }
+
+/* ==================================================================
    INTERACTIVITÉ — pointeur fin, mouvement autorisé. Au tactile et
    sous reduce : rien, tout est posé.
    ================================================================== */

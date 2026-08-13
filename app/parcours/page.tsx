@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { Caveat } from "next/font/google"
+import { Caveat, Dancing_Script } from "next/font/google"
 import { PageParcours } from "@/components/proto/page-parcours"
 import "./parcours.css"
 import "./estia.css"
@@ -16,6 +16,17 @@ const correcteur = Caveat({
   preload: false,
 })
 
+/* La plume de l'étudiant (JOUR CPGE, demande Hugo 2026-08-13) —
+   CINQUIÈME fonte, cursive calligraphique : la voix de l'étudiant
+   s'écrit au stylo sur la copie ; l'énoncé imprimé reste net. Deux
+   mains distinctes : Caveat corrige, Dancing Script compose. */
+const plume = Dancing_Script({
+  subsets: ["latin"],
+  variable: "--f-plume",
+  display: "swap",
+  preload: false,
+})
+
 /* FR en dur — même règle que le layout : le HTML est statique, la
    langue est un état client, le title ne bascule pas. Premières
    métadonnées PAR PAGE du dépôt (spec §1 : « Métadonnées propres »). */
@@ -27,7 +38,7 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <div className={correcteur.variable}>
+    <div className={`${correcteur.variable} ${plume.variable}`}>
       <PageParcours />
     </div>
   )
