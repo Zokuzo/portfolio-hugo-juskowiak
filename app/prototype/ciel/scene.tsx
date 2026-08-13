@@ -40,6 +40,25 @@ export default function Scene() {
           target={[0, 0, 0]}
         />
       </Canvas>
+      {/* consigne d'entrée : le clic déclenchera l'atterrissage (build #29) —
+          la scène annonce déjà le geste */}
+      <p
+        style={{
+          position: "absolute",
+          bottom: 28,
+          left: 0,
+          right: 0,
+          margin: 0,
+          textAlign: "center",
+          pointerEvents: "none",
+          color: "#241a3d",
+          fontFamily: "var(--f-mono)",
+          fontSize: 13,
+          letterSpacing: "0.08em",
+        }}
+      >
+        cliquez sur la voiture pour démarrer
+      </p>
       <Loader />
     </div>
   )
