@@ -28,6 +28,11 @@ next-env.d.ts
 # artefacts de debogage playwright (captures, snapshots, journaux)
 .playwright-mcp
 
+# les assets sources bruts (GLB Sketchfab avant optimisation) : lourds,
+# hors dépôt (carte #15) — et hors du scan Tailwind oxide, qui avale les
+# binaires non-gitignorés jusqu'à l'OOM (débogué au gate #22)
+/ressources/
+
 # la carte de travail : recherches, tickets locaux, rendus intermédiaires.
 # Tranché à l'issue #8 : la prose décrit l'intérieur de produits
 # d'employeurs et reste hors de l'historique d'un dépôt public ; les

@@ -64,7 +64,22 @@ export default function VoitureRue(props: { position?: [number, number, number];
           mat.needsUpdate = true
         }
         if (mat?.name === "RedGlow" || mat?.name === "BrakeLight") {
-          mat.emissiveIntensity = 1.6
+          mat.emissiveIntensity = 0.6
+        }
+        /* la livrée d'usine vit encore dans les textures des accessoires
+           (garnish de malle, aileron) et rougeoie magenta la nuit — on la
+           neutralise, verdict robe unique du #21 */
+        if (mat?.name === "Taillightbody") {
+          mat.map = null
+          mat.color.set("#150c0e")
+          mat.roughness = 0.35
+          mat.needsUpdate = true
+        }
+        if (mat?.name === "Carbon") {
+          mat.map = null
+          mat.color.set("#1c1c20")
+          mat.roughness = 0.5
+          mat.needsUpdate = true
         }
       }
     })
