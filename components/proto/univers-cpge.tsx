@@ -227,11 +227,13 @@ export function UniversCpge({
           {/* la correction tombe après l'impression — et flotte au-dessus
               de la copie au scroll (yRouge ; rotate migré de la CSS) */}
           <motion.div className="uc-piece uc-verdict" style={{ y: yRouge, rotate: -2.6 }} {...corrige(0.5)}>
-            {/* l'ellipse encercle les DEUX lignes du verdict — un cercle
-                qui ne ferme que la première ne fait pas propre (retour
-                Hugo 2026-08-13) */}
-            <svg aria-hidden="true" viewBox="0 0 340 106" preserveAspectRatio="none">
-              <path d="M22,53 Q18,16 88,11 Q180,2 294,15 Q336,22 332,54 Q331,88 252,97 Q140,108 54,94 Q16,84 22,56" />
+            {/* la boucle du correcteur ENTOURE les deux lignes — une
+                ellipse coupe toujours les coins d'un bloc de texte :
+                le geste juste est une boucle rectangle-arrondie, côtés
+                plats, coins ronds, queue de stylo qui rentre (retours
+                Hugo 2026-08-13 ×2) */}
+            <svg aria-hidden="true" viewBox="0 0 344 118" preserveAspectRatio="none">
+              <path d="M10,36 Q9,10 36,9 Q170,3 306,8 Q336,9 335,34 Q337,60 334,84 Q334,108 300,109 Q170,115 52,109 Q12,110 11,82 Q9,58 10,40 Q10,30 24,27" />
             </svg>
             <span className="uc-main">{t(lang, "ucVerdict")}</span>
             <span className="mono mono-xs">{t(lang, "ucVoir")} · {findePeriode}</span>
