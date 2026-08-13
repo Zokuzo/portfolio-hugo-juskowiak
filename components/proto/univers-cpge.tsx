@@ -227,8 +227,11 @@ export function UniversCpge({
           {/* la correction tombe après l'impression — et flotte au-dessus
               de la copie au scroll (yRouge ; rotate migré de la CSS) */}
           <motion.div className="uc-piece uc-verdict" style={{ y: yRouge, rotate: -2.6 }} {...corrige(0.5)}>
-            <svg aria-hidden="true" viewBox="0 0 340 74" preserveAspectRatio="none">
-              <path d="M22,37 Q20,12 88,9 Q180,2 292,13 Q334,19 331,38 Q330,60 250,66 Q140,74 52,64 Q18,58 22,40" />
+            {/* l'ellipse encercle les DEUX lignes du verdict — un cercle
+                qui ne ferme que la première ne fait pas propre (retour
+                Hugo 2026-08-13) */}
+            <svg aria-hidden="true" viewBox="0 0 340 106" preserveAspectRatio="none">
+              <path d="M22,53 Q18,16 88,11 Q180,2 294,15 Q336,22 332,54 Q331,88 252,97 Q140,108 54,94 Q16,84 22,56" />
             </svg>
             <span className="uc-main">{t(lang, "ucVerdict")}</span>
             <span className="mono mono-xs">{t(lang, "ucVoir")} · {findePeriode}</span>
@@ -274,21 +277,6 @@ export function UniversCpge({
             </table>
           </motion.div>
 
-          {/* le tampon du visa : il tombe après coup, MORD sur l'encadré,
-              et se réimprime sous la main (pointeur fin seul) */}
-          <motion.div
-            className="uc-piece uc-tampon"
-            role="img"
-            aria-label={`${c.etat} — ${findePeriode}`}
-            style={{ y: yRouge, rotate: -6 }}
-            whileTap={pointeurFin && !reduit ? { scale: 0.92 } : undefined}
-            whileHover={pointeurFin && !reduit ? { rotate: -4 } : undefined}
-            {...corrige(0.85)}
-          >
-            <b>{c.etat}</b>
-            <span>{findePeriode} — {t(lang, "ueVisa")}</span>
-          </motion.div>
-
           <motion.span className="uc-piece uc-no-page uc-p2 mono mono-xs" aria-hidden="true" {...imprime(0)}>— 2 —</motion.span>
         </motion.div>
 
@@ -310,6 +298,25 @@ export function UniversCpge({
             <motion.p className="uc-suite dim" {...ecrit(0.6)}>{t(lang, "ucSuite")}</motion.p>
           </motion.div>
         )}
+
+        {/* le tampon du visa : il tombe après coup, MORD sur l'encadré —
+            APRÈS lui dans le DOM, obligatoirement : l'encadré vit hors
+            des couches de respiration (contextes d'empilement), un
+            z-index dans la page droite ne le battrait jamais (retour
+            Hugo 2026-08-13 : le tampon passait dessous). Il garde sa
+            respiration yRouge et se réimprime sous la main. */}
+        <motion.div
+          className="uc-piece uc-tampon"
+          role="img"
+          aria-label={`${c.etat} — ${findePeriode}`}
+          style={{ y: yRouge, rotate: -6 }}
+          whileTap={pointeurFin && !reduit ? { scale: 0.92 } : undefined}
+          whileHover={pointeurFin && !reduit ? { rotate: -4 } : undefined}
+          {...corrige(0.85)}
+        >
+          <b>{c.etat}</b>
+          <span>{findePeriode} — {t(lang, "ueVisa")}</span>
+        </motion.div>
 
         <div className="uc-rail" aria-hidden="true"><i></i><i className="r"></i></div>
       </div>

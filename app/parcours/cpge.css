@@ -201,8 +201,9 @@
   color: var(--uc-correction);
 }
 .uc-verdict .uc-main { display: block; font-size: 1.7rem; line-height: 1.05; font-weight: 600; }
-.uc-verdict .mono-xs { display: block; margin-top: 0.85rem; letter-spacing: 0.2em; }
-.uc-verdict svg { position: absolute; inset: -13px -10px auto -16px; height: 58px; width: calc(100% + 26px); pointer-events: none; }
+/* sous l'ellipse (qui descend à ~93px) — jamais barrée par son trait */
+.uc-verdict .mono-xs { display: block; margin-top: 1.6rem; letter-spacing: 0.2em; }
+.uc-verdict svg { position: absolute; inset: -13px -10px auto -16px; height: 106px; width: calc(100% + 26px); pointer-events: none; }
 .uc-verdict svg path { fill: none; stroke: var(--uc-correction); stroke-width: 1.6; }
 
 /* le titre : la barre grasse suisse, le display massif condensé.
@@ -316,7 +317,7 @@
    rotate(-6deg) : Tâche 2 en CSS ; la Tâche 3 le migre dans le style
    framer (yRouge + réimpression). */
 .uc-tampon {
-  top: 79.79%; left: 75.48%;
+  top: 79.79%; left: 76.5%;
   /* rotate : dans le style framer — l'inline écrase toujours la feuille de style */
   color: var(--uc-correction);
   border: 2px solid var(--uc-correction);
@@ -410,6 +411,26 @@
 :where(html.clair) .uc-travail p { font-size: 1.2rem; font-weight: 500; }
 :where(html.clair) .uc-resultat p { font-size: 1.35rem; font-weight: 600; }
 :where(html.clair) .uc-resultat .uc-suite { font-size: 1.1rem; font-weight: 500; }
+/* …les titres aussi (retour Hugo 2026-08-13) : l'étudiant écrit son
+   titre en tête de copie et ses têtes de parties — à l'encre Bic,
+   règle tirée en bleu ; la barre grasse et l'énoncé restent imprimés */
+:where(html.clair) .uc-titre { color: var(--uc-chair); }
+:where(html.clair) .uc-nom {
+  font-family: var(--f-plume), cursive;
+  font-stretch: normal;
+  font-weight: 700;
+  font-size: 160px;
+  line-height: 0.9;
+  letter-spacing: 0.01em;
+  margin-left: 0;
+}
+/* interlignes resserrés : la cursive à 1,55 poussait le bloc titre
+   sous II. PROGRAMME (sonde, JOUR seul) */
+:where(html.clair) .uc-titre-ligne { margin-top: 0.6rem; }
+:where(html.clair) .uc-intitule { font-family: var(--f-plume), cursive; font-size: 1.45rem; line-height: 1.3; font-weight: 600; }
+:where(html.clair) .uc-tete-q { color: var(--uc-chair); border-top-color: var(--uc-chair); }
+:where(html.clair) .uc-tete-q b { font-family: var(--f-plume), cursive; font-stretch: normal; font-size: 2.1rem; font-weight: 700; }
+:where(html.clair) .uc-tete-q h3 { font-family: var(--f-plume), cursive; font-size: 1.3rem; font-weight: 600; letter-spacing: 0.02em; text-transform: none; }
 
 /* ==================================================================
    INTERACTIVITÉ — pointeur fin, mouvement autorisé. Au tactile et
