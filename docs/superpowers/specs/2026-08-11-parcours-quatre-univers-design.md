@@ -361,3 +361,23 @@ Retour Hugo sur la planche Hokkaido v1 (gate non pris, planche revue en v2) :
   l'étoile du Kaitakushi (北辰, celle de la tour de l'horloge de
   Sapporo) en encre diluée au colophon — jamais en rouge, le hanko
   garde l'exclusivité de la chaleur d'encre.
+
+## Addendum 2026-08-13 (suite) — retour sur planche Hokkaido v2
+
+Second retour Hugo (planche revue en v3) :
+
+- **Le schéma abstrait « le trait quitte le rail » est RETIRÉ** — « je
+  ne comprends pas l'utilité de ce schéma ». Leçon pour tous les
+  univers : les gestes de la planche restent FIGURATIFS (le chōchin,
+  une silhouette), les métaphores de composition ne s'affichent pas.
+- **La tour TV de Sapporo entre aux tirages** (« j'étais à Sapporo ») :
+  vue du parc Ōdori, le soir, illuminée — Haseyu-, domaine public.
+  Quatre tirages désormais → champ `photos[]` de chapitres.ts.
+- **Les deux thèmes portent l'affect du semestre** : JOUR = **le froid
+  de la ville en hiver** (l'arrivée en mars — ciel de neige, ombres
+  bleu-glace claires `#9aa7b8`, sumi froid) · NUIT = **le côté
+  agréable des nuits japonaises** (les soirs d'été — lanternes,
+  éclairages, traditions ; l'urushi chaud de la v2 confirmé). Le
+  colophon dit : « Nuit — nuits d'été · Jour — hiver ». Le froid
+  CLAIR du JOUR n'est pas le bleu foncé retiré de la NUIT ; ratios
+  JOUR v3 : 14,524 / 6,556 / hanko 6,115.
