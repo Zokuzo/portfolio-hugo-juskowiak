@@ -13,7 +13,22 @@ import { REDUIT } from "./voiture"
    Les puresky natifs ne sont jamais rosé-orangé une fois tone-mappés —
    la teinte est le concept, pas un pis-aller. */
 
-export default function VarianteB() {
+/* la ceinture « plein » : une couronne complète autour de l'horizon, seize
+   nappes vaporeuses à rayon/hauteur/teinte variés — douce mais habitée */
+const CEINTURE = Array.from({ length: 16 }, (_, i) => {
+  const angle = (i / 16) * Math.PI * 2
+  const rayon = 38 + (i % 4) * 8
+  return {
+    seed: i * 7 + 3,
+    position: [Math.sin(angle) * rayon, -7 - (i % 3) * 3, Math.cos(angle) * rayon] as [number, number, number],
+    bounds: [14 + (i % 3) * 4, 2 + (i % 2), 7 + (i % 2)] as [number, number, number],
+    volume: 9 + (i % 4),
+    opacity: 0.12 + (i % 3) * 0.03,
+    color: ["#fff3ea", "#ffe9e0", "#fff0e6", "#ffeadd"][i % 4],
+  }
+})
+
+export default function VarianteB({ nuages = "plein" }: { nuages?: string }) {
   /* bouton de réglage du prototype : ?rot=0.25 (en unités de π) tourne le
      ciel pour placer le soleil — 0.25 retenu après balayage en captures */
   const rot = Math.PI * Number(new URLSearchParams(window.location.search).get("rot") ?? "0.25")
@@ -70,77 +85,26 @@ export default function VarianteB() {
           virent fumée — on les garde crème */}
       <ambientLight intensity={0.55} color="#ffe2d2" />
 
-      {/* gate bis : plus doux, repoussés à l'horizon — une ceinture basse
-          et lointaine, opacités faibles, croissance large pour l'effet
-          vaporeux ; rien près de la voiture */}
-      <Clouds limit={160}>
-        <Cloud
-          seed={3}
-          bounds={[20, 2.5, 8]}
-          segments={14}
-          volume={11}
-          growth={6}
-          speed={REDUIT ? 0 : 0.04}
-          opacity={0.12}
-          color="#fff3ea"
-          position={[-44, -11, -46]}
-        />
-        <Cloud
-          seed={8}
-          bounds={[18, 2, 8]}
-          segments={12}
-          volume={10}
-          growth={6}
-          speed={REDUIT ? 0 : 0.03}
-          opacity={0.11}
-          color="#ffe9e0"
-          position={[40, -12, -42]}
-        />
-        <Cloud
-          seed={13}
-          bounds={[22, 2.5, 9]}
-          segments={14}
-          volume={12}
-          growth={7}
-          speed={REDUIT ? 0 : 0.03}
-          opacity={0.11}
-          color="#fff0e6"
-          position={[-32, -12, 42]}
-        />
-        <Cloud
-          seed={5}
-          bounds={[16, 2, 7]}
-          segments={10}
-          volume={9}
-          growth={6}
-          speed={REDUIT ? 0 : 0.04}
-          opacity={0.1}
-          color="#fff6ee"
-          position={[12, -10, -62]}
-        />
-        <Cloud
-          seed={17}
-          bounds={[20, 2, 8]}
-          segments={12}
-          volume={11}
-          growth={6}
-          speed={REDUIT ? 0 : 0.03}
-          opacity={0.11}
-          color="#ffeee4"
-          position={[56, -11, 16]}
-        />
-        <Cloud
-          seed={21}
-          bounds={[18, 2, 8]}
-          segments={12}
-          volume={10}
-          growth={6}
-          speed={REDUIT ? 0 : 0.03}
-          opacity={0.11}
-          color="#fff3ea"
-          position={[-58, -11, 4]}
-        />
-      </Clouds>
+      {/* gate ter : deux alternatives — « plein » (couronne complète) ou
+          « sans » (ciel nu, la pellicule seule) ; l'entre-deux est mort */}
+      {nuages !== "sans" && (
+        <Clouds limit={400}>
+          {CEINTURE.map((n) => (
+            <Cloud
+              key={n.seed}
+              seed={n.seed}
+              bounds={n.bounds}
+              segments={12}
+              volume={n.volume}
+              growth={6}
+              speed={REDUIT ? 0 : 0.03}
+              opacity={n.opacity}
+              color={n.color}
+              position={n.position}
+            />
+          ))}
+        </Clouds>
+      )}
     </>
   )
 }

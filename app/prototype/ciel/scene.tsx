@@ -16,6 +16,7 @@ export default function Scene() {
   const params = useSearchParams()
   const cle = params.get("variant") ?? "b"
   const robe = params.get("robe") ?? "argent"
+  const nuages = params.get("nuages") ?? "plein"
   /* bouton de réglage du prototype : ?cam=x,y,z place la caméra de départ */
   const brut = params.get("cam")?.split(",").map(Number)
   const cam: [number, number, number] =
@@ -36,7 +37,7 @@ export default function Scene() {
     <div style={{ position: "fixed", inset: 0, background: "#241a3d" }}>
       <Canvas camera={{ position: cam, fov: 38 }} dpr={[1, 2]}>
         <Suspense fallback={null}>
-          {cle === "a" ? <VarianteA /> : cle === "c" ? <VarianteC /> : <VarianteB />}
+          {cle === "a" ? <VarianteA /> : cle === "c" ? <VarianteC /> : <VarianteB nuages={nuages} />}
           <Voiture robe={robe} />
         </Suspense>
         <OrbitControls
@@ -51,6 +52,47 @@ export default function Scene() {
       <Loader />
       <Switcher courante={cle} choisir={(c) => maj({ variant: c })} />
       <Robes courante={robe} choisir={(r) => maj({ robe: r })} />
+      {/* l'alternative du gate : couronne de nuages ou ciel nu */}
+      <div
+        style={{
+          position: "fixed",
+          bottom: 18,
+          right: 18,
+          display: "flex",
+          alignItems: "center",
+          gap: 4,
+          padding: "8px 10px",
+          borderRadius: 999,
+          background: "rgba(12, 9, 24, 0.78)",
+          border: "1px solid rgba(255, 255, 255, 0.16)",
+          backdropFilter: "blur(10px)",
+          color: "#f2ecff",
+          fontFamily: "var(--f-mono)",
+          fontSize: 12,
+          zIndex: 10,
+        }}
+      >
+        <span style={{ opacity: 0.65, padding: "0 4px" }}>nuages</span>
+        {(["plein", "sans"] as const).map((n) => (
+          <button
+            key={n}
+            type="button"
+            onClick={() => maj({ nuages: n })}
+            style={{
+              background: nuages === n ? "rgba(255,255,255,0.22)" : "transparent",
+              border: "none",
+              color: "inherit",
+              font: "inherit",
+              fontWeight: nuages === n ? 700 : 400,
+              padding: "4px 10px",
+              borderRadius: 999,
+              cursor: "pointer",
+            }}
+          >
+            {n}
+          </button>
+        ))}
+      </div>
     </div>
   )
 }
