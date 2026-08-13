@@ -18,7 +18,7 @@ import Aura from "./aura"
    il sculpte les crêtes par le dessus et porte le sunburst (réf. Porsche) */
 const SOLEIL = new THREE.Vector3(0.25, 0.6, -1.0)
 
-export default function VarianteB({ nuages = "plein" }: { nuages?: string }) {
+export default function VarianteB() {
   /* bouton de réglage du prototype : ?rot=0.25 (en unités de π) tourne le
      ciel pour placer le soleil — 0.25 retenu après balayage en captures */
   const rot = Math.PI * Number(new URLSearchParams(window.location.search).get("rot") ?? "0.25")
@@ -74,35 +74,31 @@ export default function VarianteB({ nuages = "plein" }: { nuages?: string }) {
       {/* débouche l'habitacle derrière le verre fumé */}
       <ambientLight intensity={0.55} color="#ffe2d2" />
 
-      {/* gate « aura divine » (réf. Porsche dans les cumulus) : un banc
-          épais et sculpté sous la voiture, des masses éparses au-dessus,
-          et le sunburst — « sans » = ciel nu */}
-      {nuages !== "sans" && (
-        <>
-          <MerDeNuages
-            soleil={SOLEIL}
-            crete="#ffe3c4"
-            ombre="#c28f92"
-            loin="#eba48e"
-            sommet={-2}
-            fond={-14}
-            couverture={0.1}
-            echelle={0.03}
-          />
-          <MerDeNuages
-            sens="plafond"
-            soleil={SOLEIL}
-            crete="#fff0da"
-            ombre="#d8a49c"
-            loin="#eba48e"
-            sommet={8}
-            fond={20}
-            couverture={0.5}
-            echelle={0.045}
-          />
-          <Aura direction={SOLEIL} taille={230} />
-        </>
-      )}
+      {/* le verdict « aura divine » (réf. Porsche dans les cumulus) : un
+          banc épais et sculpté sous la voiture, des masses éparses
+          au-dessus, le sunburst qui perce */}
+      <MerDeNuages
+        soleil={SOLEIL}
+        crete="#ffe3c4"
+        ombre="#c28f92"
+        loin="#eba48e"
+        sommet={-2}
+        fond={-14}
+        couverture={0.1}
+        echelle={0.03}
+      />
+      <MerDeNuages
+        sens="plafond"
+        soleil={SOLEIL}
+        crete="#fff0da"
+        ombre="#d8a49c"
+        loin="#eba48e"
+        sommet={8}
+        fond={20}
+        couverture={0.5}
+        echelle={0.045}
+      />
+      <Aura direction={SOLEIL} taille={230} />
     </>
   )
 }

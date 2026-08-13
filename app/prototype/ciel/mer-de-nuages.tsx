@@ -75,9 +75,11 @@ export default function MerDeNuages({
               u.y
             );
           }
+          /* 4 octaves : le 5e coûtait ~20 % du raymarch pour un détail
+             que le dither noie — fluidité d'abord (gate) */
           float fbm(vec2 p) {
             float v = 0.0, a = 0.5;
-            for (int k = 0; k < 5; k++) {
+            for (int k = 0; k < 4; k++) {
               v += a * bruit(p);
               p = p * 2.03 + vec2(17.0, 31.0);
               a *= 0.5;
@@ -98,14 +100,14 @@ export default function MerDeNuages({
             vec3 dir = normalize(vMonde - cameraPosition);
             if (dir.y * uSens > -0.005) discard;
             vec3 p = vMonde;
-            float pas = abs(uSommet - uFond) / 26.0 / max(abs(dir.y), 0.12);
+            float pas = abs(uSommet - uFond) / 20.0 / max(abs(dir.y), 0.12);
             pas = min(pas, 6.0);
             /* départ dithéré : casse les stries en escalier du raymarch */
             p += dir * pas * hash(gl_FragCoord.xy);
             vec3 soleil = normalize(uSoleil);
             float transmis = 1.0;
             vec3 acc = vec3(0.0);
-            for (int k = 0; k < 26; k++) {
+            for (int k = 0; k < 20; k++) {
               float d = densite(p);
               if (d > 0.01) {
                 float versSoleil = densite(p + soleil * 1.6);

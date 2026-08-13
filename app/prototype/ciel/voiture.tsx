@@ -11,20 +11,11 @@ export const REDUIT =
   typeof window !== "undefined" &&
   window.matchMedia("(prefers-reduced-motion: reduce)").matches
 
-/* Les robes réfléchissantes à essayer — la première garde le matériau
-   d'origine (teal texturé, mat). La teinte des autres vient d'une vraie
-   peinture physique : métal + clearcoat, l'environnement s'y mire. */
-export const ROBES = [
-  { cle: "origine", nom: "Origine", teinte: "#3fd6c0" },
-  { cle: "nacre", nom: "Blanc nacré", teinte: "#f0f2f3" },
-  { cle: "onyx", nom: "Noir onyx", teinte: "#0b0b0e" },
-  { cle: "grenat", nom: "Rouge grenat", teinte: "#a51325" },
-  { cle: "nuit", nom: "Bleu nuit", teinte: "#1c2c5e" },
-  { cle: "mauve", nom: "Mauve crépuscule", teinte: "#6f5698" },
-  { cle: "argent", nom: "Argent", teinte: "#b4b9bf" },
-] as const
+/* LA robe — verdict du gate : Argent, anodisé poli, seul survivant du
+   testeur de couleurs. Le teal texturé d'usine est resté dans l'historique. */
+const ARGENT = "#b4b9bf"
 
-export default function Voiture({ robe = "origine" }: { robe?: string }) {
+export default function Voiture() {
   const { scene } = useGLTF("/prototype/gt86.glb")
   const groupe = useRef<THREE.Group>(null)
 
@@ -62,42 +53,32 @@ export default function Voiture({ robe = "origine" }: { robe?: string }) {
     return scene
   }, [scene])
 
-  /* la peinture : on garde l'original sous le coude, on pose une robe
-     physique par-dessus quand un swatch est choisi */
-  const peinture = useMemo(() => {
-    const choix = ROBES.find((r) => r.cle === robe)
-    if (!choix || choix.cle === "origine") return null
-    /* anodisé poli : plus de satiné — miroir métallique, le ciel se
-       découpe dans la robe (gate : « métallisé voire anodisé ») */
-    return new THREE.MeshPhysicalMaterial({
-      color: choix.teinte,
-      metalness: 1.0,
-      roughness: 0.03,
-      clearcoat: 1,
-      clearcoatRoughness: 0.02,
-      envMapIntensity: 3.5,
-    })
-  }, [robe])
+  /* anodisé poli : miroir métallique, le ciel se découpe dans la robe */
+  const peinture = useMemo(
+    () =>
+      new THREE.MeshPhysicalMaterial({
+        color: ARGENT,
+        metalness: 1.0,
+        roughness: 0.03,
+        clearcoat: 1,
+        clearcoatRoughness: 0.02,
+        envMapIntensity: 3.5,
+      }),
+    [],
+  )
 
   useEffect(() => {
     /* la robe couvre la carrosserie ET la jante (étoile + lit extérieur) —
-       demande du gate ; pneus, freins et visserie restent d'origine */
+       pneus, freins et visserie restent d'origine */
     const PEINTS = ["Paint", "Stern", "Aussenbeet"]
-    const originaux = new Map<THREE.Mesh, THREE.Material | THREE.Material[]>()
     modele.traverse((o) => {
       const mesh = o as THREE.Mesh
       if (!mesh.isMesh) return
       const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
       if (mats.some((m) => PEINTS.includes(m?.name ?? ""))) {
-        originaux.set(mesh, mesh.material)
-        if (peinture) mesh.material = peinture
+        mesh.material = peinture
       }
     })
-    return () => {
-      originaux.forEach((mat, mesh) => {
-        mesh.material = mat
-      })
-    }
   }, [modele, peinture])
 
   useFrame((etat) => {
