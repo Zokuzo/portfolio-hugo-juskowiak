@@ -325,3 +325,39 @@ Valeurs contractuelles issues du gate :
   pointeur, NUIT l'éponge efface et la craie se redessine ; le tampon
   se réimprime. Sous `reduce` et au tactile : tout posé.
 - Textes jamais l'un sur l'autre ; les cadres peuvent se toucher.
+
+## Addendum 2026-08-13 — retour sur planche Hokkaido v1 : directives nouvelles
+
+Retour Hugo sur la planche Hokkaido v1 (gate non pris, planche revue en v2) :
+
+- **« Les planches se ressemblent trop — le bleu foncé est présent
+  partout. »** L'aizome de la NUIT Hokkaido doublait le cyanotype
+  ESTIA. Règle générale qui en découle, valable pour MBDS et /work :
+  **chaque univers tient SA famille de couleur — deux NUITS ne
+  partagent jamais la même dominante.**
+- **La ligne Hokkaido du tableau des univers est amendée** : NUIT =
+  **la nuit de lanterne du festival de la neige** — urushi (laque
+  brun-noir chaude `#1c120a`), un chōchin dessiné pendu du bord haut
+  (son papier porte 雪), halo ambre, encre ivoire `#f4ecdd`, le trait
+  de sumi-e s'écrit en neige, hanko vermillon `#e0684a`. Zéro bleu.
+  JOUR inchangé dans l'esprit (neige, blanc sur blanc) mais les
+  ombres passent au **gris-perle à peine bleuté** et le washi se
+  fibre. Ratios v2 : NUIT 15,688 / 8,504 / hanko 5,480 · JOUR
+  14,713 / 6,736 / hanko 6,070.
+- **La disposition de la planche v1 est approuvée** (« j'aime bien la
+  disposition ») — le renversement japonais/latin, les sections en
+  kanji, le colophon 奥付, le sceau 済 sur le coin de l'estampe.
+- **Les sept cours suivis entrent au récit** (fournis par Hugo) :
+  Project Management (Kaizen methods, etc.), Theory and Practice of
+  Algorithm, Frontier of Human Technologies, Human Computer
+  Interaction, Accelerator Science, Transportation Planning,
+  Intelligent Information System. Sur la planche : le mokuroku
+  (目録), registre à numéraux kanji sous le tirage du campus. À la
+  construction : **champ `cours[]` neuf dans `chapitres.ts`** (FR/EN,
+  garde-fou de fidélité étendu), même mécanique que `photos`/`lien`
+  pour ESTIA.
+- **« Inspire-toi plus du Japon et d'Hokkaido, garde les kanji »** —
+  signes entrés en v2 : le chōchin (NUIT), le washi fibré (JOUR),
+  l'étoile du Kaitakushi (北辰, celle de la tour de l'horloge de
+  Sapporo) en encre diluée au colophon — jamais en rouge, le hanko
+  garde l'exclusivité de la chaleur d'encre.
