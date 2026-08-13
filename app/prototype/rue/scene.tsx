@@ -69,17 +69,6 @@ function Phare({ cote, origine, gauche }: { cote: 1 | -1; origine: THREE.Vector3
       <sprite position={p.toArray()} scale={[2.2, 2.2, 1]}>
         <spriteMaterial map={halo()} color="#ffeecb" transparent opacity={0.22} blending={THREE.AdditiveBlending} depthWrite={false} />
       </sprite>
-      {/* la LED du phare : signature froide au bord haut de l'optique —
-          un trait net (basic hors tone mapping) doublé d'un voile */}
-      <group position={[p.x, p.y + 0.07, p.z]} rotation-y={CAP}>
-        <mesh>
-          <boxGeometry args={[0.44, 0.03, 0.015]} />
-          <meshBasicMaterial color="#dff2ff" toneMapped={false} />
-        </mesh>
-      </group>
-      <sprite position={[p.x, p.y + 0.07, p.z]} scale={[0.85, 0.14, 1]}>
-        <spriteMaterial map={halo()} color="#cfe9ff" transparent opacity={0.5} blending={THREE.AdditiveBlending} depthWrite={false} />
-      </sprite>
     </group>
   )
 }

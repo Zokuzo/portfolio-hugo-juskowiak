@@ -54,6 +54,15 @@ export default function VoitureRue(props: { position?: [number, number, number];
           mat.emissiveIntensity = 8
           mat.toneMapped = false
         }
+        /* la LED vit DANS le phare (verdict Hugo — pas de barre flottante) :
+           l'optique s'allume de sa propre texture en carte d'émission,
+           le dessin réel du phare fait la signature */
+        if (mat?.name === "HeadlightsTex") {
+          mat.emissive?.set("#bcd6f0")
+          mat.emissiveMap = mat.map
+          mat.emissiveIntensity = 1.6
+          mat.needsUpdate = true
+        }
         if (mat?.name === "RedGlow" || mat?.name === "BrakeLight") {
           mat.emissiveIntensity = 1.6
         }
