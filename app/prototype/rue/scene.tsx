@@ -34,8 +34,8 @@ type Variante = {
 
 const VARIANTES: Record<string, Variante> = {
   a: {
-    pose: [0.8, 0, -3],
-    cap: -Math.PI * 0.38,
+    pose: [1.6, 0, -3],
+    cap: Math.PI,
     cam: [4.2, 2.0, 6.5],
     cible: [0, 0.8, -3],
     brume: ["#0d0b16", 16, 70],
@@ -48,7 +48,7 @@ const VARIANTES: Record<string, Variante> = {
     decorPosition: [6, -1, 32],
     /* sonde de sol : la rue est la bande y=0,2 inclinée d'~19° */
     pose: [0, 0.2, 0],
-    cap: 0.34,
+    cap: 0.62,
     cam: [-2.5, 2.4, -7],
     cible: [0, 1.2, 0.5],
     brume: ["#0d0b16", 22, 170],
@@ -66,8 +66,8 @@ const VARIANTES: Record<string, Variante> = {
        van garé vers z=-3 — la bande z=-5,5 est propre */
     /* correction : le plateau z<-5 était la VOIE FERRÉE — la route est la
        bande z -1,5..-4 où le van est garé ; la GT86 se range derrière lui */
-    pose: [7, 3.72, -2.6],
-    cap: -Math.PI / 2,
+    pose: [7.5, 3.72, -1.9],
+    cap: -Math.PI / 2 + 0.55,
     cam: [1.6, 6.0, 3.6],
     cible: [9, 4.2, -3],
     brume: ["#0d0b16", 18, 80],
