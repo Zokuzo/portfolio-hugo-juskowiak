@@ -48,9 +48,9 @@ export default function DecorGlb({
     modele.parent?.updateWorldMatrix(true, true)
     const ray = new THREE.Raycaster()
     const bas = new THREE.Vector3(0, -1, 0)
-    for (let dz = -10; dz <= 10; dz += 2) {
+    for (let dz = -24; dz <= 24; dz += 3) {
       let ligne = `z=${String(sonde[2] + dz).padStart(4)} |`
-      for (let dx = -10; dx <= 10; dx += 2) {
+      for (let dx = -24; dx <= 24; dx += 3) {
         ray.set(new THREE.Vector3(sonde[0] + dx, 60, sonde[2] + dz), bas)
         const impact = ray.intersectObject(modele, true)[0]
         ligne += (impact ? (60 - impact.distance).toFixed(1) : "·").padStart(6)
@@ -58,7 +58,7 @@ export default function DecorGlb({
       console.log("[sol] " + ligne)
     }
     let entete = "[sol] x =    |"
-    for (let dx = -10; dx <= 10; dx += 2) entete += String(sonde[0] + dx).padStart(6)
+    for (let dx = -24; dx <= 24; dx += 3) entete += String(sonde[0] + dx).padStart(6)
     console.log(entete)
   }, [modele, fichier, sonde])
 

@@ -76,15 +76,19 @@ const VARIANTES: Record<string, Variante> = {
     fichier: "/prototype/decor-hongkong.glb",
     /* le GLB est en centimètres (bbox 4679×3820) : ÷100 puis recentrage
        de la scène autour de l'origine */
-    echelle: 0.01,
-    decorPosition: [-8.2, 0, -4],
+    /* ÷100 sous-évaluait : barrières à mi-portière, banc nain — le
+       mobilier réel impose ~×1,6 de plus */
+    echelle: 0.016,
+    decorPosition: [-13.1, 0, -6.5],
     /* la rue du décor court sur X : cap -90° — la voiture file dans le
        canyon de néons, caméra trois-quarts arrière ; y -0,18 : la chaussée
        du scan est légèrement sous le zéro, sinon la voiture lévite */
-    pose: [-3, -0.32, -2.1],
+    /* sonde large ×1,6 : le corridor routier court sur X entre z=0 et 9
+       (façades z≤-9 et z≥15) — voie proche centrée z≈2,2 */
+    pose: [-4, -0.28, 2.2],
     cap: -Math.PI / 2,
-    cam: [3.5, 2.0, 2.5],
-    cible: [-3, 0.8, -2.1],
+    cam: [3.5, 2.4, 6.5],
+    cible: [-4, 0.8, 2.2],
     brume: ["#0d0b16", 20, 90],
     ambiance: 0.9,
   },
