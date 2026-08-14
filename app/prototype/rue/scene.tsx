@@ -81,6 +81,25 @@ const VARIANTES: Record<string, Variante> = {
     cible: [9, 4.2, -3],
     brume: ["#0d0b16", 18, 80],
   },
+  e: {
+    /* la city procédurale importée par Hugo (96,5 → 16,1 Mo, échelle
+       métrique native). Sonde : carrefour à l'origine — rue E-O (z -4..4),
+       rue N-S (x -6..6), socle de 4,5 m à z≈15 sous un mur de tours de
+       57 m. Défaut : nez au socle des tours, phares sur son mur */
+    fichier: "/prototype/decor-procedural.glb",
+    pose: [-2.6, -0.05, 7.6],
+    cap: 0,
+    cam: [-7, 2.2, 2],
+    cible: [-2.3, 1, 8.1],
+    brume: ["#0d0b16", 25, 180],
+    ambiance: 0.4,
+    poses: {
+      /* 1 — rangée au bord nord de la route E-O, parallèle, plein ouest */
+      "1": { pose: [13.5, -0.05, 3.2], cap: -Math.PI / 2, cam: [18.5, 2.0, 0.2], cible: [13.5, 1, 3] },
+      /* 2 — au bord du trottoir, en biais vers la vitrine échafaudée */
+      "2": { pose: [1.7, -0.05, 6.5], cap: -0.3, cam: [5.7, 2.3, 2.6], cible: [1.2, 1, 7] },
+    },
+  },
   d: {
     fichier: "/prototype/decor-hongkong.glb",
     /* le GLB est en centimètres (bbox 4679×3820) : ÷100 puis recentrage
