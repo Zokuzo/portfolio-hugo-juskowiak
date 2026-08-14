@@ -30,6 +30,8 @@ type Variante = {
   /* les décors à nuit cuite dans les textures ont besoin d'une ambiante
      franche, nos lampes seules les laissent noirs */
   ambiance?: number
+  /* mises en scène alternatives (?pose=1|2|3) — même décor, autre garage */
+  poses?: Record<string, Pick<Variante, "pose" | "cap" | "cam" | "cible">>
 }
 
 const VARIANTES: Record<string, Variante> = {
@@ -46,13 +48,20 @@ const VARIANTES: Record<string, Variante> = {
        les tours deviennent praticables, ses textures s'assument de loin */
     echelle: 20,
     decorPosition: [6, -1, 32],
-    /* sonde de sol : la rue est la bande y=0,2 inclinée d'~19° */
-    pose: [0, 0.2, 0],
-    cap: 0.62,
-    cam: [-2.5, 2.4, -7],
-    cible: [0, 1.2, 0.5],
+    /* sonde de sol : la rue est la bande y=0,2 inclinée d'~35°. Verdict
+       Hugo « phares sur un mur » : par défaut, nez tourné vers le muret
+       gauche — le double halo des optiques vit sur la pierre. Alternates :
+       ?pose=1 rangée au bord droit, ?pose=2 en pleine voie */
+    pose: [-1.8, 0.02, 1.0],
+    cap: -0.45,
+    cam: [3.4, 1.9, -2.5],
+    cible: [-2.6, 1, 2.2],
     brume: ["#0d0b16", 22, 170],
     ambiance: 0.4,
+    poses: {
+      "1": { pose: [2.4, 0.1, -2.2], cap: 0.62, cam: [-2.5, 2.2, -7], cible: [2.2, 1, -1.6] },
+      "2": { pose: [0, 0.2, 0], cap: 0.62, cam: [-2.5, 2.4, -7], cible: [0, 1.2, 0.5] },
+    },
   },
   c: {
     /* le coin de canal : la voiture longe le quai, caméra depuis l'autre
@@ -153,7 +162,9 @@ function Phare({ cote, cap, origine, gauche }: { cote: 1 | -1; cap: number; orig
 
 export default function Scene() {
   const params = useSearchParams()
-  const v = VARIANTES[params.get("variant") ?? "a"] ?? VARIANTES.a
+  const base = VARIANTES[params.get("variant") ?? "a"] ?? VARIANTES.a
+  const surcharge = base.poses?.[params.get("pose") ?? ""]
+  const v = surcharge ? { ...base, ...surcharge } : base
   const brut = params.get("cam")?.split(",").map(Number)
   const cam: [number, number, number] =
     brut && brut.length === 3 && brut.every(Number.isFinite) ? (brut as [number, number, number]) : v.cam
