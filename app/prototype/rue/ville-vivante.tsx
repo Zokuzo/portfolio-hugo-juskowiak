@@ -2,7 +2,6 @@
 
 import { useMemo, useRef } from "react"
 import { useFrame } from "@react-three/fiber"
-import { useGLTF } from "@react-three/drei"
 import * as THREE from "three"
 import { halo } from "./rue"
 
@@ -28,31 +27,37 @@ function graine(n: number) {
 
 /* [x, z, y de la tête, vrai spot ?] — positions des luminaires analysées */
 const LAMPES: [number, number, number, boolean?][] = [
-  /* rue N-S, rangée ouest (hautes) et est (courtes) */
-  [-4.8, -15.5, 10.1, true],
-  [-4.8, -30.0, 10.1, true],
-  [-4.8, -44.5, 10.1],
-  [5.7, -15.5, 7.9, true],
-  [5.7, -30.0, 7.9],
-  [5.7, -44.5, 7.9],
-  /* rue E-O, rangée nord (hautes) et sud (courtes puis hautes à l'ouest) */
-  [8.0, 1.0, 10.1, true],
-  [20.2, 1.0, 10.1],
-  [32.3, 1.0, 10.1],
-  [44.5, 1.0, 10.1],
-  [-8.0, 1.0, 10.1],
-  [-20.2, 1.0, 10.1],
-  [-32.3, 1.0, 10.1],
-  [-44.5, 1.0, 10.1],
-  [15.5, -2.0, 7.9, true],
-  [26.4, -2.0, 7.9],
-  [37.3, -2.0, 7.9],
-  [48.2, -2.0, 7.9],
-  [-15.5, -4.8, 10.1],
-  [-30.0, -4.8, 10.1],
-  [-44.5, -4.8, 10.1],
-  /* le mât d'angle du carrefour */
-  [-2.0, 4.7, 9.8],
+  /* rue N-S : rangée ouest (hautes) et est (courtes) */
+  [-4.8, -15.5, 10.1, true], [-4.8, -30.0, 10.1, true], [-4.8, -44.5, 10.1],
+  [5.7, -15.5, 7.9, true], [5.7, -30.0, 7.9], [5.7, -44.5, 7.9],
+  /* rue E-O : rangée nord (hautes) et sud */
+  [8.0, 1.0, 10.1, true], [20.2, 1.0, 10.1], [32.3, 1.0, 10.1], [44.5, 1.0, 10.1],
+  [-8.0, 1.0, 10.1], [-20.2, 1.0, 10.1], [-32.3, 1.0, 10.1], [-44.5, 1.0, 10.1],
+  [15.5, -2.0, 7.9, true], [26.4, -2.0, 7.9], [37.3, -2.0, 7.9], [48.2, -2.0, 7.9],
+  [-15.5, -4.8, 10.1], [-30.0, -4.8, 10.1], [-44.5, -4.8, 10.1],
+  /* mâts d'angle des carrefours */
+  [-2.0, 4.7, 9.8], [0.0, 6.8, 9.4],
+  [57.0, -5.8, 9.8], [54.1, -5.9, 9.4], [63.0, 5.8, 9.8], [65.9, 5.9, 9.4],
+  [50.4, 3.0, 9.8], [50.4, 5.9, 9.4],
+  /* boulevards périphériques (Hugo les a vus éteints en orbite) */
+  [61.0, 44.5, 10.1], [61.0, 33.6, 10.1], [61.0, 22.7, 10.1], [61.0, 11.7, 10.1],
+  [-61.0, 48.3, 10.1], [-61.0, 36.1, 10.1], [-61.0, 23.9, 10.1], [-61.0, 11.8, 10.1],
+  [48.3, 61.0, 10.1], [36.1, 61.0, 10.1], [23.9, 61.0, 10.1], [11.8, 61.0, 10.1],
+  [20.2, 55.2, 10.1], [32.3, 55.2, 10.1], [44.5, 55.2, 10.1],
+  [-8.0, 55.2, 10.1], [-20.2, 55.2, 10.1], [-32.3, 55.2, 10.1], [-44.5, 55.2, 10.1], [8.0, 55.2, 10.1],
+  [-15.5, -55.2, 10.1], [-30.0, -55.2, 10.1], [-44.5, -55.2, 10.1],
+  [-59.0, -44.5, 10.1], [-59.0, -30.0, 10.1], [-59.0, -15.5, 10.1],
+  [-15.5, -61.0, 10.1], [-30.0, -61.0, 10.1], [-44.5, -61.0, 10.1],
+  [-55.2, 15.5, 10.1], [-55.2, 30.0, 10.1], [-55.2, 44.5, 10.1],
+  [55.2, 15.5, 10.1], [55.2, 30.0, 10.1], [55.2, 44.5, 10.1],
+  [15.5, -64.8, 10.1], [30.0, -64.8, 10.1], [44.5, -64.8, 10.1],
+  [-61.0, -11.7, 10.1], [-61.0, -23.9, 10.1], [-61.0, -36.1, 10.1], [-61.0, -48.2, 10.1],
+  [58.0, -48.2, 7.9], [58.0, -36.1, 7.9], [58.0, -23.9, 7.9], [58.0, -11.8, 7.9],
+  [15.5, -58.0, 7.9], [26.4, -58.0, 7.9], [37.3, -58.0, 7.9], [48.2, -58.0, 7.9],
+  [65.7, -44.5, 7.9], [65.7, -30.0, 7.9], [65.7, -15.5, 7.9],
+  [-15.5, 65.7, 7.9], [-30.0, 65.7, 7.9], [-44.5, 65.7, 7.9],
+  [65.8, -66.7, 9.8], [-65.8, -57.0, 9.8], [-63.0, -69.6, 9.8], [-50.4, -63.0, 9.8],
+  [-65.8, 63.0, 9.8], [65.8, 53.3, 9.8], [-5.8, 66.7, 9.8], [66.7, -54.2, 9.8],
 ]
 
 function Lampe({ x, z, y, vrai }: { x: number; z: number; y: number; vrai?: boolean }) {
@@ -117,104 +122,7 @@ function TeteDeFeu({ pos, phase }: { pos: [number, number, number]; phase: numbe
   )
 }
 
-/* ---- les fenêtres habitées ------------------------------------------ */
-/* plus de façades devinées : chaque fenêtre est COLLÉE au mur par un
-   raycast horizontal au montage — depuis la rue vers le bâti, au premier
-   impact. Les bandes décrivent d'où l'on tire et à quelles hauteurs. */
-type Bande = {
-  /* origine du tir : le long d'un axe, à hauteurs fixes */
-  origines: [number, number, number][]
-  dir: [number, number, number]
-  portee: number
-  teinte: string
-  part: number
-}
-const BANDES: Bande[] = [
-  /* la brique ouest de la rue N-S : tirs vers -X depuis la chaussée */
-  {
-    origines: Array.from({ length: 24 }, (_, i) => [-6, 2.1 + (i % 2) * 2.3, -8 - Math.floor(i / 2) * 2.6] as [number, number, number]),
-    dir: [-1, 0, 0],
-    portee: 18,
-    teinte: "#ffc98a",
-    part: 0.42,
-  },
-  /* le bloc est de la rue N-S : tirs vers +X */
-  {
-    origines: Array.from({ length: 16 }, (_, i) => [6, 2.3 + (i % 2) * 2.4, -9 - Math.floor(i / 2) * 2.8] as [number, number, number]),
-    dir: [1, 0, 0],
-    portee: 14,
-    teinte: "#ffd9a2",
-    part: 0.36,
-  },
-  /* les tours au nord du carrefour : tirs vers +Z depuis le MILIEU de la
-     rue (partir trop près, c'est tirer depuis l'intérieur du bâtiment —
-     une façade vue de dos ne se raycast pas), étages 6,5 à 20 m */
-  {
-    origines: Array.from({ length: 64 }, (_, i) => [-14 + (i % 8) * 3.3, 6.5 + Math.floor(i / 8) * 2.7, 1] as [number, number, number]),
-    dir: [0, 0, 1],
-    portee: 24,
-    teinte: "#cfe0ff",
-    part: 0.3,
-  },
-  /* la façade est de la rue N-S en étage (au-dessus des vitrines) */
-  {
-    origines: Array.from({ length: 16 }, (_, i) => [6, 5.2 + Math.floor(i / 8) * 2.6, -8 - (i % 8) * 2.8] as [number, number, number]),
-    dir: [1, 0, 0],
-    portee: 14,
-    teinte: "#ffe0b0",
-    part: 0.3,
-  },
-]
-
-function Fenetres({ decor }: { decor: THREE.Object3D }) {
-  const quads = useMemo(() => {
-    decor.updateWorldMatrix(true, true)
-    const ray = new THREE.Raycaster()
-    const liste: { p: THREE.Vector3; q: THREE.Quaternion; teinte: string }[] = []
-    const avantPlan = new THREE.Vector3(0, 0, 1)
-    BANDES.forEach((b, bi) => {
-      const dir = new THREE.Vector3(...b.dir).normalize()
-      b.origines.forEach((o, oi) => {
-        if (graine(bi * 97.3 + oi * 13.7) > b.part) return
-        ray.set(new THREE.Vector3(...o), dir)
-        ray.far = b.portee
-        /* premier impact FAÇADE : on saute arbres, mobilier, bras de mâts —
-           un quad-fenêtre sur un lampadaire a déjà été vu, jamais deux */
-        const impact = ray
-          .intersectObject(decor, true)
-          .find((h) => {
-            const mat = (h.object as THREE.Mesh).material as THREE.Material | THREE.Material[]
-            const nom = (Array.isArray(mat) ? mat[0] : mat)?.name ?? ""
-            return !/Street_Assets|Foliage|Bark|Glass|Grass|WetFloor|trash|firescape/i.test(nom)
-          })
-        if (!impact || !impact.face) return
-        /* le quad épouse le mur : posé au point d'impact, tourné selon la
-           normale, décollé de 6 cm */
-        const n = impact.face.normal.clone().transformDirection(impact.object.matrixWorld).normalize()
-        if (Math.abs(n.y) > 0.4) return /* toit ou sol : pas une façade */
-        const p = impact.point.clone().addScaledVector(n, 0.06)
-        const q = new THREE.Quaternion().setFromUnitVectors(avantPlan, n)
-        liste.push({ p, q, teinte: b.teinte })
-      })
-    })
-    return liste
-  }, [decor])
-  return (
-    <group>
-      {quads.map((f, i) => (
-        <mesh key={i} position={f.p} quaternion={f.q}>
-          <planeGeometry args={[0.85, 1.15]} />
-          <meshBasicMaterial color={f.teinte} transparent opacity={0.7} />
-        </mesh>
-      ))}
-    </group>
-  )
-}
-
 export default function VieNocturne() {
-  /* même GLB que DecorGlb : le cache useGLTF rend l'instance partagée,
-     transform identité en variante e — le raycast des fenêtres vise juste */
-  const { scene } = useGLTF("/prototype/decor-procedural.glb")
   return (
     <group>
       {LAMPES.map(([x, z, y, vrai], i) => (
@@ -224,7 +132,6 @@ export default function VieNocturne() {
           (côté z+), en opposition de phase */}
       <TeteDeFeu pos={[9.42, 3.35, -5.63]} phase={0} />
       <TeteDeFeu pos={[9.9, 3.35, -5.19]} phase={1} />
-      <Fenetres decor={scene} />
     </group>
   )
 }

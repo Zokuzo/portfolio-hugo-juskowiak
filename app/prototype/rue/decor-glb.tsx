@@ -41,10 +41,44 @@ export default function DecorGlb({
         const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
         for (const m of mats) {
           const mat = m as THREE.MeshStandardMaterial
-          if (mat?.name?.includes("Glass")) {
-            mat.emissive?.set("#ffca7a")
-            if (mat.map) mat.emissiveMap = mat.map
-            mat.emissiveIntensity = 0.8
+          /* les fenêtres de ce décor sont PEINTES dans les textures de
+             façade (24 sommets pour tout un mur de brique — vérifié à
+             l'analyse) : impossible d'aligner des quads dessus. Alors ce
+             sont les pixels sombres de la texture eux-mêmes qui s'allument
+             — inversion de luminance en émissif, modulée par un bruit
+             cellulaire (~1 fenêtre) pour que seules certaines vivent.
+             Alignement parfait par construction. */
+          if (mat?.name === "CityGen_LR_Facades" || mat?.name === "CityGenGlass.001") {
+            mat.onBeforeCompile = (shader) => {
+              shader.vertexShader = shader.vertexShader
+                .replace("#include <common>", "#include <common>\nvarying vec3 vPosMonde;")
+                .replace(
+                  "#include <begin_vertex>",
+                  "#include <begin_vertex>\nvPosMonde = (modelMatrix * vec4(position, 1.0)).xyz;",
+                )
+              shader.fragmentShader = shader.fragmentShader
+                .replace(
+                  "#include <common>",
+                  "#include <common>\nvarying vec3 vPosMonde;\nfloat hachageFen(vec2 p){return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);}",
+                )
+                .replace(
+                  "#include <emissivemap_fragment>",
+                  `#include <emissivemap_fragment>
+                  {
+                    float lum = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
+                    /* seules les vraies vitres (très sombres) comptent */
+                    float vitre = smoothstep(0.10, 0.04, lum);
+                    vec2 cellule = vec2(floor(vPosMonde.y / 1.5), floor((vPosMonde.x + vPosMonde.z) / 1.7));
+                    /* une ville dort : ~10 % de fenêtres vivent, moitié
+                       moins au rez-de-chaussée, chacune à sa luminosité */
+                    float seuil = vPosMonde.y < 5.0 ? 0.95 : 0.90;
+                    float allume = step(seuil, hachageFen(cellule));
+                    float dose = 0.25 + 0.55 * hachageFen(cellule + 7.3);
+                    vec3 teinteFen = mix(vec3(1.0, 0.72, 0.42), vec3(0.75, 0.83, 1.0), step(0.7, hachageFen(cellule + 3.1)));
+                    totalEmissiveRadiance += teinteFen * vitre * allume * dose;
+                  }`,
+                )
+            }
             mat.needsUpdate = true
           }
         }
