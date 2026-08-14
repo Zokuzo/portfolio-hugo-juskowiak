@@ -53,12 +53,14 @@ const VARIANTES: Record<string, Variante> = {
     /* le coin de canal : la voiture longe le quai, caméra depuis l'autre
        rive — le pied du pont reste dans le cadre sans l'écraser */
     fichier: "/prototype/decor-tokyo.glb",
-    /* le quai est piéton (jardinières tous les 2,7 m) — la voiture vit sur
-       la route de l'autre rive, celle du camion garé */
-    pose: [9.5, 1.2, 0],
+    /* verdict Hugo : le décor est sous-dimensionné (jardinières à 2,7 m,
+       pick-up de 2,5 m) — on l'agrandit ×1,6, la voiture garde sa taille
+       réelle ; elle vit sur la terrasse de l'autre rive */
+    echelle: 1.6,
+    pose: [15.6, 1.22, 0],
     cap: 0,
-    cam: [3, 3, 6],
-    cible: [9.5, 1.5, 0],
+    cam: [4.8, 4.2, 9.5],
+    cible: [15.6, 1.8, 0],
     brume: ["#0d0b16", 18, 80],
   },
   d: {
