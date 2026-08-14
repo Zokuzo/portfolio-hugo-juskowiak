@@ -7,13 +7,13 @@ import { Environment, Lightformer, Loader, OrbitControls, SpotLight as SpotVolum
 import * as THREE from "three"
 import Rue, { halo } from "./rue"
 import DecorGlb from "./decor-glb"
+import VieNocturne from "./ville-vivante"
 import VoitureRue from "./voiture-rue"
 
-/* La scène du prototype #22, quatre décors au banc d'essai (gate œil Hugo) :
-   ?variant=a  la rue construite minimale (défaut)
-   ?variant=b  « city » — boulevard détrempé (CC-BY, 4,3 Mo optimisé)
-   ?variant=c  « city scene tokyo » (choix Hugo, 6,1 Mo)
-   ?variant=d  « hong kong night street » (CC-BY, nuit cuite, 7,5 Mo)
+/* La scène du prototype #22 — verdict Hugo : la city procédurale (défaut,
+   ?variant=e) rangée au bord de la route, ville vivante ; ?variant=a garde
+   la rue construite en référence. Les décors b/c/d ont perdu le gate et
+   sont sortis du code (l'historique git les garde).
    Boutons de réglage : ?cam=x,y,z — dpr ≤ 1,5, doctrine fluidité du #21. */
 
 type Variante = {
@@ -30,6 +30,8 @@ type Variante = {
   /* les décors à nuit cuite dans les textures ont besoin d'une ambiante
      franche, nos lampes seules les laissent noirs */
   ambiance?: number
+  /* la ville s'anime : lampadaires allumés + vitrages émissifs */
+  vie?: boolean
   /* mises en scène alternatives (?pose=1|2|3) — même décor, autre garage */
   poses?: Record<string, Pick<Variante, "pose" | "cap" | "cam" | "cible">>
 }
@@ -42,83 +44,26 @@ const VARIANTES: Record<string, Variante> = {
     cible: [0, 0.8, -3],
     brume: ["#0d0b16", 16, 70],
   },
-  b: {
-    fichier: "/prototype/decor-ville.glb",
-    /* le diorama aérien passe à l'échelle voiture : ×20 — ses rues entre
-       les tours deviennent praticables, ses textures s'assument de loin */
-    echelle: 20,
-    decorPosition: [6, -1, 32],
-    /* sonde de sol : la rue est la bande y=0,2 inclinée d'~35°. Verdict
-       Hugo « phares sur un mur » : par défaut, nez tourné vers le muret
-       gauche — le double halo des optiques vit sur la pierre. Alternates :
-       ?pose=1 rangée au bord droit, ?pose=2 en pleine voie */
-    pose: [-1.8, 0.02, 1.0],
-    cap: -0.45,
-    cam: [3.4, 1.9, -2.5],
-    cible: [-2.6, 1, 2.2],
-    brume: ["#0d0b16", 22, 170],
-    ambiance: 0.4,
-    poses: {
-      "1": { pose: [2.4, 0.1, -2.2], cap: 0.62, cam: [-2.5, 2.2, -7], cible: [2.2, 1, -1.6] },
-      "2": { pose: [0, 0.2, 0], cap: 0.62, cam: [-2.5, 2.4, -7], cible: [0, 1.2, 0.5] },
-    },
-  },
-  c: {
-    /* le coin de canal : la voiture longe le quai, caméra depuis l'autre
-       rive — le pied du pont reste dans le cadre sans l'écraser */
-    fichier: "/prototype/decor-tokyo.glb",
-    /* verdict Hugo : le décor est sous-dimensionné (jardinières à 2,7 m,
-       pick-up de 2,5 m) — on l'agrandit ×1,6, la voiture garde sa taille
-       réelle ; elle vit sur la terrasse de l'autre rive */
-    echelle: 1.6,
-    /* sonde de sol : la route est le plateau y=3,9 le long de X (z -3..-8),
-       van garé vers z=-3 — la bande z=-5,5 est propre */
-    /* correction : le plateau z<-5 était la VOIE FERRÉE — la route est la
-       bande z -1,5..-4 où le van est garé ; la GT86 se range derrière lui */
-    pose: [7.5, 3.72, -1.9],
-    cap: -Math.PI / 2 + 0.55,
-    cam: [1.6, 6.0, 3.6],
-    cible: [9, 4.2, -3],
-    brume: ["#0d0b16", 18, 80],
-  },
   e: {
     /* la city procédurale importée par Hugo (96,5 → 16,1 Mo, échelle
        métrique native). Sonde : carrefour à l'origine — rue E-O (z -4..4),
        rue N-S (x -6..6), socle de 4,5 m à z≈15 sous un mur de tours de
        57 m. Défaut : nez au socle des tours, phares sur son mur */
     fichier: "/prototype/decor-procedural.glb",
-    pose: [-2.6, -0.05, 7.6],
-    cap: 0,
-    cam: [-7, 2.2, 2],
-    cible: [-2.3, 1, 8.1],
+    /* verdict Hugo : rangée au bord de la route = LA pose */
+    pose: [13.5, -0.05, 3.2],
+    cap: -Math.PI / 2,
+    cam: [18.5, 2.0, 0.2],
+    cible: [13.5, 1, 3],
     brume: ["#0d0b16", 25, 180],
     ambiance: 0.4,
+    vie: true,
     poses: {
-      /* 1 — rangée au bord nord de la route E-O, parallèle, plein ouest */
-      "1": { pose: [13.5, -0.05, 3.2], cap: -Math.PI / 2, cam: [18.5, 2.0, 0.2], cible: [13.5, 1, 3] },
-      /* 2 — au bord du trottoir, en biais vers la vitrine échafaudée */
+      /* 1 — sur le parvis, nez à la vitrine échafaudée */
+      "1": { pose: [-2.6, -0.05, 7.6], cap: 0, cam: [-7, 2.2, 2], cible: [-2.3, 1, 8.1] },
+      /* 2 — au bord du trottoir, en biais vers la vitrine */
       "2": { pose: [1.7, -0.05, 6.5], cap: -0.3, cam: [5.7, 2.3, 2.6], cible: [1.2, 1, 7] },
     },
-  },
-  d: {
-    fichier: "/prototype/decor-hongkong.glb",
-    /* le GLB est en centimètres (bbox 4679×3820) : ÷100 puis recentrage
-       de la scène autour de l'origine */
-    /* ÷100 sous-évaluait : barrières à mi-portière, banc nain — le
-       mobilier réel impose ~×1,6 de plus */
-    echelle: 0.016,
-    decorPosition: [-13.1, 0, -6.5],
-    /* la rue du décor court sur X : cap -90° — la voiture file dans le
-       canyon de néons, caméra trois-quarts arrière ; y -0,18 : la chaussée
-       du scan est légèrement sous le zéro, sinon la voiture lévite */
-    /* sonde large ×1,6 : le corridor routier court sur X entre z=0 et 9
-       (façades z≤-9 et z≥15) — voie proche centrée z≈2,2 */
-    pose: [-4, -0.28, 2.2],
-    cap: -Math.PI / 2,
-    cam: [3.5, 2.4, 6.5],
-    cible: [-4, 0.8, 2.2],
-    brume: ["#0d0b16", 20, 90],
-    ambiance: 0.9,
   },
 }
 
@@ -181,7 +126,7 @@ function Phare({ cote, cap, origine, gauche }: { cote: 1 | -1; cap: number; orig
 
 export default function Scene() {
   const params = useSearchParams()
-  const base = VARIANTES[params.get("variant") ?? "a"] ?? VARIANTES.a
+  const base = VARIANTES[params.get("variant") ?? "e"] ?? VARIANTES.e
   const surcharge = base.poses?.[params.get("pose") ?? ""]
   const v = surcharge ? { ...base, ...surcharge } : base
   const brut = params.get("cam")?.split(",").map(Number)
@@ -220,12 +165,14 @@ export default function Scene() {
               position={v.decorPosition}
               rotationY={v.decorRotationY}
               sonde={v.pose}
+              nuit={v.vie}
             />
           ) : (
             <Rue />
           )}
           <VoitureRue position={v.pose} rotationY={v.cap} />
           <Phares pose={v.pose} cap={v.cap} />
+          {v.vie && <VieNocturne />}
         </Suspense>
         <OrbitControls
           enablePan={false}

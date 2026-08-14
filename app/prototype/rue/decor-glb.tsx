@@ -13,6 +13,7 @@ export default function DecorGlb({
   position = [0, 0, 0],
   rotationY = 0,
   sonde,
+  nuit,
 }: {
   fichier: string
   echelle?: number
@@ -22,6 +23,9 @@ export default function DecorGlb({
      impact d'un rayon vertical, sur une grille de ±10 m — c'est la carte
      qui dit où une voiture peut poser ses roues */
   sonde?: [number, number, number]
+  /* la ville s'habite : les vitrages du décor s'allument de l'intérieur
+     (émissif chaud voilé par leur propre texture — patchwork de fenêtres) */
+  nuit?: boolean
 }) {
   const { scene } = useGLTF(fichier)
 
@@ -33,9 +37,21 @@ export default function DecorGlb({
          normalise ce qui coûte : pas d'ombres, frustum culling actif */
       mesh.castShadow = false
       mesh.receiveShadow = false
+      if (nuit) {
+        const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+        for (const m of mats) {
+          const mat = m as THREE.MeshStandardMaterial
+          if (mat?.name?.includes("Glass")) {
+            mat.emissive?.set("#ffca7a")
+            if (mat.map) mat.emissiveMap = mat.map
+            mat.emissiveIntensity = 0.8
+            mat.needsUpdate = true
+          }
+        }
+      }
     })
     return scene
-  }, [scene])
+  }, [scene, nuit])
 
   useEffect(() => {
     const boite = new THREE.Box3().setFromObject(modele)
