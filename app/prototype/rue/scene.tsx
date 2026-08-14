@@ -134,6 +134,10 @@ export default function Scene() {
   const brut = params.get("cam")?.split(",").map(Number)
   const cam: [number, number, number] =
     brut && brut.length === 3 && brut.every(Number.isFinite) ? (brut as [number, number, number]) : v.cam
+  /* ?vise=x,y,z : oriente la caméra de contrôle ailleurs que sur la voiture */
+  const brutVise = params.get("vise")?.split(",").map(Number)
+  const cible: [number, number, number] =
+    brutVise && brutVise.length === 3 && brutVise.every(Number.isFinite) ? (brutVise as [number, number, number]) : v.cible
 
   return (
     <div style={{ position: "fixed", inset: 0, background: v.brume[0] }}>
@@ -182,7 +186,7 @@ export default function Scene() {
           minDistance={3.5}
           maxDistance={v.fichier ? 60 : 20}
           maxPolarAngle={Math.PI * 0.49}
-          target={v.cible}
+          target={cible}
         />
       </Canvas>
       <Loader />
