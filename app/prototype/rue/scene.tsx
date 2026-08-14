@@ -40,14 +40,19 @@ const VARIANTES: Record<string, Variante> = {
     cible: [0, 0.8, -3],
     brume: ["#0d0b16", 16, 70],
   },
-  /* poses de départ neutres — la sonde bbox en console cale la suite */
   b: {
     fichier: "/prototype/decor-ville.glb",
-    pose: [0, 0, 0],
-    cap: 0,
-    cam: [10, 5, 14],
-    cible: [0, 1, 0],
-    brume: ["#0d0b16", 25, 160],
+    /* le diorama aérien passe à l'échelle voiture : ×20 — ses rues entre
+       les tours deviennent praticables, ses textures s'assument de loin */
+    echelle: 20,
+    decorPosition: [6, -1, 32],
+    /* sonde de sol : la rue est la bande y=0,2 inclinée d'~19° */
+    pose: [0, 0.2, 0],
+    cap: 0.34,
+    cam: [-2.5, 2.4, -7],
+    cible: [0, 1.2, 0.5],
+    brume: ["#0d0b16", 22, 170],
+    ambiance: 0.4,
   },
   c: {
     /* le coin de canal : la voiture longe le quai, caméra depuis l'autre
@@ -57,10 +62,14 @@ const VARIANTES: Record<string, Variante> = {
        pick-up de 2,5 m) — on l'agrandit ×1,6, la voiture garde sa taille
        réelle ; elle vit sur la terrasse de l'autre rive */
     echelle: 1.6,
-    pose: [15.6, 1.22, 0],
-    cap: 0,
-    cam: [4.8, 4.2, 9.5],
-    cible: [15.6, 1.8, 0],
+    /* sonde de sol : la route est le plateau y=3,9 le long de X (z -3..-8),
+       van garé vers z=-3 — la bande z=-5,5 est propre */
+    /* correction : le plateau z<-5 était la VOIE FERRÉE — la route est la
+       bande z -1,5..-4 où le van est garé ; la GT86 se range derrière lui */
+    pose: [7, 3.72, -2.6],
+    cap: -Math.PI / 2,
+    cam: [1.6, 6.0, 3.6],
+    cible: [9, 4.2, -3],
     brume: ["#0d0b16", 18, 80],
   },
   d: {
@@ -72,10 +81,10 @@ const VARIANTES: Record<string, Variante> = {
     /* la rue du décor court sur X : cap -90° — la voiture file dans le
        canyon de néons, caméra trois-quarts arrière ; y -0,18 : la chaussée
        du scan est légèrement sous le zéro, sinon la voiture lévite */
-    pose: [-2, -0.32, 0],
+    pose: [-3, -0.32, -2.1],
     cap: -Math.PI / 2,
-    cam: [4.5, 2.0, 4.5],
-    cible: [-2, 0.8, 0],
+    cam: [3.5, 2.0, 2.5],
+    cible: [-3, 0.8, -2.1],
     brume: ["#0d0b16", 20, 90],
     ambiance: 0.9,
   },
@@ -176,6 +185,7 @@ export default function Scene() {
               echelle={v.echelle}
               position={v.decorPosition}
               rotationY={v.decorRotationY}
+              sonde={v.pose}
             />
           ) : (
             <Rue />

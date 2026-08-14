@@ -12,11 +12,16 @@ export default function DecorGlb({
   echelle = 1,
   position = [0, 0, 0],
   rotationY = 0,
+  sonde,
 }: {
   fichier: string
   echelle?: number
   position?: [number, number, number]
   rotationY?: number
+  /* centre de la sonde de sol : imprime en console la hauteur du premier
+     impact d'un rayon vertical, sur une grille de ±10 m — c'est la carte
+     qui dit où une voiture peut poser ses roues */
+  sonde?: [number, number, number]
 }) {
   const { scene } = useGLTF(fichier)
 
@@ -39,7 +44,23 @@ export default function DecorGlb({
     console.log(
       `[decor] ${fichier} bbox taille=(${taille.x.toFixed(1)}, ${taille.y.toFixed(1)}, ${taille.z.toFixed(1)}) centre=(${centre.x.toFixed(1)}, ${centre.y.toFixed(1)}, ${centre.z.toFixed(1)}) minY=${boite.min.y.toFixed(2)}`,
     )
-  }, [modele, fichier])
+    if (!sonde) return
+    modele.parent?.updateWorldMatrix(true, true)
+    const ray = new THREE.Raycaster()
+    const bas = new THREE.Vector3(0, -1, 0)
+    for (let dz = -10; dz <= 10; dz += 2) {
+      let ligne = `z=${String(sonde[2] + dz).padStart(4)} |`
+      for (let dx = -10; dx <= 10; dx += 2) {
+        ray.set(new THREE.Vector3(sonde[0] + dx, 60, sonde[2] + dz), bas)
+        const impact = ray.intersectObject(modele, true)[0]
+        ligne += (impact ? (60 - impact.distance).toFixed(1) : "·").padStart(6)
+      }
+      console.log("[sol] " + ligne)
+    }
+    let entete = "[sol] x =    |"
+    for (let dx = -10; dx <= 10; dx += 2) entete += String(sonde[0] + dx).padStart(6)
+    console.log(entete)
+  }, [modele, fichier, sonde])
 
   return (
     <group position={position} rotation-y={rotationY} scale={echelle}>
