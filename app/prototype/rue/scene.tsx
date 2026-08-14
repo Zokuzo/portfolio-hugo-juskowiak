@@ -50,11 +50,13 @@ const VARIANTES: Record<string, Variante> = {
        rue N-S (x -6..6), socle de 4,5 m à z≈15 sous un mur de tours de
        57 m. Défaut : nez au socle des tours, phares sur son mur */
     fichier: "/prototype/decor-procedural.glb",
-    /* verdict Hugo : rangée au bord de la route = LA pose */
-    pose: [13.5, -0.05, 3.2],
-    cap: -Math.PI / 2,
-    cam: [18.5, 2.0, 0.2],
-    cible: [13.5, 1, 3],
+    /* verdict Hugo : rangée au bas-côté, à un endroit SANS barrière —
+       le bord ouest de la rue N-S (carte des barrières de l'analyseur),
+       le mât d'en face à -15,5 la borde de lumière */
+    pose: [-4.4, -0.05, -19],
+    cap: Math.PI,
+    cam: [-1.2, 2.0, -12.5],
+    cible: [-4.4, 1, -19],
     brume: ["#0d0b16", 25, 180],
     ambiance: 0.4,
     vie: true,
