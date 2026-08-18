@@ -58,8 +58,10 @@ const VARIANTES: Record<string, Variante> = {
     cap: Math.PI,
     cam: [-1.2, 2.0, -12.5],
     cible: [-4.4, 1, -19],
-    brume: ["#0d0b16", 25, 180],
-    ambiance: 0.4,
+    brume: ["#08070f", 25, 180],
+    /* assez pour lire les volumes, plus assez pour ressembler à un
+       crépuscule — la nuit vient des lampes, pas de l'air (verdict Hugo) */
+    ambiance: 0.15,
     vie: true,
     poses: {
       /* 1 — sur le parvis, nez à la vitrine échafaudée */
@@ -166,8 +168,10 @@ export default function Scene() {
             <Lightformer form="rect" intensity={0.35} color="#9aa4c8" position={[8, 2, -6]} scale={[8, 3, 1]} target={[0, 0, 0]} />
             <Lightformer form="rect" intensity={0.3} color="#6b7490" position={[-8, 2, -12]} scale={[8, 3, 1]} target={[0, 0, 0]} />
           </Environment>
-          <hemisphereLight args={["#2a2440", "#0c0a10", 0.35]} />
-          <ambientLight intensity={0.06 + (v.ambiance ?? 0)} color={v.ambiance ? "#cdb8a8" : "#c8d4ff"} />
+          <hemisphereLight args={["#232038", "#0a080e", 0.22]} />
+          {/* ambiante de nuit froide (clair de lune) — la chaude #cdb8a8
+              donnait un air de coucher de soleil à toute la ville */}
+          <ambientLight intensity={0.06 + (v.ambiance ?? 0)} color={v.ambiance ? "#a9b4d4" : "#c8d4ff"} />
           {v.fichier ? (
             <DecorGlb
               fichier={v.fichier}

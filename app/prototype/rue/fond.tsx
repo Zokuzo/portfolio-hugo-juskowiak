@@ -23,9 +23,10 @@ const CIEL = {
     void main() {
       vec3 d = normalize(vDir);
       float h = max(d.y, 0.0);
-      /* zénith bleu nuit → horizon voilé, pollution chaude au ras */
-      vec3 ciel = mix(vec3(0.14, 0.12, 0.19), vec3(0.055, 0.05, 0.09), smoothstep(0.0, 0.5, h));
-      ciel += vec3(0.14, 0.085, 0.04) * pow(1.0 - h, 9.0);
+      /* zénith bleu nuit → horizon voilé, pollution chaude au ras —
+         dosé sombre : le ciel clair donnait un air de crépuscule */
+      vec3 ciel = mix(vec3(0.075, 0.065, 0.11), vec3(0.022, 0.02, 0.04), smoothstep(0.0, 0.5, h));
+      ciel += vec3(0.085, 0.05, 0.022) * pow(1.0 - h, 9.0);
       /* étoiles : une par cellule angulaire, la plupart éteintes, tuées
          près de l'horizon par le voile urbain */
       vec2 a = vec2(atan(d.z, d.x) * 40.0, d.y * 60.0);
@@ -54,7 +55,7 @@ const SKYLINE = {
       if (vUv.y > haut) discard;
       /* silhouette à peine détachée du ciel d'horizon — de la brume, pas
          un mur */
-      vec3 teinte = mix(vec3(0.045, 0.04, 0.075), vec3(0.062, 0.056, 0.098), vUv.y / haut);
+      vec3 teinte = mix(vec3(0.028, 0.025, 0.048), vec3(0.04, 0.036, 0.065), vUv.y / haut);
       /* fenêtres éparses, jamais aux bords des tours */
       vec2 fen = vec2(col * 4.0, vUv.y * 60.0);
       vec2 cf = floor(fen);
@@ -86,7 +87,7 @@ export default function Fond() {
           skyline ; le brouillard de scène le fond dans la nuit */}
       <mesh rotation-x={-Math.PI / 2} position={[0, -0.12, 0]}>
         <circleGeometry args={[400, 48]} />
-        <meshBasicMaterial color="#0b0a10" />
+        <meshBasicMaterial color="#07060a" />
       </mesh>
       {/* la lune voilée, haute au sud-ouest — assez pour exister, pas
           assez pour concurrencer les lampadaires */}

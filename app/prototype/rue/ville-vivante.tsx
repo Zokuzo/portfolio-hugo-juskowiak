@@ -83,7 +83,9 @@ function Lampe({ x, z, y, vrai }: { x: number; z: number; y: number; vrai?: bool
           <spriteMaterial map={halo()} color="#ffe6bb" transparent opacity={0.9} blending={THREE.AdditiveBlending} depthWrite={false} />
         </sprite>
         <sprite scale={[3.4, 3.4, 1]}>
-          <spriteMaterial map={halo()} color="#ffca7a" transparent opacity={0.14} blending={THREE.AdditiveBlending} depthWrite={false} />
+          {/* dosé pour la scène assombrie — à 0,14 les boules de lumière
+            mangeaient l'avenue */}
+        <spriteMaterial map={halo()} color="#ffca7a" transparent opacity={0.09} blending={THREE.AdditiveBlending} depthWrite={false} />
         </sprite>
       </group>
       {vrai ? (
@@ -94,7 +96,9 @@ function Lampe({ x, z, y, vrai }: { x: number; z: number; y: number; vrai?: bool
       ) : (
         <mesh position={[x, 0.02, z]} rotation-x={-Math.PI / 2}>
           <circleGeometry args={[4.2, 24]} />
-          <meshBasicMaterial map={halo()} color="#7d6039" transparent opacity={0.5} blending={THREE.AdditiveBlending} depthWrite={false} />
+          {/* flaque discrète : à 0,5 les 85 flaques repeignaient les
+              trottoirs en plein jour */}
+          <meshBasicMaterial map={halo()} color="#7d6039" transparent opacity={0.28} blending={THREE.AdditiveBlending} depthWrite={false} />
         </mesh>
       )}
     </group>

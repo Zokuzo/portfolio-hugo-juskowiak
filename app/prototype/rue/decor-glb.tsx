@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useRef } from "react"
+import { useFrame } from "@react-three/fiber"
 import { useGLTF } from "@react-three/drei"
 import * as THREE from "three"
 
@@ -98,6 +99,29 @@ export default function DecorGlb({
     })
     return scene
   }, [scene, nuit])
+
+  /* la nuit se joue ici : l'Environment (softbox de la robe) repeignait le
+     décor en fin d'après-midi — 84 % de la lumière au sol, mesuré par
+     isolation des sources. `envMapIntensity` seul est INERTE face à
+     `scene.environment` (three ne l'honore qu'avec un envMap posé sur le
+     matériau) : on copie donc l'environnement en envMap propre au décor,
+     dose faible — la voiture, elle, garde l'environnement plein. */
+  const envPose = useRef(false)
+  useFrame(({ scene: sc }) => {
+    if (envPose.current || !nuit || !sc.environment) return
+    envPose.current = true
+    modele.traverse((o) => {
+      const mesh = o as THREE.Mesh
+      if (!mesh.isMesh) return
+      for (const m of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
+        const mat = m as THREE.MeshStandardMaterial
+        if (!mat || !("envMapIntensity" in mat)) continue
+        mat.envMap = sc.environment
+        mat.envMapIntensity = (mat.metalness ?? 0) > 0.5 ? 0.35 : 0.15
+        mat.needsUpdate = true
+      }
+    })
+  })
 
   useEffect(() => {
     const boite = new THREE.Box3().setFromObject(modele)
