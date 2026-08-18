@@ -66,16 +66,28 @@ export default function DecorGlb({
                   `#include <emissivemap_fragment>
                   {
                     float lum = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
-                    /* seules les vraies vitres (très sombres) comptent */
-                    float vitre = smoothstep(0.10, 0.04, lum);
-                    vec2 cellule = vec2(floor(vPosMonde.y / 1.5), floor((vPosMonde.x + vPosMonde.z) / 1.7));
-                    /* une ville dort : ~10 % de fenêtres vivent, moitié
-                       moins au rez-de-chaussée, chacune à sa luminosité */
-                    float seuil = vPosMonde.y < 5.0 ? 0.95 : 0.90;
-                    float allume = step(seuil, hachageFen(cellule));
-                    float dose = 0.25 + 0.55 * hachageFen(cellule + 7.3);
+                    /* seules les vraies vitres (très sombres) comptent —
+                       seuil serré : les ombres de linteaux et le bois
+                       sombre des portes faisaient des blocs crème (capture
+                       Hugo, aberrations) */
+                    float vitre = smoothstep(0.055, 0.03, lum);
+                    vec2 grille = vec2(vPosMonde.y / 1.5, (vPosMonde.x + vPosMonde.z) / 1.7);
+                    vec2 cellule = floor(grille);
+                    vec2 f = fract(grille);
+                    /* la lueur vit au CŒUR de la cellule, bords en fondu :
+                       un bloc ne peut plus chevaucher un encadrement ni un
+                       bandeau d'étage voisin */
+                    float coeur = smoothstep(0.06, 0.28, f.x) * (1.0 - smoothstep(0.72, 0.94, f.x))
+                                * smoothstep(0.06, 0.28, f.y) * (1.0 - smoothstep(0.72, 0.94, f.y));
+                    /* une ville dort : ~10 % de fenêtres vivent, rien au
+                       rez-de-chaussée (boutiques closes — leurs portes
+                       vitrées faisaient les pires blocs) */
+                    float allume = step(0.90, hachageFen(cellule)) * step(3.2, vPosMonde.y);
+                    /* dose plafonnée : la vitre garde sa texture au lieu
+                       de saturer en aplat */
+                    float dose = 0.12 + 0.3 * hachageFen(cellule + 7.3);
                     vec3 teinteFen = mix(vec3(1.0, 0.72, 0.42), vec3(0.75, 0.83, 1.0), step(0.7, hachageFen(cellule + 3.1)));
-                    totalEmissiveRadiance += teinteFen * vitre * allume * dose;
+                    totalEmissiveRadiance += teinteFen * vitre * coeur * allume * dose;
                   }`,
                 )
             }

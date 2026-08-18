@@ -7,6 +7,7 @@ import { Environment, Lightformer, Loader, OrbitControls, SpotLight as SpotVolum
 import * as THREE from "three"
 import Rue, { halo } from "./rue"
 import DecorGlb from "./decor-glb"
+import Fond from "./fond"
 import VieNocturne from "./ville-vivante"
 import VoitureRue from "./voiture-rue"
 
@@ -145,9 +146,12 @@ export default function Scene() {
         camera={{ position: cam, fov: 38 }}
         dpr={[1, 1.5]}
         gl={{ powerPreference: "high-performance" }}
-        onCreated={({ scene }) => {
+        onCreated={({ scene, camera, gl }) => {
           scene.background = new THREE.Color(v.brume[0])
           scene.fog = new THREE.Fog(v.brume[0], v.brume[1], v.brume[2])
+          /* poignées des outils de capture (tools/, gates visuels) */
+          if (process.env.NODE_ENV !== "production")
+            Object.assign(window as object, { __scene: scene, __camera: camera, __gl: gl })
         }}
       >
         <Suspense fallback={null}>
@@ -179,6 +183,7 @@ export default function Scene() {
           <VoitureRue position={v.pose} rotationY={v.cap} />
           <Phares pose={v.pose} cap={v.cap} />
           {v.vie && <VieNocturne />}
+          {v.vie && <Fond />}
         </Suspense>
         <OrbitControls
           enablePan={false}

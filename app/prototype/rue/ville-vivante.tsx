@@ -20,6 +20,9 @@ const REDUIT =
   typeof window !== "undefined" &&
   window.matchMedia("(prefers-reduced-motion: reduce)").matches
 
+/* brouillon partagé du recul des halos — zéro allocation par frame */
+const direction = new THREE.Vector3()
+
 function graine(n: number) {
   const x = Math.sin(n * 127.1 + 311.7) * 43758.5453
   return x - Math.floor(x)
@@ -62,14 +65,27 @@ const LAMPES: [number, number, number, boolean?][] = [
 
 function Lampe({ x, z, y, vrai }: { x: number; z: number; y: number; vrai?: boolean }) {
   const cible = useMemo(() => new THREE.Object3D(), [])
+  const halos = useRef<THREE.Group>(null)
+  /* le sprite posé AU centre de la tête se fait avaler par sa géométrie
+     (depth test — vérifié en capture : depthTest off le révélait mais
+     faisait luire les lampes à travers les murs). On le tire de 0,9 m
+     vers la caméra : hors du boîtier sous tous les angles, occlusion par
+     les bâtiments intacte. */
+  useFrame(({ camera }) => {
+    if (!halos.current) return
+    const tete = halos.current.position.set(x, y, z)
+    tete.add(direction.copy(camera.position).sub(tete).normalize().multiplyScalar(0.9))
+  })
   return (
     <group>
-      <sprite position={[x, y, z]} scale={[1.15, 1.15, 1]}>
-        <spriteMaterial map={halo()} color="#ffe6bb" transparent opacity={0.9} blending={THREE.AdditiveBlending} depthWrite={false} />
-      </sprite>
-      <sprite position={[x, y, z]} scale={[3.4, 3.4, 1]}>
-        <spriteMaterial map={halo()} color="#ffca7a" transparent opacity={0.14} blending={THREE.AdditiveBlending} depthWrite={false} />
-      </sprite>
+      <group ref={halos} position={[x, y, z]}>
+        <sprite scale={[1.15, 1.15, 1]}>
+          <spriteMaterial map={halo()} color="#ffe6bb" transparent opacity={0.9} blending={THREE.AdditiveBlending} depthWrite={false} />
+        </sprite>
+        <sprite scale={[3.4, 3.4, 1]}>
+          <spriteMaterial map={halo()} color="#ffca7a" transparent opacity={0.14} blending={THREE.AdditiveBlending} depthWrite={false} />
+        </sprite>
+      </group>
       {vrai ? (
         <>
           <primitive object={cible} position={[x, 0, z]} />
