@@ -43,6 +43,7 @@ function creeEcran() {
   const h = 256
   const u = h / 100
   let fond: HTMLImageElement | null = null
+  let quartier: HTMLImageElement | null = null
   const etat = {
     mode: "veille" as "veille" | "hub" | "gps",
     allume: true,
@@ -168,56 +169,45 @@ function creeEcran() {
        Rayquaza ne vit plus que sur la veille et le hub */
     g.fillStyle = "#16132a"
     g.fillRect(0, 0, l, h)
-    g.fillStyle = "#1d1839"
-    g.beginPath()
-    g.roundRect(24, 26, 128, 74, u * 4)
-    g.roundRect(388, 148, 112, 82, u * 4)
-    g.roundRect(196, 20, 120, 44, u * 4)
-    g.fill()
-    g.fillStyle = "#211b41"
-    g.beginPath()
-    g.roundRect(34, 146, 108, 76, u * 4)
-    g.roundRect(376, 24, 112, 70, u * 4)
-    g.fill()
-    g.fillStyle = "#172a22"
-    g.beginPath()
-    g.roundRect(214, 196, 86, 48, u * 5)
-    g.fill()
+    /* les bâtiments RÉELS du modèle 3D (demande Hugo) : empreintes
+       extraites du GLB par tools/monde/carte-quartier.mjs — projection du
+       dessus dans le repère de la voiture garée (4 px/m, cap sud en haut),
+       arrondies en morphologie. Ce qu'on voit au pare-brise EST la carte. */
+    if (quartier) g.drawImage(quartier, 0, 0, l, h)
     /* le réseau mort : rubans courbes, jamais empruntables */
+    /* le réseau mort suit les vraies rues du quartier : le boulevard sud
+       (traversé par la fourche), la rue qui continue au-delà du carrefour,
+       les deux verticales des bords (x = ±55 m du décor) */
     const morte = (chemin: () => void, large = 1) => ruban(chemin, "#100d1f", u * 1.6, "#2a2447", u * (3.2 * large))
     morte(() => {
-      g.moveTo(0, 214)
-      g.bezierCurveTo(170, 206, 342, 220, 512, 206)
-    })
-    morte(() => {
-      g.moveTo(26, 44)
-      g.bezierCurveTo(180, 14, 332, 14, 486, 44)
+      g.moveTo(0, 102)
+      g.bezierCurveTo(170, 98, 342, 106, 512, 100)
     }, 1.5)
     morte(() => {
-      g.moveTo(88, 256)
-      g.bezierCurveTo(94, 200, 78, 150, 92, 96)
+      g.moveTo(276, 108)
+      g.bezierCurveTo(272, 70, 284, 30, 280, -8)
     })
     morte(() => {
-      g.moveTo(430, 256)
-      g.bezierCurveTo(422, 204, 438, 156, 424, 104)
+      g.moveTo(54, 256)
+      g.bezierCurveTo(58, 180, 46, 100, 52, 30)
     })
     morte(() => {
-      g.moveTo(256, 170)
-      g.bezierCurveTo(300, 160, 350, 168, 512, 150)
-    }, 0.8)
+      g.moveTo(494, 256)
+      g.bezierCurveTo(490, 190, 502, 120, 496, 60)
+    })
     /* l'itinéraire : tronc en S puis la fourche — rubans VIOLETS (le code
        Waze de la route optimale), points blancs qui avancent */
     const tronc = () => {
-      g.moveTo(256, 252)
-      g.bezierCurveTo(250, 224, 262, 200, 256, 170)
+      g.moveTo(256, 246)
+      g.bezierCurveTo(252, 215, 262, 160, 274, 112)
     }
     const gauche = () => {
-      g.moveTo(256, 170)
-      g.bezierCurveTo(248, 126, 198, 112, 142, 86)
+      g.moveTo(274, 112)
+      g.bezierCurveTo(240, 100, 180, 98, 116, 98)
     }
     const droite = () => {
-      g.moveTo(256, 170)
-      g.bezierCurveTo(264, 126, 314, 112, 370, 86)
+      g.moveTo(274, 112)
+      g.bezierCurveTo(320, 100, 380, 94, 436, 96)
     }
     const vive = (chemin: () => void, choisi: boolean, estompe: boolean) => {
       if (estompe) {
@@ -261,7 +251,7 @@ function creeEcran() {
     g.fillStyle = "#ffffff"
     g.fill()
     /* les deux destinations en ballons */
-    ballon(128, 52, 142, 86, "MAISON", "#8f5cff", etat.choix === "maison", (cx, cy, r) => {
+    ballon(100, 58, 116, 96, "MAISON", "#8f5cff", etat.choix === "maison", (cx, cy, r) => {
       g.lineWidth = r * 0.34
       g.beginPath()
       g.moveTo(cx - r, cy + r * 0.15)
@@ -273,7 +263,7 @@ function creeEcran() {
       g.lineTo(cx + r * 0.6, cy)
       g.stroke()
     })
-    ballon(384, 52, 370, 86, "TRAVAIL", "#e561d3", etat.choix === "travail", (cx, cy, r) => {
+    ballon(452, 56, 436, 94, "TRAVAIL", "#e561d3", etat.choix === "travail", (cx, cy, r) => {
       g.lineWidth = r * 0.34
       g.beginPath()
       g.roundRect(cx - r * 0.85, cy - r * 0.45, r * 1.7, r * 1.25, r * 0.2)
@@ -413,6 +403,12 @@ function creeEcran() {
     peint()
   }
   img.src = "/prototype/ecran-fond.jpg"
+  const imgQuartier = new Image()
+  imgQuartier.onload = () => {
+    quartier = imgQuartier
+    peint()
+  }
+  imgQuartier.src = "/prototype/carte-quartier.png"
   peint()
 
   return {
