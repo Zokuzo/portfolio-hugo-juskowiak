@@ -181,16 +181,28 @@ function Voiture() {
      en envMap propre à dose de veille (leçon du #22 : sans envMap posé
      sur le matériau, envMapIntensity est INERTE) ; la robe garde le sien */
   const envPose = useRef(false)
-  useFrame(({ scene: sc }) => {
+  useFrame(({ scene: sc, gl }) => {
     if (envPose.current || !sc.environment) return
     envPose.current = true
     const INTERIEUR = new Set(["MoreInterior", "InteriorBlack", "InteriorStuff", "SilverPlastic", "Pedals", "Carbon"])
+    /* textures de l'habitacle affûtées : l'anisotropie à 1 délavait tout
+       ce qui se voit en angle rasant — planche, console, sièges (retour
+       Hugo « améliore les textures ») ; la résolution des atlas n'était
+       pas le goulot (512-2048 natifs, vérifié à l'inspection) */
+    const aniso = gl.capabilities.getMaxAnisotropy()
     modele.traverse((o) => {
       const mesh = o as THREE.Mesh
       if (!mesh.isMesh) return
       for (const m of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
         const mat = m as THREE.MeshStandardMaterial
-        if (!mat || !INTERIEUR.has(mat.name)) continue
+        if (!mat) continue
+        for (const tex of [mat.map, mat.normalMap, mat.roughnessMap, mat.metalnessMap, mat.emissiveMap, mat.aoMap]) {
+          if (tex && tex.anisotropy < aniso) {
+            tex.anisotropy = aniso
+            tex.needsUpdate = true
+          }
+        }
+        if (!INTERIEUR.has(mat.name)) continue
         mat.envMap = sc.environment
         mat.envMapIntensity = 0.1
         /* et la teinte elle-même descend d'un cran : l'ambiante de nuit
