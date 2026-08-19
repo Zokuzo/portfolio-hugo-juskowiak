@@ -732,8 +732,11 @@ function creeEcran() {
 /* verdict Hugo : l'écran NATIF gagne — le ratio 2:1 (512×256) est gravé
    pour l'UI écran (GPS #26, Musiques #33) ; la PSP a perdu le gate et
    sort du code avec son GLB (l'historique git les garde) */
-function Voiture({ ecran }: { ecran: ReturnType<typeof creeEcran> }) {
+function Voiture({ ecran, warning }: { ecran: ReturnType<typeof creeEcran>; warning: boolean }) {
   const { scene } = useGLTF("/prototype/gt86.glb")
+  /* les clignotants du GLB (matériau Indicator, relevé en #16) : les feux
+     de détresse se voient AUSSI de l'extérieur (demande Hugo) */
+  const clignotants = useRef<THREE.MeshStandardMaterial[]>([])
   /* la planche passagère troque sa livrée Miku pour le Haunter (choix
      Hugo — raccord au violet des néons) : recomposé DANS le repère de la
      texture d'origine (atlas 2048² gris, artwork à 180° dans le quart
@@ -780,6 +783,44 @@ function Voiture({ ecran }: { ecran: ReturnType<typeof creeEcran> }) {
         mat.emissive.set("#a86bff")
         mat.needsUpdate = true
       }
+      /* le tableau de bord s'uniformise sur la palette du HAUNTER (demande
+         Hugo) : la luminance de la texture d'origine est re-teintée en
+         prune/violet — toutes les nuances deviennent des variations d'une
+         seule couleur (l'alcantara du haut, lui, se taille dans la
+         géométrie plus bas) */
+      if (mat?.name === "InteriorBlack") {
+        mat.roughness = 0.82
+        mat.onBeforeCompile = (shader) => {
+          shader.vertexShader = shader.vertexShader
+            .replace("#include <common>", "#include <common>\nvarying vec3 vPosMonde;\nvarying vec3 vNorMonde;")
+            .replace(
+              "#include <begin_vertex>",
+              "#include <begin_vertex>\nvPosMonde = (modelMatrix * vec4(position, 1.0)).xyz;\nvNorMonde = normalize(mat3(modelMatrix) * normal);",
+            )
+          shader.fragmentShader = shader.fragmentShader
+            .replace(
+              "#include <common>",
+              `#include <common>
+              varying vec3 vPosMonde;
+              varying vec3 vNorMonde;`,
+            )
+            .replace(
+              "#include <map_fragment>",
+              `#include <map_fragment>
+              {
+                float lum = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
+                /* palette Haunter : ombres indigo → lumières lavande */
+                diffuseColor.rgb = mix(vec3(0.055, 0.035, 0.095), vec3(0.36, 0.26, 0.50), pow(lum, 0.85));
+              }`,
+            )
+
+        }
+        mat.needsUpdate = true
+      }
+      if (mat?.name === "Indicator") {
+        mat.toneMapped = false
+        clignotants.current.push(mat)
+      }
       /* rétroéclairage concentré PAR BOUTON (demande Hugo) : InteriorStuff
          porte toutes les faces de boutons (vérifié au flash magenta) — sa
          propre texture en carte émissive violette fait briller les
@@ -806,8 +847,84 @@ function Voiture({ ecran }: { ecran: ReturnType<typeof creeEcran> }) {
         mesh.material = m
       }
     })
+    /* L'ALCANTARA du haut de planche (demande Hugo) — taillé dans la
+       GÉOMÉTRIE plutôt qu'en shader : le masque par varyings ne se
+       déclenchait pas (débogué en peignant hauteur et normale à l'écran),
+       la géométrie ne ment pas. Triangles au-dessus de 86 cm et à plat,
+       rendus avec le sheen natif de MeshPhysicalMaterial — c'est ce halo
+       de fibres qui fait lire le velours. */
+    let planche: THREE.Mesh | null = null
+    scene.traverse((o) => {
+      const m = o as THREE.Mesh
+      if (!m.isMesh) return
+      const mats = Array.isArray(m.material) ? m.material : [m.material]
+      if (mats.some((x) => (x as THREE.Material | undefined)?.name === "InteriorBlack")) planche = m
+    })
+    if (planche) {
+      const cible = planche as THREE.Mesh
+      cible.updateWorldMatrix(true, false)
+      const geo = cible.geometry
+      const pos = geo.attributes.position
+      const index = geo.index
+      const total = index ? index.count : pos.count
+      const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3()
+      const ab = new THREE.Vector3(), ac = new THREE.Vector3(), n = new THREE.Vector3()
+      const gardes: number[] = []
+      for (let t = 0; t + 2 < total; t += 3) {
+        const i0 = index ? index.getX(t) : t
+        const i1 = index ? index.getX(t + 1) : t + 1
+        const i2 = index ? index.getX(t + 2) : t + 2
+        a.fromBufferAttribute(pos, i0).applyMatrix4(cible.matrixWorld)
+        b.fromBufferAttribute(pos, i1).applyMatrix4(cible.matrixWorld)
+        c.fromBufferAttribute(pos, i2).applyMatrix4(cible.matrixWorld)
+        if ((a.y + b.y + c.y) / 3 < 0.86) continue
+        ab.subVectors(b, a)
+        ac.subVectors(c, a)
+        n.crossVectors(ab, ac).normalize()
+        /* à plat : les contre-portes montent aussi haut mais restent verticales */
+        if (Math.abs(n.y) < 0.5) continue
+        gardes.push(i0, i1, i2)
+      }
+      /* StrictMode et le HMR rejouent ce useMemo : sans ce ménage, les
+         meshes de velours s'empilaient (trois exemplaires relevés) */
+      const vieux = cible.parent?.getObjectByName("alcantara")
+      if (vieux) vieux.removeFromParent()
+      if (gardes.length) {
+        const geoAlc = new THREE.BufferGeometry()
+        geoAlc.setAttribute("position", pos)
+        if (geo.attributes.normal) geoAlc.setAttribute("normal", geo.attributes.normal)
+        if (geo.attributes.uv) geoAlc.setAttribute("uv", geo.attributes.uv)
+        geoAlc.setIndex(gardes)
+        const velours = new THREE.MeshPhysicalMaterial({
+          color: "#140c20",
+          roughness: 1,
+          metalness: 0,
+          sheen: 1.5,
+          sheenColor: new THREE.Color("#b79bff"),
+          sheenRoughness: 0.28,
+          polygonOffset: true,
+          polygonOffsetFactor: -2,
+          polygonOffsetUnits: -2,
+        })
+        const meshAlc = new THREE.Mesh(geoAlc, velours)
+        meshAlc.name = "alcantara"
+        meshAlc.position.copy(cible.position)
+        meshAlc.quaternion.copy(cible.quaternion)
+        meshAlc.scale.copy(cible.scale)
+        cible.parent?.add(meshAlc)
+      }
+    }
     return scene
   }, [scene, art, lueur, compteur, ecran])
+
+  /* la cadence des warnings, EN PHASE avec le triangle de l'habitacle */
+  useFrame(({ clock }) => {
+    const allume = warning && (REDUIT || Math.floor(clock.elapsedTime * 2.4) % 2 === 0)
+    for (const m of clignotants.current) {
+      m.emissive.set("#ffb340")
+      m.emissiveIntensity = allume ? 4 : 0
+    }
+  })
 
   /* plafonnier éteint, suite : l'Environment plein repeignait plastiques
      et planche en fin d'après-midi — l'intérieur reçoit l'environnement
@@ -1047,21 +1164,44 @@ function Retro() {
 /* ---- les feux de détresse ------------------------------------------- */
 /* le triangle rouge clignote quand on l'enclenche (demande Hugo) — halo
    additif + lampe courte à cadence de warning, fixes sous reduce */
+/* répétiteurs arrière relevés sur le mesh Indicator ; à l'avant les
+   clignotants vivent dans l'optique — coins extérieurs des phares */
+/* bornes RELEVÉES des optiques (bbox monde) : avant HeadlightsTex jusqu'à
+   z=1,96, arrière Indicator jusqu'à z=−1,89 — les halos se posent DEVANT
+   la surface, sinon la carrosserie les avale (depth test) */
+const FEUX_WARNING: [number, number, number][] = [
+  [0.6, 0.63, 2.0],
+  [-0.86, 0.63, 2.0],
+  [0.58, 0.82, -1.93],
+  [-0.73, 0.82, -1.93],
+]
+
 function Warning({ actif }: { actif: boolean }) {
   const mat = useRef<THREE.SpriteMaterial>(null)
   const lampe = useRef<THREE.PointLight>(null)
+  const feux = useRef<(THREE.SpriteMaterial | null)[]>([])
   useFrame(({ clock }) => {
     const allume = actif && (REDUIT || Math.floor(clock.elapsedTime * 2.4) % 2 === 0)
     if (mat.current) mat.current.opacity = allume ? 0.8 : 0
     if (lampe.current) lampe.current.intensity = allume ? 0.45 : 0
+    for (const f of feux.current) if (f) f.opacity = allume ? 1 : 0
   })
   const pos = ECRAN_NATIF.centre.clone().addScaledVector(PLAN_AXE_Y, 0.0704).addScaledVector(PLAN_NORMALE, -0.012)
   return (
-    <group position={pos.toArray()}>
-      <sprite scale={[0.05, 0.05, 1]}>
-        <spriteMaterial ref={mat} map={halo()} color="#ff2e20" transparent opacity={0} blending={THREE.AdditiveBlending} depthWrite={false} />
-      </sprite>
-      <pointLight ref={lampe} color="#ff3b2e" intensity={0} distance={0.28} decay={2} />
+    <group>
+      <group position={pos.toArray()}>
+        <sprite scale={[0.05, 0.05, 1]}>
+          <spriteMaterial ref={mat} map={halo()} color="#ff2e20" transparent opacity={0} blending={THREE.AdditiveBlending} depthWrite={false} />
+        </sprite>
+        <pointLight ref={lampe} color="#ff3b2e" intensity={0} distance={0.28} decay={2} />
+      </group>
+      {/* les warnings vus de l'EXTÉRIEUR (demande Hugo) : halos ambre aux
+          quatre coins, en phase avec le triangle et les lentilles */}
+      {FEUX_WARNING.map((p, i) => (
+        <sprite key={i} position={p} scale={[0.24, 0.24, 1]}>
+          <spriteMaterial ref={(m) => { feux.current[i] = m }} map={halo()} color="#ffb340" transparent opacity={0} blending={THREE.AdditiveBlending} depthWrite={false} />
+        </sprite>
+      ))}
     </group>
   )
 }
@@ -1103,7 +1243,7 @@ export default function Scene() {
   const [selZone, setSelZone] = useState<number | null>(null)
   const [modeEcran, setModeEcran] = useState<"hub" | "gps" | "musiques" | "horloge" | "stats">("hub")
   const [eteint, setEteint] = useState(false)
-  const [warning, setWarning] = useState(false)
+  const [warning, setWarning] = useState(params.get("warning") !== null)
   const [partir, setPartir] = useState(false)
   const [but, setBut] = useState<{ cam: THREE.Vector3; vise: THREE.Vector3 } | null>(null)
   /* PAS un useMemo : creeEcran est impur (canvas, Image, timers) et le
@@ -1205,6 +1345,7 @@ export default function Scene() {
   /* les boutons physiques de la façade (demande Hugo) */
   const CYCLE: ("hub" | "gps" | "musiques" | "horloge" | "stats")[] = ["hub", "gps", "musiques", "horloge", "stats"]
   const surBouton = (nom: string) => {
+    if (process.env.NODE_ENV !== "production") (window as unknown as { __bouton: string }).__bouton = nom + "@" + Date.now()
     if (nom === "power") {
       setEteint((e) => !e)
       return
@@ -1292,7 +1433,7 @@ export default function Scene() {
           scene.fog = new THREE.Fog("#08070f", 15, 70)
           /* poignées des outils de capture (tools/, gates visuels) */
           if (process.env.NODE_ENV !== "production")
-            Object.assign(window as object, { __scene: scene, __camera: camera, __gl: gl })
+            Object.assign(window as object, { __scene: scene, __camera: camera, __gl: gl, __THREE: THREE })
         }}
       >
         <Suspense fallback={null}>
@@ -1329,7 +1470,7 @@ export default function Scene() {
           <NeonsInterieur />
           <NomChrome />
           <Retro />
-          <Voiture ecran={ecran} />
+          <Voiture ecran={ecran} warning={warning} />
           <Warning actif={warning} />
           <ClicEcran centre={ECRAN_NATIF.centre} surClic={surEcran} surBouton={surBouton} surDehors={surDehors} surBrut={edition ? surEditer : undefined} />
           {edition &&
