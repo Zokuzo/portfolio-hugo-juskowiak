@@ -29,6 +29,10 @@ const ECRAN_NATIF = {
   centre: new THREE.Vector3(-0.075, 0.785, 0.328),
   bascule: -0.28,
 }
+/* les MÊMES vecteurs que le raycast de ClicEcran — toute position de cage
+   dérivée à la main divergeait (l'axe vertical du plan pointe vers le BAS) */
+const PLAN_NORMALE = new THREE.Vector3(0, Math.sin(ECRAN_NATIF.bascule), Math.cos(ECRAN_NATIF.bascule)).normalize()
+const PLAN_AXE_Y = PLAN_NORMALE.clone().cross(new THREE.Vector3(-1, 0, 0)).normalize()
 
 /* ---- l'écran natif : deux états, même fond ------------------------- */
 /* veille (vue conducteur) : le Rayquaza + « CLICK HERE » qui clignote ;
@@ -863,7 +867,7 @@ const BOUTONS: [string, number, number][] = [
   ["map", -0.0817, -0.0271],
 ]
 
-function ClicEcran({ centre, surClic, surBouton, surDehors }: { centre: THREE.Vector3; surClic: (u: number, v: number) => void; surBouton: (nom: string) => void; surDehors: () => void }) {
+function ClicEcran({ centre, surClic, surBouton, surDehors, surBrut }: { centre: THREE.Vector3; surClic: (u: number, v: number) => void; surBouton: (nom: string) => void; surDehors: () => void; surBrut?: (dx: number, dy: number) => void }) {
   const gl = useThree((s) => s.gl)
   const camera = useThree((s) => s.camera)
   const refClic = useRef(surClic)
@@ -872,6 +876,8 @@ function ClicEcran({ centre, surClic, surBouton, surDehors }: { centre: THREE.Ve
   refBouton.current = surBouton
   const refDehors = useRef(surDehors)
   refDehors.current = surDehors
+  const refBrut = useRef(surBrut)
+  refBrut.current = surBrut
   useEffect(() => {
     const el = gl.domElement
     const normale = new THREE.Vector3(0, Math.sin(ECRAN_NATIF.bascule), Math.cos(ECRAN_NATIF.bascule)).normalize()
@@ -888,6 +894,11 @@ function ClicEcran({ centre, surClic, surBouton, surDehors }: { centre: THREE.Ve
       if (!rayon.ray.intersectPlane(plan, impact)) return refDehors.current()
       const d = impact.sub(centre)
       const dy = d.dot(axeY)
+      /* mode édition : coordonnées plan brutes, rien d'autre */
+      if (refBrut.current) {
+        if (Math.abs(d.x) < 0.16 && Math.abs(dy) < 0.1) refBrut.current(d.x, dy)
+        return
+      }
       /* dalle 13×7 cm : en coordonnées écran, u croît vers la droite du
          conducteur (monde −x) — calibré au clic sur la tuile GPS */
       if (Math.abs(d.x) < 0.072 && Math.abs(dy) < 0.04) {
@@ -1057,6 +1068,11 @@ export default function Scene() {
   const params = useSearchParams()
   const [zoome, setZoome] = useState(false)
   const routeur = useRouter()
+  /* ?edit : Hugo place lui-même les zones des boutons physiques — clique
+     une cage puis l'endroit exact du bouton, C copie la table */
+  const edition = params.get("edit") !== null
+  const [zones, setZones] = useState<[string, number, number][]>(() => BOUTONS.map((b) => [...b]))
+  const [selZone, setSelZone] = useState<number | null>(null)
   const [modeEcran, setModeEcran] = useState<"hub" | "gps" | "musiques" | "horloge" | "stats">("hub")
   const [eteint, setEteint] = useState(false)
   const [partir, setPartir] = useState(false)
@@ -1181,6 +1197,31 @@ export default function Scene() {
     }
   }
 
+  /* l'édition : sélection d'une cage ou téléportation de la sélection */
+  const surEditer = (dx: number, dy: number) => {
+    const dans = zones.findIndex(([, bx, by]) => Math.abs(dx - bx) < 0.011 && Math.abs(dy - by) < 0.007)
+    if (dans !== -1) {
+      setSelZone(dans)
+      return
+    }
+    if (selZone !== null)
+      setZones((t) => t.map((z, i) => (i === selZone ? [z[0], Math.round(dx * 10000) / 10000, Math.round(dy * 10000) / 10000] : z)))
+  }
+
+  useEffect(() => {
+    if (!edition) return
+    const clavier = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSelZone(null)
+      if (e.key.toLowerCase() === "c") {
+        const texte = zones.map(([nom, bx, by]) => `  [${JSON.stringify(nom)}, ${bx}, ${by}],`).join("\n")
+        console.log("[boutons]\n" + texte)
+        navigator.clipboard?.writeText(texte).catch(() => {})
+      }
+    }
+    window.addEventListener("keydown", clavier)
+    return () => window.removeEventListener("keydown", clavier)
+  }, [edition, zones])
+
   /* cliquer AILLEURS que l'écran ramène au siège */
   const surDehors = () => {
     if (!zoome) return
@@ -1243,10 +1284,46 @@ export default function Scene() {
           <NomChrome />
           <Retro />
           <Voiture ecran={ecran} />
-          <ClicEcran centre={ECRAN_NATIF.centre} surClic={surEcran} surBouton={surBouton} surDehors={surDehors} />
+          <ClicEcran centre={ECRAN_NATIF.centre} surClic={surEcran} surBouton={surBouton} surDehors={surDehors} surBrut={edition ? surEditer : undefined} />
+          {edition &&
+            zones.map(([nom, bx, by], i) => (
+              <mesh
+                key={nom}
+                position={ECRAN_NATIF.centre
+                  .clone()
+                  .add(new THREE.Vector3(bx, 0, 0))
+                  .addScaledVector(PLAN_AXE_Y, by)
+                  .addScaledVector(PLAN_NORMALE, -0.004)
+                  .toArray()}
+                rotation-x={ECRAN_NATIF.bascule}
+              >
+                <planeGeometry args={[0.022, 0.014]} />
+                <meshBasicMaterial color={i === selZone ? "#ffffff" : "#ff6a3d"} wireframe transparent opacity={0.85} depthTest={false} />
+              </mesh>
+            ))}
           <Rail but={but} arrive={() => setBut(null)} viseInitiale={cible} />
         </Suspense>
       </Canvas>
+      {edition && (
+        <div
+          style={{
+            position: "absolute",
+            top: 12,
+            left: 12,
+            zIndex: 10,
+            pointerEvents: "none",
+            color: "#d8dcea",
+            font: "13px/1.6 ui-monospace, monospace",
+            background: "rgba(10, 10, 20, 0.75)",
+            padding: "10px 14px",
+            borderRadius: 8,
+          }}
+        >
+          édition des zones boutons — clique une cage ({selZone !== null ? zones[selZone][0] : "aucune sélection"}) puis l&apos;ENDROIT EXACT du bouton
+          <br />
+          <b>C</b> : copier la table · <b>Échap</b> : désélectionner
+        </div>
+      )}
       {/* le fondu du départ vers le portfolio */}
       <div
         style={{
