@@ -77,7 +77,8 @@ function Phares({ pose, cap, edition }: { pose: [number, number, number]; cap: n
      ancrés à la pose de la voiture. Les optiques se règlent dans le repère
      voiture (avancée / écart / hauteur) — éditables au gizmo en ?edit,
      symétrie assumée : bouger UNE optique règle les deux ; V copie. */
-  const [reglage, setReglage] = useState({ avancee: 1.9, ecart: 0.62, hauteur: 0.68 })
+  /* réglage posé par Hugo au gizmo (?edit) */
+  const [reglage, setReglage] = useState({ avancee: 1.73, ecart: 0.63, hauteur: 0.61 })
   const [sel, setSel] = useState(false)
   const proxy = useMemo(() => new THREE.Object3D(), [])
   const { avant, gauche, base } = useMemo(() => {

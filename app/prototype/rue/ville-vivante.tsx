@@ -145,9 +145,11 @@ function TeteDeFeu({ pos, phase }: { pos: [number, number, number]; phase: numbe
 
 /* tête face ouest (dans le boîtier, côté x-) et tête face nord (côté z+),
    en opposition de phase */
+/* positions posées par Hugo au gizmo (?edit) — la première lentille vit au
+   carrefour sud, la seconde au carrefour central */
 const FEUX: [number, number, number][] = [
-  [9.42, 3.35, -5.63],
-  [9.9, 3.35, -5.19],
+  [9.59, 3.11, -53.51],
+  [10.06, 3.18, -5.92],
 ]
 
 export default function VieNocturne({ edition }: { edition?: boolean }) {
