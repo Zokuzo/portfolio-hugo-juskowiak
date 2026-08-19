@@ -159,6 +159,56 @@ function creeEcran() {
       g.strokeStyle = "#241c3a"
       g.stroke()
     }
+    /* les rues mortes : un réseau secondaire NON empruntable (demande
+       Hugo) — plus fin, estompé, sans pointillés vivants */
+    const morte = (chemin: () => void) => {
+      g.beginPath()
+      chemin()
+      g.lineCap = "round"
+      g.strokeStyle = "#141020"
+      g.lineWidth = u * 4.5
+      g.stroke()
+      g.strokeStyle = "rgba(110, 92, 168, 0.28)"
+      g.lineWidth = u * 2.2
+      g.stroke()
+      g.setLineDash([u * 2, u * 5])
+      g.strokeStyle = "rgba(190, 175, 230, 0.14)"
+      g.lineWidth = u * 0.8
+      g.beginPath()
+      chemin()
+      g.stroke()
+      g.setLineDash([])
+    }
+    /* transversale basse qui croise le tronc, stubs verticaux, diagonale
+       haute, ruelle des pins — le quartier existe au-delà de la fourche */
+    morte(() => {
+      g.moveTo(0, h * 0.82)
+      g.lineTo(l, h * 0.79)
+    })
+    morte(() => {
+      g.moveTo(l * 0.18, h * 0.82)
+      g.lineTo(l * 0.16, h * 0.42)
+      g.lineTo(l * 0.02, h * 0.34)
+    })
+    morte(() => {
+      g.moveTo(l * 0.84, h * 0.8)
+      g.lineTo(l * 0.86, h * 0.46)
+      g.lineTo(l, h * 0.4)
+    })
+    morte(() => {
+      g.moveTo(l * 0.25, h * 0.12)
+      g.bezierCurveTo(l * 0.4, h * 0.02, l * 0.6, h * 0.02, l * 0.75, h * 0.12)
+    })
+    morte(() => {
+      g.moveTo(l * 0.42, h * 0.66)
+      g.lineTo(l * 0.3, h * 0.6)
+      g.lineTo(l * 0.1, h * 0.62)
+    })
+    morte(() => {
+      g.moveTo(l * 0.58, h * 0.66)
+      g.lineTo(l * 0.7, h * 0.62)
+      g.lineTo(l * 0.95, h * 0.66)
+    })
     /* le tronc puis la fourche */
     const tronc = () => {
       g.moveTo(l / 2, h - u * 4)
