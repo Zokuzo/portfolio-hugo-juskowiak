@@ -859,12 +859,14 @@ function Voiture({ ecran }: { ecran: ReturnType<typeof creeEcran> }) {
    appel) ; un écouteur natif sur le canvas ne dépend de rien */
 /* les boutons physiques de la façade, en coordonnées plan (d.x, dy) —
    relevés sur la capture de Hugo (dalle 0,13 m ↔ 544 px → 4185 px/m) */
+/* zones posées par Hugo dans l'éditeur ?edit (axe vertical du plan vers
+   le bas — ses mesures font foi) */
 const BOUTONS: [string, number, number][] = [
-  ["power", 0.085, 0.0306],
-  ["media", 0.08, 0.0],
-  ["suivant", 0.0795, -0.0131],
-  ["precedent", 0.0798, -0.0273],
-  ["map", -0.0817, -0.0271],
+  ["power", 0.091, -0.0354],
+  ["media", 0.08, 0],
+  ["suivant", 0.0822, 0.03],
+  ["precedent", 0.0816, 0.0141],
+  ["map", -0.0861, 0.0275],
 ]
 
 function ClicEcran({ centre, surClic, surBouton, surDehors, surBrut }: { centre: THREE.Vector3; surClic: (u: number, v: number) => void; surBouton: (nom: string) => void; surDehors: () => void; surBrut?: (dx: number, dy: number) => void }) {
