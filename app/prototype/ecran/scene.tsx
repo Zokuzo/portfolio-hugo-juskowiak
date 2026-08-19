@@ -3,10 +3,12 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
-import { Environment, Lightformer, Loader, OrbitControls, useGLTF } from "@react-three/drei"
+import { Center, Environment, Lightformer, Loader, OrbitControls, SpotLight as SpotVolumetrique, Text3D, useGLTF } from "@react-three/drei"
 import * as THREE from "three"
 import { habilleNuit } from "../rue/voiture-rue"
 import Fond from "../rue/fond"
+import DecorGlb from "../rue/decor-glb"
+import VieNocturne from "../rue/ville-vivante"
 
 /* La scène du prototype #23 — l'écran média de l'habitacle. Verdict du
    gate : l'écran NATIF du GT86 (quad `Car_16`, mat `Display`, 512×256 —
@@ -183,6 +185,56 @@ function ClicEcran({ centre, surClic }: { centre: THREE.Vector3; surClic: () => 
   return null
 }
 
+/* ---- le nom dans les phares (aperçu du ticket #31) ------------------ */
+/* « Hugo Juskowiak / SDE-IA Engineer » flotte en chrome dans la rue, face
+   au pare-brise, éclairé par deux faisceaux volumétriques partis des
+   optiques (axe voiture x = −0,075, optiques natives à ±0,62) */
+function NomChrome() {
+  const cibles = useMemo(() => [new THREE.Object3D(), new THREE.Object3D()], [])
+  return (
+    <group>
+      <Center position={[-0.45, 1.4, 13]} rotation-y={Math.PI}>
+        <Text3D
+          font="/prototype/helvetiker_bold.typeface.json"
+          size={0.5}
+          height={0.12}
+          curveSegments={8}
+          bevelEnabled
+          bevelThickness={0.015}
+          bevelSize={0.01}
+        >
+          HUGO JUSKOWIAK
+          <meshStandardMaterial color="#e8ecf2" metalness={0.9} roughness={0.28} envMapIntensity={1.6} />
+        </Text3D>
+      </Center>
+      <Center position={[-0.45, 0.82, 13]} rotation-y={Math.PI}>
+        <Text3D font="/prototype/helvetiker_regular.typeface.json" size={0.26} height={0.05} curveSegments={6}>
+          SDE / IA Engineer
+          <meshStandardMaterial color="#cfd5de" metalness={0.9} roughness={0.3} envMapIntensity={1.5} />
+        </Text3D>
+      </Center>
+      {([1, -1] as const).map((c, i) => (
+        <group key={c}>
+          <primitive object={cibles[i]} position={[-0.45 + c * 0.4, 1.15, 13]} />
+          <SpotVolumetrique
+            position={[-0.075 + c * 0.62, 0.76, 1.85]}
+            target={cibles[i]}
+            color="#ffeecb"
+            intensity={300}
+            angle={0.32}
+            penumbra={0.6}
+            decay={1.6}
+            distance={30}
+            attenuation={10}
+            anglePower={5}
+            radiusTop={0.14}
+          />
+        </group>
+      ))}
+    </group>
+  )
+}
+
 /* ---- le rail de caméra : zoom vers l'écran au clic ------------------ */
 function Rail({ but, arrive }: { but: { cam: THREE.Vector3; vise: THREE.Vector3 } | null; arrive: () => void }) {
   const controls = useThree((s) => s.controls) as { target: THREE.Vector3; update: () => void } | null
@@ -251,17 +303,17 @@ export default function Scene() {
           <ambientLight intensity={0.3} color="#a9b4d4" />
           {/* la lueur de l'écran mange le tableau de bord */}
           <pointLight position={[-0.075, 0.9, 0.18]} color="#ffb98a" intensity={0.6} distance={1.4} decay={2} />
-          {/* le monde derrière les vitres : le fond de la rue (#22) —
-              dôme, skyline, sol d'horizon, lune */}
+          {/* le monde derrière les vitres : LA ville de la rue (#22), pas
+              une silhouette — le décor entier avec ses fenêtres émissives,
+              ses 90 luminaires et ses feux, transformé pour que la voiture
+              soit garée à SA place de la scène précédente (pose (−4,4,
+              −0,05, −19), cap π → rotation π, translation −R·pose) */}
+          <group rotation-y={Math.PI} position={[-4.4, 0.02, -19]}>
+            <DecorGlb fichier="/prototype/decor-procedural.glb" nuit />
+            <VieNocturne />
+          </group>
           <Fond />
-          {/* l'asphalte sous les roues (bas des roues sondé à y=0,027) et
-              le lampadaire qui le révèle : sans eux la voiture flottait
-              sur du noir en orbite — même vocabulaire que la rue */}
-          <mesh position={[0, 0.026, 0]} rotation-x={-Math.PI / 2}>
-            <circleGeometry args={[9, 32]} />
-            <meshStandardMaterial color="#1e1b23" roughness={0.95} />
-          </mesh>
-          <spotLight position={[1.8, 9, -1.5]} color="#ffd9a2" intensity={70} angle={0.5} penumbra={0.9} decay={1.7} distance={25} />
+          <NomChrome />
           <Voiture />
           <ClicEcran centre={ECRAN_NATIF.centre} surClic={surEcran} />
           <Rail but={but} arrive={() => setBut(null)} />
