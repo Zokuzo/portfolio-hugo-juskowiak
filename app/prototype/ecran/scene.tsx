@@ -1,7 +1,7 @@
 "use client"
 
 import { Suspense, useEffect, useMemo, useRef, useState } from "react"
-import { useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { Center, Environment, Lightformer, Loader, SpotLight as SpotVolumetrique, Text3D, useGLTF, useTexture } from "@react-three/drei"
 import * as THREE from "three"
@@ -45,13 +45,14 @@ function creeEcran() {
   let fond: HTMLImageElement | null = null
   let quartier: HTMLImageElement | null = null
   const etat = {
-    mode: "veille" as "veille" | "hub" | "gps",
+    mode: "veille" as "veille" | "hub" | "gps" | "musiques" | "horloge" | "stats" | "eteint",
     allume: true,
     tic: 0,
     flash: false,
     choix: null as null | "maison" | "travail",
     transition: 0,
   }
+  let quandDepart: ((dest: "maison" | "travail") => void) | null = null
 
   const peintFond = () => {
     g.fillStyle = "#0b0d14"
@@ -225,9 +226,22 @@ function creeEcran() {
       }
       pointsQuiAvancent(chemin)
     }
-    vive(tronc, etat.choix !== null, false)
-    vive(gauche, etat.choix === "maison", etat.choix === "travail")
-    vive(droite, etat.choix === "travail", etat.choix === "maison")
+    /* sans destination choisie, la fourche n'est que des rues normales —
+       l'itinéraire n'existe qu'après le choix (façon Waze, demande Hugo) */
+    if (etat.choix === null) {
+      morte(tronc, 1.2)
+      morte(gauche, 1.2)
+      morte(droite, 1.2)
+    } else {
+      vive(tronc, true, false)
+      if (etat.choix === "maison") {
+        morte(droite, 1.2)
+        vive(gauche, true, false)
+      } else {
+        morte(gauche, 1.2)
+        vive(droite, true, false)
+      }
+    }
     /* la voiture : flèche blanche en écusson violet (façon Waze) */
     g.save()
     g.shadowColor = "rgba(0, 0, 0, 0.5)"
@@ -250,29 +264,93 @@ function creeEcran() {
     g.closePath()
     g.fillStyle = "#ffffff"
     g.fill()
-    /* les deux destinations en ballons */
-    ballon(100, 58, 116, 96, "MAISON", "#8f5cff", etat.choix === "maison", (cx, cy, r) => {
-      g.lineWidth = r * 0.34
+    /* le ballon n'apparaît qu'à la destination CHOISIE */
+    if (etat.choix === "maison")
+      ballon(100, 58, 116, 96, "MAISON", "#8f5cff", true, (cx, cy, r) => {
+        g.lineWidth = r * 0.34
+        g.beginPath()
+        g.moveTo(cx - r, cy + r * 0.15)
+        g.lineTo(cx, cy - r * 0.85)
+        g.lineTo(cx + r, cy + r * 0.15)
+        g.moveTo(cx - r * 0.6, cy)
+        g.lineTo(cx - r * 0.6, cy + r * 0.85)
+        g.lineTo(cx + r * 0.6, cy + r * 0.85)
+        g.lineTo(cx + r * 0.6, cy)
+        g.stroke()
+      })
+    if (etat.choix === "travail")
+      ballon(452, 56, 436, 94, "TRAVAIL", "#e561d3", true, (cx, cy, r) => {
+        g.lineWidth = r * 0.34
+        g.beginPath()
+        g.roundRect(cx - r * 0.85, cy - r * 0.45, r * 1.7, r * 1.25, r * 0.2)
+        g.moveTo(cx - r * 0.35, cy - r * 0.45)
+        g.lineTo(cx - r * 0.35, cy - r * 0.85)
+        g.lineTo(cx + r * 0.35, cy - r * 0.85)
+        g.lineTo(cx + r * 0.35, cy - r * 0.45)
+        g.stroke()
+      })
+    /* le sélecteur de destination façon Waze : « OÙ VA-T-ON ? » + deux
+       rangées favoris (demande Hugo — plus de points posés d'office) */
+    if (etat.choix === null) {
+      const px0 = l * 0.2
+      const pl = l * 0.6
+      const py0 = h * 0.42
+      g.save()
+      g.shadowColor = "rgba(0, 0, 0, 0.55)"
+      g.shadowBlur = u * 5
       g.beginPath()
-      g.moveTo(cx - r, cy + r * 0.15)
-      g.lineTo(cx, cy - r * 0.85)
-      g.lineTo(cx + r, cy + r * 0.15)
-      g.moveTo(cx - r * 0.6, cy)
-      g.lineTo(cx - r * 0.6, cy + r * 0.85)
-      g.lineTo(cx + r * 0.6, cy + r * 0.85)
-      g.lineTo(cx + r * 0.6, cy)
-      g.stroke()
-    })
-    ballon(452, 56, 436, 94, "TRAVAIL", "#e561d3", etat.choix === "travail", (cx, cy, r) => {
-      g.lineWidth = r * 0.34
-      g.beginPath()
-      g.roundRect(cx - r * 0.85, cy - r * 0.45, r * 1.7, r * 1.25, r * 0.2)
-      g.moveTo(cx - r * 0.35, cy - r * 0.45)
-      g.lineTo(cx - r * 0.35, cy - r * 0.85)
-      g.lineTo(cx + r * 0.35, cy - r * 0.85)
-      g.lineTo(cx + r * 0.35, cy - r * 0.45)
-      g.stroke()
-    })
+      g.roundRect(px0, py0, pl, h * 0.5, u * 5)
+      g.fillStyle = "#221c40"
+      g.fill()
+      g.restore()
+      g.font = `bold ${Math.round(u * 6.5)}px monospace`
+      g.fillStyle = "#a99cc8"
+      g.fillText("O\u00d9 VA-T-ON ?", px0 + u * 6, py0 + h * 0.075)
+      const rangee = (ry: number, titre: string, teinte: string, glyphe: (cx: number, cy: number, r: number) => void) => {
+        g.beginPath()
+        g.roundRect(px0 + u * 4, ry, pl - u * 8, h * 0.155, u * 3)
+        g.fillStyle = "#2c2452"
+        g.fill()
+        const cy = ry + h * 0.078
+        g.beginPath()
+        g.arc(px0 + u * 12, cy, u * 4.6, 0, Math.PI * 2)
+        g.fillStyle = teinte
+        g.fill()
+        g.strokeStyle = "#ffffff"
+        g.fillStyle = "#ffffff"
+        glyphe(px0 + u * 12, cy, u * 2.6)
+        g.font = `bold ${Math.round(u * 7)}px monospace`
+        g.fillStyle = "#f2ecff"
+        g.fillText(titre, px0 + u * 20, cy)
+        g.textAlign = "right"
+        g.font = `bold ${Math.round(u * 8)}px monospace`
+        g.fillStyle = "#8d80b8"
+        g.fillText("\u203a", px0 + pl - u * 8, cy)
+        g.textAlign = "left"
+      }
+      rangee(py0 + h * 0.115, "MAISON", "#8f5cff", (cx, cy, r) => {
+        g.lineWidth = r * 0.4
+        g.beginPath()
+        g.moveTo(cx - r, cy + r * 0.15)
+        g.lineTo(cx, cy - r * 0.85)
+        g.lineTo(cx + r, cy + r * 0.15)
+        g.moveTo(cx - r * 0.6, cy)
+        g.lineTo(cx - r * 0.6, cy + r * 0.85)
+        g.lineTo(cx + r * 0.6, cy + r * 0.85)
+        g.lineTo(cx + r * 0.6, cy)
+        g.stroke()
+      })
+      rangee(py0 + h * 0.3, "TRAVAIL", "#e561d3", (cx, cy, r) => {
+        g.lineWidth = r * 0.4
+        g.beginPath()
+        g.roundRect(cx - r * 0.85, cy - r * 0.45, r * 1.7, r * 1.25, r * 0.2)
+        g.moveTo(cx - r * 0.35, cy - r * 0.45)
+        g.lineTo(cx - r * 0.35, cy - r * 0.85)
+        g.lineTo(cx + r * 0.35, cy - r * 0.85)
+        g.lineTo(cx + r * 0.35, cy - r * 0.45)
+        g.stroke()
+      })
+    }
     /* chrome flottant : retour en cercle, horloge en pilule */
     g.save()
     g.shadowColor = "rgba(0, 0, 0, 0.5)"
@@ -336,10 +414,149 @@ function creeEcran() {
     }
   }
 
+  const peintMusiques = () => {
+    /* le lecteur en maquette — le vrai Spotify arrive avec #33 */
+    const cx = l * 0.30
+    g.save()
+    g.shadowColor = "rgba(0, 0, 0, 0.55)"
+    g.shadowBlur = u * 5
+    g.beginPath()
+    g.roundRect(l * 0.09, h * 0.2, l * 0.82, h * 0.62, u * 5)
+    g.fillStyle = "rgba(20, 15, 38, 0.88)"
+    g.fill()
+    g.restore()
+    /* pochette : le Rayquaza recadré */
+    if (fond) g.drawImage(fond, 128, 0, 256, 256, l * 0.12, h * 0.27, h * 0.48, h * 0.48)
+    g.strokeStyle = "#8f5cff"
+    g.lineWidth = u * 1.2
+    g.strokeRect(l * 0.12, h * 0.27, h * 0.48, h * 0.48)
+    g.font = `bold ${Math.round(u * 7.5)}px monospace`
+    g.fillStyle = "#f2ecff"
+    g.fillText("RIEN NE JOUE", l * 0.4, h * 0.34)
+    g.font = `${Math.round(u * 5.5)}px monospace`
+    g.fillStyle = "#a99cc8"
+    g.fillText("Spotify arrive (#33)", l * 0.4, h * 0.44)
+    /* barre de lecture */
+    g.beginPath()
+    g.roundRect(l * 0.4, h * 0.55, l * 0.46, u * 2, u)
+    g.fillStyle = "#37305c"
+    g.fill()
+    g.beginPath()
+    g.roundRect(l * 0.4, h * 0.55, l * 0.12, u * 2, u)
+    g.fillStyle = "#8f5cff"
+    g.fill()
+    /* transport : précédent / lecture / suivant */
+    const bt = (x: number, dessin: () => void) => {
+      g.beginPath()
+      g.arc(x, h * 0.7, u * 6, 0, Math.PI * 2)
+      g.fillStyle = "#2c2452"
+      g.fill()
+      g.fillStyle = "#e8def8"
+      dessin()
+    }
+    bt(l * 0.5, () => {
+      g.beginPath()
+      g.moveTo(l * 0.5 - u, h * 0.7 - u * 2.4)
+      g.lineTo(l * 0.5 - u, h * 0.7 + u * 2.4)
+      g.lineTo(l * 0.5 - u * 3, h * 0.7)
+      g.closePath()
+      g.fill()
+      g.fillRect(l * 0.5 + u * 0.6, h * 0.7 - u * 2.4, u * 1.1, u * 4.8)
+    })
+    bt(l * 0.63, () => {
+      g.beginPath()
+      g.moveTo(l * 0.63 - u * 1.6, h * 0.7 - u * 2.6)
+      g.lineTo(l * 0.63 - u * 1.6, h * 0.7 + u * 2.6)
+      g.lineTo(l * 0.63 + u * 2.6, h * 0.7)
+      g.closePath()
+      g.fill()
+    })
+    bt(l * 0.76, () => {
+      g.beginPath()
+      g.moveTo(l * 0.76 + u, h * 0.7 - u * 2.4)
+      g.lineTo(l * 0.76 + u, h * 0.7 + u * 2.4)
+      g.lineTo(l * 0.76 + u * 3, h * 0.7)
+      g.closePath()
+      g.fill()
+      g.fillRect(l * 0.76 - u * 1.7, h * 0.7 - u * 2.4, u * 1.1, u * 4.8)
+    })
+    void cx
+  }
+
+  const peintHorloge = () => {
+    /* le fond seul avec l'heure — grand, voilé de violet */
+    g.textAlign = "center"
+    g.font = `bold ${Math.round(u * 30)}px monospace`
+    g.shadowColor = "#9b5cff"
+    g.shadowBlur = u * 8
+    g.fillStyle = "#efe6ff"
+    g.fillText("23:42", l / 2, h * 0.48)
+    g.shadowBlur = 0
+    g.font = `${Math.round(u * 7)}px monospace`
+    g.fillStyle = "#b7a8d8"
+    g.fillText("mar. 19 ao\u00fbt", l / 2, h * 0.68)
+    g.textAlign = "left"
+  }
+
+  const peintStats = () => {
+    /* les statistiques de la voiture — jauges au violet du combiné */
+    g.fillStyle = "#16132a"
+    g.fillRect(0, 0, l, h)
+    g.font = `bold ${Math.round(u * 7)}px monospace`
+    g.fillStyle = "#a99cc8"
+    g.fillText("GT86 \u2014 STATS", u * 6, u * 10)
+    const jauge = (x: number, y: number, titre: string, valeur: string, frac: number) => {
+      g.save()
+      g.shadowColor = "rgba(0, 0, 0, 0.5)"
+      g.shadowBlur = u * 3
+      g.beginPath()
+      g.roundRect(x, y, l * 0.42, h * 0.3, u * 4)
+      g.fillStyle = "#221c40"
+      g.fill()
+      g.restore()
+      g.beginPath()
+      g.arc(x + u * 12, y + h * 0.15, u * 8, Math.PI * 0.75, Math.PI * 2.25)
+      g.strokeStyle = "#37305c"
+      g.lineWidth = u * 2.4
+      g.lineCap = "round"
+      g.stroke()
+      g.beginPath()
+      g.arc(x + u * 12, y + h * 0.15, u * 8, Math.PI * 0.75, Math.PI * (0.75 + 1.5 * frac))
+      g.strokeStyle = "#8f5cff"
+      g.stroke()
+      g.font = `${Math.round(u * 5.5)}px monospace`
+      g.fillStyle = "#a99cc8"
+      g.fillText(titre, x + u * 24, y + h * 0.1)
+      g.font = `bold ${Math.round(u * 8)}px monospace`
+      g.fillStyle = "#f2ecff"
+      g.fillText(valeur, x + u * 24, y + h * 0.2)
+    }
+    jauge(u * 6, h * 0.16, "TEMP. MOTEUR", "90 \u00b0C", 0.55)
+    jauge(l * 0.52, h * 0.16, "BATTERIE", "12,4 V", 0.8)
+    jauge(u * 6, h * 0.55, "HUILE", "OK", 0.7)
+    jauge(l * 0.52, h * 0.55, "PNEUS", "2,4 bar", 0.65)
+  }
+
   const peint = () => {
+    if (etat.mode === "eteint") {
+      /* vraiment éteint : dalle noire, rien d'autre */
+      g.fillStyle = "#050408"
+      g.fillRect(0, 0, l, h)
+      tex.needsUpdate = true
+      return
+    }
+    if (etat.mode === "stats") {
+      peintStats()
+      tex.needsUpdate = true
+      return
+    }
     peintFond()
     if (etat.mode === "gps") {
       peintGps()
+    } else if (etat.mode === "musiques") {
+      peintMusiques()
+    } else if (etat.mode === "horloge") {
+      peintHorloge()
     } else if (etat.mode === "veille") {
       /* veille : CLICK HERE clignotant, lueur violette */
       if (etat.allume) {
@@ -431,6 +648,36 @@ function creeEcran() {
       etat.choix = null
       peint()
     },
+    musiques() {
+      etat.mode = "musiques"
+      peint()
+    },
+    horloge() {
+      etat.mode = "horloge"
+      peint()
+    },
+    stats() {
+      etat.mode = "stats"
+      peint()
+    },
+    eteint() {
+      etat.mode = "eteint"
+      peint()
+    },
+    surDepart(fn: (dest: "maison" | "travail") => void) {
+      quandDepart = fn
+    },
+    /* le clic sur la carte GPS, interprété selon l'état : rangées du
+       sélecteur, ou ‹ retour */
+    clicGps(uv: number, vv: number): "retour" | "maison" | "travail" | null {
+      if (uv < 0.2 && vv < 0.3) return "retour"
+      if (etat.choix !== null) return null
+      /* le panneau : x ∈ [0.2, 0.8], rangées à 42-58 % et 60-76 % */
+      if (uv < 0.2 || uv > 0.8) return null
+      if (vv > 0.5 && vv < 0.62) return "maison"
+      if (vv > 0.68 && vv < 0.82) return "travail"
+      return null
+    },
     tic() {
       etat.tic += 1.4
       peint()
@@ -452,12 +699,10 @@ function creeEcran() {
       etat.choix = dest
       etat.transition = 0
       const fini = () => {
+        /* jauge pleine : on plonge dans le portfolio relié (demande Hugo) */
         setTimeout(() => {
-          if (etat.mode === "gps") {
-            etat.choix = null
-            peint()
-          }
-        }, 650)
+          if (quandDepart) quandDepart(dest)
+        }, 450)
       }
       if (REDUIT) {
         etat.transition = 1
@@ -598,11 +843,23 @@ function Voiture({ ecran }: { ecran: ReturnType<typeof creeEcran> }) {
 /* le pipeline d'événements R3F restait sourd sur cette page (vérifié :
    proxy en place, handler enregistré, rayon manuel au centre — zéro
    appel) ; un écouteur natif sur le canvas ne dépend de rien */
-function ClicEcran({ centre, surClic, surDehors }: { centre: THREE.Vector3; surClic: (u: number, v: number) => void; surDehors: () => void }) {
+/* les boutons physiques de la façade, en coordonnées plan (d.x, dy) —
+   relevés sur la capture de Hugo (dalle 0,13 m ↔ 544 px → 4185 px/m) */
+const BOUTONS: [string, number, number][] = [
+  ["power", 0.092, 0.037],
+  ["media", 0.087, 0.003],
+  ["suivant", 0.087, -0.0115],
+  ["precedent", 0.087, -0.028],
+  ["map", -0.09, -0.028],
+]
+
+function ClicEcran({ centre, surClic, surBouton, surDehors }: { centre: THREE.Vector3; surClic: (u: number, v: number) => void; surBouton: (nom: string) => void; surDehors: () => void }) {
   const gl = useThree((s) => s.gl)
   const camera = useThree((s) => s.camera)
   const refClic = useRef(surClic)
   refClic.current = surClic
+  const refBouton = useRef(surBouton)
+  refBouton.current = surBouton
   const refDehors = useRef(surDehors)
   refDehors.current = surDehors
   useEffect(() => {
@@ -625,10 +882,14 @@ function ClicEcran({ centre, surClic, surDehors }: { centre: THREE.Vector3; surC
          conducteur (monde −x) — calibré au clic sur la tuile GPS */
       if (Math.abs(d.x) < 0.072 && Math.abs(dy) < 0.04) {
         refClic.current((0.065 - d.x) / 0.13, (0.035 - dy) / 0.07)
-      } else if (Math.abs(d.x) > 0.16 || Math.abs(dy) > 0.1) {
-        /* frange neutre entre la dalle et le « dehors » : un clic à
-           quelques millimètres du bord ne doit pas éjecter du zoom */
-        refDehors.current()
+      } else {
+        const bouton = BOUTONS.find(([, bx, by]) => Math.abs(d.x - bx) < 0.014 && Math.abs(dy - by) < 0.0085)
+        if (bouton) refBouton.current(bouton[0])
+        else if (Math.abs(d.x) > 0.16 || Math.abs(dy) > 0.1) {
+          /* frange neutre entre la façade et le « dehors » : un clic à
+             quelques millimètres du bord ne doit pas éjecter du zoom */
+          refDehors.current()
+        }
       }
     }
     el.addEventListener("click", clic)
@@ -725,6 +986,10 @@ function NeonsInterieur() {
     [-0.5, 0.38, 0.5],
     [0.1, 0.48, -0.12],
     [-0.28, 0.48, -0.12],
+    /* le rétroéclairage de l'îlot (demande Hugo) : la façade du poste et
+       le bloc clim baignent dans un violet discret */
+    [-0.075, 0.76, 0.42],
+    [-0.075, 0.6, 0.44],
   ]
   return (
     <group>
@@ -785,7 +1050,10 @@ const VUES = {
 export default function Scene() {
   const params = useSearchParams()
   const [zoome, setZoome] = useState(false)
-  const [modeEcran, setModeEcran] = useState<"hub" | "gps">("hub")
+  const routeur = useRouter()
+  const [modeEcran, setModeEcran] = useState<"hub" | "gps" | "musiques" | "horloge" | "stats">("hub")
+  const [eteint, setEteint] = useState(false)
+  const [partir, setPartir] = useState(false)
   const [but, setBut] = useState<{ cam: THREE.Vector3; vise: THREE.Vector3 } | null>(null)
   /* PAS un useMemo : creeEcran est impur (canvas, Image, timers) et le
      double-rendu StrictMode en fabriquait DEUX instances — le matériau
@@ -813,15 +1081,40 @@ export default function Scene() {
       }, 650)
       return () => clearInterval(t)
     }
+    if (eteint) {
+      ecran.eteint()
+      return
+    }
     if (modeEcran === "hub") {
       ecran.hub()
+      return
+    }
+    if (modeEcran === "musiques") {
+      ecran.musiques()
+      return
+    }
+    if (modeEcran === "horloge") {
+      ecran.horloge()
+      return
+    }
+    if (modeEcran === "stats") {
+      ecran.stats()
       return
     }
     ecran.gps()
     if (REDUIT) return
     const t = setInterval(() => ecran.tic(), 90)
     return () => clearInterval(t)
-  }, [zoome, modeEcran, ecran])
+  }, [zoome, modeEcran, eteint, ecran])
+
+  /* la jauge pleine du GPS plonge dans le portfolio relié : fondu noir
+     puis navigation réelle — Maison → la home, Travail → /work */
+  useEffect(() => {
+    ecran.surDepart((dest) => {
+      setPartir(true)
+      setTimeout(() => routeur.push(dest === "maison" ? "/" : "/work"), 650)
+    })
+  }, [ecran, routeur])
 
   const brut = params.get("cam")?.split(",").map(Number)
   const cam: [number, number, number] =
@@ -834,6 +1127,7 @@ export default function Scene() {
   const surEcran = (uv: number, vv: number) => {
     if (process.env.NODE_ENV !== "production")
       (window as unknown as { __routage: unknown }).__routage = { uv, vv, zoome, modeEcran, t: Date.now() }
+    if (eteint) return
     if (!zoome) {
       setBut(VUES.ecran)
       setZoome(true)
@@ -842,13 +1136,43 @@ export default function Scene() {
     }
     if (modeEcran === "hub") {
       if (uv < 0.48) setModeEcran("gps")
-      else if (uv > 0.52) ecran.bientot()
+      else if (uv > 0.52) setModeEcran("musiques")
       return
     }
-    /* carte GPS : ← retour, sinon fourche Maison / Travail */
-    if (uv < 0.16 && vv < 0.26) setModeEcran("hub")
-    else if (uv < 0.48) ecran.choisit("maison")
-    else if (uv > 0.52) ecran.choisit("travail")
+    if (modeEcran === "gps") {
+      /* le sélecteur de destination et le ‹ retour, interprétés par
+         l'écran lui-même (les zones vivent à côté du dessin) */
+      const action = ecran.clicGps(uv, vv)
+      if (action === "retour") setModeEcran("hub")
+      else if (action === "maison" || action === "travail") ecran.choisit(action)
+      return
+    }
+    /* musiques / horloge / stats : le ‹ n'existe pas encore, les boutons
+       physiques (flèches, MAP, MEDIA) font la navigation */
+  }
+
+  /* les boutons physiques de la façade (demande Hugo) */
+  const CYCLE: ("gps" | "musiques" | "horloge" | "stats")[] = ["gps", "musiques", "horloge", "stats"]
+  const surBouton = (nom: string) => {
+    if (nom === "power") {
+      setEteint((e) => !e)
+      return
+    }
+    if (eteint) return
+    const va = (m: "gps" | "musiques" | "horloge" | "stats") => {
+      if (!zoome) {
+        setBut(VUES.ecran)
+        setZoome(true)
+      }
+      setModeEcran(m)
+    }
+    if (nom === "media") va("musiques")
+    else if (nom === "map") va("gps")
+    else if (nom === "suivant" || nom === "precedent") {
+      const i = CYCLE.indexOf(modeEcran as (typeof CYCLE)[number])
+      const j = i === -1 ? 0 : (i + (nom === "suivant" ? 1 : CYCLE.length - 1)) % CYCLE.length
+      va(CYCLE[j])
+    }
   }
 
   /* cliquer AILLEURS que l'écran ramène au siège */
@@ -913,10 +1237,21 @@ export default function Scene() {
           <NomChrome />
           <Retro />
           <Voiture ecran={ecran} />
-          <ClicEcran centre={ECRAN_NATIF.centre} surClic={surEcran} surDehors={surDehors} />
+          <ClicEcran centre={ECRAN_NATIF.centre} surClic={surEcran} surBouton={surBouton} surDehors={surDehors} />
           <Rail but={but} arrive={() => setBut(null)} viseInitiale={cible} />
         </Suspense>
       </Canvas>
+      {/* le fondu du départ vers le portfolio */}
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          background: "#050408",
+          opacity: partir ? 1 : 0,
+          pointerEvents: "none",
+          transition: "opacity 600ms ease",
+        }}
+      />
       <Loader />
     </div>
   )
