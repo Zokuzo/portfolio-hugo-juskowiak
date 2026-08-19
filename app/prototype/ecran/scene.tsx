@@ -30,51 +30,47 @@ const ECRAN_NATIF = {
   bascule: -0.28,
 }
 
-/* ---- la maquette de hub peinte en canvas --------------------------- */
-/* la maquette de hub jugée au gate — le vrai hub arrive avec #32 */
-function textureHub(l: number, h: number, sousTitre: string, mode?: "gltf") {
+/* ---- l'écran natif : deux états, même fond ------------------------- */
+/* veille (vue conducteur) : le Rayquaza + « CLICK HERE » qui clignote ;
+   hub (après clic) : les tuiles GPS / MUSIQUES aux teintes du fond.
+   Textes d'en-tête supprimés (demande Hugo), seule l'horloge reste. */
+function creeEcran() {
   const c = document.createElement("canvas")
-  c.width = l
-  c.height = h
+  c.width = 512
+  c.height = 256
   const g = c.getContext("2d")!
-  const u = h / 100 /* unité : pourcent de hauteur */
+  const l = 512
+  const h = 256
+  const u = h / 100
   let fond: HTMLImageElement | null = null
+  const etat = { hub: false, allume: true }
 
-  const peint = () => {
-  g.fillStyle = "#0b0d14"
-  g.fillRect(0, 0, l, h)
-  /* le fond Rayquaza (choix Hugo) sous un voile sombre — les tuiles
-     restent lisibles, le dragon vit derrière */
-  if (fond) {
-    g.drawImage(fond, 0, 0, l, h)
-    g.fillStyle = "rgba(7, 9, 16, 0.42)"
+  const peintFond = () => {
+    g.fillStyle = "#0b0d14"
     g.fillRect(0, 0, l, h)
+    if (fond) {
+      g.drawImage(fond, 0, 0, l, h)
+      g.fillStyle = "rgba(7, 9, 16, 0.42)"
+      g.fillRect(0, 0, l, h)
+    }
+    g.strokeStyle = "#2b2440"
+    g.lineWidth = Math.max(2, u * 1.2)
+    g.strokeRect(u * 2, u * 2, l - u * 4, h - u * 4)
+    g.textBaseline = "middle"
+    g.font = `${Math.round(u * 8)}px monospace`
+    g.fillStyle = "#b7a8d8"
+    g.textAlign = "right"
+    g.fillText("23:42", l - u * 8, u * 10)
+    g.textAlign = "left"
   }
-  g.strokeStyle = "#252a3c"
-  g.lineWidth = Math.max(2, u * 1.2)
-  g.strokeRect(u * 2, u * 2, l - u * 4, h - u * 4)
 
-  g.textBaseline = "middle"
-  g.font = `${Math.round(u * 8)}px monospace`
-  g.fillStyle = "#8f97b3"
-  g.fillText("HUGO JUSKOWIAK — MEDIA", u * 8, u * 10)
-  g.textAlign = "right"
-  g.fillText("23:42", l - u * 8, u * 10)
-  g.textAlign = "left"
-  g.font = `${Math.round(u * 5)}px monospace`
-  g.fillStyle = "#4c5470"
-  g.fillText(sousTitre, u * 8, u * 19)
-
-  const arrondi = (x: number, y: number, la: number, ha: number, r: number) => {
-    g.beginPath()
-    g.roundRect(x, y, la, ha, r)
-  }
   const tuile = (x: number, titre: string, teinte: string, glyphe: (cx: number, cy: number, r: number) => void) => {
-    const y = u * 27
+    const y = u * 20
     const la = l / 2 - u * 12
-    const ha = h - y - u * 10
-    arrondi(x, y, la, ha, u * 4)
-    g.fillStyle = "rgba(14, 17, 26, 0.72)"
+    const ha = h - y - u * 12
+    g.beginPath()
+    g.roundRect(x, y, la, ha, u * 4)
+    g.fillStyle = "rgba(16, 12, 28, 0.7)"
     g.fill()
     g.strokeStyle = teinte
     g.lineWidth = u * 1.4
@@ -86,66 +82,91 @@ function textureHub(l: number, h: number, sousTitre: string, mode?: "gltf") {
     glyphe(cx, cy, ha * 0.2)
     g.textAlign = "center"
     g.font = `bold ${Math.round(u * 9)}px monospace`
-    g.fillStyle = "#dfe4f2"
+    g.fillStyle = "#efe8fb"
     g.fillText(titre, cx, y + ha * 0.82)
     g.textAlign = "left"
   }
-  /* GPS : un jalon de carte */
-  tuile(u * 8, "GPS", "#ff7a45", (cx, cy, r) => {
-    g.lineWidth = r * 0.24
-    g.beginPath()
-    g.arc(cx, cy - r * 0.25, r * 0.55, Math.PI * 0.92, Math.PI * 2.08)
-    g.lineTo(cx, cy + r)
-    g.closePath()
-    g.stroke()
-    g.beginPath()
-    g.arc(cx, cy - r * 0.25, r * 0.2, 0, Math.PI * 2)
-    g.fill()
-  })
-  /* MUSIQUES : une double croche */
-  tuile(l / 2 + u * 4, "MUSIQUES", "#7aa7ff", (cx, cy, r) => {
-    g.lineWidth = r * 0.24
-    g.beginPath()
-    g.moveTo(cx - r * 0.45, cy + r * 0.7)
-    g.lineTo(cx - r * 0.45, cy - r * 0.8)
-    g.lineTo(cx + r * 0.65, cy - r)
-    g.lineTo(cx + r * 0.65, cy + r * 0.5)
-    g.stroke()
-    g.beginPath()
-    g.arc(cx - r * 0.6, cy + r * 0.7, r * 0.28, 0, Math.PI * 2)
-    g.arc(cx + r * 0.5, cy + r * 0.5, r * 0.28, 0, Math.PI * 2)
-    g.fill()
-  })
 
+  const peint = () => {
+    peintFond()
+    if (!etat.hub) {
+      /* veille : CLICK HERE clignotant, lueur violette */
+      if (etat.allume) {
+        g.textAlign = "center"
+        g.font = `bold ${Math.round(u * 15)}px monospace`
+        g.shadowColor = "#9b5cff"
+        g.shadowBlur = u * 6
+        g.fillStyle = "#d8beff"
+        g.fillText("CLICK HERE", l / 2, h * 0.52)
+        g.shadowBlur = 0
+        g.textAlign = "left"
+      }
+    } else {
+      /* le hub : tuiles aux teintes du Rayquaza (violet / magenta) */
+      tuile(u * 8, "GPS", "#b57aff", (cx, cy, r) => {
+        g.lineWidth = r * 0.24
+        g.beginPath()
+        g.arc(cx, cy - r * 0.25, r * 0.55, Math.PI * 0.92, Math.PI * 2.08)
+        g.lineTo(cx, cy + r)
+        g.closePath()
+        g.stroke()
+        g.beginPath()
+        g.arc(cx, cy - r * 0.25, r * 0.2, 0, Math.PI * 2)
+        g.fill()
+      })
+      tuile(l / 2 + u * 4, "MUSIQUES", "#f473e8", (cx, cy, r) => {
+        g.lineWidth = r * 0.24
+        g.beginPath()
+        g.moveTo(cx - r * 0.45, cy + r * 0.7)
+        g.lineTo(cx - r * 0.45, cy - r * 0.8)
+        g.lineTo(cx + r * 0.65, cy - r)
+        g.lineTo(cx + r * 0.65, cy + r * 0.5)
+        g.stroke()
+        g.beginPath()
+        g.arc(cx - r * 0.6, cy + r * 0.7, r * 0.28, 0, Math.PI * 2)
+        g.arc(cx + r * 0.5, cy + r * 0.5, r * 0.28, 0, Math.PI * 2)
+        g.fill()
+      })
+    }
+    tex.needsUpdate = true
   }
-  peint()
+
   const tex = new THREE.CanvasTexture(c)
+  tex.colorSpace = THREE.SRGBColorSpace
+  tex.anisotropy = 8
+  /* UV du quad Display : v ∈ [1,2] (relevé au GLB brut) → Repeat
+     obligatoire, flipY par défaut remet l'image à l'endroit */
+  tex.wrapS = THREE.RepeatWrapping
+  tex.wrapT = THREE.RepeatWrapping
   const img = new Image()
   img.onload = () => {
     fond = img
     peint()
-    tex.needsUpdate = true
   }
   img.src = "/prototype/ecran-fond.jpg"
-  tex.colorSpace = THREE.SRGBColorSpace
-  tex.anisotropy = 8
-  /* orientation RELEVÉE en capture, pas déduite : le quad Display du GT86
-     échantillonne v ∈ [1,2] → Repeat obligatoire (le clamp étalait la
-     dernière rangée en aplat), et le flipY par défaut remet l'image à
-     l'endroit.  */
-  if (mode === "gltf") {
-    tex.wrapS = THREE.RepeatWrapping
-    tex.wrapT = THREE.RepeatWrapping
+  peint()
+
+  return {
+    tex,
+    veille(allume: boolean) {
+      etat.hub = false
+      etat.allume = allume
+      peint()
+    },
+    hub() {
+      etat.hub = true
+      peint()
+    },
   }
-  return tex
 }
 
 /* ---- la voiture, écran natif habillé --------------------------------- */
 /* verdict Hugo : l'écran NATIF gagne — le ratio 2:1 (512×256) est gravé
    pour l'UI écran (GPS #26, Musiques #33) ; la PSP a perdu le gate et
    sort du code avec son GLB (l'historique git les garde) */
-function Voiture() {
+function Voiture({ zoome }: { zoome: boolean }) {
   const { scene } = useGLTF("/prototype/gt86.glb")
+  const ecran = useMemo(() => creeEcran(), [])
   /* la planche passagère troque sa livrée Miku pour le Haunter (choix
      Hugo — raccord au violet des néons) : recomposé DANS le repère de la
      texture d'origine (atlas 2048² gris, artwork à 180° dans le quart
@@ -201,16 +222,35 @@ function Voiture() {
       }
       if (mat?.name === "Display") {
         const m = mat.clone()
-        const tex = textureHub(512, 256, "écran natif GT86 — 512×256 (2:1)", "gltf")
-        m.map = tex
-        m.emissiveMap = tex
+        m.map = ecran.tex
+        m.emissiveMap = ecran.tex
         m.emissive = new THREE.Color("#ffffff")
         m.emissiveIntensity = 1.1
         mesh.material = m
       }
     })
     return scene
-  }, [scene, art, lueur, compteur])
+  }, [scene, art, lueur, compteur, ecran])
+
+  /* la machine à états de l'écran : veille clignotante au siège, hub au
+     zoom — figée allumée sous prefers-reduced-motion */
+  useEffect(() => {
+    if (zoome) {
+      ecran.hub()
+      return
+    }
+    if (REDUIT) {
+      ecran.veille(true)
+      return
+    }
+    let allume = true
+    ecran.veille(allume)
+    const t = setInterval(() => {
+      allume = !allume
+      ecran.veille(allume)
+    }, 650)
+    return () => clearInterval(t)
+  }, [zoome, ecran])
 
   /* plafonnier éteint, suite : l'Environment plein repeignait plastiques
      et planche en fin d'après-midi — l'intérieur reçoit l'environnement
@@ -504,7 +544,7 @@ export default function Scene() {
           <NeonsInterieur />
           <NomChrome />
           <Retro />
-          <Voiture />
+          <Voiture zoome={zoome} />
           <ClicEcran centre={ECRAN_NATIF.centre} surClic={surEcran} />
           <Rail but={but} arrive={() => setBut(null)} viseInitiale={cible} />
         </Suspense>
