@@ -150,6 +150,28 @@ function Voiture() {
     })
     return scene
   }, [scene])
+
+  /* plafonnier éteint, suite : l'Environment plein repeignait plastiques
+     et planche en fin d'après-midi — l'intérieur reçoit l'environnement
+     en envMap propre à dose de veille (leçon du #22 : sans envMap posé
+     sur le matériau, envMapIntensity est INERTE) ; la robe garde le sien */
+  const envPose = useRef(false)
+  useFrame(({ scene: sc }) => {
+    if (envPose.current || !sc.environment) return
+    envPose.current = true
+    const INTERIEUR = new Set(["MoreInterior", "InteriorBlack", "InteriorStuff", "SilverPlastic", "Pedals", "DashboardArtwork", "Carbon"])
+    modele.traverse((o) => {
+      const mesh = o as THREE.Mesh
+      if (!mesh.isMesh) return
+      for (const m of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
+        const mat = m as THREE.MeshStandardMaterial
+        if (!mat || !INTERIEUR.has(mat.name)) continue
+        mat.envMap = sc.environment
+        mat.envMapIntensity = 0.12
+        mat.needsUpdate = true
+      }
+    })
+  })
   return <primitive object={modele} />
 }
 
@@ -191,8 +213,19 @@ function ClicEcran({ centre, surClic }: { centre: THREE.Vector3; surClic: () => 
    optiques (axe voiture x = −0,075, optiques natives à ±0,62) */
 function NomChrome() {
   const cibles = useMemo(() => [new THREE.Object3D(), new THREE.Object3D()], [])
+  /* le nom FLOTTE (demande Hugo) — houle lente + roulis infime ; les
+     faisceaux restent fixes : la lumière glisse sur les lettres. Figé
+     sous prefers-reduced-motion. */
+  const flotte = useRef<THREE.Group>(null)
+  useFrame(({ clock }) => {
+    if (!flotte.current) return
+    const t = REDUIT ? 0 : clock.elapsedTime
+    flotte.current.position.y = Math.sin(t * 0.7) * 0.07
+    flotte.current.rotation.z = Math.sin(t * 0.45 + 1.3) * 0.008
+  })
   return (
     <group>
+      <group ref={flotte}>
       <Center position={[-0.45, 1.4, 13]} rotation-y={Math.PI}>
         <Text3D
           font="/prototype/helvetiker_bold.typeface.json"
@@ -213,6 +246,7 @@ function NomChrome() {
           <meshStandardMaterial color="#cfd5de" metalness={0.9} roughness={0.3} envMapIntensity={1.7} emissive="#fff3dc" emissiveIntensity={0.16} />
         </Text3D>
       </Center>
+      </group>
       {([1, -1] as const).map((c, i) => (
         <group key={c}>
           <primitive object={cibles[i]} position={[-0.45 + c * 1.3, 1.25, 13]} />
@@ -306,10 +340,15 @@ export default function Scene() {
             <Lightformer form="rect" intensity={0.25} color="#9aa4c8" position={[6, 2, -4]} scale={[6, 2, 1]} target={[0, 0, 0]} />
             <Lightformer form="rect" intensity={0.2} color="#6b7490" position={[-6, 2, 4]} scale={[6, 2, 1]} target={[0, 0, 0]} />
           </Environment>
-          <hemisphereLight args={["#2a2440", "#0a080e", 0.5]} />
-          <ambientLight intensity={0.3} color="#a9b4d4" />
+          {/* plafonnier ÉTEINT (demande Hugo) : mêmes ambiantes que la nuit
+              de la rue — l'habitacle ne vit plus que de l'écran, du combiné
+              et de la ville */}
+          <hemisphereLight args={["#232038", "#0a080e", 0.22]} />
+          <ambientLight intensity={0.21} color="#a9b4d4" />
           {/* la lueur de l'écran mange le tableau de bord */}
-          <pointLight position={[-0.075, 0.9, 0.18]} color="#ffb98a" intensity={0.6} distance={1.4} decay={2} />
+          {/* la lueur de l'écran : locale et honnête — à 0,6/1,4 m elle
+              faisait plafonnier sur tout le poste (retour Hugo) */}
+          <pointLight position={[-0.075, 0.85, 0.24]} color="#ffb98a" intensity={0.3} distance={0.65} decay={2} />
           {/* le monde derrière les vitres : LA ville de la rue (#22), pas
               une silhouette — le décor entier avec ses fenêtres émissives,
               ses 90 luminaires et ses feux, transformé pour que la voiture
