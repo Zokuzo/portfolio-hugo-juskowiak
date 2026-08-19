@@ -728,6 +728,58 @@ function creeEcran() {
   }
 }
 
+/* ---- la moquette des tapis de sol ----------------------------------- */
+/* le plancher du GLB n'a NI texture NI relief (relevé au raycast : map
+   aucune) — d'où son aspect plastique. On lui tisse une moquette :
+   fibres bouclées dessinées au canvas, teintes prune de l'habitacle,
+   quelques fibres claires qui accrochent les néons. */
+function textureMoquette(taille = 512) {
+  const c = document.createElement("canvas")
+  c.width = taille
+  c.height = taille
+  const g = c.getContext("2d")!
+  g.fillStyle = "#171122"
+  g.fillRect(0, 0, taille, taille)
+  /* déterministe : la même moquette à chaque chargement */
+  let graine = 1337
+  const alea = () => {
+    graine = (graine * 1103515245 + 12345) & 0x7fffffff
+    return graine / 0x7fffffff
+  }
+  const fibres = ["#221a33", "#2b2140", "#1c1529", "#332748"]
+  g.lineCap = "round"
+  for (let i = 0; i < 26000; i++) {
+    const x = alea() * taille
+    const y = alea() * taille
+    const a = alea() * Math.PI * 2
+    const l = 2 + alea() * 3.5
+    g.strokeStyle = fibres[(alea() * fibres.length) | 0]
+    g.lineWidth = 0.7 + alea() * 0.9
+    g.beginPath()
+    g.moveTo(x, y)
+    g.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l)
+    g.stroke()
+  }
+  /* les brins qui accrochent la lumière des néons */
+  for (let i = 0; i < 900; i++) {
+    const x = alea() * taille
+    const y = alea() * taille
+    const a = alea() * Math.PI * 2
+    g.strokeStyle = alea() > 0.55 ? "rgba(150, 118, 214, 0.5)" : "rgba(92, 74, 138, 0.45)"
+    g.lineWidth = 0.8
+    g.beginPath()
+    g.moveTo(x, y)
+    g.lineTo(x + Math.cos(a) * 3, y + Math.sin(a) * 3)
+    g.stroke()
+  }
+  const tex = new THREE.CanvasTexture(c)
+  tex.colorSpace = THREE.SRGBColorSpace
+  tex.wrapS = THREE.RepeatWrapping
+  tex.wrapT = THREE.RepeatWrapping
+  tex.anisotropy = 8
+  return tex
+}
+
 /* ---- la voiture, écran natif habillé --------------------------------- */
 /* verdict Hugo : l'écran NATIF gagne — le ratio 2:1 (512×256) est gravé
    pour l'UI écran (GPS #26, Musiques #33) ; la PSP a perdu le gate et
@@ -912,6 +964,65 @@ function Voiture({ ecran, warning }: { ecran: ReturnType<typeof creeEcran>; warn
         meshAlc.quaternion.copy(cible.quaternion)
         meshAlc.scale.copy(cible.scale)
         cible.parent?.add(meshAlc)
+      }
+    }
+    /* LES TAPIS DE SOL (demande Hugo) : même méthode que l'alcantara —
+       les triangles bas et à plat d'InteriorBlack deviennent un mesh
+       moquette. Géométrie NON indexée, avec des UV planaires calculées
+       ici (le plancher d'origine n'a pas d'UV exploitables). */
+    if (planche) {
+      const cible = planche as THREE.Mesh
+      const geo = cible.geometry
+      const pos = geo.attributes.position
+      const index = geo.index
+      const total = index ? index.count : pos.count
+      const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3()
+      const ab = new THREE.Vector3(), ac = new THREE.Vector3(), n = new THREE.Vector3()
+      const sommets: number[] = []
+      const normales: number[] = []
+      const uvs: number[] = []
+      /* 1 mètre ↔ 3 tuiles de moquette */
+      const K = 3
+      for (let t = 0; t + 2 < total; t += 3) {
+        const i0 = index ? index.getX(t) : t
+        const i1 = index ? index.getX(t + 1) : t + 1
+        const i2 = index ? index.getX(t + 2) : t + 2
+        a.fromBufferAttribute(pos, i0).applyMatrix4(cible.matrixWorld)
+        b.fromBufferAttribute(pos, i1).applyMatrix4(cible.matrixWorld)
+        c.fromBufferAttribute(pos, i2).applyMatrix4(cible.matrixWorld)
+        /* le plancher seul : relevé à y≈0,27-0,33 — au-dessus de 36 cm on
+           mordait sur l'assise des sièges et le tunnel (vu en capture) */
+        const my = (a.y + b.y + c.y) / 3
+        if (my > 0.36) continue
+        ab.subVectors(b, a)
+        ac.subVectors(c, a)
+        n.crossVectors(ab, ac).normalize()
+        if (Math.abs(n.y) < 0.55) continue
+        for (const v of [a, b, c]) {
+          sommets.push(v.x, v.y, v.z)
+          normales.push(0, 1, 0)
+          uvs.push(v.x * K, v.z * K)
+        }
+      }
+      const vieuxTapis = cible.parent?.getObjectByName("moquette")
+      if (vieuxTapis) vieuxTapis.removeFromParent()
+      if (sommets.length) {
+        const geoTapis = new THREE.BufferGeometry()
+        geoTapis.setAttribute("position", new THREE.Float32BufferAttribute(sommets, 3))
+        geoTapis.setAttribute("normal", new THREE.Float32BufferAttribute(normales, 3))
+        geoTapis.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2))
+        const moquette = new THREE.MeshStandardMaterial({
+          map: textureMoquette(),
+          roughness: 1,
+          metalness: 0,
+          polygonOffset: true,
+          polygonOffsetFactor: -2,
+          polygonOffsetUnits: -2,
+        })
+        const meshTapis = new THREE.Mesh(geoTapis, moquette)
+        meshTapis.name = "moquette"
+        /* sommets déjà en coordonnées MONDE : le mesh vit à la racine */
+        scene.add(meshTapis)
       }
     }
     return scene
