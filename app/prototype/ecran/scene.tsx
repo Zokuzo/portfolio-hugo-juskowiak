@@ -869,6 +869,8 @@ const BOUTONS: [string, number, number][] = [
   ["map", -0.0861, 0.0275],
   /* déduit de la grille de Hugo : même colonne que MAP NAV, à hauteur de MEDIA */
   ["setup", -0.0861, 0],
+  /* le triangle de détresse, sur le bandeau sous le poste */
+  ["warning", 0, 0.0704],
 ]
 
 function ClicEcran({ centre, surClic, surBouton, surDehors, surBrut }: { centre: THREE.Vector3; surClic: (u: number, v: number) => void; surBouton: (nom: string) => void; surDehors: () => void; surBrut?: (dx: number, dy: number) => void }) {
@@ -1042,6 +1044,28 @@ function Retro() {
   )
 }
 
+/* ---- les feux de détresse ------------------------------------------- */
+/* le triangle rouge clignote quand on l'enclenche (demande Hugo) — halo
+   additif + lampe courte à cadence de warning, fixes sous reduce */
+function Warning({ actif }: { actif: boolean }) {
+  const mat = useRef<THREE.SpriteMaterial>(null)
+  const lampe = useRef<THREE.PointLight>(null)
+  useFrame(({ clock }) => {
+    const allume = actif && (REDUIT || Math.floor(clock.elapsedTime * 2.4) % 2 === 0)
+    if (mat.current) mat.current.opacity = allume ? 0.8 : 0
+    if (lampe.current) lampe.current.intensity = allume ? 0.45 : 0
+  })
+  const pos = ECRAN_NATIF.centre.clone().addScaledVector(PLAN_AXE_Y, 0.0704).addScaledVector(PLAN_NORMALE, -0.012)
+  return (
+    <group position={pos.toArray()}>
+      <sprite scale={[0.05, 0.05, 1]}>
+        <spriteMaterial ref={mat} map={halo()} color="#ff2e20" transparent opacity={0} blending={THREE.AdditiveBlending} depthWrite={false} />
+      </sprite>
+      <pointLight ref={lampe} color="#ff3b2e" intensity={0} distance={0.28} decay={2} />
+    </group>
+  )
+}
+
 /* ---- le rail de caméra : la SEULE façon de bouger ------------------- */
 /* pas d'orbite libre (demande Hugo) : la caméra vit sur un rail, seuls
    les clics la déplacent — le rail tient sa propre cible et verrouille
@@ -1079,6 +1103,7 @@ export default function Scene() {
   const [selZone, setSelZone] = useState<number | null>(null)
   const [modeEcran, setModeEcran] = useState<"hub" | "gps" | "musiques" | "horloge" | "stats">("hub")
   const [eteint, setEteint] = useState(false)
+  const [warning, setWarning] = useState(false)
   const [partir, setPartir] = useState(false)
   const [but, setBut] = useState<{ cam: THREE.Vector3; vise: THREE.Vector3 } | null>(null)
   /* PAS un useMemo : creeEcran est impur (canvas, Image, timers) et le
@@ -1184,6 +1209,11 @@ export default function Scene() {
       setEteint((e) => !e)
       return
     }
+    if (nom === "warning") {
+      /* les feux de détresse vivent même écran éteint */
+      setWarning((w) => !w)
+      return
+    }
     if (eteint) return
     const va = (m: "hub" | "gps" | "musiques" | "horloge" | "stats") => {
       if (!zoome) {
@@ -1227,13 +1257,24 @@ export default function Scene() {
     return () => window.removeEventListener("keydown", clavier)
   }, [edition, zones])
 
-  /* cliquer AILLEURS que l'écran ramène au siège */
+  /* cliquer AILLEURS que l'écran — ou Échap — ramène au siège */
   const surDehors = () => {
     if (!zoome) return
     setBut(VUES.conducteur)
     setZoome(false)
     setModeEcran("hub")
   }
+
+  useEffect(() => {
+    const clavier = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || edition || !zoome) return
+      setBut(VUES.conducteur)
+      setZoome(false)
+      setModeEcran("hub")
+    }
+    window.addEventListener("keydown", clavier)
+    return () => window.removeEventListener("keydown", clavier)
+  }, [edition, zoome])
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "#08070f" }}>
@@ -1289,6 +1330,7 @@ export default function Scene() {
           <NomChrome />
           <Retro />
           <Voiture ecran={ecran} />
+          <Warning actif={warning} />
           <ClicEcran centre={ECRAN_NATIF.centre} surClic={surEcran} surBouton={surBouton} surDehors={surDehors} surBrut={edition ? surEditer : undefined} />
           {edition &&
             zones.map(([nom, bx, by], i) => (
