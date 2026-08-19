@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
-import { Center, Environment, Lightformer, Loader, OrbitControls, SpotLight as SpotVolumetrique, Text3D, useGLTF } from "@react-three/drei"
+import { Center, Environment, Lightformer, Loader, SpotLight as SpotVolumetrique, Text3D, useGLTF } from "@react-three/drei"
 import * as THREE from "three"
 import { habilleNuit } from "../rue/voiture-rue"
 import Fond from "../rue/fond"
@@ -235,16 +235,20 @@ function NomChrome() {
   )
 }
 
-/* ---- le rail de caméra : zoom vers l'écran au clic ------------------ */
-function Rail({ but, arrive }: { but: { cam: THREE.Vector3; vise: THREE.Vector3 } | null; arrive: () => void }) {
-  const controls = useThree((s) => s.controls) as { target: THREE.Vector3; update: () => void } | null
+/* ---- le rail de caméra : la SEULE façon de bouger ------------------- */
+/* pas d'orbite libre (demande Hugo) : la caméra vit sur un rail, seuls
+   les clics la déplacent — le rail tient sa propre cible et verrouille
+   le regard à chaque frame */
+function Rail({ but, arrive, viseInitiale }: { but: { cam: THREE.Vector3; vise: THREE.Vector3 } | null; arrive: () => void; viseInitiale: [number, number, number] }) {
+  const vise = useRef(new THREE.Vector3(...viseInitiale))
   useFrame(({ camera }) => {
-    if (!but || !controls) return
-    const k = REDUIT ? 1 : 0.09
-    camera.position.lerp(but.cam, k)
-    controls.target.lerp(but.vise, k)
-    controls.update()
-    if (camera.position.distanceTo(but.cam) < 0.005) arrive()
+    if (but) {
+      const k = REDUIT ? 1 : 0.09
+      camera.position.lerp(but.cam, k)
+      vise.current.lerp(but.vise, k)
+      if (camera.position.distanceTo(but.cam) < 0.005) arrive()
+    }
+    camera.lookAt(vise.current)
   })
   return null
 }
@@ -285,7 +289,10 @@ export default function Scene() {
           /* la même nuit que la rue (#22) : fond, brume et palette — vus
              à travers les vitres, les deux scènes doivent se répondre */
           scene.background = new THREE.Color("#08070f")
-          scene.fog = new THREE.Fog("#08070f", 25, 180)
+          /* brume serrée : la ville est COUPÉE à 50 m (fluidité, demande
+             Hugo) — le bord de coupe fond dans la nuit, la skyline du
+             Fond (peinte hors brume) tient l'horizon derrière */
+          scene.fog = new THREE.Fog("#08070f", 15, 70)
           /* poignées des outils de capture (tools/, gates visuels) */
           if (process.env.NODE_ENV !== "production")
             Object.assign(window as object, { __scene: scene, __camera: camera, __gl: gl })
@@ -309,24 +316,15 @@ export default function Scene() {
               soit garée à SA place de la scène précédente (pose (−4,4,
               −0,05, −19), cap π → rotation π, translation −R·pose) */}
           <group rotation-y={Math.PI} position={[-4.4, 0.02, -19]}>
-            <DecorGlb fichier="/prototype/decor-procedural.glb" nuit />
-            <VieNocturne />
+            <DecorGlb fichier="/prototype/decor-habitacle.glb" nuit />
+            <VieNocturne autour={[-4.4, -19, 50]} />
           </group>
           <Fond />
           <NomChrome />
           <Voiture />
           <ClicEcran centre={ECRAN_NATIF.centre} surClic={surEcran} />
-          <Rail but={but} arrive={() => setBut(null)} />
+          <Rail but={but} arrive={() => setBut(null)} viseInitiale={cible} />
         </Suspense>
-        <OrbitControls
-          makeDefault
-          enablePan={false}
-          enableDamping
-          minDistance={0.12}
-          maxDistance={6}
-          maxPolarAngle={Math.PI * 0.6}
-          target={cible}
-        />
       </Canvas>
       <Loader />
     </div>

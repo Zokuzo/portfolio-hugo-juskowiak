@@ -152,7 +152,13 @@ const FEUX: [number, number, number][] = [
   [10.06, 3.18, -5.92],
 ]
 
-export default function VieNocturne({ edition }: { edition?: boolean }) {
+export default function VieNocturne({ edition, autour }: { edition?: boolean; autour?: [number, number, number] }) {
+  /* `autour` [x, z, rayon] : ne monte que les luminaires du quartier —
+     l'habitacle (#23) vit dans une ville COUPÉE au même rayon */
+  const lampes90 = useMemo(
+    () => (autour ? LAMPES.filter(([x, z]) => Math.abs(x - autour[0]) < autour[2] && Math.abs(z - autour[1]) < autour[2]) : LAMPES),
+    [autour],
+  )
   /* mode édition (?edit) : Hugo place lui-même les lentilles des feux —
      clic sur une cage, gizmo drei sur un proxy, la position suit en état
      React ; la touche C copie les coordonnées prêtes à coller ici. */
@@ -176,7 +182,7 @@ export default function VieNocturne({ edition }: { edition?: boolean }) {
 
   return (
     <group>
-      {LAMPES.map(([x, z, y, vrai], i) => (
+      {lampes90.map(([x, z, y, vrai], i) => (
         <Lampe key={i} x={x} z={z} y={y} vrai={vrai} />
       ))}
       {feux.map((pos, i) => (
