@@ -867,6 +867,8 @@ const BOUTONS: [string, number, number][] = [
   ["suivant", 0.0822, 0.03],
   ["precedent", 0.0816, 0.0141],
   ["map", -0.0861, 0.0275],
+  /* déduit de la grille de Hugo : même colonne que MAP NAV, à hauteur de MEDIA */
+  ["setup", -0.0861, 0],
 ]
 
 function ClicEcran({ centre, surClic, surBouton, surDehors, surBrut }: { centre: THREE.Vector3; surClic: (u: number, v: number) => void; surBouton: (nom: string) => void; surDehors: () => void; surBrut?: (dx: number, dy: number) => void }) {
@@ -1176,14 +1178,14 @@ export default function Scene() {
   }
 
   /* les boutons physiques de la façade (demande Hugo) */
-  const CYCLE: ("gps" | "musiques" | "horloge" | "stats")[] = ["gps", "musiques", "horloge", "stats"]
+  const CYCLE: ("hub" | "gps" | "musiques" | "horloge" | "stats")[] = ["hub", "gps", "musiques", "horloge", "stats"]
   const surBouton = (nom: string) => {
     if (nom === "power") {
       setEteint((e) => !e)
       return
     }
     if (eteint) return
-    const va = (m: "gps" | "musiques" | "horloge" | "stats") => {
+    const va = (m: "hub" | "gps" | "musiques" | "horloge" | "stats") => {
       if (!zoome) {
         setBut(VUES.ecran)
         setZoome(true)
@@ -1192,6 +1194,7 @@ export default function Scene() {
     }
     if (nom === "media") va("musiques")
     else if (nom === "map") va("gps")
+    else if (nom === "setup") va("stats")
     else if (nom === "suivant" || nom === "precedent") {
       const i = CYCLE.indexOf(modeEcran as (typeof CYCLE)[number])
       const j = i === -1 ? 0 : (i + (nom === "suivant" ? 1 : CYCLE.length - 1)) % CYCLE.length
