@@ -151,12 +151,16 @@ function Voiture() {
      texture d'origine (atlas 2048² gris, artwork à 180° dans le quart
      haut-gauche — relevé sur la texture extraite), + carte émissive
      noire où seul le Haunter luit */
-  const [art, lueur] = useTexture(["/prototype/haunter-dash.jpg", "/prototype/haunter-dash-lueur.jpg"])
+  const [art, lueur, compteur] = useTexture(["/prototype/haunter-dash.jpg", "/prototype/haunter-dash-lueur.jpg", "/prototype/compteur-violet.jpg"])
   const modele = useMemo(() => {
-    art.flipY = false
-    art.colorSpace = THREE.SRGBColorSpace
-    lueur.flipY = false
-    lueur.colorSpace = THREE.SRGBColorSpace
+    for (const t of [art, lueur, compteur]) {
+      t.flipY = false
+      t.colorSpace = THREE.SRGBColorSpace
+    }
+    /* même piège que le quad Display : les UV du combiné débordent de
+       [0,1] — sans Repeat, le clamp rend le cadran noir */
+    compteur.wrapS = THREE.RepeatWrapping
+    compteur.wrapT = THREE.RepeatWrapping
     /* la robe de nuit COMMUNE aux scènes (Argent, verre teinté, livrée
        neutralisée, feux allumés) — la voiture de l'habitacle est la même
        que celle de la rue (retour Hugo : plus jamais la livrée d'usine) */
@@ -173,6 +177,20 @@ function Voiture() {
         const verre = mat as THREE.MeshPhysicalMaterial
         verre.opacity = 0.4
         verre.color.set("#1a2027")
+      }
+      /* le combiné passe au violet (cohérence néons, demande Hugo) :
+         la texture du cadran est la même à la teinte près (rouge → violet
+         par rotation de teinte, seule couleur saturée du cadran), et les
+         aiguilles suivent */
+      if (mat?.name === "Speedo") {
+        mat.map = compteur
+        mat.emissiveMap = compteur
+        mat.needsUpdate = true
+      }
+      if (mat?.name === "Speedoneedle") {
+        mat.color.set("#1a1022")
+        mat.emissive.set("#a86bff")
+        mat.needsUpdate = true
       }
       if (mat?.name === "DashboardArtwork") {
         mat.map = art
@@ -192,7 +210,7 @@ function Voiture() {
       }
     })
     return scene
-  }, [scene, art, lueur])
+  }, [scene, art, lueur, compteur])
 
   /* plafonnier éteint, suite : l'Environment plein repeignait plastiques
      et planche en fin d'après-midi — l'intérieur reçoit l'environnement
