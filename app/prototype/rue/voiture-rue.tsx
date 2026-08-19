@@ -10,21 +10,21 @@ import * as THREE from "three"
    pur) est le glow pilotable — allumer = monter emissiveIntensity. */
 const ARGENT = "#b4b9bf"
 
-export default function VoitureRue(props: { position?: [number, number, number]; rotationY?: number }) {
-  const { scene } = useGLTF("/prototype/gt86.glb")
-
-  const modele = useMemo(() => {
-    /* même robe qu'au #21 : un matériau NEUF remplace la peinture — muter
-       la couleur ne suffit pas, la texture teal d'usine multiplierait */
-    const peinture = new THREE.MeshPhysicalMaterial({
-      color: ARGENT,
-      metalness: 1.0,
-      roughness: 0.06,
-      clearcoat: 1,
-      clearcoatRoughness: 0.03,
-      envMapIntensity: 1.0,
-    })
-    scene.traverse((o) => {
+/* La robe de nuit commune à toutes les scènes (verdict #21) — partagée
+   avec l'habitacle du #23 : peinture Argent neuve, verre teinté, livrée
+   d'usine neutralisée, feux allumés. Ne touche ni position ni écran. */
+export function habilleNuit(scene: THREE.Group) {
+  /* un matériau NEUF remplace la peinture — muter la couleur ne suffit
+     pas, la texture teal d'usine multiplierait */
+  const peinture = new THREE.MeshPhysicalMaterial({
+    color: ARGENT,
+    metalness: 1.0,
+    roughness: 0.06,
+    clearcoat: 1,
+    clearcoatRoughness: 0.03,
+    envMapIntensity: 1.0,
+  })
+  scene.traverse((o) => {
       const mesh = o as THREE.Mesh
       if (!mesh.isMesh) return
       const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
@@ -83,6 +83,13 @@ export default function VoitureRue(props: { position?: [number, number, number];
         }
       }
     })
+}
+
+export default function VoitureRue(props: { position?: [number, number, number]; rotationY?: number }) {
+  const { scene } = useGLTF("/prototype/gt86.glb")
+
+  const modele = useMemo(() => {
+    habilleNuit(scene)
     /* posée sur ses roues : le bas de la bbox affleure l'asphalte (y=0) */
     const boite = new THREE.Box3().setFromObject(scene)
     scene.position.set(

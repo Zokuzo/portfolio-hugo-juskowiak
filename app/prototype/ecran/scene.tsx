@@ -5,6 +5,8 @@ import { useSearchParams } from "next/navigation"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { Environment, Lightformer, Loader, OrbitControls, useGLTF } from "@react-three/drei"
 import * as THREE from "three"
+import { habilleNuit } from "../rue/voiture-rue"
+import Fond from "../rue/fond"
 
 /* La scène du prototype #23 — l'écran média de l'habitacle. Verdict du
    gate : l'écran NATIF du GT86 (quad `Car_16`, mat `Display`, 512×256 —
@@ -124,14 +126,16 @@ function textureHub(l: number, h: number, sousTitre: string, mode?: "gltf") {
 function Voiture() {
   const { scene } = useGLTF("/prototype/gt86.glb")
   const modele = useMemo(() => {
+    /* la robe de nuit COMMUNE aux scènes (Argent, verre teinté, livrée
+       neutralisée, feux allumés) — la voiture de l'habitacle est la même
+       que celle de la rue (retour Hugo : plus jamais la livrée d'usine) */
+    habilleNuit(scene)
     scene.traverse((o) => {
       const mesh = o as THREE.Mesh
       if (!mesh.isMesh) return
       mesh.castShadow = false
       mesh.receiveShadow = false
       const mat = mesh.material as THREE.MeshStandardMaterial
-      /* le disque d'ombre au sol intégré au modèle n'a rien à faire ici */
-      if (mat?.name === "Floor") mesh.visible = false
       if (mat?.name === "Display") {
         const m = mat.clone()
         const tex = textureHub(512, 256, "écran natif GT86 — 512×256 (2:1)", "gltf")
@@ -220,13 +224,16 @@ export default function Scene() {
   }
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "#0a0912" }}>
+    <div style={{ position: "fixed", inset: 0, background: "#08070f" }}>
       <Canvas
         camera={{ position: cam, fov: 45 }}
         dpr={[1, 1.5]}
         gl={{ powerPreference: "high-performance" }}
         onCreated={({ scene, camera, gl }) => {
-          scene.background = new THREE.Color("#0a0912")
+          /* la même nuit que la rue (#22) : fond, brume et palette — vus
+             à travers les vitres, les deux scènes doivent se répondre */
+          scene.background = new THREE.Color("#08070f")
+          scene.fog = new THREE.Fog("#08070f", 25, 180)
           /* poignées des outils de capture (tools/, gates visuels) */
           if (process.env.NODE_ENV !== "production")
             Object.assign(window as object, { __scene: scene, __camera: camera, __gl: gl })
@@ -244,6 +251,17 @@ export default function Scene() {
           <ambientLight intensity={0.3} color="#a9b4d4" />
           {/* la lueur de l'écran mange le tableau de bord */}
           <pointLight position={[-0.075, 0.9, 0.18]} color="#ffb98a" intensity={0.6} distance={1.4} decay={2} />
+          {/* le monde derrière les vitres : le fond de la rue (#22) —
+              dôme, skyline, sol d'horizon, lune */}
+          <Fond />
+          {/* l'asphalte sous les roues (bas des roues sondé à y=0,027) et
+              le lampadaire qui le révèle : sans eux la voiture flottait
+              sur du noir en orbite — même vocabulaire que la rue */}
+          <mesh position={[0, 0.026, 0]} rotation-x={-Math.PI / 2}>
+            <circleGeometry args={[9, 32]} />
+            <meshStandardMaterial color="#1e1b23" roughness={0.95} />
+          </mesh>
+          <spotLight position={[1.8, 9, -1.5]} color="#ffd9a2" intensity={70} angle={0.5} penumbra={0.9} decay={1.7} distance={25} />
           <Voiture />
           <ClicEcran centre={ECRAN_NATIF.centre} surClic={surEcran} />
           <Rail but={but} arrive={() => setBut(null)} />
