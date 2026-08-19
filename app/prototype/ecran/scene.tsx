@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
-import { Center, Environment, Lightformer, Loader, SpotLight as SpotVolumetrique, Text3D, useGLTF } from "@react-three/drei"
+import { Center, Environment, Lightformer, Loader, SpotLight as SpotVolumetrique, Text3D, useGLTF, useTexture } from "@react-three/drei"
 import * as THREE from "three"
 import { habilleNuit } from "../rue/voiture-rue"
 import Fond from "../rue/fond"
@@ -128,7 +128,17 @@ function textureHub(l: number, h: number, sousTitre: string, mode?: "gltf") {
    sort du code avec son GLB (l'historique git les garde) */
 function Voiture() {
   const { scene } = useGLTF("/prototype/gt86.glb")
+  /* la planche passagère troque sa livrée Miku pour le Haunter (choix
+     Hugo — raccord au violet des néons) : recomposé DANS le repère de la
+     texture d'origine (atlas 2048² gris, artwork à 180° dans le quart
+     haut-gauche — relevé sur la texture extraite), + carte émissive
+     noire où seul le Haunter luit */
+  const [art, lueur] = useTexture(["/prototype/haunter-dash.jpg", "/prototype/haunter-dash-lueur.jpg"])
   const modele = useMemo(() => {
+    art.flipY = false
+    art.colorSpace = THREE.SRGBColorSpace
+    lueur.flipY = false
+    lueur.colorSpace = THREE.SRGBColorSpace
     /* la robe de nuit COMMUNE aux scènes (Argent, verre teinté, livrée
        neutralisée, feux allumés) — la voiture de l'habitacle est la même
        que celle de la rue (retour Hugo : plus jamais la livrée d'usine) */
@@ -146,6 +156,13 @@ function Voiture() {
         verre.opacity = 0.4
         verre.color.set("#1a2027")
       }
+      if (mat?.name === "DashboardArtwork") {
+        mat.map = art
+        mat.emissiveMap = lueur
+        mat.emissive = new THREE.Color("#ffffff")
+        mat.emissiveIntensity = 0.55
+        mat.needsUpdate = true
+      }
       if (mat?.name === "Display") {
         const m = mat.clone()
         const tex = textureHub(512, 256, "écran natif GT86 — 512×256 (2:1)", "gltf")
@@ -157,7 +174,7 @@ function Voiture() {
       }
     })
     return scene
-  }, [scene])
+  }, [scene, art, lueur])
 
   /* plafonnier éteint, suite : l'Environment plein repeignait plastiques
      et planche en fin d'après-midi — l'intérieur reçoit l'environnement
@@ -167,7 +184,7 @@ function Voiture() {
   useFrame(({ scene: sc }) => {
     if (envPose.current || !sc.environment) return
     envPose.current = true
-    const INTERIEUR = new Set(["MoreInterior", "InteriorBlack", "InteriorStuff", "SilverPlastic", "Pedals", "DashboardArtwork", "Carbon"])
+    const INTERIEUR = new Set(["MoreInterior", "InteriorBlack", "InteriorStuff", "SilverPlastic", "Pedals", "Carbon"])
     modele.traverse((o) => {
       const mesh = o as THREE.Mesh
       if (!mesh.isMesh) return
@@ -280,6 +297,47 @@ function NomChrome() {
   )
 }
 
+/* ---- les néons ------------------------------------------------------ */
+/* sous caisse : spots PLONGEANTS — la lumière va au sol, plus rien ne
+   remonte dans l'habitacle (retour Hugo) */
+function NeonsSol() {
+  const cibles = useMemo(() => Array.from({ length: 4 }, () => new THREE.Object3D()), [])
+  const points: [number, number][] = [[-0.075, 1.5], [-0.075, -1.4], [-0.7, 0.05], [0.55, 0.05]]
+  return (
+    <group>
+      {points.map(([x, z], i) => (
+        <group key={i}>
+          <primitive object={cibles[i]} position={[x, 0, z]} />
+          <spotLight position={[x, 0.28, z]} target={cibles[i]} color="#8a3cff" intensity={5} angle={1.1} penumbra={0.7} distance={1.6} decay={2} />
+        </group>
+      ))}
+    </group>
+  )
+}
+
+/* interstices de l'habitacle : accents violets locaux (repose-pieds,
+   flancs de console) — courte portée, l'habitacle reste éteint */
+function NeonsInterieur() {
+  const points: [number, number, number][] = [
+    [0.3, 0.38, 0.5],
+    [-0.5, 0.38, 0.5],
+    [0.1, 0.48, -0.12],
+    [-0.28, 0.48, -0.12],
+  ]
+  return (
+    <group>
+      {points.map(([x, y, z], i) => (
+        <group key={i}>
+          <sprite position={[x, y, z]} scale={[0.16, 0.16, 1]}>
+            <spriteMaterial map={halo()} color="#9b4dff" transparent opacity={0.5} blending={THREE.AdditiveBlending} depthWrite={false} />
+          </sprite>
+          <pointLight position={[x, y, z]} color="#8a3cff" intensity={0.35} distance={0.5} decay={2} />
+        </group>
+      ))}
+    </group>
+  )
+}
+
 /* ---- le rail de caméra : la SEULE façon de bouger ------------------- */
 /* pas d'orbite libre (demande Hugo) : la caméra vit sur un rail, seuls
    les clics la déplacent — le rail tient sa propre cible et verrouille
@@ -373,8 +431,8 @@ export default function Scene() {
             <planeGeometry args={[3.3, 5.6]} />
             <meshBasicMaterial map={halo()} color="#7a2cf0" transparent opacity={0.55} blending={THREE.AdditiveBlending} depthWrite={false} />
           </mesh>
-          <pointLight position={[-0.075, 0.08, 1.7]} color="#8a3cff" intensity={2} distance={2.6} decay={2} />
-          <pointLight position={[-0.075, 0.08, -1.5]} color="#8a3cff" intensity={2} distance={2.6} decay={2} />
+          <NeonsSol />
+          <NeonsInterieur />
           <NomChrome />
           <Voiture />
           <ClicEcran centre={ECRAN_NATIF.centre} surClic={surEcran} />
