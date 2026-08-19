@@ -776,6 +776,16 @@ function Voiture({ ecran }: { ecran: ReturnType<typeof creeEcran> }) {
         mat.emissive.set("#a86bff")
         mat.needsUpdate = true
       }
+      /* rétroéclairage concentré PAR BOUTON (demande Hugo) : InteriorStuff
+         porte toutes les faces de boutons (vérifié au flash magenta) — sa
+         propre texture en carte émissive violette fait briller les
+         sérigraphies claires, les fonds sombres restent sourds */
+      if (mat?.name === "InteriorStuff") {
+        mat.emissiveMap = mat.map
+        mat.emissive = new THREE.Color("#8a5cff")
+        mat.emissiveIntensity = 0.55
+        mat.needsUpdate = true
+      }
       if (mat?.name === "DashboardArtwork") {
         mat.map = art
         mat.emissiveMap = lueur
@@ -846,11 +856,11 @@ function Voiture({ ecran }: { ecran: ReturnType<typeof creeEcran> }) {
 /* les boutons physiques de la façade, en coordonnées plan (d.x, dy) —
    relevés sur la capture de Hugo (dalle 0,13 m ↔ 544 px → 4185 px/m) */
 const BOUTONS: [string, number, number][] = [
-  ["power", 0.092, 0.037],
-  ["media", 0.087, 0.003],
-  ["suivant", 0.087, -0.0115],
-  ["precedent", 0.087, -0.028],
-  ["map", -0.09, -0.028],
+  ["power", 0.085, 0.0306],
+  ["media", 0.08, 0.0],
+  ["suivant", 0.0795, -0.0131],
+  ["precedent", 0.0798, -0.0273],
+  ["map", -0.0817, -0.0271],
 ]
 
 function ClicEcran({ centre, surClic, surBouton, surDehors }: { centre: THREE.Vector3; surClic: (u: number, v: number) => void; surBouton: (nom: string) => void; surDehors: () => void }) {
@@ -883,7 +893,7 @@ function ClicEcran({ centre, surClic, surBouton, surDehors }: { centre: THREE.Ve
       if (Math.abs(d.x) < 0.072 && Math.abs(dy) < 0.04) {
         refClic.current((0.065 - d.x) / 0.13, (0.035 - dy) / 0.07)
       } else {
-        const bouton = BOUTONS.find(([, bx, by]) => Math.abs(d.x - bx) < 0.014 && Math.abs(dy - by) < 0.0085)
+        const bouton = BOUTONS.find(([, bx, by]) => Math.abs(d.x - bx) < 0.011 && Math.abs(dy - by) < 0.007)
         if (bouton) refBouton.current(bouton[0])
         else if (Math.abs(d.x) > 0.16 || Math.abs(dy) > 0.1) {
           /* frange neutre entre la façade et le « dehors » : un clic à
@@ -986,10 +996,6 @@ function NeonsInterieur() {
     [-0.5, 0.38, 0.5],
     [0.1, 0.48, -0.12],
     [-0.28, 0.48, -0.12],
-    /* le rétroéclairage de l'îlot (demande Hugo) : la façade du poste et
-       le bloc clim baignent dans un violet discret */
-    [-0.075, 0.76, 0.42],
-    [-0.075, 0.6, 0.44],
   ]
   return (
     <group>
