@@ -138,6 +138,13 @@ function Voiture() {
       mesh.castShadow = false
       mesh.receiveShadow = false
       const mat = mesh.material as THREE.MeshStandardMaterial
+      /* pare-brise éclairci pour laisser passer le nom (demande Hugo) —
+         réglage propre à l'habitacle, la rue garde son verre à 0,8 */
+      if (mat?.name === "Glass") {
+        const verre = mat as THREE.MeshPhysicalMaterial
+        verre.opacity = 0.4
+        verre.color.set("#1a2027")
+      }
       if (mat?.name === "Display") {
         const m = mat.clone()
         const tex = textureHub(512, 256, "écran natif GT86 — 512×256 (2:1)", "gltf")
@@ -346,10 +353,7 @@ export default function Scene() {
           <hemisphereLight args={["#232038", "#0a080e", 0.22]} />
           <ambientLight intensity={0.21} color="#a9b4d4" />
           {/* la lueur de l'écran mange le tableau de bord */}
-          {/* la lueur de l'écran : locale et honnête — à 0,6/1,4 m elle
-              faisait plafonnier sur tout le poste (retour Hugo) */}
-          <pointLight position={[-0.075, 0.85, 0.24]} color="#ffb98a" intensity={0.3} distance={0.65} decay={2} />
-          {/* le monde derrière les vitres : LA ville de la rue (#22), pas
+                    {/* le monde derrière les vitres : LA ville de la rue (#22), pas
               une silhouette — le décor entier avec ses fenêtres émissives,
               ses 90 luminaires et ses feux, transformé pour que la voiture
               soit garée à SA place de la scène précédente (pose (−4,4,
