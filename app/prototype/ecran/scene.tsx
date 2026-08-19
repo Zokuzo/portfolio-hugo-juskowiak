@@ -649,7 +649,8 @@ function creeEcran() {
     },
     gps() {
       etat.mode = "gps"
-      etat.choix = null
+      /* un re-render ne doit pas raturer un départ déjà lancé */
+      if (etat.transition === 0) etat.choix = null
       peint()
     },
     musiques() {
@@ -673,13 +674,14 @@ function creeEcran() {
     },
     /* le clic sur la carte GPS, interprété selon l'état : rangées du
        sélecteur, ou ‹ retour */
+    /* zones CALQUÉES sur le dessin (le panneau vit en x ∈ [0,2 ; 0,8], la
+       rangée MAISON en y ∈ [0,535 ; 0,69], TRAVAIL en [0,72 ; 0,875]) */
     clicGps(uv: number, vv: number): "retour" | "maison" | "travail" | null {
-      if (uv < 0.2 && vv < 0.3) return "retour"
+      if (uv < 0.22 && vv < 0.26) return "retour"
       if (etat.choix !== null) return null
-      /* le panneau : x ∈ [0.2, 0.8], rangées à 42-58 % et 60-76 % */
-      if (uv < 0.2 || uv > 0.8) return null
-      if (vv > 0.5 && vv < 0.62) return "maison"
-      if (vv > 0.68 && vv < 0.82) return "travail"
+      if (uv < 0.18 || uv > 0.82) return null
+      if (vv >= 0.5 && vv < 0.705) return "maison"
+      if (vv >= 0.705 && vv <= 0.9) return "travail"
       return null
     },
     tic() {
@@ -718,7 +720,7 @@ function creeEcran() {
       const pas = () => {
         ;(window as unknown as { __pas: number }).__pas = ((window as unknown as { __pas?: number }).__pas ?? 0) + 1
         if (etat.mode !== "gps" || !etat.choix) return
-        etat.transition = Math.min(1, (performance.now() - debut) / 1500)
+        etat.transition = Math.min(1, (performance.now() - debut) / 2600)
         peint()
         if (etat.transition < 1) requestAnimationFrame(pas)
         else fini()
@@ -1133,10 +1135,13 @@ function ClicEcran({ centre, surClic, surBouton, surDehors, surBrut }: { centre:
         if (Math.abs(d.x) < 0.16 && Math.abs(dy) < 0.1) refBrut.current(d.x, dy)
         return
       }
-      /* dalle 13×7 cm : en coordonnées écran, u croît vers la droite du
-         conducteur (monde −x) — calibré au clic sur la tuile GPS */
+      /* dalle 13×7 cm : u croît vers la droite du conducteur (monde −x),
+         et v suit le DESSIN (0 en haut du canvas) — l'axe vertical du plan
+         pointe vers le bas, d'où le + : les zones du GPS étaient posées
+         tête-bêche par rapport aux rangées peintes (bug des destinations
+         non cliquables) */
       if (Math.abs(d.x) < 0.072 && Math.abs(dy) < 0.04) {
-        refClic.current((0.065 - d.x) / 0.13, (0.035 - dy) / 0.07)
+        refClic.current((0.065 - d.x) / 0.13, (dy + 0.035) / 0.07)
       } else {
         const bouton = BOUTONS.find(([, bx, by]) => Math.abs(d.x - bx) < 0.011 && Math.abs(dy - by) < 0.007)
         if (bouton) refBouton.current(bouton[0])
@@ -1321,14 +1326,40 @@ function Warning({ actif }: { actif: boolean }) {
 /* pas d'orbite libre (demande Hugo) : la caméra vit sur un rail, seuls
    les clics la déplacent — le rail tient sa propre cible et verrouille
    le regard à chaque frame */
+const DUREE_VOL = 1.1 /* secondes */
+/* douce au départ ET à l'arrivée : c'est l'accélération constante du lerp
+   par frame qui donnait ces à-coups quand la cadence tombait */
+const adoucit = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
+
 function Rail({ but, arrive, viseInitiale }: { but: { cam: THREE.Vector3; vise: THREE.Vector3 } | null; arrive: () => void; viseInitiale: [number, number, number] }) {
+  const gl = useThree((s) => s.gl)
   const vise = useRef(new THREE.Vector3(...viseInitiale))
-  useFrame(({ camera }) => {
-    if (but) {
-      const k = REDUIT ? 1 : 0.09
-      camera.position.lerp(but.cam, k)
-      vise.current.lerp(but.vise, k)
-      if (camera.position.distanceTo(but.cam) < 0.005) arrive()
+  /* le vol est piloté par le TEMPS, pas par le nombre d'images : même
+     trajectoire à 20 ou à 120 images/s */
+  const vol = useRef<{ depuisCam: THREE.Vector3; depuisVise: THREE.Vector3; t: number } | null>(null)
+  useFrame(({ camera, clock }, delta) => {
+    void clock
+    if (but && !vol.current) {
+      vol.current = { depuisCam: camera.position.clone(), depuisVise: vise.current.clone(), t: 0 }
+      /* moins de pixels PENDANT le vol : c'est la charge du décor qui
+         faisait tomber la cadence et hacher le mouvement (demande Hugo) */
+      gl.setPixelRatio(1)
+    }
+    if (!but && vol.current) vol.current = null
+    if (but && vol.current) {
+      const v = vol.current
+      /* delta plafonné : une image lente ne doit pas téléporter la caméra
+         (mesuré : un seul pas de 0,55 au lieu d'une glissade). Plafond
+         large — trop serré, le vol n'avance plus quand la cadence tombe */
+      v.t = REDUIT ? 1 : Math.min(1, v.t + Math.min(delta, 1 / 12) / DUREE_VOL)
+      const e = adoucit(v.t)
+      camera.position.lerpVectors(v.depuisCam, but.cam, e)
+      vise.current.lerpVectors(v.depuisVise, but.vise, e)
+      if (v.t >= 1) {
+        vol.current = null
+        gl.setPixelRatio(Math.min(window.devicePixelRatio, 1.5))
+        arrive()
+      }
     }
     camera.lookAt(vise.current)
   })
@@ -1413,10 +1444,13 @@ export default function Scene() {
      puis navigation réelle — Maison → la home, Travail → /work */
   useEffect(() => {
     ecran.surDepart((dest) => {
+      /* ?nodepart : l'itinéraire reste à l'écran sans partir — pour les
+         gates visuels (le départ file trop vite pour être capturé) */
+      if (params.get("nodepart") !== null) return
       setPartir(true)
       setTimeout(() => routeur.push(dest === "maison" ? "/" : "/work"), 650)
     })
-  }, [ecran, routeur])
+  }, [ecran, routeur, params])
 
   const brut = params.get("cam")?.split(",").map(Number)
   const cam: [number, number, number] =
