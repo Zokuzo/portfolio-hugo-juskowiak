@@ -7,6 +7,7 @@ import { Center, Environment, Lightformer, Loader, SpotLight as SpotVolumetrique
 import * as THREE from "three"
 import { habilleNuit } from "../rue/voiture-rue"
 import Fond from "../rue/fond"
+import { halo } from "../rue/rue"
 import DecorGlb from "../rue/decor-glb"
 import VieNocturne from "../rue/ville-vivante"
 
@@ -174,7 +175,10 @@ function Voiture() {
         const mat = m as THREE.MeshStandardMaterial
         if (!mat || !INTERIEUR.has(mat.name)) continue
         mat.envMap = sc.environment
-        mat.envMapIntensity = 0.12
+        mat.envMapIntensity = 0.1
+        /* et la teinte elle-même descend d'un cran : l'ambiante de nuit
+           suffisait encore à révéler les plastiques (retour Hugo) */
+        mat.color.multiplyScalar(0.5)
         mat.needsUpdate = true
       }
     })
@@ -363,6 +367,14 @@ export default function Scene() {
             <VieNocturne autour={[-4.4, -19, 50]} />
           </group>
           <Fond />
+          {/* néons violets sous caisse (demande Hugo) : nappe additive au
+              sol + deux lampes basses qui teintent l'asphalte autour */}
+          <mesh position={[-0.075, 0.045, 0.05]} rotation-x={-Math.PI / 2}>
+            <planeGeometry args={[3.3, 5.6]} />
+            <meshBasicMaterial map={halo()} color="#7a2cf0" transparent opacity={0.55} blending={THREE.AdditiveBlending} depthWrite={false} />
+          </mesh>
+          <pointLight position={[-0.075, 0.08, 1.7]} color="#8a3cff" intensity={2} distance={2.6} decay={2} />
+          <pointLight position={[-0.075, 0.08, -1.5]} color="#8a3cff" intensity={2} distance={2.6} decay={2} />
           <NomChrome />
           <Voiture />
           <ClicEcran centre={ECRAN_NATIF.centre} surClic={surEcran} />
