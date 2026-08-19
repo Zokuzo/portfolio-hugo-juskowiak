@@ -204,26 +204,26 @@ function NomChrome() {
           bevelSize={0.01}
         >
           HUGO JUSKOWIAK
-          <meshStandardMaterial color="#e8ecf2" metalness={0.9} roughness={0.28} envMapIntensity={1.6} />
+          <meshStandardMaterial color="#e8ecf2" metalness={0.9} roughness={0.28} envMapIntensity={1.8} emissive="#fff3dc" emissiveIntensity={0.2} />
         </Text3D>
       </Center>
       <Center position={[-0.45, 0.82, 13]} rotation-y={Math.PI}>
         <Text3D font="/prototype/helvetiker_regular.typeface.json" size={0.26} height={0.05} curveSegments={6}>
           SDE / IA Engineer
-          <meshStandardMaterial color="#cfd5de" metalness={0.9} roughness={0.3} envMapIntensity={1.5} />
+          <meshStandardMaterial color="#cfd5de" metalness={0.9} roughness={0.3} envMapIntensity={1.7} emissive="#fff3dc" emissiveIntensity={0.16} />
         </Text3D>
       </Center>
       {([1, -1] as const).map((c, i) => (
         <group key={c}>
-          <primitive object={cibles[i]} position={[-0.45 + c * 0.4, 1.15, 13]} />
+          <primitive object={cibles[i]} position={[-0.45 + c * 1.3, 1.25, 13]} />
           <SpotVolumetrique
             position={[-0.075 + c * 0.62, 0.76, 1.85]}
             target={cibles[i]}
             color="#ffeecb"
-            intensity={300}
-            angle={0.32}
+            intensity={900}
+            angle={0.38}
             penumbra={0.6}
-            decay={1.6}
+            decay={1.2}
             distance={30}
             attenuation={10}
             anglePower={5}
