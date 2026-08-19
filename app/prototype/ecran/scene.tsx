@@ -6,14 +6,12 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { Environment, Lightformer, Loader, OrbitControls, useGLTF } from "@react-three/drei"
 import * as THREE from "three"
 
-/* La scène du prototype #23 — l'écran média de l'habitacle, deux options
-   au banc (gate œil Hugo, la décision fixe ratio + résolution de l'UI
-   écran pour le GPS #26 et les Musiques #33) :
-   - défaut : l'écran NATIF du GT86 — le quad `Car_16` (mat `Display`,
-     texture 512×256, ~13×7 cm) s'habille d'une maquette de hub ;
-   - ?variant=psp : la PSP (échelle réelle 18,8 cm) posée en écran
-     embarqué sur la console, dalle 16:9.
-   Clic sur l'écran → la caméra vient s'y cadrer ; re-clic → retour.
+/* La scène du prototype #23 — l'écran média de l'habitacle. Verdict du
+   gate : l'écran NATIF du GT86 (quad `Car_16`, mat `Display`, 512×256 —
+   le ratio 2:1 est gravé pour l'UI écran, GPS #26 et Musiques #33) ; la
+   variante PSP a perdu et est sortie du code avec son GLB.
+   Vue par défaut : ASSIS CONDUCTEUR (demande Hugo) ; clic sur l'écran →
+   la caméra vient s'y cadrer ; re-clic → retour au siège.
    Conduite à droite (Speedo à x>0) — relevé de l'analyse #16. */
 
 const REDUIT =
@@ -28,7 +26,7 @@ const ECRAN_NATIF = {
 }
 
 /* ---- la maquette de hub peinte en canvas --------------------------- */
-/* même UI aux deux ratios : c'est exactement ce que le gate doit juger */
+/* la maquette de hub jugée au gate — le vrai hub arrive avec #32 */
 function textureHub(l: number, h: number, sousTitre: string, mode?: "gltf") {
   const c = document.createElement("canvas")
   c.width = l
@@ -111,7 +109,7 @@ function textureHub(l: number, h: number, sousTitre: string, mode?: "gltf") {
   /* orientation RELEVÉE en capture, pas déduite : le quad Display du GT86
      échantillonne v ∈ [1,2] → Repeat obligatoire (le clamp étalait la
      dernière rangée en aplat), et le flipY par défaut remet l'image à
-     l'endroit. La dalle PSP (quad maison) vit avec les défauts. */
+     l'endroit.  */
   if (mode === "gltf") {
     tex.wrapS = THREE.RepeatWrapping
     tex.wrapT = THREE.RepeatWrapping
@@ -119,8 +117,11 @@ function textureHub(l: number, h: number, sousTitre: string, mode?: "gltf") {
   return tex
 }
 
-/* ---- la voiture, écran natif habillé ou en veille ------------------ */
-function Voiture({ variante }: { variante: "natif" | "psp" }) {
+/* ---- la voiture, écran natif habillé --------------------------------- */
+/* verdict Hugo : l'écran NATIF gagne — le ratio 2:1 (512×256) est gravé
+   pour l'UI écran (GPS #26, Musiques #33) ; la PSP a perdu le gate et
+   sort du code avec son GLB (l'historique git les garde) */
+function Voiture() {
   const { scene } = useGLTF("/prototype/gt86.glb")
   const modele = useMemo(() => {
     scene.traverse((o) => {
@@ -133,59 +134,17 @@ function Voiture({ variante }: { variante: "natif" | "psp" }) {
       if (mat?.name === "Floor") mesh.visible = false
       if (mat?.name === "Display") {
         const m = mat.clone()
-        if (variante === "natif") {
-          const tex = textureHub(512, 256, "écran natif GT86 — 512×256 (2:1)", "gltf")
-          m.map = tex
-          m.emissiveMap = tex
-          m.emissive = new THREE.Color("#ffffff")
-          m.emissiveIntensity = 1.1
-        } else {
-          /* écran natif VRAIMENT éteint sous la PSP : l'émissif en veille
-             ne suffit pas, la base éclairée par la lueur d'écran rejouait
-             l'UI d'origine — on noircit aussi la teinte */
-          m.emissiveIntensity = 0.04
-          m.color = new THREE.Color("#16161c")
-        }
+        const tex = textureHub(512, 256, "écran natif GT86 — 512×256 (2:1)", "gltf")
+        m.map = tex
+        m.emissiveMap = tex
+        m.emissive = new THREE.Color("#ffffff")
+        m.emissiveIntensity = 1.1
         mesh.material = m
       }
     })
     return scene
-  }, [scene, variante])
-  return <primitive object={modele} />
-}
-
-/* ---- la PSP en écran embarqué -------------------------------------- */
-function Psp() {
-  const { scene } = useGLTF("/prototype/psp.glb")
-  const modele = useMemo(() => {
-    scene.traverse((o) => {
-      const mesh = o as THREE.Mesh
-      if (!mesh.isMesh) return
-      mesh.castShadow = false
-      mesh.receiveShadow = false
-      /* notre dalle remplace l'écran du modèle : son quad éteint et sa
-         vitre crasseuse (grime cuit dans l'atlas) brouillaient l'UI */
-      if (/display|glass/i.test(mesh.name)) mesh.visible = false
-    })
-    return scene
   }, [scene])
-  const ui = useMemo(() => textureHub(512, 290, "PSP embarquée — dalle 16:9"), [])
-  /* dockée SUR la façade du poste natif, basculée avec la planche */
-  return (
-    <>
-      <group position={[-0.075, 0.792, 0.322]} rotation={[ECRAN_NATIF.bascule, Math.PI, 0]}>
-        <primitive object={modele} />
-      </group>
-      {/* la dalle vivante : un quad maison calqué sur le quad display du
-          modèle, SONDÉ en monde : 11,0×6,4 cm centré (−0,075, 0,792,
-          0,312), même bascule que la planche (ses UV à lui pointent dans
-          l'atlas 4096 — remap plus coûteux qu'un quad, recherche #16) */}
-      <mesh position={[-0.075, 0.7919, 0.3099]} rotation={[ECRAN_NATIF.bascule, Math.PI, 0]}>
-        <planeGeometry args={[0.104, 0.059]} />
-        <meshBasicMaterial map={ui} toneMapped={false} />
-      </mesh>
-    </>
-  )
+  return <primitive object={modele} />
 }
 
 /* ---- le clic écran : écouteur DOM + raycast maison ------------------ */
@@ -235,29 +194,28 @@ function Rail({ but, arrive }: { but: { cam: THREE.Vector3; vise: THREE.Vector3 
 }
 
 const VUES = {
-  /* assis côté conducteur (à droite), l'écran dans le champ */
-  habitacle: { cam: new THREE.Vector3(0.32, 1.04, -0.42), vise: new THREE.Vector3(-0.1, 0.78, 0.4) },
+  /* ASSIS au poste de conduite (à droite), le regard vers la route —
+     volant, combiné et écran dans le champ */
+  conducteur: { cam: new THREE.Vector3(0.3, 1.05, -0.42), vise: new THREE.Vector3(0.0, 0.8, 1.2) },
   /* le nez sur l'écran, dans son axe incliné */
-  natif: { cam: new THREE.Vector3(-0.075, 0.9, -0.05), vise: ECRAN_NATIF.centre.clone() },
-  psp: { cam: new THREE.Vector3(-0.075, 0.98, -0.08), vise: new THREE.Vector3(-0.075, 0.86, 0.31) },
+  ecran: { cam: new THREE.Vector3(-0.075, 0.9, -0.05), vise: ECRAN_NATIF.centre.clone() },
 }
 
 export default function Scene() {
   const params = useSearchParams()
-  const variante = params.get("variant") === "psp" ? "psp" : "natif"
   const [zoome, setZoome] = useState(false)
   const [but, setBut] = useState<{ cam: THREE.Vector3; vise: THREE.Vector3 } | null>(null)
 
   const brut = params.get("cam")?.split(",").map(Number)
   const cam: [number, number, number] =
-    brut && brut.length === 3 && brut.every(Number.isFinite) ? (brut as [number, number, number]) : VUES.habitacle.cam.toArray() as [number, number, number]
+    brut && brut.length === 3 && brut.every(Number.isFinite) ? (brut as [number, number, number]) : VUES.conducteur.cam.toArray() as [number, number, number]
   const brutVise = params.get("vise")?.split(",").map(Number)
   const cible: [number, number, number] =
-    brutVise && brutVise.length === 3 && brutVise.every(Number.isFinite) ? (brutVise as [number, number, number]) : VUES.habitacle.vise.toArray() as [number, number, number]
+    brutVise && brutVise.length === 3 && brutVise.every(Number.isFinite) ? (brutVise as [number, number, number]) : VUES.conducteur.vise.toArray() as [number, number, number]
 
   const surEcran = () => {
     if (process.env.NODE_ENV !== "production") (window as unknown as { __clics: number }).__clics = ((window as unknown as { __clics?: number }).__clics ?? 0) + 1
-    setBut(zoome ? VUES.habitacle : VUES[variante])
+    setBut(zoome ? VUES.conducteur : VUES.ecran)
     setZoome(!zoome)
   }
 
@@ -285,18 +243,9 @@ export default function Scene() {
           <hemisphereLight args={["#2a2440", "#0a080e", 0.5]} />
           <ambientLight intensity={0.3} color="#a9b4d4" />
           {/* la lueur de l'écran mange le tableau de bord */}
-          <pointLight
-            position={[-0.075, 0.9, 0.18]}
-            color={variante === "psp" ? "#9db4e8" : "#ffb98a"}
-            intensity={0.6}
-            distance={1.4}
-            decay={2}
-          />
-          <Voiture variante={variante} />
-          {variante === "psp" && <Psp />}
-          {/* la zone cliquable de l'écran : un plan invisible posé sur la
-              dalle active — le seul point chaud de la scène */}
-          <ClicEcran centre={variante === "psp" ? VUES.psp.vise : ECRAN_NATIF.centre} surClic={surEcran} />
+          <pointLight position={[-0.075, 0.9, 0.18]} color="#ffb98a" intensity={0.6} distance={1.4} decay={2} />
+          <Voiture />
+          <ClicEcran centre={ECRAN_NATIF.centre} surClic={surEcran} />
           <Rail but={but} arrive={() => setBut(null)} />
         </Suspense>
         <OrbitControls
