@@ -94,26 +94,31 @@ function creeEcran() {
     g.textAlign = "left"
   }
 
-  /* ---- la carte GPS (ticket #26) : fourche Maison / Travail ---------- */
-  const trace = (chemin: () => void, choisi: boolean, estompe: boolean) => {
+  /* ---- la carte GPS (ticket #26), façon Waze nuit -------------------- */
+  /* codes relevés : itinéraire optimal VIOLET (le code Waze), carte de
+     nuit sombre, rubans arrondis, ballons-marqueurs à liseré blanc,
+     chrome flottant en pastilles */
+  const ruban = (chemin: () => void, casing: string, lc: number, coeur: string, lcoeur: number) => {
+    g.lineCap = "round"
+    g.lineJoin = "round"
     g.beginPath()
     chemin()
+    g.strokeStyle = casing
+    g.lineWidth = lcoeur + lc
+    g.stroke()
+    g.beginPath()
+    chemin()
+    g.strokeStyle = coeur
+    g.lineWidth = lcoeur
+    g.stroke()
+  }
+
+  const pointsQuiAvancent = (chemin: () => void) => {
+    /* l'astuce des points ronds : un dash quasi nul à bouts ronds */
     g.lineCap = "round"
-    g.strokeStyle = "#181226"
-    g.lineWidth = u * 7.5
-    g.stroke()
-    g.strokeStyle = estompe ? "rgba(120, 96, 190, 0.25)" : choisi ? "#d8beff" : "#8a5fd6"
-    if (choisi) {
-      g.shadowColor = "#a86bff"
-      g.shadowBlur = u * 5
-    }
-    g.lineWidth = u * 4
-    g.stroke()
-    g.shadowBlur = 0
-    /* ligne centrale pointillée, animée */
-    g.strokeStyle = estompe ? "rgba(220, 210, 250, 0.15)" : "rgba(236, 226, 255, 0.75)"
-    g.lineWidth = u * 0.9
-    g.setLineDash([u * 3.2, u * 4])
+    g.strokeStyle = "rgba(255, 252, 255, 0.9)"
+    g.lineWidth = u * 2
+    g.setLineDash([0.01, u * 6])
     g.lineDashOffset = -etat.tic
     g.beginPath()
     chemin()
@@ -121,177 +126,222 @@ function creeEcran() {
     g.setLineDash([])
   }
 
-  const pin = (x: number, y: number, titre: string, teinte: string, choisi: boolean, glyphe: (cx: number, cy: number, r: number) => void) => {
-    const r = u * 9
-    if (choisi) {
-      g.shadowColor = teinte
-      g.shadowBlur = u * 7
-    }
+  const ballon = (x: number, y: number, boutX: number, boutY: number, titre: string, teinte: string, choisi: boolean, glyphe: (cx: number, cy: number, r: number) => void) => {
+    const r = u * 8.5
+    g.save()
+    g.shadowColor = "rgba(0, 0, 0, 0.55)"
+    g.shadowBlur = u * 4
+    g.shadowOffsetY = u * 1.5
     g.beginPath()
     g.arc(x, y, r, 0, Math.PI * 2)
-    g.fillStyle = "rgba(14, 10, 26, 0.9)"
-    g.fill()
-    g.strokeStyle = teinte
-    g.lineWidth = u * 1.6
-    g.stroke()
-    g.shadowBlur = 0
-    g.strokeStyle = teinte
     g.fillStyle = teinte
-    glyphe(x, y, r * 0.55)
+    g.fill()
+    g.beginPath()
+    g.moveTo(x - r * 0.42, y + r * 0.82)
+    g.lineTo(boutX, boutY)
+    g.lineTo(x + r * 0.42, y + r * 0.82)
+    g.closePath()
+    g.fill()
+    g.restore()
+    g.beginPath()
+    g.arc(x, y, r, 0, Math.PI * 2)
+    g.strokeStyle = choisi ? "#ffffff" : "rgba(255, 255, 255, 0.85)"
+    g.lineWidth = choisi ? u * 1.8 : u * 1.2
+    g.stroke()
+    g.strokeStyle = "#ffffff"
+    g.fillStyle = "#ffffff"
+    glyphe(x, y, r * 0.52)
+    g.font = `bold ${Math.round(u * 6.5)}px monospace`
+    const lt = g.measureText(titre).width
+    g.beginPath()
+    g.roundRect(x - lt / 2 - u * 3, y + r + u * 2.5, lt + u * 6, u * 9, u * 4.5)
+    g.fillStyle = "rgba(10, 8, 22, 0.85)"
+    g.fill()
     g.textAlign = "center"
-    g.font = `bold ${Math.round(u * 7.5)}px monospace`
-    g.fillStyle = choisi ? "#ffffff" : "#e6dcf8"
-    g.fillText(titre, x, y + r + u * 6)
+    g.fillStyle = "#f2ecff"
+    g.fillText(titre, x, y + r + u * 7.2)
     g.textAlign = "left"
   }
 
   const peintGps = () => {
-    /* voile plus dense : la carte doit se lire par-dessus le Rayquaza */
-    g.fillStyle = "rgba(7, 9, 16, 0.5)"
+    /* une carte est une SURFACE : fond opaque façon Waze nuit, le
+       Rayquaza ne vit plus que sur la veille et le hub */
+    g.fillStyle = "#16132a"
     g.fillRect(0, 0, l, h)
-    /* pâtés de ville en filigrane */
-    g.lineWidth = u
-    for (const [bx, by, bl, bh] of [[36, 34, 110, 62], [44, 148, 96, 66], [382, 150, 96, 66], [386, 34, 92, 60], [212, 26, 96, 34]]) {
-      g.beginPath()
-      g.roundRect(bx, by, bl, bh, u * 2)
-      g.fillStyle = "rgba(22, 16, 38, 0.4)"
-      g.fill()
-      g.strokeStyle = "#241c3a"
-      g.stroke()
-    }
-    /* les rues mortes : un réseau secondaire NON empruntable (demande
-       Hugo) — plus fin, estompé, sans pointillés vivants */
-    const morte = (chemin: () => void) => {
-      g.beginPath()
-      chemin()
-      g.lineCap = "round"
-      g.strokeStyle = "#141020"
-      g.lineWidth = u * 4.5
-      g.stroke()
-      g.strokeStyle = "rgba(110, 92, 168, 0.28)"
-      g.lineWidth = u * 2.2
-      g.stroke()
-      g.setLineDash([u * 2, u * 5])
-      g.strokeStyle = "rgba(190, 175, 230, 0.14)"
-      g.lineWidth = u * 0.8
-      g.beginPath()
-      chemin()
-      g.stroke()
-      g.setLineDash([])
-    }
-    /* transversale basse qui croise le tronc, stubs verticaux, diagonale
-       haute, ruelle des pins — le quartier existe au-delà de la fourche */
+    g.fillStyle = "#1d1839"
+    g.beginPath()
+    g.roundRect(24, 26, 128, 74, u * 4)
+    g.roundRect(388, 148, 112, 82, u * 4)
+    g.roundRect(196, 20, 120, 44, u * 4)
+    g.fill()
+    g.fillStyle = "#211b41"
+    g.beginPath()
+    g.roundRect(34, 146, 108, 76, u * 4)
+    g.roundRect(376, 24, 112, 70, u * 4)
+    g.fill()
+    g.fillStyle = "#172a22"
+    g.beginPath()
+    g.roundRect(214, 196, 86, 48, u * 5)
+    g.fill()
+    /* le réseau mort : rubans courbes, jamais empruntables */
+    const morte = (chemin: () => void, large = 1) => ruban(chemin, "#100d1f", u * 1.6, "#2a2447", u * (3.2 * large))
     morte(() => {
-      g.moveTo(0, h * 0.82)
-      g.lineTo(l, h * 0.79)
+      g.moveTo(0, 214)
+      g.bezierCurveTo(170, 206, 342, 220, 512, 206)
     })
     morte(() => {
-      g.moveTo(l * 0.18, h * 0.82)
-      g.lineTo(l * 0.16, h * 0.42)
-      g.lineTo(l * 0.02, h * 0.34)
+      g.moveTo(26, 44)
+      g.bezierCurveTo(180, 14, 332, 14, 486, 44)
+    }, 1.5)
+    morte(() => {
+      g.moveTo(88, 256)
+      g.bezierCurveTo(94, 200, 78, 150, 92, 96)
     })
     morte(() => {
-      g.moveTo(l * 0.84, h * 0.8)
-      g.lineTo(l * 0.86, h * 0.46)
-      g.lineTo(l, h * 0.4)
+      g.moveTo(430, 256)
+      g.bezierCurveTo(422, 204, 438, 156, 424, 104)
     })
     morte(() => {
-      g.moveTo(l * 0.25, h * 0.12)
-      g.bezierCurveTo(l * 0.4, h * 0.02, l * 0.6, h * 0.02, l * 0.75, h * 0.12)
-    })
-    morte(() => {
-      g.moveTo(l * 0.42, h * 0.66)
-      g.lineTo(l * 0.3, h * 0.6)
-      g.lineTo(l * 0.1, h * 0.62)
-    })
-    morte(() => {
-      g.moveTo(l * 0.58, h * 0.66)
-      g.lineTo(l * 0.7, h * 0.62)
-      g.lineTo(l * 0.95, h * 0.66)
-    })
-    /* le tronc puis la fourche */
+      g.moveTo(256, 170)
+      g.bezierCurveTo(300, 160, 350, 168, 512, 150)
+    }, 0.8)
+    /* l'itinéraire : tronc en S puis la fourche — rubans VIOLETS (le code
+       Waze de la route optimale), points blancs qui avancent */
     const tronc = () => {
-      g.moveTo(l / 2, h - u * 4)
-      g.lineTo(l / 2, h * 0.66)
+      g.moveTo(256, 252)
+      g.bezierCurveTo(250, 224, 262, 200, 256, 170)
     }
     const gauche = () => {
-      g.moveTo(l / 2, h * 0.66)
-      g.bezierCurveTo(l / 2, h * 0.42, l * 0.36, h * 0.4, l * 0.25, h * 0.3)
+      g.moveTo(256, 170)
+      g.bezierCurveTo(248, 126, 198, 112, 142, 86)
     }
     const droite = () => {
-      g.moveTo(l / 2, h * 0.66)
-      g.bezierCurveTo(l / 2, h * 0.42, l * 0.64, h * 0.4, l * 0.75, h * 0.3)
+      g.moveTo(256, 170)
+      g.bezierCurveTo(264, 126, 314, 112, 370, 86)
     }
-    trace(tronc, etat.choix !== null, false)
-    trace(gauche, etat.choix === "maison", etat.choix === "travail")
-    trace(droite, etat.choix === "travail", etat.choix === "maison")
-    /* les deux destinations */
-    pin(l * 0.23, h * 0.22, "MAISON", "#b57aff", etat.choix === "maison", (cx, cy, r) => {
+    const vive = (chemin: () => void, choisi: boolean, estompe: boolean) => {
+      if (estompe) {
+        ruban(chemin, "#0e0a1d", u * 1.4, "#3a3260", u * 3.4)
+        return
+      }
+      if (choisi) {
+        g.save()
+        g.shadowColor = "#a06bff"
+        g.shadowBlur = u * 5
+        ruban(chemin, "#0e0a1d", u * 1.6, "#b78aff", u * 4.6)
+        g.restore()
+      } else {
+        ruban(chemin, "#0e0a1d", u * 1.6, "#8f5cff", u * 4.2)
+      }
+      pointsQuiAvancent(chemin)
+    }
+    vive(tronc, etat.choix !== null, false)
+    vive(gauche, etat.choix === "maison", etat.choix === "travail")
+    vive(droite, etat.choix === "travail", etat.choix === "maison")
+    /* la voiture : flèche blanche en écusson violet (façon Waze) */
+    g.save()
+    g.shadowColor = "rgba(0, 0, 0, 0.5)"
+    g.shadowBlur = u * 3
+    g.beginPath()
+    g.arc(256, 244, u * 5.2, 0, Math.PI * 2)
+    g.fillStyle = "#8f5cff"
+    g.fill()
+    g.restore()
+    g.beginPath()
+    g.arc(256, 244, u * 5.2, 0, Math.PI * 2)
+    g.strokeStyle = "#ffffff"
+    g.lineWidth = u * 1.2
+    g.stroke()
+    g.beginPath()
+    g.moveTo(256, 244 - u * 3)
+    g.lineTo(256 - u * 2.4, 244 + u * 2.2)
+    g.lineTo(256, 244 + u * 0.8)
+    g.lineTo(256 + u * 2.4, 244 + u * 2.2)
+    g.closePath()
+    g.fillStyle = "#ffffff"
+    g.fill()
+    /* les deux destinations en ballons */
+    ballon(128, 52, 142, 86, "MAISON", "#8f5cff", etat.choix === "maison", (cx, cy, r) => {
       g.lineWidth = r * 0.34
       g.beginPath()
-      g.moveTo(cx - r, cy + r * 0.2)
-      g.lineTo(cx, cy - r * 0.8)
-      g.lineTo(cx + r, cy + r * 0.2)
+      g.moveTo(cx - r, cy + r * 0.15)
+      g.lineTo(cx, cy - r * 0.85)
+      g.lineTo(cx + r, cy + r * 0.15)
       g.moveTo(cx - r * 0.6, cy)
-      g.lineTo(cx - r * 0.6, cy + r * 0.9)
-      g.lineTo(cx + r * 0.6, cy + r * 0.9)
+      g.lineTo(cx - r * 0.6, cy + r * 0.85)
+      g.lineTo(cx + r * 0.6, cy + r * 0.85)
       g.lineTo(cx + r * 0.6, cy)
       g.stroke()
     })
-    pin(l * 0.77, h * 0.22, "TRAVAIL", "#f473e8", etat.choix === "travail", (cx, cy, r) => {
+    ballon(384, 52, 370, 86, "TRAVAIL", "#e561d3", etat.choix === "travail", (cx, cy, r) => {
       g.lineWidth = r * 0.34
       g.beginPath()
-      g.roundRect(cx - r * 0.9, cy - r * 0.5, r * 1.8, r * 1.3, r * 0.2)
-      g.moveTo(cx - r * 0.35, cy - r * 0.5)
-      g.lineTo(cx - r * 0.35, cy - r * 0.9)
-      g.lineTo(cx + r * 0.35, cy - r * 0.9)
-      g.lineTo(cx + r * 0.35, cy - r * 0.5)
+      g.roundRect(cx - r * 0.85, cy - r * 0.45, r * 1.7, r * 1.25, r * 0.2)
+      g.moveTo(cx - r * 0.35, cy - r * 0.45)
+      g.lineTo(cx - r * 0.35, cy - r * 0.85)
+      g.lineTo(cx + r * 0.35, cy - r * 0.85)
+      g.lineTo(cx + r * 0.35, cy - r * 0.45)
       g.stroke()
     })
-    /* vous êtes ici : chevron au pied du tronc */
-    g.shadowColor = "#a86bff"
-    g.shadowBlur = u * 4
-    g.fillStyle = "#e8dcff"
+    /* chrome flottant : retour en cercle, horloge en pilule */
+    g.save()
+    g.shadowColor = "rgba(0, 0, 0, 0.5)"
+    g.shadowBlur = u * 3
     g.beginPath()
-    g.moveTo(l / 2, h - u * 10)
-    g.lineTo(l / 2 - u * 4, h - u * 3.5)
-    g.lineTo(l / 2, h - u * 5.8)
-    g.lineTo(l / 2 + u * 4, h - u * 3.5)
-    g.closePath()
+    g.arc(u * 9, u * 10, u * 6, 0, Math.PI * 2)
+    g.fillStyle = "#221c40"
     g.fill()
-    g.shadowBlur = 0
-    /* retour ← */
-    g.font = `bold ${Math.round(u * 10)}px monospace`
-    g.fillStyle = "#b7a8d8"
-    g.fillText("\u2039", u * 6, u * 11)
-    g.font = `${Math.round(u * 7)}px monospace`
-    g.fillText("GPS", u * 14, u * 10.5)
-    /* la micro-transition de sélection : bandeau DÉPART + jauge */
+    g.beginPath()
+    g.roundRect(l - u * 26, u * 4.5, u * 22, u * 11, u * 5.5)
+    g.fill()
+    g.restore()
+    g.textAlign = "center"
+    g.font = `bold ${Math.round(u * 9)}px monospace`
+    g.fillStyle = "#e8def8"
+    g.fillText("‹", u * 9, u * 10.5)
+    g.font = `${Math.round(u * 6.5)}px monospace`
+    g.fillText("23:42", l - u * 15, u * 10.5)
+    g.textAlign = "left"
+    /* la sélection : carte ETA façon Waze, jauge fine */
     if (etat.choix) {
       const nom = etat.choix === "maison" ? "MAISON" : "TRAVAIL"
-      const bl = l * 0.56
+      const teinte = etat.choix === "maison" ? "#8f5cff" : "#e561d3"
+      const bl = l * 0.5
       const bx = (l - bl) / 2
-      const by = h * 0.72
+      const by = h * 0.74
+      g.save()
+      g.shadowColor = "rgba(0, 0, 0, 0.55)"
+      g.shadowBlur = u * 4
       g.beginPath()
-      g.roundRect(bx, by, bl, h * 0.17, u * 3)
-      g.fillStyle = "rgba(12, 8, 24, 0.88)"
+      g.roundRect(bx, by, bl, h * 0.19, u * 5)
+      g.fillStyle = "#221c40"
       g.fill()
-      g.strokeStyle = etat.choix === "maison" ? "#b57aff" : "#f473e8"
-      g.lineWidth = u * 1.2
-      g.stroke()
-      g.textAlign = "center"
-      g.font = `bold ${Math.round(u * 8.5)}px monospace`
+      g.restore()
+      g.beginPath()
+      g.arc(bx + u * 9, by + h * 0.095, u * 5, 0, Math.PI * 2)
+      g.fillStyle = teinte
+      g.fill()
+      g.beginPath()
+      g.moveTo(bx + u * 9, by + h * 0.095 - u * 2.6)
+      g.lineTo(bx + u * 9 - u * 2.1, by + h * 0.095 + u * 2)
+      g.lineTo(bx + u * 9, by + h * 0.095 + u * 0.7)
+      g.lineTo(bx + u * 9 + u * 2.1, by + h * 0.095 + u * 2)
+      g.closePath()
+      g.fillStyle = "#ffffff"
+      g.fill()
+      g.font = `bold ${Math.round(u * 7)}px monospace`
       g.fillStyle = "#f2ecff"
-      g.fillText(`D\u00c9PART \u2192 ${nom}`, l / 2, by + h * 0.062)
-      g.textAlign = "left"
-      /* la jauge du départ */
+      g.fillText(`DÉPART → ${nom}`, bx + u * 17, by + h * 0.062)
+      g.font = `${Math.round(u * 5.5)}px monospace`
+      g.fillStyle = "#a99cc8"
+      g.fillText("0,4 km · 2 min", bx + u * 17, by + h * 0.128)
       g.beginPath()
-      g.roundRect(bx + u * 5, by + h * 0.105, bl - u * 10, u * 3, u * 1.5)
-      g.fillStyle = "#241a3e"
+      g.roundRect(bx + u * 4, by + h * 0.163, bl - u * 8, u * 1.8, u * 0.9)
+      g.fillStyle = "#37305c"
       g.fill()
       g.beginPath()
-      g.roundRect(bx + u * 5, by + h * 0.105, (bl - u * 10) * etat.transition, u * 3, u * 1.5)
-      g.fillStyle = etat.choix === "maison" ? "#b57aff" : "#f473e8"
+      g.roundRect(bx + u * 4, by + h * 0.163, (bl - u * 8) * etat.transition, u * 1.8, u * 0.9)
+      g.fillStyle = teinte
       g.fill()
     }
   }
