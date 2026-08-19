@@ -141,6 +141,9 @@ export default function Scene() {
   const brutVise = params.get("vise")?.split(",").map(Number)
   const cible: [number, number, number] =
     brutVise && brutVise.length === 3 && brutVise.every(Number.isFinite) ? (brutVise as [number, number, number]) : v.cible
+  /* ?edit : Hugo place les luminaires lui-même (cages cliquables + gizmo),
+     C copie la table des positions */
+  const edition = params.get("edit") !== null
 
   return (
     <div style={{ position: "fixed", inset: 0, background: v.brume[0] }}>
@@ -186,10 +189,11 @@ export default function Scene() {
           )}
           <VoitureRue position={v.pose} rotationY={v.cap} />
           <Phares pose={v.pose} cap={v.cap} />
-          {v.vie && <VieNocturne />}
+          {v.vie && <VieNocturne edition={edition} />}
           {v.vie && <Fond />}
         </Suspense>
         <OrbitControls
+          makeDefault
           enablePan={false}
           enableDamping
           minDistance={3.5}
@@ -198,6 +202,28 @@ export default function Scene() {
           target={cible}
         />
       </Canvas>
+      {edition && (
+        <div
+          style={{
+            position: "absolute",
+            top: 12,
+            left: 12,
+            zIndex: 10,
+            pointerEvents: "none",
+            color: "#d8dcea",
+            font: "13px/1.6 ui-monospace, monospace",
+            background: "rgba(10, 10, 20, 0.75)",
+            padding: "10px 14px",
+            borderRadius: 8,
+          }}
+        >
+          mode édition des luminaires
+          <br />
+          clic sur une cage orange → flèches pour déplacer (orbite : glisser ailleurs)
+          <br />
+          <b>C</b> : copier la liste des positions · <b>Échap</b> : désélectionner
+        </div>
+      )}
       <Loader />
     </div>
   )

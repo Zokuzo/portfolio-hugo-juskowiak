@@ -1,7 +1,8 @@
 "use client"
 
-import { useMemo, useRef } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useFrame } from "@react-three/fiber"
+import { TransformControls } from "@react-three/drei"
 import * as THREE from "three"
 import { halo } from "./rue"
 
@@ -63,7 +64,7 @@ const LAMPES: [number, number, number, boolean?][] = [
   [-65.8, 63.0, 9.8], [65.8, 53.3, 9.8], [-5.8, 66.7, 9.8], [66.7, -54.2, 9.8],
 ]
 
-function Lampe({ x, z, y, vrai }: { x: number; z: number; y: number; vrai?: boolean }) {
+function Lampe({ x, z, y, vrai, surClic }: { x: number; z: number; y: number; vrai?: boolean; surClic?: () => void }) {
   const cible = useMemo(() => new THREE.Object3D(), [])
   const halos = useRef<THREE.Group>(null)
   /* le sprite posé AU centre de la tête se fait avaler par sa géométrie
@@ -78,6 +79,13 @@ function Lampe({ x, z, y, vrai }: { x: number; z: number; y: number; vrai?: bool
   })
   return (
     <group>
+      {/* mode édition : la cage orange est la poignée cliquable de la tête */}
+      {surClic && (
+        <mesh position={[x, y, z]} onClick={(e) => { e.stopPropagation(); surClic() }}>
+          <boxGeometry args={[1.3, 1.3, 1.3]} />
+          <meshBasicMaterial color="#ff6a3d" wireframe transparent opacity={0.4} depthTest={false} />
+        </mesh>
+      )}
       <group ref={halos} position={[x, y, z]}>
         <sprite scale={[1.15, 1.15, 1]}>
           <spriteMaterial map={halo()} color="#ffe6bb" transparent opacity={0.9} blending={THREE.AdditiveBlending} depthWrite={false} />
@@ -142,12 +150,55 @@ function TeteDeFeu({ pos, phase }: { pos: [number, number, number]; phase: numbe
   )
 }
 
-export default function VieNocturne() {
+export default function VieNocturne({ edition }: { edition?: boolean }) {
+  /* mode édition (?edit) : Hugo déplace les luminaires lui-même — clic sur
+     une cage, gizmo drei sur un proxy, la table suit en état React ; la
+     touche C copie la liste au format du code, prête à coller ici. */
+  const [lampes, setLampes] = useState(LAMPES)
+  const [sel, setSel] = useState<number | null>(null)
+  const proxy = useMemo(() => new THREE.Object3D(), [])
+
+  useEffect(() => {
+    if (!edition) return
+    const clavier = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSel(null)
+      if (e.key.toLowerCase() === "c") {
+        const texte = lampes
+          .map(([x, z, y, v]) => `  [${x.toFixed(1)}, ${z.toFixed(1)}, ${y.toFixed(1)}${v ? ", true" : ""}],`)
+          .join("\n")
+        console.log("[lampes]\n" + texte)
+        navigator.clipboard?.writeText(texte).catch(() => {})
+      }
+    }
+    window.addEventListener("keydown", clavier)
+    return () => window.removeEventListener("keydown", clavier)
+  }, [edition, lampes])
+
   return (
     <group>
-      {LAMPES.map(([x, z, y, vrai], i) => (
-        <Lampe key={i} x={x} z={z} y={y} vrai={vrai} />
+      {lampes.map(([x, z, y, vrai], i) => (
+        <Lampe
+          key={i}
+          x={x}
+          z={z}
+          y={y}
+          vrai={vrai}
+          surClic={edition ? () => { proxy.position.set(x, y, z); setSel(i) } : undefined}
+        />
       ))}
+      {edition && sel !== null && (
+        <>
+          <primitive object={proxy} />
+          <TransformControls
+            object={proxy}
+            onObjectChange={() =>
+              setLampes((t) =>
+                t.map((l, i) => (i === sel ? [proxy.position.x, proxy.position.z, proxy.position.y, l[3]] : l)),
+              )
+            }
+          />
+        </>
+      )}
       {/* tête face ouest (dans le boîtier, côté x-) et tête face nord
           (côté z+), en opposition de phase */}
       <TeteDeFeu pos={[9.42, 3.35, -5.63]} phase={0} />
