@@ -43,7 +43,14 @@ function creeEcran() {
   const h = 256
   const u = h / 100
   let fond: HTMLImageElement | null = null
-  const etat = { hub: false, allume: true }
+  const etat = {
+    mode: "veille" as "veille" | "hub" | "gps",
+    allume: true,
+    tic: 0,
+    flash: false,
+    choix: null as null | "maison" | "travail",
+    transition: 0,
+  }
 
   const peintFond = () => {
     g.fillStyle = "#0b0d14"
@@ -87,9 +94,163 @@ function creeEcran() {
     g.textAlign = "left"
   }
 
+  /* ---- la carte GPS (ticket #26) : fourche Maison / Travail ---------- */
+  const trace = (chemin: () => void, choisi: boolean, estompe: boolean) => {
+    g.beginPath()
+    chemin()
+    g.lineCap = "round"
+    g.strokeStyle = "#181226"
+    g.lineWidth = u * 7.5
+    g.stroke()
+    g.strokeStyle = estompe ? "rgba(120, 96, 190, 0.25)" : choisi ? "#d8beff" : "#8a5fd6"
+    if (choisi) {
+      g.shadowColor = "#a86bff"
+      g.shadowBlur = u * 5
+    }
+    g.lineWidth = u * 4
+    g.stroke()
+    g.shadowBlur = 0
+    /* ligne centrale pointillée, animée */
+    g.strokeStyle = estompe ? "rgba(220, 210, 250, 0.15)" : "rgba(236, 226, 255, 0.75)"
+    g.lineWidth = u * 0.9
+    g.setLineDash([u * 3.2, u * 4])
+    g.lineDashOffset = -etat.tic
+    g.beginPath()
+    chemin()
+    g.stroke()
+    g.setLineDash([])
+  }
+
+  const pin = (x: number, y: number, titre: string, teinte: string, choisi: boolean, glyphe: (cx: number, cy: number, r: number) => void) => {
+    const r = u * 9
+    if (choisi) {
+      g.shadowColor = teinte
+      g.shadowBlur = u * 7
+    }
+    g.beginPath()
+    g.arc(x, y, r, 0, Math.PI * 2)
+    g.fillStyle = "rgba(14, 10, 26, 0.9)"
+    g.fill()
+    g.strokeStyle = teinte
+    g.lineWidth = u * 1.6
+    g.stroke()
+    g.shadowBlur = 0
+    g.strokeStyle = teinte
+    g.fillStyle = teinte
+    glyphe(x, y, r * 0.55)
+    g.textAlign = "center"
+    g.font = `bold ${Math.round(u * 7.5)}px monospace`
+    g.fillStyle = choisi ? "#ffffff" : "#e6dcf8"
+    g.fillText(titre, x, y + r + u * 6)
+    g.textAlign = "left"
+  }
+
+  const peintGps = () => {
+    /* voile plus dense : la carte doit se lire par-dessus le Rayquaza */
+    g.fillStyle = "rgba(7, 9, 16, 0.5)"
+    g.fillRect(0, 0, l, h)
+    /* pâtés de ville en filigrane */
+    g.lineWidth = u
+    for (const [bx, by, bl, bh] of [[36, 34, 110, 62], [44, 148, 96, 66], [382, 150, 96, 66], [386, 34, 92, 60], [212, 26, 96, 34]]) {
+      g.beginPath()
+      g.roundRect(bx, by, bl, bh, u * 2)
+      g.fillStyle = "rgba(22, 16, 38, 0.4)"
+      g.fill()
+      g.strokeStyle = "#241c3a"
+      g.stroke()
+    }
+    /* le tronc puis la fourche */
+    const tronc = () => {
+      g.moveTo(l / 2, h - u * 4)
+      g.lineTo(l / 2, h * 0.66)
+    }
+    const gauche = () => {
+      g.moveTo(l / 2, h * 0.66)
+      g.bezierCurveTo(l / 2, h * 0.42, l * 0.36, h * 0.4, l * 0.25, h * 0.3)
+    }
+    const droite = () => {
+      g.moveTo(l / 2, h * 0.66)
+      g.bezierCurveTo(l / 2, h * 0.42, l * 0.64, h * 0.4, l * 0.75, h * 0.3)
+    }
+    trace(tronc, etat.choix !== null, false)
+    trace(gauche, etat.choix === "maison", etat.choix === "travail")
+    trace(droite, etat.choix === "travail", etat.choix === "maison")
+    /* les deux destinations */
+    pin(l * 0.23, h * 0.22, "MAISON", "#b57aff", etat.choix === "maison", (cx, cy, r) => {
+      g.lineWidth = r * 0.34
+      g.beginPath()
+      g.moveTo(cx - r, cy + r * 0.2)
+      g.lineTo(cx, cy - r * 0.8)
+      g.lineTo(cx + r, cy + r * 0.2)
+      g.moveTo(cx - r * 0.6, cy)
+      g.lineTo(cx - r * 0.6, cy + r * 0.9)
+      g.lineTo(cx + r * 0.6, cy + r * 0.9)
+      g.lineTo(cx + r * 0.6, cy)
+      g.stroke()
+    })
+    pin(l * 0.77, h * 0.22, "TRAVAIL", "#f473e8", etat.choix === "travail", (cx, cy, r) => {
+      g.lineWidth = r * 0.34
+      g.beginPath()
+      g.roundRect(cx - r * 0.9, cy - r * 0.5, r * 1.8, r * 1.3, r * 0.2)
+      g.moveTo(cx - r * 0.35, cy - r * 0.5)
+      g.lineTo(cx - r * 0.35, cy - r * 0.9)
+      g.lineTo(cx + r * 0.35, cy - r * 0.9)
+      g.lineTo(cx + r * 0.35, cy - r * 0.5)
+      g.stroke()
+    })
+    /* vous êtes ici : chevron au pied du tronc */
+    g.shadowColor = "#a86bff"
+    g.shadowBlur = u * 4
+    g.fillStyle = "#e8dcff"
+    g.beginPath()
+    g.moveTo(l / 2, h - u * 10)
+    g.lineTo(l / 2 - u * 4, h - u * 3.5)
+    g.lineTo(l / 2, h - u * 5.8)
+    g.lineTo(l / 2 + u * 4, h - u * 3.5)
+    g.closePath()
+    g.fill()
+    g.shadowBlur = 0
+    /* retour ← */
+    g.font = `bold ${Math.round(u * 10)}px monospace`
+    g.fillStyle = "#b7a8d8"
+    g.fillText("\u2039", u * 6, u * 11)
+    g.font = `${Math.round(u * 7)}px monospace`
+    g.fillText("GPS", u * 14, u * 10.5)
+    /* la micro-transition de sélection : bandeau DÉPART + jauge */
+    if (etat.choix) {
+      const nom = etat.choix === "maison" ? "MAISON" : "TRAVAIL"
+      const bl = l * 0.56
+      const bx = (l - bl) / 2
+      const by = h * 0.72
+      g.beginPath()
+      g.roundRect(bx, by, bl, h * 0.17, u * 3)
+      g.fillStyle = "rgba(12, 8, 24, 0.88)"
+      g.fill()
+      g.strokeStyle = etat.choix === "maison" ? "#b57aff" : "#f473e8"
+      g.lineWidth = u * 1.2
+      g.stroke()
+      g.textAlign = "center"
+      g.font = `bold ${Math.round(u * 8.5)}px monospace`
+      g.fillStyle = "#f2ecff"
+      g.fillText(`D\u00c9PART \u2192 ${nom}`, l / 2, by + h * 0.062)
+      g.textAlign = "left"
+      /* la jauge du départ */
+      g.beginPath()
+      g.roundRect(bx + u * 5, by + h * 0.105, bl - u * 10, u * 3, u * 1.5)
+      g.fillStyle = "#241a3e"
+      g.fill()
+      g.beginPath()
+      g.roundRect(bx + u * 5, by + h * 0.105, (bl - u * 10) * etat.transition, u * 3, u * 1.5)
+      g.fillStyle = etat.choix === "maison" ? "#b57aff" : "#f473e8"
+      g.fill()
+    }
+  }
+
   const peint = () => {
     peintFond()
-    if (!etat.hub) {
+    if (etat.mode === "gps") {
+      peintGps()
+    } else if (etat.mode === "veille") {
       /* veille : CLICK HERE clignotant, lueur violette */
       if (etat.allume) {
         g.textAlign = "center"
@@ -127,6 +288,14 @@ function creeEcran() {
         g.arc(cx + r * 0.5, cy + r * 0.5, r * 0.28, 0, Math.PI * 2)
         g.fill()
       })
+      if (etat.flash) {
+        /* MUSIQUES pas encore câblées (#33) */
+        g.textAlign = "center"
+        g.font = `bold ${Math.round(u * 8)}px monospace`
+        g.fillStyle = "#f9c4f1"
+        g.fillText("BIENT\u00d4T", l * 0.75, h * 0.52)
+        g.textAlign = "left"
+      }
     }
     tex.needsUpdate = true
   }
@@ -148,14 +317,68 @@ function creeEcran() {
 
   return {
     tex,
+    etatDebug() {
+      return JSON.stringify(etat)
+    },
     veille(allume: boolean) {
-      etat.hub = false
+      etat.mode = "veille"
       etat.allume = allume
       peint()
     },
     hub() {
-      etat.hub = true
+      etat.mode = "hub"
+      etat.choix = null
       peint()
+    },
+    gps() {
+      etat.mode = "gps"
+      etat.choix = null
+      peint()
+    },
+    tic() {
+      etat.tic += 1.4
+      peint()
+    },
+    bientot() {
+      if (etat.flash) return
+      etat.flash = true
+      peint()
+      setTimeout(() => {
+        etat.flash = false
+        if (etat.mode === "hub") peint()
+      }, 750)
+    },
+    /* la micro-transition de sélection : la branche choisie s'allume, le
+       bandeau DÉPART se remplit, puis la carte revient au repos — le vrai
+       départ vers la page viendra avec #27/#32 */
+    choisit(dest: "maison" | "travail") {
+      if (etat.choix) return
+      etat.choix = dest
+      etat.transition = 0
+      const fini = () => {
+        setTimeout(() => {
+          if (etat.mode === "gps") {
+            etat.choix = null
+            peint()
+          }
+        }, 650)
+      }
+      if (REDUIT) {
+        etat.transition = 1
+        peint()
+        fini()
+        return
+      }
+      const debut = performance.now()
+      const pas = () => {
+        ;(window as unknown as { __pas: number }).__pas = ((window as unknown as { __pas?: number }).__pas ?? 0) + 1
+        if (etat.mode !== "gps" || !etat.choix) return
+        etat.transition = Math.min(1, (performance.now() - debut) / 1500)
+        peint()
+        if (etat.transition < 1) requestAnimationFrame(pas)
+        else fini()
+      }
+      requestAnimationFrame(pas)
     },
   }
 }
@@ -164,9 +387,8 @@ function creeEcran() {
 /* verdict Hugo : l'écran NATIF gagne — le ratio 2:1 (512×256) est gravé
    pour l'UI écran (GPS #26, Musiques #33) ; la PSP a perdu le gate et
    sort du code avec son GLB (l'historique git les garde) */
-function Voiture({ zoome }: { zoome: boolean }) {
+function Voiture({ ecran }: { ecran: ReturnType<typeof creeEcran> }) {
   const { scene } = useGLTF("/prototype/gt86.glb")
-  const ecran = useMemo(() => creeEcran(), [])
   /* la planche passagère troque sa livrée Miku pour le Haunter (choix
      Hugo — raccord au violet des néons) : recomposé DANS le repère de la
      texture d'origine (atlas 2048² gris, artwork à 180° dans le quart
@@ -232,26 +454,6 @@ function Voiture({ zoome }: { zoome: boolean }) {
     return scene
   }, [scene, art, lueur, compteur, ecran])
 
-  /* la machine à états de l'écran : veille clignotante au siège, hub au
-     zoom — figée allumée sous prefers-reduced-motion */
-  useEffect(() => {
-    if (zoome) {
-      ecran.hub()
-      return
-    }
-    if (REDUIT) {
-      ecran.veille(true)
-      return
-    }
-    let allume = true
-    ecran.veille(allume)
-    const t = setInterval(() => {
-      allume = !allume
-      ecran.veille(allume)
-    }, 650)
-    return () => clearInterval(t)
-  }, [zoome, ecran])
-
   /* plafonnier éteint, suite : l'Environment plein repeignait plastiques
      et planche en fin d'après-midi — l'intérieur reçoit l'environnement
      en envMap propre à dose de veille (leçon du #22 : sans envMap posé
@@ -300,11 +502,13 @@ function Voiture({ zoome }: { zoome: boolean }) {
 /* le pipeline d'événements R3F restait sourd sur cette page (vérifié :
    proxy en place, handler enregistré, rayon manuel au centre — zéro
    appel) ; un écouteur natif sur le canvas ne dépend de rien */
-function ClicEcran({ centre, surClic }: { centre: THREE.Vector3; surClic: () => void }) {
+function ClicEcran({ centre, surClic, surDehors }: { centre: THREE.Vector3; surClic: (u: number, v: number) => void; surDehors: () => void }) {
   const gl = useThree((s) => s.gl)
   const camera = useThree((s) => s.camera)
   const refClic = useRef(surClic)
   refClic.current = surClic
+  const refDehors = useRef(surDehors)
+  refDehors.current = surDehors
   useEffect(() => {
     const el = gl.domElement
     const normale = new THREE.Vector3(0, Math.sin(ECRAN_NATIF.bascule), Math.cos(ECRAN_NATIF.bascule)).normalize()
@@ -318,9 +522,18 @@ function ClicEcran({ centre, surClic }: { centre: THREE.Vector3; surClic: () => 
       )
       const plan = new THREE.Plane().setFromNormalAndCoplanarPoint(normale, centre)
       const impact = new THREE.Vector3()
-      if (!rayon.ray.intersectPlane(plan, impact)) return
+      if (!rayon.ray.intersectPlane(plan, impact)) return refDehors.current()
       const d = impact.sub(centre)
-      if (Math.abs(d.x) < 0.1 && Math.abs(d.dot(axeY)) < 0.065) refClic.current()
+      const dy = d.dot(axeY)
+      /* dalle 13×7 cm : en coordonnées écran, u croît vers la droite du
+         conducteur (monde −x) — calibré au clic sur la tuile GPS */
+      if (Math.abs(d.x) < 0.072 && Math.abs(dy) < 0.04) {
+        refClic.current((0.065 - d.x) / 0.13, (0.035 - dy) / 0.07)
+      } else if (Math.abs(d.x) > 0.16 || Math.abs(dy) > 0.1) {
+        /* frange neutre entre la dalle et le « dehors » : un clic à
+           quelques millimètres du bord ne doit pas éjecter du zoom */
+        refDehors.current()
+      }
     }
     el.addEventListener("click", clic)
     return () => el.removeEventListener("click", clic)
@@ -476,7 +689,43 @@ const VUES = {
 export default function Scene() {
   const params = useSearchParams()
   const [zoome, setZoome] = useState(false)
+  const [modeEcran, setModeEcran] = useState<"hub" | "gps">("hub")
   const [but, setBut] = useState<{ cam: THREE.Vector3; vise: THREE.Vector3 } | null>(null)
+  /* PAS un useMemo : creeEcran est impur (canvas, Image, timers) et le
+     double-rendu StrictMode en fabriquait DEUX instances — le matériau
+     pilotait l'une, les clics parlaient à l'autre (débogage aux pixels).
+     L'init paresseuse en ref garantit l'instance unique. */
+  const refEcran = useRef<ReturnType<typeof creeEcran> | null>(null)
+  if (refEcran.current === null) refEcran.current = creeEcran()
+  const ecran = refEcran.current
+  if (process.env.NODE_ENV !== "production") (window as unknown as { __ecran: unknown }).__ecran = ecran
+
+  /* la machine à états de l'écran : veille clignotante au siège, hub ou
+     carte GPS au zoom — pointillés animés en mode carte, tout figé sous
+     prefers-reduced-motion */
+  useEffect(() => {
+    if (!zoome) {
+      if (REDUIT) {
+        ecran.veille(true)
+        return
+      }
+      let allume = true
+      ecran.veille(allume)
+      const t = setInterval(() => {
+        allume = !allume
+        ecran.veille(allume)
+      }, 650)
+      return () => clearInterval(t)
+    }
+    if (modeEcran === "hub") {
+      ecran.hub()
+      return
+    }
+    ecran.gps()
+    if (REDUIT) return
+    const t = setInterval(() => ecran.tic(), 90)
+    return () => clearInterval(t)
+  }, [zoome, modeEcran, ecran])
 
   const brut = params.get("cam")?.split(",").map(Number)
   const cam: [number, number, number] =
@@ -485,10 +734,33 @@ export default function Scene() {
   const cible: [number, number, number] =
     brutVise && brutVise.length === 3 && brutVise.every(Number.isFinite) ? (brutVise as [number, number, number]) : VUES.conducteur.vise.toArray() as [number, number, number]
 
-  const surEcran = () => {
-    if (process.env.NODE_ENV !== "production") (window as unknown as { __clics: number }).__clics = ((window as unknown as { __clics?: number }).__clics ?? 0) + 1
-    setBut(zoome ? VUES.conducteur : VUES.ecran)
-    setZoome(!zoome)
+  /* le routage des clics sur la dalle, par zones (u,v ∈ [0,1]) */
+  const surEcran = (uv: number, vv: number) => {
+    if (process.env.NODE_ENV !== "production")
+      (window as unknown as { __routage: unknown }).__routage = { uv, vv, zoome, modeEcran, t: Date.now() }
+    if (!zoome) {
+      setBut(VUES.ecran)
+      setZoome(true)
+      setModeEcran("hub")
+      return
+    }
+    if (modeEcran === "hub") {
+      if (uv < 0.48) setModeEcran("gps")
+      else if (uv > 0.52) ecran.bientot()
+      return
+    }
+    /* carte GPS : ← retour, sinon fourche Maison / Travail */
+    if (uv < 0.16 && vv < 0.26) setModeEcran("hub")
+    else if (uv < 0.48) ecran.choisit("maison")
+    else if (uv > 0.52) ecran.choisit("travail")
+  }
+
+  /* cliquer AILLEURS que l'écran ramène au siège */
+  const surDehors = () => {
+    if (!zoome) return
+    setBut(VUES.conducteur)
+    setZoome(false)
+    setModeEcran("hub")
   }
 
   return (
@@ -544,8 +816,8 @@ export default function Scene() {
           <NeonsInterieur />
           <NomChrome />
           <Retro />
-          <Voiture zoome={zoome} />
-          <ClicEcran centre={ECRAN_NATIF.centre} surClic={surEcran} />
+          <Voiture ecran={ecran} />
+          <ClicEcran centre={ECRAN_NATIF.centre} surClic={surEcran} surDehors={surDehors} />
           <Rail but={but} arrive={() => setBut(null)} viseInitiale={cible} />
         </Suspense>
       </Canvas>
