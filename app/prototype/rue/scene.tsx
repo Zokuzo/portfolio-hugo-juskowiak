@@ -1,9 +1,9 @@
 "use client"
 
-import { Suspense, useMemo } from "react"
+import { Suspense, useEffect, useMemo, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { Canvas } from "@react-three/fiber"
-import { Environment, Lightformer, Loader, OrbitControls, SpotLight as SpotVolumetrique } from "@react-three/drei"
+import { Environment, Lightformer, Loader, OrbitControls, SpotLight as SpotVolumetrique, TransformControls } from "@react-three/drei"
 import * as THREE from "three"
 import Rue, { halo } from "./rue"
 import DecorGlb from "./decor-glb"
@@ -72,34 +72,78 @@ const VARIANTES: Record<string, Variante> = {
   },
 }
 
-function Phares({ pose, cap }: { pose: [number, number, number]; cap: number }) {
+function Phares({ pose, cap, edition }: { pose: [number, number, number]; cap: number; edition?: boolean }) {
   /* les feux de croisement mordent l'asphalte : deux spots volumétriques
-     ancrés à la pose de la voiture */
-  const { origine, gauche } = useMemo(() => {
+     ancrés à la pose de la voiture. Les optiques se règlent dans le repère
+     voiture (avancée / écart / hauteur) — éditables au gizmo en ?edit,
+     symétrie assumée : bouger UNE optique règle les deux ; V copie. */
+  const [reglage, setReglage] = useState({ avancee: 1.9, ecart: 0.62, hauteur: 0.68 })
+  const [sel, setSel] = useState(false)
+  const proxy = useMemo(() => new THREE.Object3D(), [])
+  const { avant, gauche, base } = useMemo(() => {
     const avant = new THREE.Vector3(Math.sin(cap), 0, Math.cos(cap))
-    const origine = new THREE.Vector3(...pose).add(new THREE.Vector3(0, 0.68, 0)).addScaledVector(avant, 1.9)
-    const gauche = new THREE.Vector3(-avant.z, 0, avant.x)
-    return { avant, origine, gauche }
+    return { avant, gauche: new THREE.Vector3(-avant.z, 0, avant.x), base: new THREE.Vector3(...pose) }
   }, [pose, cap])
+  const optiques = useMemo(
+    () =>
+      ([1, -1] as const).map((c) =>
+        base
+          .clone()
+          .addScaledVector(avant, reglage.avancee)
+          .addScaledVector(gauche, c * reglage.ecart)
+          .add(new THREE.Vector3(0, reglage.hauteur, 0)),
+      ),
+    [base, avant, gauche, reglage],
+  )
+
+  useEffect(() => {
+    if (!edition) return
+    const clavier = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSel(false)
+      if (e.key.toLowerCase() === "v") {
+        const t = `phares : avancee=${reglage.avancee.toFixed(2)} ecart=${reglage.ecart.toFixed(2)} hauteur=${reglage.hauteur.toFixed(2)}`
+        console.log(t)
+        navigator.clipboard?.writeText(t).catch(() => {})
+      }
+    }
+    window.addEventListener("keydown", clavier)
+    return () => window.removeEventListener("keydown", clavier)
+  }, [edition, reglage])
+
   return (
     <group>
-      {([1, -1] as const).map((c) => (
-        <Phare key={c} cote={c} cap={cap} origine={origine} gauche={gauche} />
+      {optiques.map((p, i) => (
+        <group key={i}>
+          <Phare p={p} avant={avant} />
+          {edition && (
+            <mesh position={p.toArray()} onClick={(e) => { e.stopPropagation(); proxy.position.copy(p); setSel(true) }}>
+              <boxGeometry args={[0.5, 0.5, 0.5]} />
+              <meshBasicMaterial color="#3da9ff" wireframe transparent opacity={0.6} depthTest={false} />
+            </mesh>
+          )}
+        </group>
       ))}
+      {edition && sel && (
+        <>
+          <primitive object={proxy} />
+          <TransformControls
+            object={proxy}
+            onObjectChange={() => {
+              const rel = proxy.position.clone().sub(base)
+              setReglage({ avancee: rel.dot(avant), ecart: Math.abs(rel.dot(gauche)), hauteur: rel.y })
+            }}
+          />
+        </>
+      )}
     </group>
   )
 }
 
-function Phare({ cote, cap, origine, gauche }: { cote: 1 | -1; cap: number; origine: THREE.Vector3; gauche: THREE.Vector3 }) {
+function Phare({ p, avant }: { p: THREE.Vector3; avant: THREE.Vector3 }) {
   /* la cible du spot doit vivre dans le graphe, sinon three la laisse à
      l'origine du monde */
   const cible = useMemo(() => new THREE.Object3D(), [])
-  const { p, vise } = useMemo(() => {
-    const avant = new THREE.Vector3(Math.sin(cap), 0, Math.cos(cap))
-    const p = origine.clone().addScaledVector(gauche, cote * 0.62)
-    const vise = p.clone().addScaledVector(avant, 9).setY(0)
-    return { p, vise }
-  }, [cote, cap, origine, gauche])
+  const vise = useMemo(() => p.clone().addScaledVector(avant, 9).setY(0), [p, avant])
   return (
     <group>
       <primitive object={cible} position={vise.toArray()} />
@@ -188,7 +232,7 @@ export default function Scene() {
             <Rue />
           )}
           <VoitureRue position={v.pose} rotationY={v.cap} />
-          <Phares pose={v.pose} cap={v.cap} />
+          <Phares pose={v.pose} cap={v.cap} edition={edition} />
           {v.vie && <VieNocturne edition={edition} />}
           {v.vie && <Fond />}
         </Suspense>
@@ -217,11 +261,11 @@ export default function Scene() {
             borderRadius: 8,
           }}
         >
-          mode édition des luminaires
+          mode édition — LED des feux (cages orange) · optiques de la voiture (cages bleues)
           <br />
-          clic sur une cage orange → flèches pour déplacer (orbite : glisser ailleurs)
+          clic sur une cage → flèches pour déplacer (orbite : glisser ailleurs)
           <br />
-          <b>C</b> : copier la liste des positions · <b>Échap</b> : désélectionner
+          <b>C</b> : copier les feux · <b>V</b> : copier les phares · <b>Échap</b> : désélectionner
         </div>
       )}
       <Loader />
