@@ -38,9 +38,18 @@ function textureHub(l: number, h: number, sousTitre: string, mode?: "gltf") {
   c.height = h
   const g = c.getContext("2d")!
   const u = h / 100 /* unité : pourcent de hauteur */
+  let fond: HTMLImageElement | null = null
 
+  const peint = () => {
   g.fillStyle = "#0b0d14"
   g.fillRect(0, 0, l, h)
+  /* le fond Rayquaza (choix Hugo) sous un voile sombre — les tuiles
+     restent lisibles, le dragon vit derrière */
+  if (fond) {
+    g.drawImage(fond, 0, 0, l, h)
+    g.fillStyle = "rgba(7, 9, 16, 0.42)"
+    g.fillRect(0, 0, l, h)
+  }
   g.strokeStyle = "#252a3c"
   g.lineWidth = Math.max(2, u * 1.2)
   g.strokeRect(u * 2, u * 2, l - u * 4, h - u * 4)
@@ -65,7 +74,7 @@ function textureHub(l: number, h: number, sousTitre: string, mode?: "gltf") {
     const la = l / 2 - u * 12
     const ha = h - y - u * 10
     arrondi(x, y, la, ha, u * 4)
-    g.fillStyle = "#12151f"
+    g.fillStyle = "rgba(14, 17, 26, 0.72)"
     g.fill()
     g.strokeStyle = teinte
     g.lineWidth = u * 1.4
@@ -108,7 +117,16 @@ function textureHub(l: number, h: number, sousTitre: string, mode?: "gltf") {
     g.fill()
   })
 
+  }
+  peint()
   const tex = new THREE.CanvasTexture(c)
+  const img = new Image()
+  img.onload = () => {
+    fond = img
+    peint()
+    tex.needsUpdate = true
+  }
+  img.src = "/prototype/ecran-fond.jpg"
   tex.colorSpace = THREE.SRGBColorSpace
   tex.anisotropy = 8
   /* orientation RELEVÉE en capture, pas déduite : le quad Display du GT86
@@ -204,7 +222,12 @@ function Voiture() {
         }
         if (!INTERIEUR.has(mat.name)) continue
         mat.envMap = sc.environment
-        mat.envMapIntensity = 0.1
+        /* les plastiques de console reprennent un éclat (retour Hugo
+           « ne reflète pas la lumière ») : sheen d'environnement et
+           rugosité plafonnée — les sièges/tapis restent mats */
+        const console_ = mat.name === "InteriorStuff" || mat.name === "SilverPlastic"
+        mat.envMapIntensity = console_ ? 0.35 : 0.1
+        if (console_) mat.roughness = Math.min(mat.roughness, 0.45)
         /* et la teinte elle-même descend d'un cran : l'ambiante de nuit
            suffisait encore à révéler les plastiques (retour Hugo) */
         mat.color.multiplyScalar(0.5)
@@ -350,6 +373,22 @@ function NeonsInterieur() {
   )
 }
 
+/* ---- le reflet du rétroviseur --------------------------------------- */
+/* POV fixe → le reflet est une VRAIE capture de la vue arrière (prise
+   depuis la position du miroir, retournée en miroir, assombrie), plaquée
+   sur la glace — position/inclinaison sondées par raycast à travers le
+   pixel du miroir depuis la caméra conducteur */
+function Retro() {
+  const tex = useTexture("/prototype/retro.jpg")
+  tex.colorSpace = THREE.SRGBColorSpace
+  return (
+    <mesh position={[-0.03, 1.128, 0.147]} rotation={[-0.14, 2.618, 0]}>
+      <planeGeometry args={[0.23, 0.076]} />
+      <meshBasicMaterial map={tex} toneMapped={false} color="#b6bfd2" />
+    </mesh>
+  )
+}
+
 /* ---- le rail de caméra : la SEULE façon de bouger ------------------- */
 /* pas d'orbite libre (demande Hugo) : la caméra vit sur un rail, seuls
    les clics la déplacent — le rail tient sa propre cible et verrouille
@@ -446,6 +485,7 @@ export default function Scene() {
           <NeonsSol />
           <NeonsInterieur />
           <NomChrome />
+          <Retro />
           <Voiture />
           <ClicEcran centre={ECRAN_NATIF.centre} surClic={surEcran} />
           <Rail but={but} arrive={() => setBut(null)} viseInitiale={cible} />
