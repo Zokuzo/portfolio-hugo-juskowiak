@@ -2,12 +2,36 @@
 
 import { useEffect, useReducer } from "react"
 import { useRouter } from "next/navigation"
-import { Canvas, useThree } from "@react-three/fiber"
+import { Canvas, useLoader, useThree } from "@react-three/fiber"
+import { useGLTF } from "@react-three/drei"
+import { RGBELoader } from "three-stdlib"
 import * as THREE from "three"
 import type { CSSProperties } from "react"
 import { t, type Lang } from "@/components/proto/dict"
 import { parametre } from "./capable"
 import { INTRO, RAILS, REPOS, depart, marqueVue, suivant } from "./machine"
+
+/* LES ASSETS ET LEUR CASCADE — ticket #28.
+
+   Le décodeur Draco est CHEZ NOUS : drei pointe par défaut sur gstatic.com
+   (`@react-three/drei/core/Gltf.js:8`). Aucun de nos GLB n'est Draco
+   aujourd'hui (tout est meshopt, décodeur embarqué dans three-stdlib) — donc
+   zéro requête dans les deux cas — mais le chemin est armé pour le jour où un
+   export en produirait un. `public/voiture/draco/` est déjà dans le dépôt,
+   octets identiques à ceux de three (vérifié). La sonde 7/7 de
+   `tools/gt86/verifie.mjs` prouve qu'aucun octet ne part chez un tiers.
+
+   La cascade (spec #25) : ce module ne charge au montage que ce que le CIEL
+   demandera — la voiture et le ciel. `RGBELoader` vient de three-stdlib comme
+   dans `<Environment>` de drei : même constructeur, donc MÊME clé de cache —
+   le préchargement d'ici servira le dôme du #29 sans un octet de plus. */
+const VOITURE = "/prototype/gt86.glb"
+const VILLE = "/prototype/decor-habitacle.glb"
+const CIEL_HDR = "/prototype/crepuscule.hdr"
+
+useGLTF.setDecoderPath("/voiture/draco/")
+useGLTF.preload(VOITURE)
+useLoader.preload(RGBELoader, CIEL_HDR)
 
 /* LA COQUILLE MONTÉE — ticket #27 de la carte #15.
 
@@ -93,6 +117,18 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
   useEffect(() => {
     if (etat === "HABITACLE") marqueVue()
   }, [etat])
+
+  /* LA SUITE DE LA CASCADE (#28) : chaque état télécharge ce dont le SUIVANT
+     aura besoin. Le fetch de la ville part dès l'atterrissage — et aussi à
+     l'habitacle, parce que le skip et les sessions revenantes y arrivent sans
+     passer par l'atterrissage. Le décor ne sera MONTÉ qu'en état de repos
+     (frameloop "demand") : le décodage meshopt, synchrone sur le thread
+     principal, tombe boucle arrêtée — jamais pendant un rail où chaque image
+     compte. `prefetch("/home")` attend que la route existe (#34). */
+  useEffect(() => {
+    if (etat === "ATTERRISSAGE" || etat === "HABITACLE") useGLTF.preload(VILLE)
+    if (etat === "HABITACLE") router.prefetch("/work")
+  }, [etat, router])
 
   /* DÉPART est terminal : la sortie de la machine est une VRAIE navigation
      Next, pas un état du canvas (spec #25). */

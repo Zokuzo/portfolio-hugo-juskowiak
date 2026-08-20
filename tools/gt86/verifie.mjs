@@ -124,7 +124,62 @@ for (const f of ["components/gt86/capable.ts", "components/gt86/surcouche.tsx", 
   assert.equal(fautif, null, `${f} importe ${fautif?.[1]} statiquement — la 3D doit rester derrière le dynamic`)
 }
 
-console.log("bloc A — machine + gardes : OK")
+/* LE RÉGIME DES ASSETS — ticket #28. Deux régressions passent inaperçues
+   sans ces gardes : un asset qui REGROSSIT (un ré-export qui oublie
+   `tools/monde/regime.mjs`), et un NOM qui disparaît (une passe join/palette
+   fusionne les matériaux — le shader de fenêtres ne trouve plus sa façade,
+   l'habillage de la voiture plus ses optiques). On lit le chunk JSON du GLB
+   à la main : zéro dépendance, comme le reste du bloc A.
+
+   Les noms listés sont EXACTEMENT ceux que le code compare (`mat.name ===`),
+   relevés par grep — pas la liste complète des matériaux. Les budgets sont en
+   octets, calés ~7 % au-dessus du poids mesuré après régime (`ls -lh` affiche
+   des Mio : 8,3 Mo s'y lit « 7,9M », ce n'est pas une régression). */
+const ASSETS = {
+  "public/prototype/gt86.glb": {
+    max: 2_400_000,
+    mats: 36,
+    noms: ["Carbon", "DashboardArtwork", "Display", "Floor", "Glass", "HeadlightsTex",
+      "Indicator", "InteriorBlack", "InteriorStuff", "LightsFront", "RedGlow",
+      "SilverPlastic", "Speedo", "Speedoneedle", "Taillightbody"],
+  },
+  "public/prototype/decor-procedural.glb": {
+    max: 8_800_000,
+    mats: 38,
+    meshes: 38,
+    noms: ["CityGen_LR_Facades", "CityGenGlass.001"],
+  },
+  "public/prototype/decor-habitacle.glb": {
+    max: 5_000_000,
+    mats: 42,
+    meshes: 44,
+    noms: ["CityGen_LR_Facades", "CityGenGlass.001"],
+  },
+  "public/prototype/crepuscule.hdr": { max: 1_200_000 },
+}
+
+const jsonDuGlb = (buf) => JSON.parse(buf.subarray(20, 20 + buf.readUInt32LE(12)).toString("utf8"))
+
+for (const [f, budget] of Object.entries(ASSETS)) {
+  const buf = readFileSync(path.join(RACINE, f))
+  assert.ok(
+    buf.length <= budget.max,
+    `${f} pèse ${buf.length} o (budget ${budget.max}) — repasser tools/monde/regime.mjs`,
+  )
+  if (!f.endsWith(".glb")) continue
+  const g = jsonDuGlb(buf)
+  const mats = (g.materials ?? []).map((m) => m.name)
+  for (const nom of budget.noms) assert.ok(mats.includes(nom), `${f} a perdu le matériau ${nom}`)
+  if (budget.mats) assert.equal(mats.length, budget.mats, `${f} : ${mats.length} matériaux au lieu de ${budget.mats}`)
+  if (budget.meshes) assert.equal(g.meshes.length, budget.meshes, `${f} : ${g.meshes.length} meshes au lieu de ${budget.meshes}`)
+  /* un GLB basisu jetterait au chargement : useGLTF ne pose aucun KTX2Loader */
+  assert.ok(
+    !(g.extensionsRequired ?? []).includes("KHR_texture_basisu"),
+    `${f} exige KHR_texture_basisu — useGLTF n'a pas de transcodeur, le chargement jetterait`,
+  )
+}
+
+console.log("bloc A — machine + gardes + assets : OK")
 if (!NAV) {
   console.log("(bloc B navigateur non lancé — ajouter --nav)")
   process.exit(0)
@@ -235,6 +290,32 @@ assert.equal(
   "le défilement est resté gelé après le repli",
 )
 console.log("  6/6 le repli démonte proprement et rend le défilement")
+
+/* 7. AUCUN OCTET NE PART CHEZ UN TIERS (#28). Grepper le bundle ne prouve
+      rien — l'URL gstatic vit dans le module drei, override ou pas. La seule
+      preuve est RUNTIME : on traverse l'intro (les preload en cascade se
+      déclenchent — voiture, ciel, ville) puis on relit le journal réseau de
+      la page. Couvre d'un coup le décodeur Draco (gstatic), les presets
+      drei (jsdelivr), les HDRI distants et les polices tierces. */
+await va(base + "/")
+await attends(async () => await etat(), 8000, "remontage pour la sonde réseau")
+if ((await etat()) === "CIEL") await sonde(`document.querySelector('[data-gt86="demarrer"]').click()`)
+await pause(3000)
+const ressources = JSON.parse(
+  await sonde(`JSON.stringify(performance.getEntriesByType("resource").map((e) => e.name))`),
+)
+const externes = ressources.filter((u) => !u.startsWith(base))
+assert.deepEqual(externes, [], `des requêtes partent chez un tiers : ${externes}`)
+/* …et la cascade tire RÉELLEMENT ses octets — sans ça, une cascade débranchée
+   passerait la sonde d'externes haut la main. La ville se précharge à
+   l'HABITACLE (où la session revenante atterrit), la voiture et le ciel au
+   chargement du module. */
+for (const asset of ["/prototype/gt86.glb", "/prototype/crepuscule.hdr", "/prototype/decor-habitacle.glb"])
+  assert.ok(
+    ressources.some((u) => u.endsWith(asset)),
+    `la cascade n'a pas demandé ${asset} — préchargement débranché ?`,
+  )
+console.log("  7/7 zéro requête externe, et la cascade tire voiture + ciel + ville")
 
 console.log("bloc B — navigateur : OK")
 
