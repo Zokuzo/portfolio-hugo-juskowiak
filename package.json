@@ -6,7 +6,8 @@
     "build": "next build",
     "dev": "next dev",
     "start": "next start",
-    "banc": "node tools/banc/frame.mjs"
+    "banc": "node tools/banc/frame.mjs",
+    "gt86": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON tools/gt86/verifie.mjs"
   },
   "dependencies": {
     "@react-three/drei": "10.7.8",

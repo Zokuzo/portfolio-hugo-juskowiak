@@ -16,6 +16,8 @@ import { Smooth } from "@/components/proto/smooth"
 import { World } from "@/components/proto/world"
 import { Voiture } from "@/components/proto/voiture"
 import type { Lang } from "@/components/proto/dict"
+import { useGt86 } from "@/components/gt86/capable"
+import Surcouche from "@/components/gt86/surcouche"
 
 /* LE JEU DE PLANS COMPLET — dix feuilles, numérotées sans trou.
 
@@ -39,6 +41,14 @@ import type { Lang } from "@/components/proto/dict"
 export default function Page() {
   const [lang, setLang] = useState<Lang>("fr")
 
+  /* LA SURCOUCHE 3D (#27, carte #15). Le serveur rend TOUJOURS la version
+     simple ci-dessous — c'est elle qui est indexée, et c'est elle le repli.
+     `useGt86` répond `false` au serveur ET pendant l'hydratation, donc rien
+     ne change tant que React n'a pas fini ; l'expérience se pose au rendu
+     suivant si la machine est desktop capable, et se retire d'elle-même à
+     la moindre erreur. */
+  const gt86 = useGt86()
+
   /* Le retour d'une fiche atterrit sur /#carte-<slug> : le défilement est
      rendu par l'ancre, le FOCUS ne l'est par personne — sans ça, un lecteur
      au clavier repart du haut et retraverse tout le document au Tab
@@ -60,7 +70,15 @@ export default function Page() {
           enveloppé dans aucun élément portant transform, filter ou
           will-change — sinon cet ancêtre devient le bloc conteneur
           du position:fixed et le monde se met à scroller. */}
-      <World />
+      {/* DÉMONTÉS SOUS LA SURCOUCHE, pas masqués. La voiture écoute la
+          saisie au DOCUMENT et décide par l'alpha d'un pixel de sa propre
+          toile, pas par le z-order : derrière un voile opaque elle poserait
+          quand même le curseur `grab` et téléchargerait son modèle. Le décor,
+          lui, garderait huit plans en `will-change` et un grain repeint en
+          continu derrière quelque chose que personne ne voit. Les retirer
+          déclenche leurs nettoyages déjà écrits, et garantit qu'il n'y a
+          JAMAIS deux contextes WebGL vivants sur la page. */}
+      {!gt86.actif && <World />}
       {/* La voiture est montée ICI, et pas dans la plaque, parce que son
           tourbillon traverse les trois premières feuilles. Même règle que
           le décor : aucun élément enveloppant, sinon un ancêtre portant
@@ -68,7 +86,11 @@ export default function Page() {
           voiture se remet à scroller avec la page. Sa place dans l'ordre
           compte aussi — après <World />, elle passe devant lui à
           z-index égal, et les sections (z-index 1) passent devant elle. */}
-      <Voiture />
+      {!gt86.actif && <Voiture />}
+      {/* FRÈRE DIRECT, sans un div d'enveloppe — la même règle que le décor
+          et la voiture : un ancêtre portant transform, filter ou will-change
+          deviendrait le bloc conteneur des `position: fixed` de la page. */}
+      {gt86.actif && <Surcouche lang={lang} surRepli={gt86.abandonne} />}
       <div className="frame" aria-hidden="true">
         <span className="tick tl" />
         <span className="tick tr" />

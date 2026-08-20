@@ -59,6 +59,20 @@ export async function creeScene(toile: HTMLCanvasElement, surPerte?: () => void)
   renderer.setPixelRatio(1) // les pixels sont gérés par taille(), comme la toile 2D
   regleRenderer(THREE, renderer)
 
+  /* `renderer.dispose()` NE RELÂCHE PAS le contexte WebGL (three r169) : il
+     libère les ressources GPU, mais le contexte reste vivant jusqu'au passage
+     du ramasse-miettes. Chaque destruction laissait donc un contexte zombie —
+     supportable tant qu'on ne détruisait qu'à la bascule de thème, plus du
+     tout depuis que la surcouche #27 fait l'aller-retour capable ↔ repli sur
+     la même page. Chromium évince le contexte le PLUS ANCIEN une fois la
+     limite atteinte (~8 à 16 selon la machine) : le zombie survivrait à la
+     scène vivante. `forceContextLoss()` rend le slot tout de suite.
+     Les DEUX sorties passent par ici — sinon elles divergent. */
+  const ferme = () => {
+    renderer.dispose()
+    renderer.forceContextLoss()
+  }
+
   /* Le thème AU MOMENT DE LA CRÉATION : la scène vit avec le
      composant, et la bascule le remonte (#13) — studio clair et
      livrée MSO d'origine en plein jour, sinon la saisie montrerait
@@ -83,7 +97,7 @@ export async function creeScene(toile: HTMLCanvasElement, surPerte?: () => void)
     gltf = await loader.loadAsync(MODELE)
   } catch {
     draco.dispose()
-    renderer.dispose()
+    ferme()
     return null
   }
   const rayon = prepareModele(THREE, gltf.scene)
@@ -120,7 +134,7 @@ export async function creeScene(toile: HTMLCanvasElement, surPerte?: () => void)
     detruit() {
       draco.dispose()
       pmrem.dispose()
-      renderer.dispose()
+      ferme()
     },
   }
 }

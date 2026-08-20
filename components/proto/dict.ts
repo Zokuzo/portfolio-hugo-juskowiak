@@ -46,6 +46,22 @@ const DICT = {
     fr: "JOUR",
     en: "LIGHT",
   },
+  /* L'expérience GT86 (#27) — aucune chaîne en dur dans la surcouche, la
+     doctrine de la spec veut que TOUT le texte de l'expérience soit du DOM
+     bilingue en overlay, jamais porté par la 3D. */
+  gt86Chantier: { fr: "COQUILLE #27", en: "SHELL #27" },
+  gt86Demarrer: {
+    fr: "Cliquez pour démarrer",
+    en: "Click to start",
+  },
+  gt86EnRoute: { fr: "en route…", en: "on the way…" },
+  gt86Gps: { fr: "GPS", en: "GPS" },
+  gt86Musiques: { fr: "Musiques", en: "Music" },
+  gt86Maison: { fr: "Maison", en: "Home" },
+  gt86Travail: { fr: "Travail", en: "Work" },
+  gt86Partir: { fr: "Départ", en: "Go" },
+  gt86Passer: { fr: "passer l'intro", en: "skip intro" },
+  gt86Retour: { fr: "retour", en: "back" },
   status: {
     fr: "En poste · France",
     en: "Employed · France",
