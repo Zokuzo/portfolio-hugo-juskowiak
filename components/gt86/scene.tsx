@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useEffect, useReducer } from "react"
+import { Suspense, useCallback, useEffect, useReducer, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Canvas, useLoader, useThree } from "@react-three/fiber"
 import { useGLTF } from "@react-three/drei"
@@ -11,6 +11,8 @@ import { t, type Lang } from "@/components/proto/dict"
 import { parametre } from "./capable"
 import { INTRO, RAILS, REPOS, depart, marqueVue, suivant } from "./machine"
 import Ciel, { CIEL_HDR, VOITURE } from "./ciel"
+import Rue from "./rue"
+import Vol, { VOL_MS, type Trajectoire } from "./vol"
 
 /* LES ASSETS ET LEUR CASCADE — ticket #28.
 
@@ -102,13 +104,30 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
   const { etat, dest } = scene
   const boom = parametre() === "boom"
 
+  /* Le vol d'atterrissage (#30) : ses canaux vivent dans une ref — les
+     scènes les consomment par frame, React ne re-rend rien. `chute: 1`
+     au départ = la voiture de la rue est posée (skip, session revenante). */
+  const vol = useRef<Trajectoire>({ t: 0, plonge: 0, chute: 1 })
+  const voile = useRef<HTMLDivElement>(null)
+  /* voiture + ciel décodés → la rue se monte en sourdine pendant le CIEL
+     (décodage meshopt synchrone : jamais pendant le rail) */
+  const [cielPret, setCielPret] = useState(false)
+  const surPret = useCallback(() => setCielPret(true), [])
+  /* la bascule ciel → rue du vol, derrière le voile plein — un état React,
+     pas un `visible` impératif : une seule source de vérité */
+  const [enRue, setEnRue] = useState(false)
+  const surBascule = useCallback(() => setEnRue(true), [])
+
   /* LES RAILS. Un `setTimeout` — une HORLOGE, pas des images : le
      `requestAnimationFrame` est étranglé quand la scène rame, piège payé au
      #26 sur la jauge du GPS. Le nettoyage annule le rail en cours, ce qui
-     rend le skip immédiat et sûr même en plein atterrissage. */
+     rend le skip immédiat et sûr même en plein atterrissage.
+     ATTERRISSAGE : le vol (vol.tsx) envoie le vrai « fini » au bout de sa
+     course, toujours en phase avec l'image — l'horloge ne reste qu'en
+     FILET, large, au cas où la boucle de rendu meurt. */
   useEffect(() => {
     if (!RAILS[etat]) return
-    const h = setTimeout(() => envoie({ t: "fini" }), RAIL_MS)
+    const h = setTimeout(() => envoie({ t: "fini" }), etat === "ATTERRISSAGE" ? VOL_MS + 4000 : RAIL_MS)
     return () => clearTimeout(h)
   }, [etat])
 
@@ -168,21 +187,52 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
         dpr={[1, 1.5]}
         gl={{ powerPreference: "high-performance", antialias: true, alpha: true }}
         camera={{ position: [0, 0, 6], fov: 45 }}
-        onCreated={({ scene: s }) => {
-          s.background = new THREE.Color(NUIT)
+        onCreated={(st) => {
+          st.scene.background = new THREE.Color(NUIT)
+          /* poignée des outils de capture CDP (télémétrie, gates visuels) —
+           même rôle que window.__scene des prototypes ; expose caméra,
+           scène et invalidate() pour poser des vues en frameloop demand */
+          Object.assign(window as object, { __gt86: st })
         }}
       >
         <Perte surRepli={surRepli} />
-        {/* #29 a posé le ciel — #30 pose la rue, #31 l'habitacle, #32
+        {/* #29 a posé le ciel, #30 la rue et le vol — #31 l'habitacle, #32
             l'écran. Le ciel reste monté à vie (piège <Environment>, voir
-            ciel.tsx), seul `visible` bascule quand on quitte le vol. */}
+            ciel.tsx), seul `visible` bascule ; la rue attend que le ciel
+            soit décodé (ou qu'on l'ait déjà quitté) pour se monter, et
+            devient le fond de TOUS les états d'après. */}
+        <Vol etat={etat} vol={vol} voile={voile} surBascule={surBascule} fini={() => envoie({ t: "fini" })} />
         <Suspense fallback={null}>
           <Ciel
-            visible={etat === "CIEL" || etat === "ATTERRISSAGE"}
+            visible={etat === "CIEL" || (etat === "ATTERRISSAGE" && !enRue)}
             surClic={() => envoie({ t: "clic" })}
+            surPret={surPret}
+            vol={vol}
           />
         </Suspense>
+        {(cielPret || etat !== "CIEL") && (
+          <Suspense fallback={null}>
+            <Rue
+              visible={enRue || (etat !== "CIEL" && etat !== "ATTERRISSAGE")}
+              vol={vol}
+              poseFinale={etat !== "CIEL" && etat !== "ATTERRISSAGE"}
+            />
+          </Suspense>
+        )}
       </Canvas>
+
+      {/* le voile de la bascule ciel → rue : crème des crêtes, piloté par
+          le vol image par image, transparent aux clics */}
+      <div
+        ref={voile}
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "#ffe3c4",
+          opacity: 0,
+          pointerEvents: "none",
+        }}
+      />
 
       {/* L'OVERLAY. `inset: 0` par-dessus le canvas, mais transparent aux
           clics : seuls les boutons en reçoivent — c'est ce qui laisse le

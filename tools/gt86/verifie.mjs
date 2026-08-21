@@ -139,9 +139,10 @@ const ASSETS = {
   "public/prototype/gt86.glb": {
     max: 2_400_000,
     mats: 36,
-    noms: ["Carbon", "DashboardArtwork", "Display", "Floor", "Glass", "HeadlightsTex",
-      "Indicator", "InteriorBlack", "InteriorStuff", "LightsFront", "RedGlow",
-      "SilverPlastic", "Speedo", "Speedoneedle", "Taillightbody"],
+    noms: ["Aussenbeet", "Carbon", "DashboardArtwork", "Display", "Floor", "Glass",
+      "HeadlightsTex", "Indicator", "InteriorBlack", "InteriorStuff", "LightsFront",
+      "Paint", "RedGlow", "SilverPlastic", "Speedo", "Speedoneedle", "Stern",
+      "Taillightbody"],
   },
   "public/prototype/decor-procedural.glb": {
     max: 8_800_000,
@@ -289,6 +290,17 @@ await attends(async () => await etat(), 8000, "remontage")
 assert.equal(await etat(), "HABITACLE", "l'intro s'est rejouée dans la même session")
 console.log("  4/6 intro une seule fois par session")
 
+/* 4 bis. Le vol s'achève DE LUI-MÊME (#30) : session vierge, clic sur la
+      consigne, et l'atterrissage doit mener à l'habitacle sans skip — c'est
+      le vol (vol.tsx) qui envoie le vrai « fini », l'horloge de scene.tsx
+      n'est qu'un filet. Large : vol 4,6 s + seuil 1,1 s + chargement rue. */
+await sonde(`sessionStorage.clear()`)
+await va(base + "/")
+await attends(async () => (await etat()) === "CIEL", 8000, "retour au CIEL en session vierge")
+await sonde(`document.querySelector('[data-gt86="demarrer"]').click()`)
+await attends(async () => (await etat()) === "HABITACLE", 20000, "le vol d'atterrissage jusqu'à l'habitacle")
+console.log("  4b/6 le vol d'atterrissage s'achève de lui-même")
+
 /* 5. La version simple n'est JAMAIS cassée : incapable → rien ne se monte,
       le décor et la voiture sont à leur place. */
 await va(base + "/?gt86=off")
@@ -328,7 +340,7 @@ assert.deepEqual(externes, [], `des requêtes partent chez un tiers : ${externes
    passerait la sonde d'externes haut la main. La ville se précharge à
    l'HABITACLE (où la session revenante atterrit), la voiture et le ciel au
    chargement du module. */
-for (const asset of ["/prototype/gt86.glb", "/prototype/crepuscule.hdr", "/prototype/decor-habitacle.glb"])
+for (const asset of ["/prototype/gt86.glb", "/prototype/crepuscule.hdr", "/prototype/decor-procedural.glb", "/prototype/decor-habitacle.glb"])
   assert.ok(
     ressources.some((u) => u.endsWith(asset)),
     `la cascade n'a pas demandé ${asset} — préchargement débranché ?`,

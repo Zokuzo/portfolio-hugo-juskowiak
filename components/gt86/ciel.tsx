@@ -1,11 +1,12 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState, type MutableRefObject } from "react"
 import { useFrame, useLoader, useThree } from "@react-three/fiber"
 import { Environment, Lightformer, useCursor, useGLTF } from "@react-three/drei"
 import { RGBELoader } from "three-stdlib"
 import * as THREE from "three"
 import MerDeNuages from "./mer-de-nuages"
+import type { Trajectoire } from "./vol"
 
 /* LE CIEL — ticket #29 : le verdict « Pellicule » du gate #21, porté du
    prototype (`app/prototype/ciel`, route jetable) dans la coquille.
@@ -33,11 +34,15 @@ const ARGENT = "#b4b9bf"
 /* la pose du gate : caméra au flanc, fov 38, la voiture au centre du cadre */
 const POSE = new THREE.Vector3(-4.2, -0.4, 7.8)
 
+/* la profondeur de la plongée (#30) : bien sous le sommet du banc (-2,6),
+   la voiture disparaît dans les nuages avant la bascule vers la rue */
+const PLONGEE = 9
+
 /* La GT86 flottante. Le clic sur la carrosserie EST le démarrage — le
    raycast R3F reçoit le geste parce que l'overlay DOM est
    `pointerEvents:none` partout sauf sur ses boutons ; la consigne en bas
    d'écran fait la même chose au clavier. */
-function Voiture({ surClic }: { surClic: () => void }) {
+function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<Trajectoire> }) {
   const { scene } = useGLTF(VOITURE)
   const groupe = useRef<THREE.Group>(null)
   const [survol, setSurvol] = useState(false)
@@ -77,19 +82,22 @@ function Voiture({ surClic }: { surClic: () => void }) {
     return scene
   }, [scene])
 
-  /* anodisé poli : miroir métallique, le ciel se découpe dans la robe */
-  const peinture = useMemo(
-    () =>
-      new THREE.MeshPhysicalMaterial({
-        color: ARGENT,
-        metalness: 1.0,
-        roughness: 0.03,
-        clearcoat: 1,
-        clearcoatRoughness: 0.02,
-        envMapIntensity: 3.5,
-      }),
-    [],
-  )
+  /* anodisé poli : miroir métallique, le ciel se découpe dans la robe.
+     Le nom "Paint" est porteur : la voiture de la RUE (#30) se clone
+     depuis ce même GLB déjà mué — son rhabillage retrouve la peinture
+     par ce nom. */
+  const peinture = useMemo(() => {
+    const p = new THREE.MeshPhysicalMaterial({
+      color: ARGENT,
+      metalness: 1.0,
+      roughness: 0.03,
+      clearcoat: 1,
+      clearcoatRoughness: 0.02,
+      envMapIntensity: 3.5,
+    })
+    p.name = "Paint"
+    return p
+  }, [])
 
   useEffect(() => {
     /* la robe couvre la carrosserie ET la jante (étoile + lit extérieur) —
@@ -107,13 +115,15 @@ function Voiture({ surClic }: { surClic: () => void }) {
 
   /* la respiration — amplitude couplée au sommet du banc (-2,6) : le nez
      piqué descend à ~-2,1 au creux de la houle, plus bas le banc mange la
-     carrosserie */
+     carrosserie. Le canal `plonge` du vol (#30) s'y ajoute : au clic, la
+     voiture s'enfonce dans les nuages avant la bascule vers la rue. */
   useFrame((etat) => {
     if (!groupe.current) return
     const t = etat.clock.elapsedTime
-    groupe.current.position.y = Math.sin(t * 0.55) * 0.16
+    const plonge = vol.current.plonge
+    groupe.current.position.y = Math.sin(t * 0.55) * 0.16 - PLONGEE * plonge
     groupe.current.rotation.z = Math.sin(t * 0.32) * 0.022
-    groupe.current.rotation.x = Math.sin(t * 0.45 + 1.3) * 0.014
+    groupe.current.rotation.x = Math.sin(t * 0.45 + 1.3) * 0.014 + 0.18 * plonge
   })
 
   return (
@@ -135,12 +145,28 @@ function Voiture({ surClic }: { surClic: () => void }) {
   )
 }
 
-export default function Ciel({ visible, surClic }: { visible: boolean; surClic: () => void }) {
+export default function Ciel({
+  visible,
+  surClic,
+  surPret,
+  vol,
+}: {
+  visible: boolean
+  surClic: () => void
+  /* signale que voiture + ciel sont décodés : la coquille monte alors la
+     rue en sourdine (cascade #30 — le décodage meshopt est synchrone,
+     jamais pendant le rail) */
+  surPret: () => void
+  vol: MutableRefObject<Trajectoire>
+}) {
   const hdr = useLoader(RGBELoader, CIEL_HDR)
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
 
+  /* ce rendu n'existe qu'une fois les loaders résolus — le signal est là */
+  useEffect(() => surPret(), [surPret])
+
   /* la pose d'ouverture, tenue tant que le ciel est à l'écran — le vol
-     d'atterrissage (#30) prendra la caméra ici */
+     d'atterrissage (vol.tsx) prend la caméra ici au clic */
   useEffect(() => {
     if (!visible) return
     camera.position.copy(POSE)
@@ -211,7 +237,7 @@ export default function Ciel({ visible, surClic }: { visible: boolean; surClic: 
           echelle={0.045}
         />
 
-        <Voiture surClic={surClic} />
+        <Voiture surClic={surClic} vol={vol} />
       </group>
     </>
   )
