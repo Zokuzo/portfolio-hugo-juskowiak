@@ -259,12 +259,30 @@ assert.equal(await compte(".voiture"), 0, "la voiture vanille est restée monté
 assert.equal(await compte("canvas"), 1, "il devrait rester exactement un canvas (celui de R3F)")
 console.log("  2/6 surcouche montée, un seul contexte WebGL")
 
-/* 3. Le skip mène à l'habitacle, et la session retient que l'intro est vue. */
+/* 3. Le clic sur la VOITURE lance l'atterrissage (#29) : un VRAI événement
+      souris CDP au centre du cadre — la pose du gate #21 y met la
+      carrosserie, la consigne DOM a quitté le centre exprès, et l'overlay
+      est `pointerEvents:none` : seul le raycast R3F peut réagir. On
+      réessaie tant que la Suspense décode le GLB — un clic dans le vide est
+      inerte. Puis le skip rassoit, même en plein rail, et la session
+      retient que l'intro est vue. */
 assert.equal(await etat(), "CIEL", "l'expérience devrait s'ouvrir au CIEL")
-await sonde(`document.querySelector('[data-gt86="passer"]').click()`)
+const [cx, cy] = JSON.parse(await sonde(`JSON.stringify([innerWidth / 2, innerHeight / 2])`))
+const clicToile = async () => {
+  await cdp.envoie("Input.dispatchMouseEvent", { type: "mousePressed", x: cx, y: cy, button: "left", clickCount: 1 })
+  await cdp.envoie("Input.dispatchMouseEvent", { type: "mouseReleased", x: cx, y: cy, button: "left", clickCount: 1 })
+}
+await attends(async () => {
+  /* quitter le CIEL prouve le chemin canvas → raycast → machine ; on ne
+     fige pas l'état attendu, les rails avancent tout seuls derrière */
+  if ((await etat()) === "CIEL") await clicToile()
+  await pause(150)
+  return (await etat()) !== "CIEL"
+}, 20000, "clic sur la voiture → atterrissage")
+await sonde(`document.querySelector('[data-gt86="passer"]')?.click()`)
 await pause(300)
 assert.equal(await etat(), "HABITACLE", "le skip devrait rassoir à l'habitacle")
-console.log("  3/6 le skip mène au hub")
+console.log("  3/6 le clic sur la voiture lance l'atterrissage, le skip rassoit")
 
 await va(base + "/")
 await attends(async () => await etat(), 8000, "remontage")

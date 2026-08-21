@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useReducer } from "react"
+import { Suspense, useEffect, useReducer } from "react"
 import { useRouter } from "next/navigation"
 import { Canvas, useLoader, useThree } from "@react-three/fiber"
 import { useGLTF } from "@react-three/drei"
@@ -10,6 +10,7 @@ import type { CSSProperties } from "react"
 import { t, type Lang } from "@/components/proto/dict"
 import { parametre } from "./capable"
 import { INTRO, RAILS, REPOS, depart, marqueVue, suivant } from "./machine"
+import Ciel, { CIEL_HDR, VOITURE } from "./ciel"
 
 /* LES ASSETS ET LEUR CASCADE — ticket #28.
 
@@ -24,10 +25,9 @@ import { INTRO, RAILS, REPOS, depart, marqueVue, suivant } from "./machine"
    La cascade (spec #25) : ce module ne charge au montage que ce que le CIEL
    demandera — la voiture et le ciel. `RGBELoader` vient de three-stdlib comme
    dans `<Environment>` de drei : même constructeur, donc MÊME clé de cache —
-   le préchargement d'ici servira le dôme du #29 sans un octet de plus. */
-const VOITURE = "/prototype/gt86.glb"
+   les chaînes viennent de `ciel.tsx`, le préchargement d'ici sert donc son
+   dôme et sa voiture sans un octet de plus. */
 const VILLE = "/prototype/decor-habitacle.glb"
-const CIEL_HDR = "/prototype/crepuscule.hdr"
 
 useGLTF.setDecoderPath("/voiture/draco/")
 useGLTF.preload(VOITURE)
@@ -161,8 +161,10 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
     >
       <Canvas
         /* En pose, la boucle s'arrête : rien à repeindre tant que le
-           visiteur ne bouge pas. Elle ne tourne que sur les transitions. */
-        frameloop={REPOS.has(etat) ? "demand" : "always"}
+           visiteur ne bouge pas. Elle ne tourne que sur les transitions —
+           et au CIEL : c'est une pose VIVANTE (respiration de la voiture,
+           houle des nuages), la machine y est au repos mais pas l'image. */
+        frameloop={etat === "CIEL" || !REPOS.has(etat) ? "always" : "demand"}
         dpr={[1, 1.5]}
         gl={{ powerPreference: "high-performance", antialias: true, alpha: true }}
         camera={{ position: [0, 0, 6], fov: 45 }}
@@ -171,14 +173,21 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
         }}
       >
         <Perte surRepli={surRepli} />
-        {/* LES SCÈNES SONT VIDES — #29 pose le ciel, #30 la rue, #31
-            l'habitacle, #32 l'écran. La coquille ne présume de rien. */}
+        {/* #29 a posé le ciel — #30 pose la rue, #31 l'habitacle, #32
+            l'écran. Le ciel reste monté à vie (piège <Environment>, voir
+            ciel.tsx), seul `visible` bascule quand on quitte le vol. */}
+        <Suspense fallback={null}>
+          <Ciel
+            visible={etat === "CIEL" || etat === "ATTERRISSAGE"}
+            surClic={() => envoie({ t: "clic" })}
+          />
+        </Suspense>
       </Canvas>
 
       {/* L'OVERLAY. `inset: 0` par-dessus le canvas, mais transparent aux
-          clics : seuls les boutons en reçoivent, sinon le canvas ne verrait
-          plus jamais un geste (ce dont #29 aura besoin pour le clic sur la
-          voiture flottante). */}
+          clics : seuls les boutons en reçoivent — c'est ce qui laisse le
+          clic sur la voiture flottante (#29) atteindre le canvas et son
+          raycast. */}
       <div
         style={{
           position: "absolute",
@@ -201,13 +210,33 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
           {t(lang, "gt86Chantier")} · {etat}
         </span>
 
-        <div style={{ display: "flex", gap: 14, pointerEvents: "auto" }}>
-          {etat === "CIEL" && (
-            <button type="button" style={bouton} data-gt86="demarrer" onClick={() => envoie({ t: "clic" })}>
-              {t(lang, "gt86Demarrer")}
-            </button>
-          )}
+        {/* La consigne du gate #21 : sous la mer de nuages, encre sombre sur
+            les crêtes claires — un bouton, pas un décor : même signal que le
+            clic sur la carrosserie, et accessible au clavier. Elle quitte le
+            centre du cadre pour ne pas voler le clic 3D à la voiture. */}
+        {etat === "CIEL" && (
+          <button
+            type="button"
+            style={{
+              position: "absolute",
+              bottom: 28,
+              left: "50%",
+              transform: "translateX(-50%)",
+              font: "500 18px/1 var(--f-mono)",
+              letterSpacing: "0.04em",
+              color: "#241a3d",
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              pointerEvents: "auto",
+            }}
+            data-gt86="demarrer" onClick={() => envoie({ t: "clic" })}
+          >
+            {t(lang, "gt86Demarrer")}
+          </button>
+        )}
 
+        <div style={{ display: "flex", gap: 14, pointerEvents: "auto" }}>
           {(etat === "ATTERRISSAGE" || etat === "SEUIL") && (
             <span style={{ ...discret, pointerEvents: "none" }}>{t(lang, "gt86EnRoute")}</span>
           )}

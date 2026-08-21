@@ -49,7 +49,7 @@ const DICT = {
   /* L'expérience GT86 (#27) — aucune chaîne en dur dans la surcouche, la
      doctrine de la spec veut que TOUT le texte de l'expérience soit du DOM
      bilingue en overlay, jamais porté par la 3D. */
-  gt86Chantier: { fr: "COQUILLE #27", en: "SHELL #27" },
+  gt86Chantier: { fr: "CHANTIER GT86", en: "GT86 BUILD" },
   gt86Demarrer: {
     fr: "Cliquez pour démarrer",
     en: "Click to start",
