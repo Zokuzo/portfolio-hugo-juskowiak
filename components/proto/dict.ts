@@ -66,6 +66,7 @@ const DICT = {
      par le dictionnaire comme tout texte de l'expérience (doctrine #25) */
   gt86Nom: { fr: "Hugo Juskowiak", en: "Hugo Juskowiak" },
   gt86Titre: { fr: "Software Development Engineer", en: "Software Development Engineer" },
+  gt86Rejouer: { fr: "revoir la scène", en: "replay the scene" },
   status: {
     fr: "En poste · France",
     en: "Employed · France",

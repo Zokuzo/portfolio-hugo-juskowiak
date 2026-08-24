@@ -89,6 +89,13 @@ for (const etat of ["GPS", "CHOIX", "MUSIQUES", "SPOTIFY", "SEUIL"])
 const enRoute = S("DEPART", "/home")
 assert.equal(suivant(enRoute, { t: "retour" }), enRoute, "un départ en cours ne se rature pas")
 
+// Le rejeu (4e retour de gate #31) : l'habitacle SEUL rend la main au CIEL.
+assert.equal(suivant(S("HABITACLE"), { t: "rejoue" }).etat, "CIEL", "rejouer depuis l'habitacle")
+for (const etat of ETATS.filter((e) => e !== "HABITACLE")) {
+  const avant = S(etat)
+  assert.equal(suivant(avant, { t: "rejoue" }), avant, `rejouer est inerte depuis ${etat}`)
+}
+
 /* Balayage exhaustif : tout couple (état, signal) rend un état CONNU, et
    aucun état n'échappe au classement du frameloop — sans quoi une scène
    ajoutée plus tard tournerait en boucle sans que personne le remarque. */
@@ -101,6 +108,7 @@ const SIGNAUX = [
   { t: "choisit", dest: "/work" },
   { t: "confirme" },
   { t: "retour" },
+  { t: "rejoue" },
 ]
 for (const etat of ETATS)
   for (const sig of SIGNAUX) {
@@ -346,6 +354,47 @@ const contact = await attends(async () => {
 console.log(
   `  4b/6 vol + seuil s'achèvent d'eux-mêmes, habitacle vivant (phares ${contact.optiques}, dalle ${contact.ecran}), caméra assise`,
 )
+
+/* 4 ter. LE REJEU (4e retour de gate #31) : « revoir la scène » rend la
+      main au CIEL, la voiture de rue REDEVIENT MORTE (l'extinction est
+      l'inverse exact de l'allumage), et un skip la rallume — le cycle est
+      réversible autant de fois qu'on veut. Les matériaux de la voiture de
+      rue se reconnaissent à leur préparation (toneMapped:false sur
+      LightsFront, CanvasTexture sur Display) — la voiture du ciel garde
+      les siens d'usine. */
+await sonde(`document.querySelector('[data-gt86="rejouer"]').click()`)
+await attends(async () => (await etat()) === "CIEL", 8000, "le rejeu rend la main au CIEL")
+await attends(async () => {
+  const r = JSON.parse(
+    await sonde(`(() => {
+      const st = window.__gt86
+      let optiques = -1, ecran = -1
+      st.scene.traverse((o) => {
+        const mats = Array.isArray(o.material) ? o.material : o.material ? [o.material] : []
+        for (const m of mats) {
+          if (m.name === "LightsFront" && m.toneMapped === false) optiques = m.emissiveIntensity
+          if (m.name === "Display" && m.emissiveMap?.isCanvasTexture) ecran = m.emissiveIntensity
+        }
+      })
+      return JSON.stringify({ optiques, ecran })
+    })()`),
+  )
+  return r.optiques === 0 && r.ecran === 0
+}, 8000, "l'extinction de la voiture au rejeu")
+await sonde(`document.querySelector('[data-gt86="passer"]').click()`)
+await attends(async () => (await etat()) === "HABITACLE", 8000, "le skip du rejeu rassoit")
+await attends(async () => {
+  const v = await sonde(`(() => {
+    let v = 0
+    window.__gt86.scene.traverse((o) => {
+      const mats = Array.isArray(o.material) ? o.material : o.material ? [o.material] : []
+      for (const m of mats) if (m.name === "LightsFront" && m.toneMapped === false) v = m.emissiveIntensity
+    })
+    return v
+  })()`)
+  return v >= 7.9
+}, 8000, "le rallumage après le rejeu")
+console.log("  4c/6 le rejeu rend au ciel voiture morte, et le skip rallume tout")
 
 /* 5. La version simple n'est JAMAIS cassée : incapable → rien ne se monte,
       le décor et la voiture sont à leur place. */

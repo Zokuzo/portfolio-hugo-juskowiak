@@ -516,6 +516,32 @@ export function allumeHabitacle(cockpit: Cockpit) {
   if (cockpit.phares) cockpit.phares.visible = true
 }
 
+/* l'inverse EXACT — le rejeu de la scène (4e retour de gate) rend la
+   voiture à son état d'avant la mise sous contact : morte, verre fumé
+   extérieur, faisceaux éteints. Idempotent comme l'allumage. */
+export function eteindreHabitacle(cockpit: Cockpit) {
+  for (const m of cockpit.aiguille) m.emissiveIntensity = 0
+  for (const m of cockpit.cadran) m.emissiveIntensity = 0
+  for (const m of cockpit.boutons) m.emissiveIntensity = 0
+  for (const m of cockpit.planche) m.emissiveIntensity = 0
+  for (const m of cockpit.ecran) {
+    m.emissiveIntensity = 0
+    m.color.set("#000000")
+  }
+  for (const m of cockpit.optiques) m.emissiveIntensity = 0
+  for (const m of cockpit.signature) m.emissiveIntensity = 0
+  for (const m of cockpit.braises) m.emissiveIntensity = 0
+  for (const v of cockpit.verre) {
+    v.opacity = 0.8
+    v.color.set("#161b21")
+  }
+  for (const l of cockpit.phareLums) l.intensity = 0
+  for (const n of cockpit.neonLums) n.lum.intensity = 0
+  for (const c of cockpit.phareCones) c.visible = false
+  if (cockpit.neons) cockpit.neons.visible = false
+  if (cockpit.phares) cockpit.phares.visible = false
+}
+
 /* ---- la moquette des tapis de sol (portée du #26) ----------------------- */
 
 let moquettePartagee: THREE.CanvasTexture | null = null

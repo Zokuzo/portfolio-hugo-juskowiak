@@ -38,6 +38,7 @@ export type Signal =
   | { t: "choisit"; dest: Dest }
   | { t: "confirme" }
   | { t: "retour" } // ‹ et Échap : un seul chemin de sortie, jamais deux
+  | { t: "rejoue" } // revoir la scène : l'habitacle rend la main au CIEL (4e retour de gate #31)
 
 export const ETATS: readonly Etat[] = [
   "CIEL",
@@ -111,6 +112,13 @@ export function suivant(s: Scene, g: Signal): Scene {
          navigation (le piège exact corrigé au #26 sur `gps()`). */
       if (s.etat === "HABITACLE" || s.etat === "DEPART") return s
       return { etat: "HABITACLE", dest: null }
+
+    case "rejoue":
+      /* Revoir la scène — depuis l'habitacle SEUL (des écrans plus
+         profonds, ‹ rassoit d'abord) : retour au CIEL, la boucle complète
+         (vol, seuil) se rejoue ; la marque de session reste posée, le
+         rejeu est un geste explicite, pas un état de session. */
+      return s.etat === "HABITACLE" ? { etat: "CIEL", dest: null } : s
   }
 }
 

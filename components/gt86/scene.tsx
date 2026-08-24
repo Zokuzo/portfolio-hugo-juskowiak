@@ -170,6 +170,14 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
     if (etat === "HABITACLE") marqueVue()
   }, [etat])
 
+  /* Le REJEU (4e retour de gate) : revenir au CIEL rend la main au dôme —
+     la bascule ciel → rue doit se réarmer, sinon le ciel resterait caché
+     au prochain vol (enRue n'était posé qu'une fois). L'extinction de la
+     voiture, elle, vit dans la rue (effet `vivant`). */
+  useEffect(() => {
+    if (etat === "CIEL") setEnRue(false)
+  }, [etat])
+
   /* LA SUITE DE LA CASCADE (#28) : chaque état télécharge ce dont le
      SUIVANT aura besoin. Depuis le #31 l'habitacle vit dans la rue déjà
      chargée — il ne reste à l'habitacle qu'à précharger la route de
@@ -451,6 +459,19 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
             data-gt86="retour" onClick={() => envoie({ t: "retour" })}
           >
             ‹ {t(lang, "gt86Retour")}
+          </button>
+        )}
+
+        {/* revoir la scène (4e retour de gate) : l'habitacle rend la main
+            au CIEL, toute la boucle se rejoue — la place du ‹ est libre à
+            l'habitacle, le geste y vit */}
+        {etat === "HABITACLE" && (
+          <button
+            type="button"
+            style={{ ...discret, position: "absolute", left: 20, bottom: 18, pointerEvents: "auto" }}
+            data-gt86="rejouer" onClick={() => envoie({ t: "rejoue" })}
+          >
+            ↺ {t(lang, "gt86Rejouer")}
           </button>
         )}
       </div>

@@ -10,6 +10,7 @@ import {
   TEXTURES_HABITACLE,
   VieVoiture,
   allumeHabitacle,
+  eteindreHabitacle,
   habilleInterieur,
   type Cockpit,
   type Veille,
@@ -306,15 +307,23 @@ function VoitureGaree({
   }, [scene, art, lueur, compteur, veille, gl, cockpit])
 
   /* le chemin sans cascade (skip, session revenante) : l'état final d'un
-     coup — idempotent, donc sans danger juste après le seuil. En layout,
-     comme la pose caméra : uniforms et `visible` seulement (topologie de
-     lumières constante, aucune recompilation — voir habitacle.tsx), la
-     frame du skip peint directement l'habitacle vivant */
+     coup — et son INVERSE au rejeu de la scène (HABITACLE → CIEL, 4e
+     retour de gate) : la voiture redevient morte, l'écran repasse en
+     veille, la cascade repartira de zéro. Idempotents tous les deux ; la
+     bascule ne survient qu'aux transitions vivant ⇄ intro (le passage
+     ATTERRISSAGE → SEUIL ne change pas `vivant`, la cascade en cours
+     n'est jamais raturée). En layout, comme la pose caméra : uniforms et
+     `visible` seulement (topologie de lumières constante, aucune
+     recompilation — voir habitacle.tsx). */
   useLayoutEffect(() => {
-    if (!vivant) return
-    allumeHabitacle(cockpit)
+    if (vivant) {
+      allumeHabitacle(cockpit)
+    } else {
+      eteindreHabitacle(cockpit)
+      veille.veille()
+    }
     invalide()
-  }, [vivant, cockpit, invalide])
+  }, [vivant, cockpit, veille, invalide])
 
   /* la chute : le canal `chute` du vol (0 = en l'air, 1 = posée). La
      gravité est FRANCHE — la vitesse croît jusqu'au toucher, l'assiette

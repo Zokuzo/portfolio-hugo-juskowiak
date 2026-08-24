@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState, type MutableRefObject } from "react"
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MutableRefObject } from "react"
 import { useFrame, useLoader, useThree } from "@react-three/fiber"
 import { Environment, Lightformer, useCursor, useGLTF } from "@react-three/drei"
 import { RGBELoader } from "three-stdlib"
@@ -166,8 +166,11 @@ export default function Ciel({
   useEffect(() => surPret(), [surPret])
 
   /* la pose d'ouverture, tenue tant que le ciel est à l'écran — le vol
-     d'atterrissage (vol.tsx) prend la caméra ici au clic */
-  useEffect(() => {
+     d'atterrissage (vol.tsx) prend la caméra ici au clic. Elle se REJOUE
+     au retour du rejeu (dépendance `visible`), et en LAYOUT : un effet
+     passif laissait peindre une frame de dôme depuis le siège (fov 45)
+     avant de reposer la caméra. */
+  useLayoutEffect(() => {
     if (!visible) return
     camera.position.copy(POSE)
     camera.fov = 38
