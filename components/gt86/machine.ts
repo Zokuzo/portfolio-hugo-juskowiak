@@ -62,8 +62,11 @@ export const RAILS: Partial<Record<Etat, Etat>> = {
   SEUIL: "HABITACLE",
 }
 
-/* Les états EN POSE, où la caméra ne bouge pas : `frameloop="demand"` y
-   suffit et la boucle de rendu s'arrête. Les autres sont des transitions. */
+/* Les états EN POSE, où la caméra ne bouge pas — les autres sont des
+   transitions. La boucle de rendu tourne désormais en continu (3e retour
+   de gate #31, « au moins 100 fps ») : ce classement ne pilote plus le
+   frameloop, il reste la SÉMANTIQUE de la machine, assertée par le bloc A
+   (tout état est repos, rail ou terminal). */
 export const REPOS: ReadonlySet<Etat> = new Set<Etat>([
   "CIEL",
   "HABITACLE",

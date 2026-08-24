@@ -3,7 +3,7 @@
 import { useEffect, useRef, type MutableRefObject, type RefObject } from "react"
 import { useFrame, useThree } from "@react-three/fiber"
 import * as THREE from "three"
-import { CAM_FINALE, CIBLE_FINALE } from "./rue"
+import { CAM_FINALE, CHUTE_ALTITUDE, CIBLE_FINALE } from "./rue"
 
 /* LE VOL D'ATTERRISSAGE — ticket #30, sur la recette du #26 : une course à
    DURÉE FIXE en courbe douce (jamais de lerp par image, qui hache dès que
@@ -26,6 +26,13 @@ const DUREE = 4.6
 export const VOL_MS = 4600
 /* la bascule ciel → rue, cachée derrière le voile plein */
 const BASCULE = 0.42
+/* la fenêtre de chute de la voiture (en v.t) et la secousse d'impact
+   (frein 9 : l'enveloppe repasse sous le millimètre avant la fin du vol) */
+const CHUTE_FENETRE: [number, number] = [0.45, 0.88]
+const SECOUSSE = 0.09
+const SECOUSSE_FREIN = 9
+/* la pente résiduelle de l'arrivée : ~1,8 m/s au raccord avec le seuil */
+const PENTE_ARRIVEE = 0.06
 
 /* le départ de la descente : haut au-dessus du carrefour, dans l'axe de la
    vue d'arrivée gatée — le chemin reste au-dessus du couloir des rues */
@@ -117,12 +124,37 @@ export default function Vol({
     }
 
     /* acte II — la descente : du ciel au-dessus du carrefour jusqu'à la
-       vue d'arrivée gatée au #22, la ville montant à travers la brume */
-    const e = adoucit((v.t - BASCULE) / (1 - BASCULE))
+       vue d'arrivée gatée au #22, la ville montant à travers la brume.
+       La course ne MEURT plus sur l'arrivée (3e retour de gate #31,
+       « fluidifie encore ») : elle y passe à ~1,8 m/s, la vitesse à
+       laquelle le seuil démarre — la jonction vol → seuil est raccordée */
+    const u = (v.t - BASCULE) / (1 - BASCULE)
+    const e = PENTE_ARRIVEE * u + (1 - PENTE_ARRIVEE) * adoucit(u)
     camera.position.lerpVectors(CAM_AERIENNE, ARRIVEE, e)
     i.vise.lerpVectors(VISE_AERIENNE, CIBLE, e)
+    v.chute = lisse(CHUTE_FENETRE[0], CHUTE_FENETRE[1], v.t)
+
+    /* le regard SUIT la chute : la visée au ras du sol laissait les 45 m
+       de dégringolade HORS CADRE — la voiture n'apparaissait que 92 ms
+       avant l'impact (chiffré en revue). La visée se relève vers
+       l'altitude de la voiture puis redescend avec elle : l'impact
+       revient cadrer la rue de lui-même. */
+    const altitude = (1 - v.chute * v.chute) * CHUTE_ALTITUDE
+    const engagement = lisse(CHUTE_FENETRE[0], CHUTE_FENETRE[0] + 0.11, v.t)
+    /* 0,85 : la voiture tient le tiers haut du cadre jusqu'à l'impact
+       (0,62 la perdait en fin de chute — 39 % hors cadre, NDC rejoué) */
+    i.vise.y = Math.max(i.vise.y, i.vise.y + (altitude * 0.85 - i.vise.y) * engagement)
     camera.lookAt(i.vise)
-    v.chute = lisse(0.5, 0.85, v.t)
+
+    /* l'impact : la voiture vient de s'asseoir 45 m plus bas — la caméra
+       ENCAISSE, secousse brève et amortie (déterministe, en temps de
+       partition : identique à toute cadence) */
+    if (v.t > CHUTE_FENETRE[1]) {
+      const tau = (v.t - CHUTE_FENETRE[1]) * DUREE
+      const coup = SECOUSSE * Math.exp(-tau * SECOUSSE_FREIN)
+      camera.position.x += coup * Math.sin(tau * 61)
+      camera.position.y += coup * 0.7 * Math.sin(tau * 83 + 1.3)
+    }
 
     if (v.t >= 1 && !i.fini) {
       i.fini = true

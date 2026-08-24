@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useLayoutEffect, useMemo, useRef, type MutableRefObject } from "react"
-import { useFrame, useThree } from "@react-three/fiber"
+import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber"
 import { useGLTF, useTexture } from "@react-three/drei"
 import * as THREE from "three"
 import type { Trajectoire } from "./vol"
@@ -45,16 +45,23 @@ export const CIBLE_FINALE: [number, number, number] = [-4.4, 1, -19]
 const BRUME: [string, number, number] = ["#08070f", 25, 180]
 
 /* altitude d'où la voiture tombe vers son garage pendant la phase rue du
-   vol, et assiette cabrée tenue jusqu'au toucher */
-const CHUTE_ALTITUDE = 22
+   vol, et assiette cabrée tenue jusqu'au toucher — montée à 45 m au 3e
+   retour de gate (« une chute d'encore plus haut ») */
+export const CHUTE_ALTITUDE = 45
 const CHUTE_CABRE = -0.22
 /* le TASSEMENT du toucher (retour de gate #31 : l'adoucissement en sortie
    posait la voiture en plume — une chute, ça ACCÉLÈRE) : ressort amorti,
    la caisse s'enfonce et le nez se refait en une oscillation courte */
-const TASSE_Y = 0.05
+const TASSE_Y = 0.07
 const TASSE_FREIN = 5.5
 const TASSE_FREQ = 12
 const TASSE_DUREE = 1.2
+/* la POUSSIÈRE de l'impact : une couronne de bouffées qui s'ouvre et se
+   dissout au toucher (l'« effet à la tombée » du 3e retour) */
+const POUSSIERE_DUREE = 0.85
+const POUSSIERE: [number, number][] = [
+  [1.15, 1.9], [-1.15, 1.9], [1.3, 0.2], [-1.3, 0.2], [1.15, -1.6], [-1.15, -1.6],
+]
 
 /* ---- textures partagées, peintes une fois (module client) ------------ */
 
@@ -202,11 +209,13 @@ function VoitureGaree({
   cockpit,
   veille,
   vivant,
+  surEcran,
 }: {
   vol: MutableRefObject<Trajectoire>
   cockpit: Cockpit
   veille: Veille
   vivant: boolean
+  surEcran?: (uv: { x: number; y: number } | null) => void
 }) {
   const { scene } = useGLTF("/prototype/gt86.glb")
   const [art, lueur, compteur] = useTexture([
@@ -316,6 +325,7 @@ function VoitureGaree({
      jamais sur le chemin vivant (skip, session revenante — la caméra y
      est déjà assise DANS la voiture). */
   const ressort = useRef({ tombe: false, tau: -1 })
+  const poussiere = useRef<THREE.Group>(null)
   useFrame((_, delta) => {
     const r = ressort.current
     if (vivant) {
@@ -336,23 +346,59 @@ function VoitureGaree({
       const amorti = Math.exp(-TASSE_FREIN * r.tau)
       if (porteur.current) porteur.current.position.y = -TASSE_Y * amorti * Math.sin(TASSE_FREQ * r.tau)
       if (assiette.current) assiette.current.rotation.x = CHUTE_CABRE * amorti * Math.cos(TASSE_FREQ * r.tau)
-      return
+    } else {
+      if (porteur.current) porteur.current.position.y = 0
+      if (assiette.current) assiette.current.rotation.x = 0
     }
-    if (porteur.current) porteur.current.position.y = 0
-    if (assiette.current) assiette.current.rotation.x = 0
+    /* la poussière de l'impact : ouverte par le même ressort */
+    if (poussiere.current) {
+      const k = r.tau >= 0 ? Math.min(1, r.tau / POUSSIERE_DUREE) : 1
+      poussiere.current.visible = k < 1
+      if (k < 1) {
+        const taille = 0.6 + 3.4 * k
+        const souffle = (1 - k) * (1 - k) * 0.5
+        for (const enfant of poussiere.current.children) {
+          const bouffee = enfant as THREE.Sprite
+          bouffee.scale.set(taille, taille * 0.6, 1)
+          bouffee.position.y = 0.1 + 0.55 * k
+          ;(bouffee.material as THREE.SpriteMaterial).opacity = souffle
+        }
+      }
+    }
   })
 
   return (
     <group position={POSE_VOITURE} rotation-y={CAP_VOITURE}>
       <group ref={porteur}>
         <group ref={assiette}>
-          <primitive object={modele} />
+          {/* le clic sur la DALLE (3e retour de gate : « CLICK HERE » doit
+              répondre) : le raycast R3F de la coquille marche (#29), le
+              handler filtre le quad Display et remonte l'UV */}
+          <primitive
+            object={modele}
+            onClick={(e: ThreeEvent<MouseEvent>) => {
+              if (!surEcran) return
+              const m = (e.object as THREE.Mesh).material
+              const mats = Array.isArray(m) ? m : [m]
+              if (!mats.some((x) => x?.name === "Display")) return
+              e.stopPropagation()
+              surEcran(e.uv ? { x: e.uv.x, y: e.uv.y } : null)
+            }}
+          />
           {/* rétro, néons, phares volumétriques : même repère brut que le
               GLB — le groupe copie l'offset d'assise du clone */}
           <group position={[modele.position.x, modele.position.y, modele.position.z]}>
             <VieVoiture cockpit={cockpit} />
           </group>
         </group>
+      </group>
+      {/* la poussière de l'impact — au sol, hors des groupes qui tombent */}
+      <group ref={poussiere} visible={false}>
+        {POUSSIERE.map(([x, z], i) => (
+          <sprite key={i} position={[x, 0.1, z]} scale={[0.6, 0.36, 1]}>
+            <spriteMaterial map={halo()} color="#8a7f74" transparent opacity={0} depthWrite={false} />
+          </sprite>
+        ))}
       </group>
     </group>
   )
@@ -593,6 +639,7 @@ export default function Rue({
   cockpit,
   veille,
   vivant,
+  surEcran,
 }: {
   visible: boolean
   vol: MutableRefObject<Trajectoire>
@@ -603,6 +650,7 @@ export default function Rue({
   cockpit: Cockpit
   veille: Veille
   vivant: boolean
+  surEcran?: (uv: { x: number; y: number } | null) => void
 }) {
   const scene3 = useThree((s) => s.scene)
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
@@ -637,8 +685,9 @@ export default function Rue({
       camera.lookAt(enMondeRepos(viseAssise, ASSISE.vise, voiture))
     }
     camera.updateProjectionMatrix()
-    /* les états de repos sont en frameloop "demand" : sans invalidation,
-       la pose resterait peinte à l'ANCIENNE caméra (écran noir du skip) */
+    /* boucle "always" depuis le 3e retour de gate — l'invalidation est
+       devenue un no-op inoffensif, gardée pour un éventuel retour du
+       régime "demand" */
     invalide()
   }, [pose, camera, invalide, cockpit])
 
@@ -649,7 +698,7 @@ export default function Rue({
           volumes, plus assez pour ressembler à un crépuscule (gate #22) */}
       <ambientLight intensity={0.21} color="#a9b4d4" />
       <Decor />
-      <VoitureGaree vol={vol} cockpit={cockpit} veille={veille} vivant={vivant} />
+      <VoitureGaree vol={vol} cockpit={cockpit} veille={veille} vivant={vivant} surEcran={surEcran} />
       <VieNocturne />
       <Fond />
     </group>

@@ -3,13 +3,13 @@
 import { Suspense, useCallback, useEffect, useReducer, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Canvas, useLoader, useThree } from "@react-three/fiber"
-import { useGLTF } from "@react-three/drei"
+import { Stats, useGLTF } from "@react-three/drei"
 import { RGBELoader } from "three-stdlib"
 import * as THREE from "three"
 import type { CSSProperties } from "react"
 import { t, type Lang } from "@/components/proto/dict"
 import { parametre } from "./capable"
-import { INTRO, RAILS, REPOS, depart, marqueVue, suivant } from "./machine"
+import { INTRO, RAILS, depart, marqueVue, suivant } from "./machine"
 import Ciel, { CIEL_HDR, VOITURE } from "./ciel"
 import Rue from "./rue"
 import Vol, { VOL_MS, type Trajectoire } from "./vol"
@@ -119,8 +119,28 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
   /* l'écran en veille — une seule instance par montage (StrictMode
      fabriquait deux dalles au prototype, matériau et clics séparés) */
   const veilleRef = useRef<Veille | null>(null)
-  if (!veilleRef.current) veilleRef.current = creeVeille()
+  if (!veilleRef.current) veilleRef.current = creeVeille(lang)
   const veille = veilleRef.current
+  /* la bascule FR/EN reste atteignable au clavier sous l'overlay : la
+     dalle suit (l'instance, elle, ne se recrée jamais — StrictMode) */
+  useEffect(() => {
+    veille.langue(lang)
+  }, [veille, lang])
+  /* le compteur de cadence à la demande (?fps) — pour mesurer chez Hugo */
+  const [fpsVoulu] = useState(() => new URLSearchParams(window.location.search).has("fps"))
+
+  /* le clic sur la DALLE (3e retour de gate) : veille → hub, puis la
+     moitié gauche part au GPS, la droite aux musiques — mêmes signaux que
+     les boutons DOM, la machine reste l'unique vérité */
+  const surEcran = (uv: { x: number; y: number } | null) => {
+    if (etat !== "HABITACLE") return
+    if (veille.mode() === "veille") {
+      veille.hub()
+      return
+    }
+    if (!uv) return
+    envoie({ t: "va", ou: uv.x < 0.5 ? "GPS" : "MUSIQUES" })
+  }
   /* voiture + ciel décodés → la rue se monte en sourdine pendant le CIEL
      (décodage meshopt synchrone : jamais pendant le rail) */
   const [cielPret, setCielPret] = useState(false)
@@ -191,19 +211,24 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
       style={{ position: "fixed", inset: 0, zIndex: 50, background: NUIT }}
     >
       <Canvas
-        /* En pose, la boucle s'arrête : rien à repeindre tant que le
-           visiteur ne bouge pas. Elle ne tourne que sur les transitions —
-           et au CIEL : c'est une pose VIVANTE (respiration de la voiture,
-           houle des nuages), la machine y est au repos mais pas l'image. */
-        frameloop={etat === "CIEL" || !REPOS.has(etat) ? "always" : "demand"}
+        /* Boucle TOUJOURS vivante (3e retour de gate #31, « au moins
+           100 fps ») : le "demand" des états de repos ne repeignait qu'au
+           clignotement de veille — ~1,5 image/s à l'habitacle, c'est ce
+           qu'un compteur y mesurait. Toute la scène vit (feux tricolores,
+           veille, néons) et chaque interaction répond à la cadence de
+           l'écran ; les invalidate() semés restent, inoffensifs. */
+        frameloop="always"
         dpr={[1, 1.5]}
-        gl={{ powerPreference: "high-performance", antialias: true, alpha: true }}
+        /* alpha:false : la toile est OPAQUE (scene.background est posé) —
+           le compositeur n'a plus à la fondre sur le DOM, c'est une frame
+           moins chère sur beaucoup de GPU */
+        gl={{ powerPreference: "high-performance", antialias: true, alpha: false }}
         camera={{ position: [0, 0, 6], fov: 45 }}
         onCreated={(st) => {
           st.scene.background = new THREE.Color(NUIT)
           /* poignée des outils de capture CDP (télémétrie, gates visuels) —
            même rôle que window.__scene des prototypes ; expose caméra,
-           scène et invalidate() pour poser des vues en frameloop demand */
+           scène et invalidate() pour poser des vues à la main */
           Object.assign(window as object, { __gt86: st })
         }}
       >
@@ -233,9 +258,11 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
               cockpit={cockpit}
               veille={veille}
               vivant={apres}
+              surEcran={surEcran}
             />
           </Suspense>
         )}
+        {fpsVoulu && <Stats />}
       </Canvas>
 
       {/* le voile de la bascule ciel → rue : crème des crêtes, piloté par

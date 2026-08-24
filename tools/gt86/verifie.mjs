@@ -302,7 +302,7 @@ console.log("  4/6 intro une seule fois par session")
 /* 4 bis. Le rail complet s'achève DE LUI-MÊME (#30, #31) : session vierge,
       clic sur la consigne, et vol PUIS seuil doivent mener à l'habitacle
       sans skip — les chorégraphes envoient le vrai « fini », les horloges
-      de scene.tsx ne sont que des filets. Large : vol 4,6 s + seuil 8,2 s
+      de scene.tsx ne sont que des filets. Large : vol 4,6 s + seuil 6,6 s
       + chargement rue, filets compris (VOL_MS+4 s puis SEUIL_MS+4 s sur
       machine gelée). */
 await sonde(`sessionStorage.clear()`)

@@ -27,10 +27,12 @@ import { CAM_FINALE, enMondeRepos } from "./rue"
       rétroéclairage et néons, l'habitacle luisant à travers le verre ;
    3. les phares CLAQUENT en dernier et le nom se pose dessus (overlay
       DOM), la caméra en lent travelling avant constant ;
-   4. le nom s'efface, la course ré-accélère par-dessus le capot et meurt
-      SUR le pare-brise conducteur : le verre fumé emplit le cadre, son
-      noir devient l'obscurité (le voile #161b21 du DOM finit le noir),
-      et on ressort assis, l'habitacle déjà vivant.
+   4. le nom s'efface, la course ré-accélère par-dessus le capot,
+      TRAVERSE le pare-brise conducteur sous une impulsion de voile
+      (#161b21 : le verre emplit le cadre, son noir devient l'obscurité
+      — un battement, pas un rideau) et vient mourir sur l'œil du
+      conducteur : on s'assied DANS le mouvement, le regard se lève de la
+      planche vers la route, la focale glisse vers celle de l'habitacle.
 
    Le repère des poses est celui de la VOITURE (brut GLB : nez +z,
    conducteur +x — conduite à droite) converti en monde à l'initialisation
@@ -61,8 +63,8 @@ import { CAM_FINALE, enMondeRepos } from "./rue"
      elles, se pilotent par INTENSITÉ seule — topologie constante, voir le
      Cockpit d'habitacle.tsx (le double gel de recompilation shader était
      le premier suspect du gate). */
-const DUREE = 6.1
-export const SEUIL_MS = 6100
+const DUREE = 6.6
+export const SEUIL_MS = 6600
 
 /* les fenêtres de la partition, en secondes */
 const AIGUILLE_HAUT: [number, number] = [0.55, 1.05]
@@ -73,35 +75,55 @@ const CLAQUE: [number, number] = [2.3, 2.35]
 const NOM_ENTRE: [number, number] = [2.35, 2.7]
 const NOM_SORT: [number, number] = [4.9, 5.2]
 const PLONGE_DEBUT = 5.0
-const VOILE: [number, number] = [5.72, 5.98]
+/* l'instant où la caméra TRAVERSE le pare-brise — l'entrée dans le
+   véhicule est continue jusqu'au siège (3e retour de gate), le voile
+   n'est plus un rideau mais une IMPULSION qui couvre la traversée */
+const VERRE_T = 5.9
+/* l'impulsion couvre TOUTE la fenêtre où le near plane peut trancher le
+   verre à l'approche ([5,84 → traversée], mesurée au GLB) — la sortie se
+   fait caméra dedans, regard devant, le verre est derrière elle */
+const PULSE_MONTE: [number, number] = [5.62, 5.82]
+const PULSE_BAISSE: [number, number] = [6.0, 6.32]
+/* la focale glisse vers celle de l'habitacle en s'asseyant */
+const FOCALE: [number, number] = [5.9, 6.5]
 /* la surtension du réveil d'aiguille */
 const AIGUILLE_CRETE = 2.4
 
 /* LE CHEMIN, en repère voiture — la Catmull-Rom passe PAR chaque ancre :
    vue d'arrivée (CAM_FINALE, préfixée en monde à l'init) → large autour
    du flanc → ¾ avant « B » (calé aux captures) → fin du travelling du
-   nom → au-dessus du capot → le pare-brise conducteur */
+   nom → au-dessus du capot → le pare-brise conducteur → au-dessus du
+   volant → l'œil du conducteur (ASSISE.cam, ajouté à l'init) */
 const CHEMIN: [number, number, number][] = [
   [-5.0, 1.7, -0.5],
   [-3.3, 1.5, 6.8],
   [-2.8, 1.43, 6.0],
   [-0.6, 1.78, 3.5],
-  [0.3, 1.22, 0.95],
+  /* l'ancre du verre est SUR le pare-brise mesuré au GLB (mi-hauteur) —
+     une première ancre 34 cm au-dessus déplaçait la vraie traversée à
+     t≈6,17, hors de l'impulsion du voile (payé, chiffré en revue) ; le
+     profil épingle cette ancre à VERRE_T, la traversée y est par
+     construction */
+  [0.3, 1.1, 0.45],
+  [0.3, 1.14, 0.1],
 ]
 /* les index d'ancre qui portent le rythme : le ¾ avant (le claquement y
-   arrive) et la fin du travelling (la plongée en part) */
+   arrive), la fin du travelling (la plongée en part), le verre (la
+   traversée), le siège (la fin) */
 const ANCRE_TQ = 2
 const ANCRE_TENUE = 3
-/* la pente de départ du profil (fraction du chemin par seconde) : douce
-   mais non nulle — la caméra repart sans à-coup de la vue d'arrivée */
+const ANCRE_VERRE = 5
+/* pentes du profil (fraction du chemin par seconde) : départ doux mais
+   non nul, et ~1,6 m/s à la traversée du verre */
 const PENTE_DEPART = 0.08
+const VITESSE_VERRE = 1.6
 
 /* les visées : la voiture pendant l'approche, la calandre pendant le nom
-   (continue — un saut de 3,8° claquait à l'image), le poste pendant la
-   plongée */
+   (continue — un saut de 3,8° claquait à l'image), la planche de bord
+   pendant la plongée, puis le regard se lève vers la route en s'asseyant */
 const VISE_ARRIERE = new THREE.Vector3(0, 1.05, 0)
 const VISE_AVANT = new THREE.Vector3(0, 0.75, 1.3)
-const VISE_VERRE = new THREE.Vector3(0.3, 0.95, -0.4)
+const VISE_TABLEAU = new THREE.Vector3(0.25, 0.85, 0.3)
 const VISE_APPROCHE_FIN = 1.3
 
 const adoucit = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
@@ -152,13 +174,14 @@ export default function Seuil({
   const interne = useRef({
     lance: false,
     fini: false,
+    dedans: false,
     t: 0,
     /* la courbe et son profil, construits en monde au lancement */
     courbe: null as THREE.CatmullRomCurve3 | null,
     cles: [] as Cle[],
     viseArriere: new THREE.Vector3(),
     viseAvant: new THREE.Vector3(),
-    viseVerre: new THREE.Vector3(),
+    viseTableau: new THREE.Vector3(),
     assiseCam: new THREE.Vector3(),
     assiseVise: new THREE.Vector3(),
     pos: new THREE.Vector3(),
@@ -195,38 +218,45 @@ export default function Seuil({
       if (!voiture) return
       i.lance = true
       i.fini = false
+      i.dedans = false
       i.t = 0
       /* les ancres se posent sur la voiture AU REPOS (enMondeRepos) : si le
          filet a coupé le vol en plein ciel, les groupes de chute portent
          encore l'altitude — la voiture, elle, sera posée dès cette frame.
          L'entrée est CONTRACTUELLEMENT la vue d'arrivée, jamais lue de la
-         caméra (la première frame peut courir avant l'effet de pose). */
+         caméra (la première frame peut courir avant l'effet de pose). La
+         DERNIÈRE ancre est l'œil du conducteur : la même courbe entre dans
+         le véhicule et s'assied. */
       const ancres = [
         new THREE.Vector3(...CAM_FINALE),
         ...CHEMIN.map((l) => enMondeRepos(new THREE.Vector3(), new THREE.Vector3(...l), voiture)),
+        enMondeRepos(new THREE.Vector3(), ASSISE.cam, voiture),
       ]
       i.courbe = new THREE.CatmullRomCurve3(ancres, false, "centripetal")
       /* les fractions de longueur d'arc des ancres du rythme, mesurées sur
          la courbe réelle (600 échantillons) — puis le profil : arrivée au
          ¾ avant pour le claquement, travelling du nom à vitesse constante
-         NON NULLE, ré-accélération, mort sur le verre */
+         NON NULLE, ré-accélération, traversée du verre à ~1,6 m/s, mort
+         de la course sur le siège */
       const n = ancres.length - 1
       const longueurs = i.courbe.getLengths(600)
       const total = longueurs[600]
       const frac = (idx: number) => longueurs[Math.round((idx / n) * 600)] / total
       const fTq = frac(ANCRE_TQ)
       const fTenue = frac(ANCRE_TENUE)
+      const fVerre = frac(ANCRE_VERRE)
       const derive = (fTenue - fTq) / (PLONGE_DEBUT - CLAQUE[0])
       i.cles = [
         { t: 0, s: 0, m: PENTE_DEPART },
         { t: CLAQUE[0], s: fTq, m: derive },
         { t: PLONGE_DEBUT, s: fTenue, m: derive },
+        { t: VERRE_T, s: fVerre, m: VITESSE_VERRE / total },
         { t: DUREE, s: 1, m: 0 },
       ]
       for (const [monde, local] of [
         [i.viseArriere, VISE_ARRIERE],
         [i.viseAvant, VISE_AVANT],
-        [i.viseVerre, VISE_VERRE],
+        [i.viseTableau, VISE_TABLEAU],
         [i.assiseCam, ASSISE.cam],
         [i.assiseVise, ASSISE.vise],
       ] as const) {
@@ -244,8 +274,25 @@ export default function Seuil({
       camera.lookAt(i.vise.lerpVectors(i.viseArriere, i.viseAvant, adoucit(t / VISE_APPROCHE_FIN)))
     } else if (t < PLONGE_DEBUT) {
       camera.lookAt(i.viseAvant)
+    } else if (t < VERRE_T) {
+      camera.lookAt(i.vise.lerpVectors(i.viseAvant, i.viseTableau, adoucit(lisse(PLONGE_DEBUT, VERRE_T, t))))
     } else {
-      camera.lookAt(i.vise.lerpVectors(i.viseAvant, i.viseVerre, adoucit(lisse(PLONGE_DEBUT, DUREE, t))))
+      /* dedans : le regard se lève de la planche vers la route */
+      camera.lookAt(i.vise.lerpVectors(i.viseTableau, i.assiseVise, adoucit(lisse(VERRE_T, DUREE, t))))
+    }
+    /* la focale glisse vers celle de l'habitacle en s'asseyant */
+    if (t >= FOCALE[0]) {
+      camera.fov = 38 + 7 * adoucit(fenetre(FOCALE, t))
+      camera.updateProjectionMatrix()
+    }
+    /* la traversée du verre : sous l'impulsion du voile, le pare-brise
+       passe au réglage intérieur — dehors il garde le fumé 0,8 */
+    if (t >= VERRE_T && !i.dedans) {
+      i.dedans = true
+      for (const v of cockpit.verre) {
+        v.opacity = 0.4
+        v.color.set("#1a2027")
+      }
     }
 
     /* ---- la mise sous contact ---- */
@@ -284,24 +331,24 @@ export default function Seuil({
       nom.current.style.opacity = opacite.toFixed(3)
     }
 
-    /* ---- le voile du verre : couvre la traversée du near plane ---- */
-    if (voile.current && !i.fini) voile.current.style.opacity = fenetre(VOILE, t).toFixed(3)
+    /* ---- l'impulsion du voile : pleine autour de la traversée du verre,
+       dissipée pendant qu'on s'assied — plus de rideau final ---- */
+    if (voile.current && !i.fini) {
+      const pulse = Math.min(fenetre(PULSE_MONTE, t), 1 - fenetre(PULSE_BAISSE, t))
+      voile.current.style.opacity = pulse.toFixed(3)
+    }
 
     if (i.t >= 1 && !i.fini) {
       i.fini = true
-      /* sous le voile plein : tout se pose d'un coup — l'état final
-         idempotent, l'assise conducteur, la focale de l'habitacle — puis
-         le voile se dissout en CSS (le DOM n'attend pas la boucle WebGL,
-         qui repasse en "demand" à l'habitacle). */
+      /* la course a fini SUR l'œil du conducteur — l'état final se pose
+         (idempotent : verre déjà intérieur, focale déjà à 45) et l'assise
+         exacte est reprise au millimètre */
       allumeHabitacle(cockpit)
       camera.position.copy(i.assiseCam)
       camera.fov = 45
       camera.lookAt(i.assiseVise)
       camera.updateProjectionMatrix()
-      if (voile.current) {
-        voile.current.style.transition = "opacity 600ms ease"
-        voile.current.style.opacity = "0"
-      }
+      if (voile.current) voile.current.style.opacity = "0"
       fini()
     }
   })
