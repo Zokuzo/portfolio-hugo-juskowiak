@@ -4,7 +4,7 @@ import { useEffect, useRef, type RefObject } from "react"
 import { useFrame, useThree } from "@react-three/fiber"
 import * as THREE from "three"
 import { ALLUME, ASSISE, allumeHabitacle, type Cockpit } from "./habitacle"
-import { enMondeRepos } from "./rue"
+import { CAM_FINALE, enMondeRepos } from "./rue"
 
 /* LE SEUIL — ticket #31, la mise en scène gravée au #24 : « la mise sous
    contact et la plongée dans le verre ». Sur la recette du vol (#30/#26) :
@@ -31,37 +31,62 @@ import { enMondeRepos } from "./rue"
    via localToWorld du clone garé : les chiffres restent lisibles et la
    pose de la rue peut bouger sans rien casser ici. */
 
-const DUREE = 8.2
-export const SEUIL_MS = 8200
+/* PARTITION RESSERRÉE au retour de gate #31 (« ni correcte ni assez
+   rapide ») — diagnostiquée aux arrêts sur image CDP puis contre-vérifiée
+   au calcul (rejeux numériques indépendants, géométrie du cône relue dans
+   drei/core/SpotLight.js, GLB mesuré au sommet) :
+   - le « pas assez rapidement » : 8,2 s dont ~2,5 s de plan GELÉ après le
+     claquement (dérive 8 cm/s, imperceptible) → 6,1 s, cascade PENDANT le
+     glissé, claquement à 2,3 s, et la tenue du nom devient un lent
+     travelling avant (~0,9 m en courbe douce) — le cadre reste vivant ;
+   - le « pas correctement » : l'ancienne plongée par la vitre latérale
+     finissait sa course à bout portant du flanc, voile encore transparent
+     (vue à travers le verre AVANT l'obscurité — capturé), et frôlait les
+     éclats d'optiques ; elle passe désormais PAR-DESSUS LE CAPOT vers le
+     pare-brise conducteur, décélère à zéro sur le verre, et le voile est
+     plein avant tout contact — pendant la plongée, cônes volumétriques et
+     éclats s'effacent (ils sont sous et derrière la caméra, et leurs
+     sprites à bout portant emplissaient le cadre de crème) ;
+   - les à-coups machine-rapide confirmés en revue : visée continue à
+     l'entrée de plongée (même cible que la tenue), claquement en 3 frames
+     avec cônes ET optiques synchrones, plus AUCUNE bascule de pixelRatio
+     en pleine vue, et `depuis` posé sur CAM_FINALE (jamais lu de la
+     caméra : le filet peut couper un vol en plein ciel). Les lumières,
+     elles, se pilotent par INTENSITÉ seule — topologie constante, voir le
+     Cockpit d'habitacle.tsx (le double gel de recompilation shader était
+     le premier suspect du gate). */
+const DUREE = 6.1
+export const SEUIL_MS = 6100
 
 /* les fenêtres de la partition, en secondes */
-const GLISSE_FIN = 1.5
-const AIGUILLE_HAUT: [number, number] = [1.5, 2.05]
-const AIGUILLE_POSE: [number, number] = [2.05, 2.6]
-const CADRAN: [number, number] = [1.6, 2.4]
-const INTERIEUR: [number, number] = [2.4, 3.4]
-const CLAQUE: [number, number] = [3.6, 3.75]
-const NOM_ENTRE: [number, number] = [3.65, 4.05]
-const NOM_SORT: [number, number] = [6.5, 6.9]
-const PLONGE_DEBUT = 6.7
-const VOILE: [number, number] = [7.85, 8.15]
+const GLISSE_FIN = 1.05
+const AIGUILLE_HAUT: [number, number] = [0.55, 1.05]
+const AIGUILLE_POSE: [number, number] = [1.05, 1.5]
+const CADRAN: [number, number] = [0.7, 1.4]
+const INTERIEUR: [number, number] = [1.15, 2.05]
+const CLAQUE: [number, number] = [2.3, 2.35]
+const NOM_ENTRE: [number, number] = [2.35, 2.7]
+const NOM_SORT: [number, number] = [4.9, 5.2]
+const PLONGE_DEBUT = 5.0
+const VOILE: [number, number] = [5.72, 5.98]
 /* la surtension du réveil d'aiguille */
 const AIGUILLE_CRETE = 2.4
 
 /* poses caméra en repère voiture (calées aux captures CDP — pose « B » :
-   frontal, les deux optiques, HORS des cônes volumétriques dont la
-   traversée peignait des aplats crème en bord de cadre) */
+   frontal, les deux optiques) */
 const TQ_ARRIVEE = new THREE.Vector3(-3.3, 1.5, 6.8)
-const TQ_DERIVE = new THREE.Vector3(-3.05, 1.45, 6.45)
-const GLISSE_DETOUR = new THREE.Vector3(-4.5, 1.6, -0.5)
+/* la tenue du nom : lent travelling avant vers la calandre */
+const TQ_DERIVE = new THREE.Vector3(-2.8, 1.43, 6.0)
+const GLISSE_DETOUR = new THREE.Vector3(-5.0, 1.7, -0.5)
 const VISE_ARRIERE = new THREE.Vector3(0, 1.05, 0)
 const VISE_AVANT = new THREE.Vector3(0, 0.75, 1.3)
-/* la plongée : par-dessus le capot vers la vitre conducteur (+x) */
-const PLONGE_1 = new THREE.Vector3(1.2, 1.15, 5.2)
-const PLONGE_2 = new THREE.Vector3(2.3, 1.16, 1.3)
-const PLONGE_3 = new THREE.Vector3(0.8, 1.06, -0.3)
-const VISE_PLONGE_1 = new THREE.Vector3(0, 0.8, 2.0)
-const VISE_PLONGE_2 = new THREE.Vector3(0.32, 0.98, -0.3)
+/* la plongée : haut au-dessus du capot, puis le pare-brise conducteur */
+const PLONGE_1 = new THREE.Vector3(-1.0, 1.85, 4.6)
+const PLONGE_2 = new THREE.Vector3(0.0, 1.65, 2.4)
+const PLONGE_3 = new THREE.Vector3(0.3, 1.22, 0.95)
+/* visée continue avec la tenue (un saut de 3,8° claquait à l'image) */
+const VISE_PLONGE_1 = VISE_AVANT
+const VISE_PLONGE_2 = new THREE.Vector3(0.3, 0.95, -0.4)
 
 const adoucit = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
 const lisse = (a: number, b: number, t: number) => Math.min(1, Math.max(0, (t - a) / (b - a)))
@@ -102,7 +127,6 @@ export default function Seuil({
   fini: () => void
 }) {
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
-  const gl = useThree((s) => s.gl)
   const interne = useRef({
     lance: false,
     plonge: false,
@@ -127,22 +151,21 @@ export default function Seuil({
   })
 
   /* le RANGEMENT seulement (recette du vol) : un skip en pleine mise en
-     scène restaure la résolution et coupe le voile net — l'état ALLUMÉ de
-     la voiture, lui, est posé par l'effet `vivant` de la rue à l'entrée
-     de l'habitacle, pas ici. Au fini naturel le voile n'est PAS touché :
-     sa dissipation douce (CSS) est déjà en route sur la vue assise. */
+     scène coupe le voile net — l'état ALLUMÉ de la voiture, lui, est posé
+     par l'effet `vivant` de la rue à l'entrée de l'habitacle, pas ici.
+     Au fini naturel le voile n'est PAS touché : sa dissipation douce
+     (CSS) est déjà en route sur la vue assise. */
   useEffect(() => {
     if (etat !== "SEUIL") return
     const i = interne.current
     return () => {
       i.lance = false
-      gl.setPixelRatio(Math.min(window.devicePixelRatio, 1.5))
       if (!i.fini && voile.current) {
         voile.current.style.transition = ""
         voile.current.style.opacity = "0"
       }
     }
-  }, [etat, gl, voile])
+  }, [etat, voile])
 
   useFrame((_, delta) => {
     if (etat !== "SEUIL") return
@@ -159,7 +182,10 @@ export default function Seuil({
       i.plonge = false
       i.fini = false
       i.t = 0
-      i.depuis.copy(camera.position)
+      /* l'entrée est CONTRACTUELLEMENT la vue d'arrivée — jamais lue de la
+         caméra : si le filet a coupé un vol inachevé, la première frame du
+         seuil peut courir avant l'effet de pose et lirait un point du ciel */
+      i.depuis.set(...CAM_FINALE)
       /* les ancres se posent sur la voiture AU REPOS (enMondeRepos) : si le
          filet a coupé le vol en plein ciel, les groupes de chute portent
          encore l'altitude — la voiture, elle, sera posée dès cette frame */
@@ -191,15 +217,13 @@ export default function Seuil({
       camera.position.copy(i.pos)
       camera.lookAt(i.vise.lerpVectors(i.viseArriere, i.viseAvant, e))
     } else if (t < PLONGE_DEBUT) {
-      /* la tenue : une dérive imperceptible, la pose reste vivante */
-      const e = lisse(GLISSE_FIN, PLONGE_DEBUT, t)
+      /* la tenue du nom : lent travelling avant en courbe douce — vitesse
+         nulle aux deux jonctions (glissé avant, plongée après) */
+      const e = adoucit(lisse(GLISSE_FIN, PLONGE_DEBUT, t))
       camera.position.lerpVectors(i.tq, i.tqDerive, e)
       camera.lookAt(i.viseAvant)
     } else {
-      if (!i.plonge) {
-        i.plonge = true
-        gl.setPixelRatio(1)
-      }
+      if (!i.plonge) i.plonge = true
       const e = adoucit(lisse(PLONGE_DEBUT, DUREE, t))
       bez3(i.pos, i.tqDerive, i.p1, i.p2, i.p3, e)
       camera.position.copy(i.pos)
@@ -220,14 +244,22 @@ export default function Seuil({
     }
     for (const m of cockpit.boutons) m.emissiveIntensity = dedans * ALLUME.boutons
     for (const m of cockpit.planche) m.emissiveIntensity = dedans * ALLUME.planche
+    for (const n of cockpit.neonLums) n.lum.intensity = dedans * n.plein
     if (cockpit.neons) cockpit.neons.visible = dedans > 0.3
 
-    /* ---- le claquement des phares, en DERNIER ---- */
+    /* ---- le claquement des phares, en DERNIER — optiques, faisceaux et
+       cônes d'un même geste (3 frames). Pendant la plongée, cônes et
+       éclats s'effacent : ils passent sous et derrière la caméra, et
+       leurs sprites à bout portant emplissaient le cadre — la LUMIÈRE,
+       elle, continue de mordre l'asphalte. ---- */
     const claque = fenetre(CLAQUE, t)
     for (const m of cockpit.optiques) m.emissiveIntensity = claque * ALLUME.optiques
     for (const m of cockpit.signature) m.emissiveIntensity = claque * ALLUME.signature
     for (const m of cockpit.braises) m.emissiveIntensity = claque * ALLUME.braises
-    if (cockpit.phares) cockpit.phares.visible = claque > 0
+    for (const l of cockpit.phareLums) l.intensity = claque * ALLUME.faisceau
+    const faisceaux = claque > 0 && !i.plonge
+    if (cockpit.phares) cockpit.phares.visible = faisceaux
+    for (const c of cockpit.phareCones) c.visible = faisceaux
 
     /* ---- le nom, posé sur le claquement ---- */
     if (nom.current) {
@@ -249,7 +281,6 @@ export default function Seuil({
       camera.fov = 45
       camera.lookAt(i.assiseVise)
       camera.updateProjectionMatrix()
-      gl.setPixelRatio(Math.min(window.devicePixelRatio, 1.5))
       if (voile.current) {
         voile.current.style.transition = "opacity 600ms ease"
         voile.current.style.opacity = "0"

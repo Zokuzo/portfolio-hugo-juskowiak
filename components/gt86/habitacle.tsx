@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef } from "react"
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react"
 import { useThree } from "@react-three/fiber"
 import { SpotLight as SpotVolumetrique, useTexture } from "@react-three/drei"
 import * as THREE from "three"
@@ -47,6 +47,8 @@ export const ALLUME = {
   optiques: 8,
   signature: 1.6,
   braises: 0.6,
+  /* l'intensité gatée des spots volumétriques (#22) */
+  faisceau: 380,
 }
 
 /* ---- l'écran en veille -------------------------------------------------- */
@@ -122,7 +124,19 @@ export function creeVeille(): Veille {
 /* ---- le cockpit : les poignées de la cascade ---------------------------- */
 
 /* Les matériaux du clone sont clonés PAR MESH (rue.tsx) : un même nom peut
-   vivre en plusieurs exemplaires — tout est rangé en tableaux. */
+   vivre en plusieurs exemplaires — tout est rangé en tableaux.
+
+   TOPOLOGIE DE LUMIÈRES CONSTANTE (retour de gate #31) : la clé de cache
+   des programmes de three r169 inclut le NOMBRE de lumières, et un
+   sous-arbre `visible=false` n'est pas collecté — basculer `visible` sur
+   un groupe qui CONTIENT des lumières recompilait donc tous les matériaux
+   éclairés en pleine cascade, gel synchrone pile sur le claquement
+   (confirmé par revue three, invisible sur SwiftShader). Les vraies
+   lumières (`neonLums`, `phareLums`) vivent DONC toujours dans le graphe à
+   intensité 0 — la cascade et l'allumage ne pilotent que des UNIFORMS —
+   et seuls les visuels non éclairés (`neons` : nappe + éclats ; `phares` :
+   éclats d'optiques ; `phareCones` : cônes volumétriques de drei)
+   basculent en `visible`. */
 export type Cockpit = {
   voiture: THREE.Object3D | null
   verre: THREE.MeshPhysicalMaterial[]
@@ -135,7 +149,10 @@ export type Cockpit = {
   signature: THREE.MeshStandardMaterial[]
   braises: THREE.MeshStandardMaterial[]
   neons: THREE.Group | null
+  neonLums: { lum: THREE.SpotLight | THREE.PointLight; plein: number }[]
   phares: THREE.Group | null
+  phareLums: THREE.SpotLight[]
+  phareCones: THREE.Object3D[]
 }
 
 export function cockpitVide(): Cockpit {
@@ -151,7 +168,10 @@ export function cockpitVide(): Cockpit {
     signature: [],
     braises: [],
     neons: null,
+    neonLums: [],
     phares: null,
+    phareLums: [],
+    phareCones: [],
   }
 }
 
@@ -418,6 +438,11 @@ export function allumeHabitacle(cockpit: Cockpit) {
     v.opacity = 0.4
     v.color.set("#1a2027")
   }
+  /* les lumières par leurs intensités, les visuels par `visible` —
+     topologie constante, aucune recompilation (voir Cockpit) */
+  for (const l of cockpit.phareLums) l.intensity = ALLUME.faisceau
+  for (const n of cockpit.neonLums) n.lum.intensity = n.plein
+  for (const c of cockpit.phareCones) c.visible = true
   if (cockpit.neons) cockpit.neons.visible = true
   if (cockpit.phares) cockpit.phares.visible = true
 }
@@ -489,10 +514,12 @@ function Retro() {
 }
 
 /* les néons violets gatés (#23) : nappe additive au sol + spots plongeants
-   sous caisse + accents d'habitacle — le groupe naît invisible, la cascade
-   du seuil l'allume avec le reste de l'intérieur */
+   sous caisse + accents d'habitacle. Les LUMIÈRES vivent toujours dans le
+   graphe à intensité 0 (topologie constante, voir Cockpit) — seuls la
+   nappe et les éclats naissent invisibles. */
 function Neons({ cockpit }: { cockpit: Cockpit }) {
   const cibles = useMemo(() => Array.from({ length: 4 }, () => new THREE.Object3D()), [])
+  const lums = useRef<({ lum: THREE.SpotLight | THREE.PointLight; plein: number } | null)[]>([])
   const sol: [number, number][] = [[-0.075, 1.5], [-0.075, -1.4], [-0.7, 0.05], [0.55, 0.05]]
   const dedans: [number, number, number][] = [
     [0.3, 0.38, 0.5],
@@ -500,50 +527,83 @@ function Neons({ cockpit }: { cockpit: Cockpit }) {
     [0.1, 0.48, -0.12],
     [-0.28, 0.48, -0.12],
   ]
+  /* en LAYOUT : l'allumage direct (rue.tsx, layout aussi) court au même
+     montage sur le chemin vivant — les enfants collectent d'abord */
+  useLayoutEffect(() => {
+    cockpit.neonLums = lums.current.filter((e): e is NonNullable<typeof e> => e !== null)
+  }, [cockpit])
   return (
-    <group visible={false} ref={(g) => { cockpit.neons = g }}>
-      <mesh position={[-0.075, 0.045, 0.05]} rotation-x={-Math.PI / 2}>
-        <planeGeometry args={[3.3, 5.6]} />
-        <meshBasicMaterial map={halo()} color="#7a2cf0" transparent opacity={0.55} blending={THREE.AdditiveBlending} depthWrite={false} />
-      </mesh>
+    <group>
       {sol.map(([x, z], i) => (
         <group key={i}>
           <primitive object={cibles[i]} position={[x, 0, z]} />
-          <spotLight position={[x, 0.28, z]} target={cibles[i]} color="#8a3cff" intensity={5} angle={1.1} penumbra={0.7} distance={1.6} decay={2} />
+          <spotLight
+            ref={(l) => { lums.current[i] = l && { lum: l, plein: 5 } }}
+            position={[x, 0.28, z]} target={cibles[i]} color="#8a3cff" intensity={0} angle={1.1} penumbra={0.7} distance={1.6} decay={2}
+          />
         </group>
       ))}
       {dedans.map(([x, y, z], i) => (
-        <group key={i}>
-          <sprite position={[x, y, z]} scale={[0.16, 0.16, 1]}>
+        <pointLight
+          key={i}
+          ref={(l) => { lums.current[4 + i] = l && { lum: l, plein: 0.35 } }}
+          position={[x, y, z]} color="#8a3cff" intensity={0} distance={0.5} decay={2}
+        />
+      ))}
+      <group visible={false} ref={(g) => { cockpit.neons = g }}>
+        <mesh position={[-0.075, 0.045, 0.05]} rotation-x={-Math.PI / 2}>
+          <planeGeometry args={[3.3, 5.6]} />
+          <meshBasicMaterial map={halo()} color="#7a2cf0" transparent opacity={0.55} blending={THREE.AdditiveBlending} depthWrite={false} />
+        </mesh>
+        {dedans.map(([x, y, z], i) => (
+          <sprite key={i} position={[x, y, z]} scale={[0.16, 0.16, 1]}>
             <spriteMaterial map={halo()} color="#9b4dff" transparent opacity={0.5} blending={THREE.AdditiveBlending} depthWrite={false} />
           </sprite>
-          <pointLight position={[x, y, z]} color="#8a3cff" intensity={0.35} distance={0.5} decay={2} />
-        </group>
-      ))}
+        ))}
+      </group>
     </group>
   )
 }
 
 /* les phares qui MORDENT la rue (réglage Hugo au gizmo, #22) : deux spots
    volumétriques aux optiques, cibles 9 m devant sur l'asphalte — en repère
-   voiture, ils héritent de la pose de la rue. Invisibles jusqu'au
-   claquement du seuil. */
+   voiture, ils héritent de la pose de la rue. Les LUMIÈRES sont montées à
+   demeure à intensité 0 ; leurs cônes (mesh enfant du SpotLight de drei,
+   dont l'éclat ne dépend PAS de l'intensité) et les éclats d'optiques
+   naissent invisibles et claquent avec la cascade. */
 function Phares({ cockpit }: { cockpit: Cockpit }) {
   const cibles = useMemo(() => [new THREE.Object3D(), new THREE.Object3D()], [])
+  const lums = useRef<(THREE.SpotLight | null)[]>([])
   const optiques: [number, number, number][] = [
     [-0.075 + 0.63, 0.61, 1.78],
     [-0.075 - 0.63, 0.61, 1.78],
   ]
+  /* en LAYOUT, même raison que Neons */
+  useLayoutEffect(() => {
+    cockpit.phareLums = []
+    cockpit.phareCones = []
+    for (const lum of lums.current) {
+      if (!lum) continue
+      cockpit.phareLums.push(lum)
+      lum.traverse((o) => {
+        if ((o as THREE.Mesh).isMesh) {
+          o.visible = false
+          cockpit.phareCones.push(o)
+        }
+      })
+    }
+  }, [cockpit])
   return (
-    <group visible={false} ref={(g) => { cockpit.phares = g }}>
+    <group>
       {optiques.map(([x, y, z], i) => (
         <group key={i}>
           <primitive object={cibles[i]} position={[x, 0, z + 9]} />
           <SpotVolumetrique
+            ref={(l: THREE.SpotLight | null) => { lums.current[i] = l }}
             position={[x, y, z]}
             target={cibles[i]}
             color="#ffeecb"
-            intensity={380}
+            intensity={0}
             angle={0.5}
             penumbra={0.6}
             decay={1.8}
@@ -552,14 +612,20 @@ function Phares({ cockpit }: { cockpit: Cockpit }) {
             anglePower={5}
             radiusTop={0.14}
           />
-          <sprite position={[x, y, z]} scale={[0.55, 0.55, 1]}>
-            <spriteMaterial map={halo()} color="#fffaf0" transparent opacity={0.85} blending={THREE.AdditiveBlending} depthWrite={false} />
-          </sprite>
-          <sprite position={[x, y, z]} scale={[2.2, 2.2, 1]}>
-            <spriteMaterial map={halo()} color="#ffeecb" transparent opacity={0.22} blending={THREE.AdditiveBlending} depthWrite={false} />
-          </sprite>
         </group>
       ))}
+      <group visible={false} ref={(g) => { cockpit.phares = g }}>
+        {optiques.map(([x, y, z], i) => (
+          <group key={i}>
+            <sprite position={[x, y, z]} scale={[0.55, 0.55, 1]}>
+              <spriteMaterial map={halo()} color="#fffaf0" transparent opacity={0.85} blending={THREE.AdditiveBlending} depthWrite={false} />
+            </sprite>
+            <sprite position={[x, y, z]} scale={[2.2, 2.2, 1]}>
+              <spriteMaterial map={halo()} color="#ffeecb" transparent opacity={0.22} blending={THREE.AdditiveBlending} depthWrite={false} />
+            </sprite>
+          </group>
+        ))}
+      </group>
     </group>
   )
 }

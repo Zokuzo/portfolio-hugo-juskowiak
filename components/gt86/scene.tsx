@@ -291,19 +291,6 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
         </div>
       )}
 
-      {/* le voile de la plongée (#24) : le verre fumé emplit le cadre et
-          son noir devient l'obscurité — couvre la traversée du near plane,
-          se dissout en CSS sur la vue assise */}
-      <div
-        ref={voileVerre}
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: VERRE,
-          opacity: 0,
-          pointerEvents: "none",
-        }}
-      />
 
       {/* L'OVERLAY. `inset: 0` par-dessus le canvas, mais transparent aux
           clics : seuls les boutons en reçoivent — c'est ce qui laisse le
@@ -440,6 +427,23 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
           </button>
         )}
       </div>
+
+      {/* le voile de la plongée (#24) : le verre fumé emplit le cadre et
+          son noir devient l'obscurité — se dissout en CSS sur la vue
+          assise. DERNIER-né du DOM, donc AU-DESSUS de l'overlay : sinon
+          les boutons de l'habitacle claquaient à pleine opacité sur le
+          noir pendant sa dissipation (retour de gate). `pointerEvents:
+          none` — le skip reste cliquable dessous. */}
+      <div
+        ref={voileVerre}
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: VERRE,
+          opacity: 0,
+          pointerEvents: "none",
+        }}
+      />
     </div>
   )
 }

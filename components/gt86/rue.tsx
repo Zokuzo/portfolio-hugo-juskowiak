@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef, type MutableRefObject } from "react"
+import { useEffect, useLayoutEffect, useMemo, useRef, type MutableRefObject } from "react"
 import { useFrame, useThree } from "@react-three/fiber"
 import { useGLTF, useTexture } from "@react-three/drei"
 import * as THREE from "three"
@@ -290,8 +290,11 @@ function VoitureGaree({
   }, [scene, art, lueur, compteur, veille, gl, cockpit])
 
   /* le chemin sans cascade (skip, session revenante) : l'état final d'un
-     coup — idempotent, donc sans danger juste après le seuil */
-  useEffect(() => {
+     coup — idempotent, donc sans danger juste après le seuil. En layout,
+     comme la pose caméra : uniforms et `visible` seulement (topologie de
+     lumières constante, aucune recompilation — voir habitacle.tsx), la
+     frame du skip peint directement l'habitacle vivant */
+  useLayoutEffect(() => {
     if (!vivant) return
     allumeHabitacle(cockpit)
     invalide()
@@ -580,7 +583,11 @@ export default function Rue({
     scene3.fog = new THREE.Fog(BRUME[0], BRUME[1], BRUME[2])
   }, [scene3])
 
-  useEffect(() => {
+  /* effet de LAYOUT : au skip en plein seuil, le commit démonte le nom et
+     monte les boutons de l'habitacle en synchrone — un effet passif
+     laisserait le navigateur peindre une frame de boutons sur le canvas
+     encore figé en plein glissé avant de rasseoir la caméra */
+  useLayoutEffect(() => {
     if (!pose) return
     if (pose === "rue") {
       camera.position.set(...CAM_FINALE)
