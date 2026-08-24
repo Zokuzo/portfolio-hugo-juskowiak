@@ -45,9 +45,16 @@ export const CIBLE_FINALE: [number, number, number] = [-4.4, 1, -19]
 const BRUME: [string, number, number] = ["#08070f", 25, 180]
 
 /* altitude d'où la voiture tombe vers son garage pendant la phase rue du
-   vol, et assiette cabrée qui s'efface au toucher */
+   vol, et assiette cabrée tenue jusqu'au toucher */
 const CHUTE_ALTITUDE = 22
 const CHUTE_CABRE = -0.22
+/* le TASSEMENT du toucher (retour de gate #31 : l'adoucissement en sortie
+   posait la voiture en plume — une chute, ça ACCÉLÈRE) : ressort amorti,
+   la caisse s'enfonce et le nez se refait en une oscillation courte */
+const TASSE_Y = 0.05
+const TASSE_FREIN = 5.5
+const TASSE_FREQ = 12
+const TASSE_DUREE = 1.2
 
 /* ---- textures partagées, peintes une fois (module client) ------------ */
 
@@ -300,12 +307,39 @@ function VoitureGaree({
     invalide()
   }, [vivant, cockpit, invalide])
 
-  /* la chute : le canal `chute` du vol (0 = en l'air, 1 = posée) — la
-     voiture tombe vers son garage, cabrée, et s'assied au toucher */
-  useFrame(() => {
-    const e = 1 - Math.pow(1 - vol.current.chute, 3)
-    if (porteur.current) porteur.current.position.y = (1 - e) * CHUTE_ALTITUDE
-    if (assiette.current) assiette.current.rotation.x = CHUTE_CABRE * (1 - e)
+  /* la chute : le canal `chute` du vol (0 = en l'air, 1 = posée). La
+     gravité est FRANCHE — la vitesse croît jusqu'au toucher, l'assiette
+     reste cabrée — puis le ressort amorti assied la voiture : la caisse
+     s'enfonce d'un souffle, le nez bascule au-delà de l'horizontale et
+     tout se pose (« elle s'assied au toucher », storyboard #24, que la
+     version plume trahissait). Le ressort est armé par la chute observée :
+     jamais sur le chemin vivant (skip, session revenante — la caméra y
+     est déjà assise DANS la voiture). */
+  const ressort = useRef({ tombe: false, tau: -1 })
+  useFrame((_, delta) => {
+    const r = ressort.current
+    if (vivant) {
+      r.tombe = false
+      r.tau = -1
+    }
+    const chute = vol.current.chute
+    if (chute < 1 && !vivant) {
+      r.tombe = true
+      r.tau = -1
+      if (porteur.current) porteur.current.position.y = (1 - chute * chute) * CHUTE_ALTITUDE
+      if (assiette.current) assiette.current.rotation.x = CHUTE_CABRE
+      return
+    }
+    if (r.tombe && r.tau < 0) r.tau = 0
+    if (r.tau >= 0 && r.tau < TASSE_DUREE) {
+      r.tau += Math.min(delta, 1 / 12)
+      const amorti = Math.exp(-TASSE_FREIN * r.tau)
+      if (porteur.current) porteur.current.position.y = -TASSE_Y * amorti * Math.sin(TASSE_FREQ * r.tau)
+      if (assiette.current) assiette.current.rotation.x = CHUTE_CABRE * amorti * Math.cos(TASSE_FREQ * r.tau)
+      return
+    }
+    if (porteur.current) porteur.current.position.y = 0
+    if (assiette.current) assiette.current.rotation.x = 0
   })
 
   return (

@@ -309,7 +309,12 @@ await sonde(`sessionStorage.clear()`)
 await va(base + "/")
 await attends(async () => (await etat()) === "CIEL", 8000, "retour au CIEL en session vierge")
 await sonde(`document.querySelector('[data-gt86="demarrer"]').click()`)
-await attends(async () => (await etat()) === "HABITACLE", 45000, "vol + seuil jusqu'à l'habitacle")
+/* budget MULE : la topologie de lumières constante (#31, retour de gate —
+   15 lumières toujours collectées) fait ramer SwiftShader à ~0,65 fps et
+   affame même les filets ; mesuré au CDP : rail complet ~60 s sur la
+   machine de test, 10,7 s sur une vraie. La passe prouve l'ABOUTISSEMENT,
+   pas la durée. */
+await attends(async () => (await etat()) === "HABITACLE", 120000, "vol + seuil jusqu'à l'habitacle")
 /* …et la mise sous contact a bien eu lieu (#31) : phares à l'intensité
    gatée, dalle allumée, caméra ASSISE (à moins de 2 m du poste de
    conduite — la vue d'arrivée du #30 en est à 7). La voiture du ciel

@@ -13,23 +13,29 @@ import { CAM_FINALE, enMondeRepos } from "./rue"
    effet : React les diffère, une frame courrait avant), c'est LUI qui
    envoie le vrai `{t:"fini"}`, l'horloge de scene.tsx n'est qu'un filet.
 
-   Quatre actes :
-   1. la caméra glisse du ¾ arrière d'arrivée au ¾ avant, côté rue ;
-   2. la mise sous contact en cascade — le combiné s'éveille (surtension
-      d'aiguille : le GLB n'offre aucun pivot, le balayage est une lueur
-      qui monte, dépasse et se pose), puis écrans, rétroéclairage et néons,
-      l'habitacle luisant à travers le verre fumé ;
-   3. les phares CLAQUENT en dernier et le nom se pose dessus (overlay DOM,
-      ~2,5 s) ;
-   4. le nom s'efface, la caméra arc au-dessus du capot vers la vitre
-      conducteur : le verre fumé emplit le cadre, son noir devient
-      l'obscurité (le voile #161b21 du DOM couvre la traversée du near
-      plane), et on ressort assis, l'habitacle déjà vivant.
+   Quatre actes SUR UNE SEULE COURBE (2e retour de gate, « pas assez
+   fluide » : la version en segments s'arrêtait NET à chaque jonction —
+   glissé, stop, tenue, stop, plongée. La caméra suit désormais une
+   Catmull-Rom paramétrée en longueur d'arc, et un profil de vitesse
+   Hermite C1 dont les nœuds intérieurs portent une pente NON NULLE : du
+   départ au verre, elle ne s'arrête jamais) :
+   1. l'approche — du ¾ arrière d'arrivée, large autour du flanc, jusqu'au
+      ¾ avant, en décélérant SANS s'arrêter ;
+   2. la mise sous contact en cascade pendant l'approche — le combiné
+      s'éveille (surtension d'aiguille : le GLB n'offre aucun pivot, le
+      balayage est une lueur qui monte, dépasse et se pose), puis écrans,
+      rétroéclairage et néons, l'habitacle luisant à travers le verre ;
+   3. les phares CLAQUENT en dernier et le nom se pose dessus (overlay
+      DOM), la caméra en lent travelling avant constant ;
+   4. le nom s'efface, la course ré-accélère par-dessus le capot et meurt
+      SUR le pare-brise conducteur : le verre fumé emplit le cadre, son
+      noir devient l'obscurité (le voile #161b21 du DOM finit le noir),
+      et on ressort assis, l'habitacle déjà vivant.
 
    Le repère des poses est celui de la VOITURE (brut GLB : nez +z,
    conducteur +x — conduite à droite) converti en monde à l'initialisation
-   via localToWorld du clone garé : les chiffres restent lisibles et la
-   pose de la rue peut bouger sans rien casser ici. */
+   via la pose de repos (enMondeRepos) : les chiffres restent lisibles et
+   la pose de la rue peut bouger sans rien casser ici. */
 
 /* PARTITION RESSERRÉE au retour de gate #31 (« ni correcte ni assez
    rapide ») — diagnostiquée aux arrêts sur image CDP puis contre-vérifiée
@@ -44,9 +50,9 @@ import { CAM_FINALE, enMondeRepos } from "./rue"
      (vue à travers le verre AVANT l'obscurité — capturé), et frôlait les
      éclats d'optiques ; elle passe désormais PAR-DESSUS LE CAPOT vers le
      pare-brise conducteur, décélère à zéro sur le verre, et le voile est
-     plein avant tout contact — pendant la plongée, cônes volumétriques et
-     éclats s'effacent (ils sont sous et derrière la caméra, et leurs
-     sprites à bout portant emplissaient le cadre de crème) ;
+     plein avant tout contact — ce chemin passe AU-DESSUS des cônes
+     volumétriques et derrière leurs éclats, les faisceaux restent
+     allumés (vérifié aux captures du scrubber) ;
    - les à-coups machine-rapide confirmés en revue : visée continue à
      l'entrée de plongée (même cible que la tenue), claquement en 3 frames
      avec cônes ET optiques synchrones, plus AUCUNE bascule de pixelRatio
@@ -59,7 +65,6 @@ const DUREE = 6.1
 export const SEUIL_MS = 6100
 
 /* les fenêtres de la partition, en secondes */
-const GLISSE_FIN = 1.05
 const AIGUILLE_HAUT: [number, number] = [0.55, 1.05]
 const AIGUILLE_POSE: [number, number] = [1.05, 1.5]
 const CADRAN: [number, number] = [0.7, 1.4]
@@ -72,42 +77,59 @@ const VOILE: [number, number] = [5.72, 5.98]
 /* la surtension du réveil d'aiguille */
 const AIGUILLE_CRETE = 2.4
 
-/* poses caméra en repère voiture (calées aux captures CDP — pose « B » :
-   frontal, les deux optiques) */
-const TQ_ARRIVEE = new THREE.Vector3(-3.3, 1.5, 6.8)
-/* la tenue du nom : lent travelling avant vers la calandre */
-const TQ_DERIVE = new THREE.Vector3(-2.8, 1.43, 6.0)
-const GLISSE_DETOUR = new THREE.Vector3(-5.0, 1.7, -0.5)
+/* LE CHEMIN, en repère voiture — la Catmull-Rom passe PAR chaque ancre :
+   vue d'arrivée (CAM_FINALE, préfixée en monde à l'init) → large autour
+   du flanc → ¾ avant « B » (calé aux captures) → fin du travelling du
+   nom → au-dessus du capot → le pare-brise conducteur */
+const CHEMIN: [number, number, number][] = [
+  [-5.0, 1.7, -0.5],
+  [-3.3, 1.5, 6.8],
+  [-2.8, 1.43, 6.0],
+  [-0.6, 1.78, 3.5],
+  [0.3, 1.22, 0.95],
+]
+/* les index d'ancre qui portent le rythme : le ¾ avant (le claquement y
+   arrive) et la fin du travelling (la plongée en part) */
+const ANCRE_TQ = 2
+const ANCRE_TENUE = 3
+/* la pente de départ du profil (fraction du chemin par seconde) : douce
+   mais non nulle — la caméra repart sans à-coup de la vue d'arrivée */
+const PENTE_DEPART = 0.08
+
+/* les visées : la voiture pendant l'approche, la calandre pendant le nom
+   (continue — un saut de 3,8° claquait à l'image), le poste pendant la
+   plongée */
 const VISE_ARRIERE = new THREE.Vector3(0, 1.05, 0)
 const VISE_AVANT = new THREE.Vector3(0, 0.75, 1.3)
-/* la plongée : haut au-dessus du capot, puis le pare-brise conducteur */
-const PLONGE_1 = new THREE.Vector3(-1.0, 1.85, 4.6)
-const PLONGE_2 = new THREE.Vector3(0.0, 1.65, 2.4)
-const PLONGE_3 = new THREE.Vector3(0.3, 1.22, 0.95)
-/* visée continue avec la tenue (un saut de 3,8° claquait à l'image) */
-const VISE_PLONGE_1 = VISE_AVANT
-const VISE_PLONGE_2 = new THREE.Vector3(0.3, 0.95, -0.4)
+const VISE_VERRE = new THREE.Vector3(0.3, 0.95, -0.4)
+const VISE_APPROCHE_FIN = 1.3
 
 const adoucit = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
 const lisse = (a: number, b: number, t: number) => Math.min(1, Math.max(0, (t - a) / (b - a)))
 const fenetre = ([a, b]: [number, number], t: number) => lisse(a, b, t)
 
-/* bézier quadratique et cubique, sans allocation par frame */
-const bez2 = (out: THREE.Vector3, p0: THREE.Vector3, p1: THREE.Vector3, p2: THREE.Vector3, t: number) => {
-  const u = 1 - t
-  return out.set(
-    u * u * p0.x + 2 * u * t * p1.x + t * t * p2.x,
-    u * u * p0.y + 2 * u * t * p1.y + t * t * p2.y,
-    u * u * p0.z + 2 * u * t * p1.z + t * t * p2.z,
-  )
-}
-const bez3 = (out: THREE.Vector3, p0: THREE.Vector3, p1: THREE.Vector3, p2: THREE.Vector3, p3: THREE.Vector3, t: number) => {
-  const u = 1 - t
-  return out.set(
-    u * u * u * p0.x + 3 * u * u * t * p1.x + 3 * u * t * t * p2.x + t * t * t * p3.x,
-    u * u * u * p0.y + 3 * u * u * t * p1.y + 3 * u * t * t * p2.y + t * t * t * p3.y,
-    u * u * u * p0.z + 3 * u * u * t * p1.z + 3 * u * t * t * p2.z + t * t * t * p3.z,
-  )
+/* le profil de vitesse : Hermite cubique par morceaux, C1 — chaque nœud
+   porte sa pente (ds/dt), les nœuds intérieurs une pente NON NULLE : la
+   caméra ne s'arrête qu'au verre */
+type Cle = { t: number; s: number; m: number }
+function profil(cles: Cle[], t: number) {
+  if (t <= cles[0].t) return cles[0].s
+  const der = cles[cles.length - 1]
+  if (t >= der.t) return der.s
+  let a = cles[0]
+  let b = cles[1]
+  for (let k = 1; k < cles.length; k++) {
+    if (t <= cles[k].t) {
+      a = cles[k - 1]
+      b = cles[k]
+      break
+    }
+  }
+  const d = b.t - a.t
+  const u = (t - a.t) / d
+  const u2 = u * u
+  const u3 = u2 * u
+  return (2 * u3 - 3 * u2 + 1) * a.s + (u3 - 2 * u2 + u) * d * a.m + (-2 * u3 + 3 * u2) * b.s + (u3 - u2) * d * b.m
 }
 
 export default function Seuil({
@@ -129,21 +151,14 @@ export default function Seuil({
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
   const interne = useRef({
     lance: false,
-    plonge: false,
     fini: false,
     t: 0,
-    /* les poses en monde, converties du repère voiture au lancement */
-    depuis: new THREE.Vector3(),
-    tq: new THREE.Vector3(),
-    tqDerive: new THREE.Vector3(),
-    detour: new THREE.Vector3(),
+    /* la courbe et son profil, construits en monde au lancement */
+    courbe: null as THREE.CatmullRomCurve3 | null,
+    cles: [] as Cle[],
     viseArriere: new THREE.Vector3(),
     viseAvant: new THREE.Vector3(),
-    p1: new THREE.Vector3(),
-    p2: new THREE.Vector3(),
-    p3: new THREE.Vector3(),
-    visePlonge1: new THREE.Vector3(),
-    visePlonge2: new THREE.Vector3(),
+    viseVerre: new THREE.Vector3(),
     assiseCam: new THREE.Vector3(),
     assiseVise: new THREE.Vector3(),
     pos: new THREE.Vector3(),
@@ -179,27 +194,39 @@ export default function Seuil({
       const voiture = cockpit.voiture
       if (!voiture) return
       i.lance = true
-      i.plonge = false
       i.fini = false
       i.t = 0
-      /* l'entrée est CONTRACTUELLEMENT la vue d'arrivée — jamais lue de la
-         caméra : si le filet a coupé un vol inachevé, la première frame du
-         seuil peut courir avant l'effet de pose et lirait un point du ciel */
-      i.depuis.set(...CAM_FINALE)
       /* les ancres se posent sur la voiture AU REPOS (enMondeRepos) : si le
          filet a coupé le vol en plein ciel, les groupes de chute portent
-         encore l'altitude — la voiture, elle, sera posée dès cette frame */
+         encore l'altitude — la voiture, elle, sera posée dès cette frame.
+         L'entrée est CONTRACTUELLEMENT la vue d'arrivée, jamais lue de la
+         caméra (la première frame peut courir avant l'effet de pose). */
+      const ancres = [
+        new THREE.Vector3(...CAM_FINALE),
+        ...CHEMIN.map((l) => enMondeRepos(new THREE.Vector3(), new THREE.Vector3(...l), voiture)),
+      ]
+      i.courbe = new THREE.CatmullRomCurve3(ancres, false, "centripetal")
+      /* les fractions de longueur d'arc des ancres du rythme, mesurées sur
+         la courbe réelle (600 échantillons) — puis le profil : arrivée au
+         ¾ avant pour le claquement, travelling du nom à vitesse constante
+         NON NULLE, ré-accélération, mort sur le verre */
+      const n = ancres.length - 1
+      const longueurs = i.courbe.getLengths(600)
+      const total = longueurs[600]
+      const frac = (idx: number) => longueurs[Math.round((idx / n) * 600)] / total
+      const fTq = frac(ANCRE_TQ)
+      const fTenue = frac(ANCRE_TENUE)
+      const derive = (fTenue - fTq) / (PLONGE_DEBUT - CLAQUE[0])
+      i.cles = [
+        { t: 0, s: 0, m: PENTE_DEPART },
+        { t: CLAQUE[0], s: fTq, m: derive },
+        { t: PLONGE_DEBUT, s: fTenue, m: derive },
+        { t: DUREE, s: 1, m: 0 },
+      ]
       for (const [monde, local] of [
-        [i.tq, TQ_ARRIVEE],
-        [i.tqDerive, TQ_DERIVE],
-        [i.detour, GLISSE_DETOUR],
         [i.viseArriere, VISE_ARRIERE],
         [i.viseAvant, VISE_AVANT],
-        [i.p1, PLONGE_1],
-        [i.p2, PLONGE_2],
-        [i.p3, PLONGE_3],
-        [i.visePlonge1, VISE_PLONGE_1],
-        [i.visePlonge2, VISE_PLONGE_2],
+        [i.viseVerre, VISE_VERRE],
         [i.assiseCam, ASSISE.cam],
         [i.assiseVise, ASSISE.vise],
       ] as const) {
@@ -210,24 +237,15 @@ export default function Seuil({
     i.t = Math.min(1, i.t + Math.min(delta, 1 / 12) / DUREE)
     const t = i.t * DUREE
 
-    /* ---- la caméra ---- */
-    if (t < GLISSE_FIN) {
-      const e = adoucit(t / GLISSE_FIN)
-      bez2(i.pos, i.depuis, i.detour, i.tq, e)
-      camera.position.copy(i.pos)
-      camera.lookAt(i.vise.lerpVectors(i.viseArriere, i.viseAvant, e))
+    /* ---- la caméra : une position sur LA courbe, jamais un segment ---- */
+    i.courbe!.getPointAt(profil(i.cles, t), i.pos)
+    camera.position.copy(i.pos)
+    if (t < VISE_APPROCHE_FIN) {
+      camera.lookAt(i.vise.lerpVectors(i.viseArriere, i.viseAvant, adoucit(t / VISE_APPROCHE_FIN)))
     } else if (t < PLONGE_DEBUT) {
-      /* la tenue du nom : lent travelling avant en courbe douce — vitesse
-         nulle aux deux jonctions (glissé avant, plongée après) */
-      const e = adoucit(lisse(GLISSE_FIN, PLONGE_DEBUT, t))
-      camera.position.lerpVectors(i.tq, i.tqDerive, e)
       camera.lookAt(i.viseAvant)
     } else {
-      if (!i.plonge) i.plonge = true
-      const e = adoucit(lisse(PLONGE_DEBUT, DUREE, t))
-      bez3(i.pos, i.tqDerive, i.p1, i.p2, i.p3, e)
-      camera.position.copy(i.pos)
-      camera.lookAt(i.vise.lerpVectors(i.visePlonge1, i.visePlonge2, e))
+      camera.lookAt(i.vise.lerpVectors(i.viseAvant, i.viseVerre, adoucit(lisse(PLONGE_DEBUT, DUREE, t))))
     }
 
     /* ---- la mise sous contact ---- */
@@ -248,16 +266,15 @@ export default function Seuil({
     if (cockpit.neons) cockpit.neons.visible = dedans > 0.3
 
     /* ---- le claquement des phares, en DERNIER — optiques, faisceaux et
-       cônes d'un même geste (3 frames). Pendant la plongée, cônes et
-       éclats s'effacent : ils passent sous et derrière la caméra, et
-       leurs sprites à bout portant emplissaient le cadre — la LUMIÈRE,
-       elle, continue de mordre l'asphalte. ---- */
+       cônes d'un même geste (3 frames). Le chemin par le capot passe
+       AU-DESSUS des cônes et derrière leurs éclats : les faisceaux
+       restent allumés pendant toute la plongée. ---- */
     const claque = fenetre(CLAQUE, t)
     for (const m of cockpit.optiques) m.emissiveIntensity = claque * ALLUME.optiques
     for (const m of cockpit.signature) m.emissiveIntensity = claque * ALLUME.signature
     for (const m of cockpit.braises) m.emissiveIntensity = claque * ALLUME.braises
     for (const l of cockpit.phareLums) l.intensity = claque * ALLUME.faisceau
-    const faisceaux = claque > 0 && !i.plonge
+    const faisceaux = claque > 0
     if (cockpit.phares) cockpit.phares.visible = faisceaux
     for (const c of cockpit.phareCones) c.visible = faisceaux
 
