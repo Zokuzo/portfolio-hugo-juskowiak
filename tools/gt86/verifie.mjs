@@ -174,6 +174,9 @@ const ASSETS = {
   "public/prototype/haunter-dash-lueur.jpg": { max: 52_000 },
   "public/prototype/ecran-fond.jpg": { max: 43_000 },
   "public/prototype/retro.jpg": { max: 5_300 },
+  /* la carte vue du dessus de l'écran GPS (#32, générée par
+     tools/monde/carte-quartier.mjs) */
+  "public/prototype/carte-quartier.png": { max: 1_600 },
 }
 
 const jsonDuGlb = (buf) => JSON.parse(buf.subarray(20, 20 + buf.readUInt32LE(12)).toString("utf8"))
@@ -396,6 +399,79 @@ await attends(async () => {
 }, 8000, "le rallumage après le rejeu")
 console.log("  4c/6 le rejeu rend au ciel voiture morte, et le skip rallume tout")
 
+/* 4 quater. LE POSTE RÉPOND (#32) : au vrai clic souris — la dalle zoome
+      (le rail vole vers l'écran), le hub part au GPS, la rangée MAISON
+      lance l'itinéraire (CHOIX), ?nodepart le fige, Échap rassoit. Les
+      pixels sont calculés en projetant le PLAN calibré de la dalle. */
+await va(base + "/?nodepart")
+await attends(async () => (await etat()) === "HABITACLE", 15000, "l'habitacle sous ?nodepart")
+await attends(async () => {
+  const v = await sonde(`(() => {
+    if (!window.__gt86 || !window.__gt86.scene.getObjectByName("moquette")) return 0
+    let v = 0
+    window.__gt86.scene.traverse((o) => {
+      const mats = Array.isArray(o.material) ? o.material : o.material ? [o.material] : []
+      for (const m of mats) if (m.name === "LightsFront" && m.toneMapped === false) v = m.emissiveIntensity
+    })
+    return v
+  })()`)
+  return v >= 7.9
+}, 15000, "le réveil avant le poste")
+/* le pixel d'un point (u, v) de la dalle, via le plan calibré (#26 : les
+   axes du plan — le vertical pointe vers le BAS, le u suit −x) */
+const pixelDalle = async (u, v) =>
+  JSON.parse(
+    await sonde(`(() => {
+      const st = window.__gt86
+      const T = st.scene.getObjectByName("moquette").parent
+      const V = st.camera.position.constructor
+      const centre = new V(-0.075, 0.785, 0.328)
+      const normale = new V(0, Math.sin(-0.28), Math.cos(-0.28)).normalize()
+      const axeY = normale.clone().cross(new V(-1, 0, 0))
+      const local = centre
+        .clone()
+        .add(new V(0.065 - ${u} * 0.13, 0, 0))
+        .add(axeY.clone().multiplyScalar(${v} * 0.07 - 0.035))
+      local.add(T.position)
+      const monde = new V(-local.x - 4.4, local.y - 0.05, -local.z - 19)
+      monde.project(st.camera)
+      return JSON.stringify({ x: Math.round(((monde.x + 1) / 2) * innerWidth), y: Math.round(((1 - monde.y) / 2) * innerHeight) })
+    })()`),
+  )
+const clicPoste = async (u, v) => {
+  const px = await pixelDalle(u, v)
+  await cdp.envoie("Input.dispatchMouseEvent", { type: "mousePressed", x: px.x, y: px.y, button: "left", clickCount: 1 })
+  await cdp.envoie("Input.dispatchMouseEvent", { type: "mouseReleased", x: px.x, y: px.y, button: "left", clickCount: 1 })
+}
+await clicPoste(0.5, 0.5)
+/* le rail vole vers l'écran (1,1 s) : la caméra doit finir au nez de la
+   dalle — l'écran passe en hub au même clic */
+await attends(async () => {
+  const d = await sonde(`(() => {
+    const st = window.__gt86
+    const T = st.scene.getObjectByName("moquette").parent
+    const V = st.camera.position.constructor
+    const local = new V(-0.075, 0.9, -0.05).add(T.position)
+    const monde = new V(-local.x - 4.4, local.y - 0.05, -local.z - 19)
+    return st.camera.position.distanceTo(monde)
+  })()`)
+  return d < 0.05
+}, 90000, "le rail jusqu'au nez de la dalle")
+/* budget MULE encore : le rail de 1,1 s avance d'1/12 s par frame rendue —
+   à ~0,5 fps SwiftShader, c'est ~26 s de mur (mesuré au CDP). Et on laisse
+   la caméra SE POSER avant de viser la tuile : un pixel projeté en plein
+   vol tombait à côté (payé : clic sur MUSIQUES au lieu de GPS). */
+await pause(1500)
+await clicPoste(0.25, 0.5)
+await attends(async () => (await etat()) === "GPS", 20000, "la tuile GPS du hub")
+await clicPoste(0.5, 0.6)
+await attends(async () => (await etat()) === "CHOIX", 20000, "la rangée MAISON lance l'itinéraire")
+await pause(3400)
+assert.equal(await etat(), "CHOIX", "?nodepart doit figer l'itinéraire (départ lancé quand même)")
+await sonde(`window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }))`)
+await attends(async () => (await etat()) === "HABITACLE", 8000, "Échap rassoit depuis l'itinéraire")
+console.log("  4d/6 le poste répond : dalle → hub → GPS → MAISON, ?nodepart fige, Échap rassoit")
+
 /* 5. La version simple n'est JAMAIS cassée : incapable → rien ne se monte,
       le décor et la voiture sont à leur place. */
 await va(base + "/?gt86=off")
@@ -445,6 +521,7 @@ for (const asset of [
   "/prototype/haunter-dash-lueur.jpg",
   "/prototype/retro.jpg",
   "/prototype/ecran-fond.jpg",
+  "/prototype/carte-quartier.png",
 ])
   assert.ok(
     ressources.some((u) => u.endsWith(asset)),

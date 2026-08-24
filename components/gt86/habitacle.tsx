@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef } from "react"
 import { useThree } from "@react-three/fiber"
 import { SpotLight as SpotVolumetrique, useTexture } from "@react-three/drei"
 import * as THREE from "three"
-import { t, type Lang } from "@/components/proto/dict"
+import { type Ecran } from "./ecran"
 import { envNuit, halo } from "./rue"
 
 /* L'HABITACLE — ticket #31 : l'habillage gaté aux #23/#26 (combiné violet,
@@ -52,144 +52,6 @@ export const ALLUME = {
   faisceau: 380,
 }
 
-/* ---- l'écran en veille -------------------------------------------------- */
-
-/* La dalle 512×256 (ratio 2:1 gravé au #23) en deux états : VEILLE
-   (Rayquaza + « CLICK HERE » clignotant) et un HUB minimal (deux tuiles
-   GPS/MUSIQUES par le dictionnaire — le clic sur la dalle doit répondre,
-   3e retour de gate). Le GPS complet et le zoom sont le périmètre du #32,
-   qui portera la fabrique entière du prototype. */
-export type Veille = {
-  tex: THREE.CanvasTexture
-  bat: () => void
-  hub: () => void
-  veille: () => void
-  mode: () => "veille" | "hub"
-  langue: (l: Lang) => void
-}
-
-export function creeVeille(lang: Lang): Veille {
-  const c = document.createElement("canvas")
-  c.width = 512
-  c.height = 256
-  const g = c.getContext("2d")!
-  const u = 256 / 100
-  let fond: HTMLImageElement | null = null
-  let allume = true
-  let mode: "veille" | "hub" = "veille"
-  /* la bascule FR/EN vit sous l'overlay et reste atteignable au clavier :
-     la dalle suit la langue, elle ne fige pas celle du montage */
-  let langue = lang
-
-  const tuile = (x: number, titre: string, teinte: string, glyphe: (cx: number, cy: number, r: number) => void) => {
-    const y = u * 20
-    const la = 512 / 2 - u * 12
-    const ha = 256 - y - u * 12
-    g.beginPath()
-    g.roundRect(x, y, la, ha, u * 4)
-    g.fillStyle = "rgba(16, 12, 28, 0.7)"
-    g.fill()
-    g.strokeStyle = teinte
-    g.lineWidth = u * 1.4
-    g.stroke()
-    const cx = x + la / 2
-    const cy = y + ha * 0.42
-    g.strokeStyle = teinte
-    g.fillStyle = teinte
-    glyphe(cx, cy, ha * 0.2)
-    g.textAlign = "center"
-    g.font = `bold ${Math.round(u * 9)}px monospace`
-    g.fillStyle = "#efe8fb"
-    g.fillText(titre, cx, y + ha * 0.82)
-    g.textAlign = "left"
-  }
-
-  const peint = () => {
-    g.fillStyle = "#0b0d14"
-    g.fillRect(0, 0, 512, 256)
-    if (fond) {
-      g.drawImage(fond, 0, 0, 512, 256)
-      g.fillStyle = "rgba(7, 9, 16, 0.42)"
-      g.fillRect(0, 0, 512, 256)
-    }
-    g.strokeStyle = "#2b2440"
-    g.lineWidth = Math.max(2, u * 1.2)
-    g.strokeRect(u * 2, u * 2, 512 - u * 4, 256 - u * 4)
-    g.textBaseline = "middle"
-    g.font = `${Math.round(u * 8)}px monospace`
-    g.fillStyle = "#b7a8d8"
-    g.textAlign = "right"
-    g.fillText("23:42", 512 - u * 8, u * 10)
-    g.textAlign = "left"
-    if (mode === "hub") {
-      /* tuiles du hub (gate #23) : GPS violet, MUSIQUES magenta */
-      tuile(u * 8, t(langue, "gt86Gps").toUpperCase(), "#b57aff", (cx, cy, r) => {
-        g.lineWidth = u * 1.6
-        g.beginPath()
-        g.arc(cx, cy, r * 0.75, 0, Math.PI * 2)
-        g.stroke()
-        g.beginPath()
-        g.arc(cx, cy, r * 0.22, 0, Math.PI * 2)
-        g.fill()
-      })
-      tuile(512 / 2 + u * 4, t(langue, "gt86Musiques").toUpperCase(), "#f473e8", (cx, cy, r) => {
-        g.font = `bold ${Math.round(r * 2.4)}px monospace`
-        g.textAlign = "center"
-        g.fillText("♪", cx, cy)
-        g.textAlign = "left"
-      })
-    } else if (allume) {
-      g.textAlign = "center"
-      g.font = `bold ${Math.round(u * 15)}px monospace`
-      g.shadowColor = "#9b5cff"
-      g.shadowBlur = u * 6
-      g.fillStyle = "#d8beff"
-      g.fillText("CLICK HERE", 256, 256 * 0.52)
-      g.shadowBlur = 0
-      g.textAlign = "left"
-    }
-    tex.needsUpdate = true
-  }
-
-  const tex = new THREE.CanvasTexture(c)
-  tex.colorSpace = THREE.SRGBColorSpace
-  tex.anisotropy = 8
-  /* UV du quad Display : v ∈ [1,2] (relevé au GLB brut) → Repeat
-     obligatoire, flipY par défaut remet l'image à l'endroit */
-  tex.wrapS = THREE.RepeatWrapping
-  tex.wrapT = THREE.RepeatWrapping
-  const img = new Image()
-  img.onload = () => {
-    fond = img
-    peint()
-  }
-  img.src = TEXTURES_HABITACLE.fondEcran
-  peint()
-
-  return {
-    tex,
-    bat() {
-      if (mode !== "veille") return
-      allume = !allume
-      peint()
-    },
-    hub() {
-      mode = "hub"
-      peint()
-    },
-    veille() {
-      mode = "veille"
-      allume = true
-      peint()
-    },
-    mode: () => mode,
-    langue(l: Lang) {
-      langue = l
-      peint()
-    },
-  }
-}
-
 /* ---- le cockpit : les poignées de la cascade ---------------------------- */
 
 /* Les matériaux du clone sont clonés PAR MESH (rue.tsx) : un même nom peut
@@ -217,6 +79,7 @@ export type Cockpit = {
   optiques: THREE.MeshStandardMaterial[]
   signature: THREE.MeshStandardMaterial[]
   braises: THREE.MeshStandardMaterial[]
+  clignotants: THREE.MeshStandardMaterial[]
   neons: THREE.Group | null
   neonLums: { lum: THREE.SpotLight | THREE.PointLight; plein: number }[]
   phares: THREE.Group | null
@@ -236,6 +99,7 @@ export function cockpitVide(): Cockpit {
     optiques: [],
     signature: [],
     braises: [],
+    clignotants: [],
     neons: null,
     neonLums: [],
     phares: null,
@@ -274,6 +138,7 @@ export function habilleInterieur(
   cockpit.optiques = []
   cockpit.signature = []
   cockpit.braises = []
+  cockpit.clignotants = []
 
   const { art, lueur, compteur } = textures
   for (const t of [art, lueur, compteur]) {
@@ -370,6 +235,12 @@ export function habilleInterieur(
         cockpit.signature.push(mat)
       }
       if (mat.name === "RedGlow") cockpit.braises.push(mat)
+      /* les répétiteurs (gate #26) : hors tone mapping, collectés pour le
+         clignotement des warnings — éteints au repos */
+      if (mat.name === "Indicator") {
+        mat.toneMapped = false
+        cockpit.clignotants.push(mat)
+      }
       if (mat.name === "Glass") cockpit.verre.push(mat as THREE.MeshPhysicalMaterial)
 
       /* textures affûtées (retour Hugo #26 : l'anisotropie à 1 délavait
@@ -739,16 +610,16 @@ export function VieVoiture({ cockpit }: { cockpit: Cockpit }) {
    continu depuis le 3e retour de gate (frameloop "always") — l'invalidate
    du battement est devenu un no-op inoffensif, gardé pour le jour où un
    régime "demand" reviendrait. */
-export function Pouls({ actif, veille }: { actif: boolean; veille: Veille }) {
+export function Pouls({ actif, ecran }: { actif: boolean; ecran: Ecran }) {
   const invalide = useThree((s) => s.invalidate)
   useEffect(() => {
     if (!actif) return
     const h = setInterval(() => {
-      veille.bat()
+      ecran.bat()
       invalide()
     }, 650)
     return () => clearInterval(h)
-  }, [actif, veille, invalide])
+  }, [actif, ecran, invalide])
   return null
 }
 

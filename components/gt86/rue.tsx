@@ -13,8 +13,8 @@ import {
   eteindreHabitacle,
   habilleInterieur,
   type Cockpit,
-  type Veille,
 } from "./habitacle"
+import { VUE_ECRAN, zoneDuClic, type Ecran, type Zone } from "./ecran"
 
 /* LA RUE NOCTURNE — ticket #30 : le décor gaté au #22, porté du prototype
    (`app/prototype/rue`, route jetable) dans la coquille. City procédurale
@@ -208,15 +208,17 @@ function Decor() {
 function VoitureGaree({
   vol,
   cockpit,
-  veille,
+  ecran,
   vivant,
-  surEcran,
+  warning,
+  surZone,
 }: {
   vol: MutableRefObject<Trajectoire>
   cockpit: Cockpit
-  veille: Veille
+  ecran: Ecran
   vivant: boolean
-  surEcran?: (uv: { x: number; y: number } | null) => void
+  warning: boolean
+  surZone?: (zone: Zone) => void
 }) {
   const { scene } = useGLTF("/prototype/gt86.glb")
   const [art, lueur, compteur] = useTexture([
@@ -293,7 +295,7 @@ function VoitureGaree({
     /* l'habitacle gaté et les optiques préparées à zéro — remplit le
        cockpit (StrictMode/HMR rejouent ce memo sur un clone NEUF : les
        tableaux du cockpit sont repartis de zéro dans habilleInterieur) */
-    habilleInterieur(clone, { art, lueur, compteur }, veille.tex, gl.capabilities.getMaxAnisotropy(), cockpit)
+    habilleInterieur(clone, { art, lueur, compteur }, ecran.tex, gl.capabilities.getMaxAnisotropy(), cockpit)
     /* posée sur ses roues : le bas de la bbox affleure l'asphalte (y=0) —
        recalculé sur le clone, qui hérite du centrage fait par le ciel */
     const boite = new THREE.Box3().setFromObject(clone)
@@ -304,7 +306,7 @@ function VoitureGaree({
     )
     cockpit.voiture = clone
     return clone
-  }, [scene, art, lueur, compteur, veille, gl, cockpit])
+  }, [scene, art, lueur, compteur, ecran, gl, cockpit])
 
   /* le chemin sans cascade (skip, session revenante) : l'état final d'un
      coup — et son INVERSE au rejeu de la scène (HABITACLE → CIEL, 4e
@@ -320,10 +322,10 @@ function VoitureGaree({
       allumeHabitacle(cockpit)
     } else {
       eteindreHabitacle(cockpit)
-      veille.veille()
+      ecran.veille()
     }
     invalide()
-  }, [vivant, cockpit, veille, invalide])
+  }, [vivant, cockpit, ecran, invalide])
 
   /* la chute : le canal `chute` du vol (0 = en l'air, 1 = posée). La
      gravité est FRANCHE — la vitesse croît jusqu'au toucher, l'assiette
@@ -333,6 +335,16 @@ function VoitureGaree({
      version plume trahissait). Le ressort est armé par la chute observée :
      jamais sur le chemin vivant (skip, session revenante — la caméra y
      est déjà assise DANS la voiture). */
+  /* les feux de détresse (gate #26) : cadence 2,4 Hz, ambre hors tone
+     mapping — les répétiteurs Indicator se voient dedans ET dehors */
+  useFrame(({ clock }) => {
+    const allume = warning && Math.floor(clock.elapsedTime * 2.4) % 2 === 0
+    for (const m of cockpit.clignotants) {
+      m.emissive.set("#ffb340")
+      m.emissiveIntensity = allume ? 4 : 0
+    }
+  })
+
   const ressort = useRef({ tombe: false, tau: -1 })
   const poussiere = useRef<THREE.Group>(null)
   useFrame((_, delta) => {
@@ -380,18 +392,21 @@ function VoitureGaree({
     <group position={POSE_VOITURE} rotation-y={CAP_VOITURE}>
       <group ref={porteur}>
         <group ref={assiette}>
-          {/* le clic sur la DALLE (3e retour de gate : « CLICK HERE » doit
-              répondre) : le raycast R3F de la coquille marche (#29), le
-              handler filtre le quad Display et remonte l'UV */}
+          {/* le clic sur le POSTE (#32) : le raycast R3F de la coquille
+              marche (#29) — le rayon est reprojeté sur le PLAN de la dalle
+              en repère voiture (zones calibrées par Hugo au ?edit du
+              prototype : dalle 13×7 cm, boutons de façade, frange neutre,
+              dehors) */}
           <primitive
             object={modele}
             onClick={(e: ThreeEvent<MouseEvent>) => {
-              if (!surEcran) return
-              const m = (e.object as THREE.Mesh).material
-              const mats = Array.isArray(m) ? m : [m]
-              if (!mats.some((x) => x?.name === "Display")) return
+              if (!surZone) return
+              const origine = modele.worldToLocal(e.ray.origin.clone())
+              const point = modele.worldToLocal(e.point.clone())
+              const zone = zoneDuClic(origine, point)
+              if (!zone) return
               e.stopPropagation()
-              surEcran(e.uv ? { x: e.uv.x, y: e.uv.y } : null)
+              surZone(zone)
             }}
           />
           {/* rétro, néons, phares volumétriques : même repère brut que le
@@ -638,28 +653,32 @@ export function enMondeRepos(out: THREE.Vector3, local: THREE.Vector3, voiture: 
   return out.copy(local).add(voiture.position).applyMatrix4(reposMonde)
 }
 
-/* brouillon de la visée assise — zéro allocation dans l'effet de pose */
-const viseAssise = new THREE.Vector3()
+/* la course du rail assis ⇄ écran : durée fixe (recette #26) */
+const RAIL_DUREE = 1.1
+const railAdoucit = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2)
 
 export default function Rue({
   visible,
   vol,
   pose,
   cockpit,
-  veille,
+  ecran,
   vivant,
-  surEcran,
+  warning,
+  surZone,
 }: {
   visible: boolean
   vol: MutableRefObject<Trajectoire>
-  /* hors vol, la caméra se pose directement : "rue" = la vue d'arrivée
-     gatée (le SEUIL en part), "assis" = le poste de conduite (l'habitacle
-     et tous les états d'après — skip et sessions revenantes compris) */
-  pose: "rue" | "assis" | null
+  /* hors vol : "rue" = la vue d'arrivée gatée (le SEUIL en part),
+     "assis" = le poste de conduite, "ecran" = le nez sur la dalle — et le
+     RAIL vole entre assis ⇄ ecran (1,1 s, recette #26), tout autre
+     changement se pose net */
+  pose: "rue" | "assis" | "ecran" | null
   cockpit: Cockpit
-  veille: Veille
+  ecran: Ecran
   vivant: boolean
-  surEcran?: (uv: { x: number; y: number } | null) => void
+  warning: boolean
+  surZone?: (zone: Zone) => void
 }) {
   const scene3 = useThree((s) => s.scene)
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
@@ -674,31 +693,70 @@ export default function Rue({
     scene3.fog = new THREE.Fog(BRUME[0], BRUME[1], BRUME[2])
   }, [scene3])
 
-  /* effet de LAYOUT : au skip en plein seuil, le commit démonte le nom et
-     monte les boutons de l'habitacle en synchrone — un effet passif
-     laisserait le navigateur peindre une frame de boutons sur le canvas
-     encore figé en plein glissé avant de rasseoir la caméra */
+  /* LE RAIL (recette #26, portée au #32) : les poses se posent NET —
+     sauf assis ⇄ ecran, le seul trajet volé (1,1 s, courbe douce, delta
+     plafonné). En LAYOUT : au skip en plein seuil, un effet passif
+     laissait peindre une frame de boutons sur un canvas figé en plein
+     glissé avant de rasseoir la caméra. */
+  const rail = useRef({
+    precedent: null as null | string,
+    but: null as null | { cam: THREE.Vector3; vise: THREE.Vector3 },
+    depuisCam: new THREE.Vector3(),
+    depuisVise: new THREE.Vector3(),
+    viseCourante: new THREE.Vector3(...CIBLE_FINALE),
+    t: 1,
+  })
   useLayoutEffect(() => {
-    if (!pose) return
+    const r = rail.current
+    if (!pose) {
+      r.precedent = null
+      r.but = null
+      return
+    }
     if (pose === "rue") {
       camera.position.set(...CAM_FINALE)
       camera.fov = 38
       camera.lookAt(...CIBLE_FINALE)
+      camera.updateProjectionMatrix()
+      r.viseCourante.set(...CIBLE_FINALE)
+      r.but = null
     } else {
-      /* l'assise vit dans le repère brut du GLB : convertie par la pose de
-         repos — la mesure d'assise et la pose de rue y sont déjà */
+      /* assis et écran vivent dans le repère brut du GLB : convertis par
+         la pose de repos — la mesure d'assise et la pose de rue y sont */
       const voiture = cockpit.voiture
       if (!voiture) return
-      enMondeRepos(camera.position, ASSISE.cam, voiture)
-      camera.fov = 45
-      camera.lookAt(enMondeRepos(viseAssise, ASSISE.vise, voiture))
+      const locale = pose === "assis" ? ASSISE : VUE_ECRAN
+      const cam = enMondeRepos(new THREE.Vector3(), locale.cam, voiture)
+      const vise = enMondeRepos(new THREE.Vector3(), locale.vise, voiture)
+      const vole = (r.precedent === "assis" || r.precedent === "ecran") && r.precedent !== pose
+      if (vole) {
+        r.depuisCam.copy(camera.position)
+        r.depuisVise.copy(r.viseCourante)
+        r.but = { cam, vise }
+        r.t = 0
+      } else {
+        camera.position.copy(cam)
+        camera.fov = 45
+        camera.lookAt(vise)
+        camera.updateProjectionMatrix()
+        r.viseCourante.copy(vise)
+        r.but = null
+      }
     }
-    camera.updateProjectionMatrix()
-    /* boucle "always" depuis le 3e retour de gate — l'invalidation est
-       devenue un no-op inoffensif, gardée pour un éventuel retour du
-       régime "demand" */
+    r.precedent = pose
     invalide()
   }, [pose, camera, invalide, cockpit])
+
+  useFrame((_, delta) => {
+    const r = rail.current
+    if (!r.but) return
+    r.t = Math.min(1, r.t + Math.min(delta, 1 / 12) / RAIL_DUREE)
+    const e = railAdoucit(r.t)
+    camera.position.lerpVectors(r.depuisCam, r.but.cam, e)
+    r.viseCourante.lerpVectors(r.depuisVise, r.but.vise, e)
+    camera.lookAt(r.viseCourante)
+    if (r.t >= 1) r.but = null
+  })
 
   return (
     <group visible={visible}>
@@ -707,7 +765,7 @@ export default function Rue({
           volumes, plus assez pour ressembler à un crépuscule (gate #22) */}
       <ambientLight intensity={0.21} color="#a9b4d4" />
       <Decor />
-      <VoitureGaree vol={vol} cockpit={cockpit} veille={veille} vivant={vivant} surEcran={surEcran} />
+      <VoitureGaree vol={vol} cockpit={cockpit} ecran={ecran} vivant={vivant} warning={warning} surZone={surZone} />
       <VieNocturne />
       <Fond />
     </group>

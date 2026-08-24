@@ -14,7 +14,8 @@ import Ciel, { CIEL_HDR, VOITURE } from "./ciel"
 import Rue from "./rue"
 import Vol, { VOL_MS, type Trajectoire } from "./vol"
 import Seuil, { SEUIL_MS } from "./seuil"
-import { Pouls, cockpitVide, creeVeille, type Veille } from "./habitacle"
+import { Pouls, cockpitVide } from "./habitacle"
+import { creeEcran, type Ecran, type ModeEcran, type Zone } from "./ecran"
 
 /* LES ASSETS ET LEUR CASCADE — ticket #28.
 
@@ -116,31 +117,123 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
   const voileVerre = useRef<HTMLDivElement>(null)
   const nom = useRef<HTMLDivElement>(null)
   const cockpit = useRef(cockpitVide()).current
-  /* l'écran en veille — une seule instance par montage (StrictMode
+  /* L'ÉCRAN MÉDIA (#32) — une seule instance par montage (StrictMode
      fabriquait deux dalles au prototype, matériau et clics séparés) */
-  const veilleRef = useRef<Veille | null>(null)
-  if (!veilleRef.current) veilleRef.current = creeVeille(lang)
-  const veille = veilleRef.current
+  const ecranRef = useRef<Ecran | null>(null)
+  if (!ecranRef.current) ecranRef.current = creeEcran(lang)
+  const ecran = ecranRef.current
   /* la bascule FR/EN reste atteignable au clavier sous l'overlay : la
      dalle suit (l'instance, elle, ne se recrée jamais — StrictMode) */
   useEffect(() => {
-    veille.langue(lang)
-  }, [veille, lang])
-  /* le compteur de cadence à la demande (?fps) — pour mesurer chez Hugo */
+    ecran.langue(lang)
+  }, [ecran, lang])
+  /* le compteur de cadence à la demande (?fps) — pour mesurer chez Hugo ;
+     ?nodepart fige l'itinéraire à l'écran (gates visuels, recette #26) */
   const [fpsVoulu] = useState(() => new URLSearchParams(window.location.search).has("fps"))
+  const [nodepart] = useState(() => new URLSearchParams(window.location.search).has("nodepart"))
+  /* le ZOOM sur la dalle (hub/horloge/stats, machine à l'habitacle) et
+     les feux de détresse — des états d'ÉCRAN, pas de navigation : la
+     machine garde GPS/CHOIX/MUSIQUES/DÉPART, l'écran garde son poste */
+  const [zoome, setZoome] = useState(false)
+  const [warning, setWarning] = useState(false)
+  const zoomeRef = useRef(zoome)
+  zoomeRef.current = zoome
 
-  /* le clic sur la DALLE (3e retour de gate) : veille → hub, puis la
-     moitié gauche part au GPS, la droite aux musiques — mêmes signaux que
-     les boutons DOM, la machine reste l'unique vérité */
-  const surEcran = (uv: { x: number; y: number } | null) => {
-    if (etat !== "HABITACLE") return
-    if (veille.mode() === "veille") {
-      veille.hub()
+  /* rejoindre un écran : GPS et MUSIQUES passent par la machine (deux
+     dispatchs en file — `retour` est inerte à l'habitacle), les
+     accessoires (hub, horloge, stats) restent au poste */
+  const versEcran = (mode: ModeEcran) => {
+    setZoome(true)
+    envoie({ t: "retour" })
+    if (mode === "gps") envoie({ t: "va", ou: "GPS" })
+    else if (mode === "musiques") envoie({ t: "va", ou: "MUSIQUES" })
+    else if (mode === "hub") ecran.hub()
+    else if (mode === "horloge") ecran.horloge()
+    else if (mode === "stats") ecran.stats()
+  }
+
+  /* LE POSTE RÉPOND (#32) : zones calibrées remontées par la rue — la
+     dalle, les boutons de façade posés par Hugo, le dehors qui rassoit */
+  const surZone = (zone: Zone) => {
+    if (INTRO.includes(etat) || etat === "DEPART") return
+    if (zone.type === "dehors") {
+      if (zoome || etat !== "HABITACLE") {
+        envoie({ t: "retour" })
+        setZoome(false)
+        ecran.veille()
+      }
       return
     }
-    if (!uv) return
-    envoie({ t: "va", ou: uv.x < 0.5 ? "GPS" : "MUSIQUES" })
+    const mode = ecran.mode()
+    if (zone.type === "bouton") {
+      if (zone.nom === "warning") {
+        setWarning((w) => !w)
+        return
+      }
+      if (zone.nom === "power") {
+        envoie({ t: "retour" })
+        setZoome(true)
+        if (mode === "eteint") ecran.hub()
+        else ecran.eteint()
+        return
+      }
+      if (mode === "eteint") return
+      if (zone.nom === "media") versEcran("musiques")
+      else if (zone.nom === "map") versEcran("gps")
+      else if (zone.nom === "setup") versEcran("stats")
+      else {
+        const CYCLE: ModeEcran[] = ["hub", "gps", "musiques", "horloge", "stats"]
+        const i = Math.max(0, CYCLE.indexOf(mode))
+        versEcran(CYCLE[(i + (zone.nom === "suivant" ? 1 : CYCLE.length - 1)) % CYCLE.length])
+      }
+      return
+    }
+    /* la dalle */
+    if (mode === "eteint") return
+    if (etat === "HABITACLE" && !zoome) {
+      setZoome(true)
+      ecran.hub()
+      return
+    }
+    if (etat === "HABITACLE" && mode === "hub") {
+      if (zone.u < 0.48) versEcran("gps")
+      else if (zone.u > 0.52) versEcran("musiques")
+      return
+    }
+    if (etat === "GPS" || etat === "CHOIX") {
+      const r = ecran.clicGps(zone.u, zone.v)
+      if (r === "retour") {
+        envoie({ t: "retour" })
+        setZoome(true)
+        ecran.hub()
+      } else if (r === "maison") envoie({ t: "choisit", dest: "/home" })
+      else if (r === "travail") envoie({ t: "choisit", dest: "/work" })
+    }
   }
+
+  /* la machine PEINT l'écran : un état, un dessin — les clics ne font
+     que dispatcher (sauf les accessoires locaux du poste) */
+  useEffect(() => {
+    if (etat === "GPS") ecran.gps()
+    else if (etat === "MUSIQUES") ecran.musiques()
+    else if (etat === "CHOIX" && dest) ecran.choisit(dest === "/home" ? "maison" : "travail")
+    else if (etat === "HABITACLE" && !zoomeRef.current) ecran.veille()
+  }, [etat, dest, ecran])
+
+  /* la jauge pleine (2,6 s, horloge) confirme le départ — ?nodepart la
+     fige à l'écran pour les gates visuels */
+  useEffect(() => {
+    ecran.surDepart(() => {
+      if (!nodepart) envoie({ t: "confirme" })
+    })
+  }, [ecran, nodepart])
+
+  /* les points de l'itinéraire avancent — 90 ms, une horloge (recette #26) */
+  useEffect(() => {
+    if (etat !== "GPS" && etat !== "CHOIX") return
+    const h = setInterval(() => ecran.tic(), 90)
+    return () => clearInterval(h)
+  }, [etat, ecran])
   /* voiture + ciel décodés → la rue se monte en sourdine pendant le CIEL
      (décodage meshopt synchrone : jamais pendant le rail) */
   const [cielPret, setCielPret] = useState(false)
@@ -175,7 +268,10 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
      au prochain vol (enRue n'était posé qu'une fois). L'extinction de la
      voiture, elle, vit dans la rue (effet `vivant`). */
   useEffect(() => {
-    if (etat === "CIEL") setEnRue(false)
+    if (etat !== "CIEL") return
+    setEnRue(false)
+    setZoome(false)
+    setWarning(false)
   }, [etat])
 
   /* LA SUITE DE LA CASCADE (#28) : chaque état télécharge ce dont le
@@ -190,7 +286,9 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
      Next, pas un état du canvas (spec #25). */
   useEffect(() => {
     if (etat !== "DEPART" || !dest) return
-    const h = setTimeout(() => router.push(dest), DEPART_MS)
+    /* la route /home naît au #34 — d'ici là, Maison plonge sur la home
+       simple (le choix du prototype #26) */
+    const h = setTimeout(() => router.push(dest === "/home" ? "/" : dest), DEPART_MS)
     return () => clearTimeout(h)
   }, [etat, dest, router])
 
@@ -198,11 +296,14 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
      Le prototype #26 en avait deux, et ils ont divergé. */
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
-      if (e.key === "Escape") envoie({ t: "retour" })
+      if (e.key !== "Escape") return
+      envoie({ t: "retour" })
+      setZoome(false)
+      ecran.veille()
     }
     window.addEventListener("keydown", k)
     return () => window.removeEventListener("keydown", k)
-  }, [])
+  }, [ecran])
 
   /* Le harnais de test (`?gt86=boom`) : jeté APRÈS les hooks, pour que
      l'ordre des hooks reste constant d'un rendu à l'autre. */
@@ -248,7 +349,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
             devient le fond de TOUS les états d'après. */}
         <Vol etat={etat} vol={vol} voile={voile} surBascule={surBascule} fini={() => envoie({ t: "fini" })} />
         <Seuil etat={etat} cockpit={cockpit} voile={voileVerre} nom={nom} fini={() => envoie({ t: "fini" })} />
-        <Pouls actif={etat === "SEUIL" || apres} veille={veille} />
+        <Pouls actif={etat === "SEUIL" || apres} ecran={ecran} />
         <Suspense fallback={null}>
           <Ciel
             visible={etat === "CIEL" || (etat === "ATTERRISSAGE" && !enRue)}
@@ -262,11 +363,22 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
             <Rue
               visible={enRue || (etat !== "CIEL" && etat !== "ATTERRISSAGE")}
               vol={vol}
-              pose={etat === "SEUIL" ? "rue" : apres ? "assis" : null}
+              pose={
+                etat === "SEUIL"
+                  ? "rue"
+                  : etat === "HABITACLE"
+                    ? zoome
+                      ? "ecran"
+                      : "assis"
+                    : apres
+                      ? "ecran"
+                      : null
+              }
               cockpit={cockpit}
-              veille={veille}
+              ecran={ecran}
               vivant={apres}
-              surEcran={surEcran}
+              warning={warning}
+              surZone={surZone}
             />
           </Suspense>
         )}
@@ -379,66 +491,23 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
           </button>
         )}
 
-        {/* les commandes d'état : en bas du cadre depuis le #31 — la vue
-            assise est la scène, les boutons DOM (placeholders jusqu'à
-            l'écran du #32) n'ont plus à squatter son centre */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: 64,
-            left: "50%",
-            transform: "translateX(-50%)",
-            display: "flex",
-            gap: 14,
-            pointerEvents: "auto",
-          }}
-        >
-          {etat === "ATTERRISSAGE" && (
-            <span style={{ ...discret, pointerEvents: "none" }}>{t(lang, "gt86EnRoute")}</span>
-          )}
-
-          {etat === "HABITACLE" && (
-            <>
-              <button type="button" style={bouton} data-gt86="gps" onClick={() => envoie({ t: "va", ou: "GPS" })}>
-                {t(lang, "gt86Gps")}
-              </button>
-              <button type="button" style={bouton} data-gt86="musiques" onClick={() => envoie({ t: "va", ou: "MUSIQUES" })}>
-                {t(lang, "gt86Musiques")}
-              </button>
-            </>
-          )}
-
-          {etat === "GPS" && (
-            <>
-              <button type="button" style={bouton} data-gt86="maison" onClick={() => envoie({ t: "choisit", dest: "/home" })}>
-                {t(lang, "gt86Maison")}
-              </button>
-              <button type="button" style={bouton} data-gt86="travail" onClick={() => envoie({ t: "choisit", dest: "/work" })}>
-                {t(lang, "gt86Travail")}
-              </button>
-            </>
-          )}
-
-          {etat === "CHOIX" && (
-            <button type="button" style={bouton} data-gt86="partir" onClick={() => envoie({ t: "confirme" })}>
-              {t(lang, "gt86Partir")} → {dest}
-            </button>
-          )}
-
-          {etat === "MUSIQUES" && (
-            <button type="button" style={bouton} data-gt86="spotify" onClick={() => envoie({ t: "confirme" })}>
-              Spotify
-            </button>
-          )}
-
-          {etat === "SPOTIFY" && <span style={{ ...discret, pointerEvents: "none" }}>Spotify</span>}
-
-          {etat === "DEPART" && (
-            <span style={{ ...discret, pointerEvents: "none" }}>
-              {t(lang, "gt86Partir")} → {dest}
-            </span>
-          )}
-        </div>
+        {/* le seul texte d'état restant : « en route… » pendant le vol —
+            les cases DOM provisoires (#27) sont mortes, le POSTE 3D est
+            l'interface (retour de gate #32) */}
+        {etat === "ATTERRISSAGE" && (
+          <span
+            style={{
+              ...discret,
+              position: "absolute",
+              bottom: 64,
+              left: "50%",
+              transform: "translateX(-50%)",
+              pointerEvents: "none",
+            }}
+          >
+            {t(lang, "gt86EnRoute")}
+          </span>
+        )}
 
         {/* Le skip, discret, présent de CIEL à SEUIL — et lui seul mène à
             l'habitacle-hub, qui EST le menu du site (spec #25). */}
@@ -489,6 +558,19 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
           inset: 0,
           background: VERRE,
           opacity: 0,
+          pointerEvents: "none",
+        }}
+      />
+
+      {/* le fondu du DÉPART : la jauge est pleine, on plonge dans le
+          portfolio relié (recette #26 — 600 ms, puis la navigation) */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "#050408",
+          opacity: etat === "DEPART" ? 1 : 0,
+          transition: "opacity 600ms ease",
           pointerEvents: "none",
         }}
       />

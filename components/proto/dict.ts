@@ -67,6 +67,11 @@ const DICT = {
   gt86Nom: { fr: "Hugo Juskowiak", en: "Hugo Juskowiak" },
   gt86Titre: { fr: "Software Development Engineer", en: "Software Development Engineer" },
   gt86Rejouer: { fr: "revoir la scène", en: "replay the scene" },
+  /* l'écran média (#32) : les libellés du peintre passent par le dict */
+  gt86OuVaTOn: { fr: "OÙ VA-T-ON ?", en: "WHERE TO?" },
+  gt86RienNeJoue: { fr: "RIEN NE JOUE", en: "NOTHING PLAYING" },
+  gt86SpotifyArrive: { fr: "Spotify arrive (#33)", en: "Spotify coming (#33)" },
+  gt86Date: { fr: "mar. 19 août", en: "Tue, Aug 19" },
   status: {
     fr: "En poste · France",
     en: "Employed · France",
