@@ -141,8 +141,8 @@ const ASSETS = {
     mats: 36,
     noms: ["Aussenbeet", "Carbon", "DashboardArtwork", "Display", "Floor", "Glass",
       "HeadlightsTex", "Indicator", "InteriorBlack", "InteriorStuff", "LightsFront",
-      "Paint", "RedGlow", "SilverPlastic", "Speedo", "Speedoneedle", "Stern",
-      "Taillightbody"],
+      "Paint", "Pedals", "RedGlow", "SilverPlastic", "Speedo",
+      "Speedoneedle", "Stern", "Taillightbody"],
   },
   "public/prototype/decor-procedural.glb": {
     max: 8_800_000,
@@ -150,6 +150,9 @@ const ASSETS = {
     meshes: 38,
     noms: ["CityGen_LR_Facades", "CityGenGlass.001"],
   },
+  /* la ville coupée ne sert plus qu'à la route prototype (#31 a mis
+     l'habitacle dans la rue entière) — gardée au budget tant que le
+     prototype vit, #35 tranchera son sort */
   "public/prototype/decor-habitacle.glb": {
     max: 5_000_000,
     mats: 42,
@@ -157,6 +160,12 @@ const ASSETS = {
     noms: ["CityGen_LR_Facades", "CityGenGlass.001"],
   },
   "public/prototype/crepuscule.hdr": { max: 1_200_000 },
+  /* l'habillage habitacle (#31) : textures gatées aux #23/#26 */
+  "public/prototype/compteur-violet.jpg": { max: 168_000 },
+  "public/prototype/haunter-dash.jpg": { max: 98_000 },
+  "public/prototype/haunter-dash-lueur.jpg": { max: 52_000 },
+  "public/prototype/ecran-fond.jpg": { max: 43_000 },
+  "public/prototype/retro.jpg": { max: 5_300 },
 }
 
 const jsonDuGlb = (buf) => JSON.parse(buf.subarray(20, 20 + buf.readUInt32LE(12)).toString("utf8"))
@@ -290,16 +299,48 @@ await attends(async () => await etat(), 8000, "remontage")
 assert.equal(await etat(), "HABITACLE", "l'intro s'est rejouée dans la même session")
 console.log("  4/6 intro une seule fois par session")
 
-/* 4 bis. Le vol s'achève DE LUI-MÊME (#30) : session vierge, clic sur la
-      consigne, et l'atterrissage doit mener à l'habitacle sans skip — c'est
-      le vol (vol.tsx) qui envoie le vrai « fini », l'horloge de scene.tsx
-      n'est qu'un filet. Large : vol 4,6 s + seuil 1,1 s + chargement rue. */
+/* 4 bis. Le rail complet s'achève DE LUI-MÊME (#30, #31) : session vierge,
+      clic sur la consigne, et vol PUIS seuil doivent mener à l'habitacle
+      sans skip — les chorégraphes envoient le vrai « fini », les horloges
+      de scene.tsx ne sont que des filets. Large : vol 4,6 s + seuil 8,2 s
+      + chargement rue, filets compris (VOL_MS+4 s puis SEUIL_MS+4 s sur
+      machine gelée). */
 await sonde(`sessionStorage.clear()`)
 await va(base + "/")
 await attends(async () => (await etat()) === "CIEL", 8000, "retour au CIEL en session vierge")
 await sonde(`document.querySelector('[data-gt86="demarrer"]').click()`)
-await attends(async () => (await etat()) === "HABITACLE", 20000, "le vol d'atterrissage jusqu'à l'habitacle")
-console.log("  4b/6 le vol d'atterrissage s'achève de lui-même")
+await attends(async () => (await etat()) === "HABITACLE", 45000, "vol + seuil jusqu'à l'habitacle")
+/* …et la mise sous contact a bien eu lieu (#31) : phares à l'intensité
+   gatée, dalle allumée, caméra ASSISE (à moins de 2 m du poste de
+   conduite — la vue d'arrivée du #30 en est à 7). La voiture du ciel
+   traîne ses propres matériaux homonymes : on cherche DES exemplaires
+   aux valeurs du réveil, pas l'unicité. On ATTEND l'état final au lieu
+   de le lire au vol : `data-etat` bascule au commit, mais l'allumage vit
+   dans des effets passifs que React diffère — sur machine affamée
+   (SwiftShader ~1 fps) la sonde les doublait (payé : « LightsFront à
+   1 » alors que l'état final était bon, relevé au CDP). */
+const contact = await attends(async () => {
+  const r = JSON.parse(
+    await sonde(`(() => {
+      const st = window.__gt86
+      const releve = { optiques: 0, ecran: 0 }
+      st.scene.traverse((o) => {
+        const mats = Array.isArray(o.material) ? o.material : o.material ? [o.material] : []
+        for (const m of mats) {
+          if (m.name === "LightsFront") releve.optiques = Math.max(releve.optiques, m.emissiveIntensity)
+          if (m.name === "Display") releve.ecran = Math.max(releve.ecran, m.emissiveIntensity)
+        }
+      })
+      const c = st.camera.position
+      releve.distance = Math.hypot(c.x - -4.7, c.z - -18.6)
+      return JSON.stringify(releve)
+    })()`),
+  )
+  return r.optiques >= 7.9 && r.ecran >= 1 && r.distance < 2 ? r : null
+}, 10000, "le réveil de l'habitacle (phares gatés + dalle allumée + caméra assise)")
+console.log(
+  `  4b/6 vol + seuil s'achèvent d'eux-mêmes, habitacle vivant (phares ${contact.optiques}, dalle ${contact.ecran}), caméra assise`,
+)
 
 /* 5. La version simple n'est JAMAIS cassée : incapable → rien ne se monte,
       le décor et la voiture sont à leur place. */
@@ -337,15 +378,25 @@ const ressources = JSON.parse(
 const externes = ressources.filter((u) => !u.startsWith(base))
 assert.deepEqual(externes, [], `des requêtes partent chez un tiers : ${externes}`)
 /* …et la cascade tire RÉELLEMENT ses octets — sans ça, une cascade débranchée
-   passerait la sonde d'externes haut la main. La ville se précharge à
-   l'HABITACLE (où la session revenante atterrit), la voiture et le ciel au
-   chargement du module. */
-for (const asset of ["/prototype/gt86.glb", "/prototype/crepuscule.hdr", "/prototype/decor-procedural.glb", "/prototype/decor-habitacle.glb"])
+   passerait la sonde d'externes haut la main. Voiture, ciel et textures
+   d'habitacle partent au chargement du module, la rue au montage. La ville
+   coupée du prototype n'est PLUS de la cascade (#31 : l'habitacle vit dans
+   la rue entière). */
+for (const asset of [
+  "/prototype/gt86.glb",
+  "/prototype/crepuscule.hdr",
+  "/prototype/decor-procedural.glb",
+  "/prototype/compteur-violet.jpg",
+  "/prototype/haunter-dash.jpg",
+  "/prototype/haunter-dash-lueur.jpg",
+  "/prototype/retro.jpg",
+  "/prototype/ecran-fond.jpg",
+])
   assert.ok(
     ressources.some((u) => u.endsWith(asset)),
     `la cascade n'a pas demandé ${asset} — préchargement débranché ?`,
   )
-console.log("  7/7 zéro requête externe, et la cascade tire voiture + ciel + ville")
+console.log("  7/7 zéro requête externe, et la cascade tire voiture + ciel + rue + habitacle")
 
 console.log("bloc B — navigateur : OK")
 

@@ -2,9 +2,18 @@
 
 import { useEffect, useMemo, useRef, type MutableRefObject } from "react"
 import { useFrame, useThree } from "@react-three/fiber"
-import { useGLTF } from "@react-three/drei"
+import { useGLTF, useTexture } from "@react-three/drei"
 import * as THREE from "three"
 import type { Trajectoire } from "./vol"
+import {
+  ASSISE,
+  TEXTURES_HABITACLE,
+  VieVoiture,
+  allumeHabitacle,
+  habilleInterieur,
+  type Cockpit,
+  type Veille,
+} from "./habitacle"
 
 /* LA RUE NOCTURNE — ticket #30 : le décor gaté au #22, porté du prototype
    (`app/prototype/rue`, route jetable) dans la coquille. City procédurale
@@ -177,10 +186,29 @@ function Decor() {
 /* La robe de nuit du #22 (habilleNuit du prototype) — appliquée à un CLONE :
    le GLB du cache est déjà porté par le ciel (#29), qui a mué ses matériaux
    pour le crépuscule ; deux <primitive> ne peuvent pas partager le même
-   objet de toute façon. PHARES ÉTEINTS : leur allumage sur le nom est la
-   mise en scène du SEUIL (#24 décide, #31 exécute). */
-function VoitureGaree({ vol }: { vol: MutableRefObject<Trajectoire> }) {
+   objet de toute façon. Depuis le #31 la même voiture porte AUSSI
+   l'habitacle gaté (#23/#26, habitacle.tsx) : tout naît éteint, la cascade
+   du seuil réveille — et `vivant` (skip, session revenante) allume d'un
+   coup. */
+function VoitureGaree({
+  vol,
+  cockpit,
+  veille,
+  vivant,
+}: {
+  vol: MutableRefObject<Trajectoire>
+  cockpit: Cockpit
+  veille: Veille
+  vivant: boolean
+}) {
   const { scene } = useGLTF("/prototype/gt86.glb")
+  const [art, lueur, compteur] = useTexture([
+    TEXTURES_HABITACLE.art,
+    TEXTURES_HABITACLE.lueur,
+    TEXTURES_HABITACLE.compteur,
+  ])
+  const invalide = useThree((s) => s.invalidate)
+  const gl = useThree((s) => s.gl)
   const porteur = useRef<THREE.Group>(null)
   const assiette = useRef<THREE.Group>(null)
 
@@ -230,11 +258,6 @@ function VoitureGaree({ vol }: { vol: MutableRefObject<Trajectoire> }) {
           verre.transparent = true
           verre.opacity = 0.8
         }
-        /* les optiques attendent le SEUIL : intensités à zéro, les
-           réglages gatés (#22) vivent au #31 qui les rallume */
-        if (mat.name === "LightsFront" || mat.name === "HeadlightsTex" || mat.name === "RedGlow") {
-          mat.emissiveIntensity = 0
-        }
         /* la livrée d'usine rougeoie magenta la nuit — neutralisée,
            verdict robe unique du #21 */
         if (mat.name === "Taillightbody") {
@@ -250,6 +273,10 @@ function VoitureGaree({ vol }: { vol: MutableRefObject<Trajectoire> }) {
         mat.needsUpdate = true
       }
     })
+    /* l'habitacle gaté et les optiques préparées à zéro — remplit le
+       cockpit (StrictMode/HMR rejouent ce memo sur un clone NEUF : les
+       tableaux du cockpit sont repartis de zéro dans habilleInterieur) */
+    habilleInterieur(clone, { art, lueur, compteur }, veille.tex, gl.capabilities.getMaxAnisotropy(), cockpit)
     /* posée sur ses roues : le bas de la bbox affleure l'asphalte (y=0) —
        recalculé sur le clone, qui hérite du centrage fait par le ciel */
     const boite = new THREE.Box3().setFromObject(clone)
@@ -258,8 +285,17 @@ function VoitureGaree({ vol }: { vol: MutableRefObject<Trajectoire> }) {
       -boite.min.y,
       -(boite.min.z + boite.max.z) / 2,
     )
+    cockpit.voiture = clone
     return clone
-  }, [scene])
+  }, [scene, art, lueur, compteur, veille, gl, cockpit])
+
+  /* le chemin sans cascade (skip, session revenante) : l'état final d'un
+     coup — idempotent, donc sans danger juste après le seuil */
+  useEffect(() => {
+    if (!vivant) return
+    allumeHabitacle(cockpit)
+    invalide()
+  }, [vivant, cockpit, invalide])
 
   /* la chute : le canal `chute` du vol (0 = en l'air, 1 = posée) — la
      voiture tombe vers son garage, cabrée, et s'assied au toucher */
@@ -274,6 +310,11 @@ function VoitureGaree({ vol }: { vol: MutableRefObject<Trajectoire> }) {
       <group ref={porteur}>
         <group ref={assiette}>
           <primitive object={modele} />
+          {/* rétro, néons, phares volumétriques : même repère brut que le
+              GLB — le groupe copie l'offset d'assise du clone */}
+          <group position={[modele.position.x, modele.position.y, modele.position.z]}>
+            <VieVoiture cockpit={cockpit} />
+          </group>
         </group>
       </group>
     </group>
@@ -494,16 +535,37 @@ function Fond() {
 
 /* ---- la rue entière ---------------------------------------------------- */
 
+/* Du repère brut du GLB au monde, VOITURE AU REPOS : pose de rue × offset
+   d'assise du clone. Jamais localToWorld — les groupes porteur/assiette
+   sont animés par la chute, et un filet qui coupe le vol en plein ciel
+   laisse leur transform à 22 m d'altitude jusqu'à la frame suivante
+   (payé : le glissé du seuil visait une voiture en l'air, sondé au CDP). */
+const reposMonde = new THREE.Matrix4()
+export function enMondeRepos(out: THREE.Vector3, local: THREE.Vector3, voiture: THREE.Object3D) {
+  reposMonde.makeRotationY(CAP_VOITURE).setPosition(POSE_VOITURE[0], POSE_VOITURE[1], POSE_VOITURE[2])
+  return out.copy(local).add(voiture.position).applyMatrix4(reposMonde)
+}
+
+/* brouillon de la visée assise — zéro allocation dans l'effet de pose */
+const viseAssise = new THREE.Vector3()
+
 export default function Rue({
   visible,
   vol,
-  poseFinale,
+  pose,
+  cockpit,
+  veille,
+  vivant,
 }: {
   visible: boolean
   vol: MutableRefObject<Trajectoire>
-  /* hors vol (skip, session revenante, états d'après) : la caméra se pose
-     directement sur la vue d'arrivée gatée */
-  poseFinale: boolean
+  /* hors vol, la caméra se pose directement : "rue" = la vue d'arrivée
+     gatée (le SEUIL en part), "assis" = le poste de conduite (l'habitacle
+     et tous les états d'après — skip et sessions revenantes compris) */
+  pose: "rue" | "assis" | null
+  cockpit: Cockpit
+  veille: Veille
+  vivant: boolean
 }) {
   const scene3 = useThree((s) => s.scene)
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
@@ -519,15 +581,25 @@ export default function Rue({
   }, [scene3])
 
   useEffect(() => {
-    if (!poseFinale) return
-    camera.position.set(...CAM_FINALE)
-    camera.fov = 38
-    camera.lookAt(...CIBLE_FINALE)
+    if (!pose) return
+    if (pose === "rue") {
+      camera.position.set(...CAM_FINALE)
+      camera.fov = 38
+      camera.lookAt(...CIBLE_FINALE)
+    } else {
+      /* l'assise vit dans le repère brut du GLB : convertie par la pose de
+         repos — la mesure d'assise et la pose de rue y sont déjà */
+      const voiture = cockpit.voiture
+      if (!voiture) return
+      enMondeRepos(camera.position, ASSISE.cam, voiture)
+      camera.fov = 45
+      camera.lookAt(enMondeRepos(viseAssise, ASSISE.vise, voiture))
+    }
     camera.updateProjectionMatrix()
     /* les états de repos sont en frameloop "demand" : sans invalidation,
        la pose resterait peinte à l'ANCIENNE caméra (écran noir du skip) */
     invalide()
-  }, [poseFinale, camera, invalide])
+  }, [pose, camera, invalide, cockpit])
 
   return (
     <group visible={visible}>
@@ -536,7 +608,7 @@ export default function Rue({
           volumes, plus assez pour ressembler à un crépuscule (gate #22) */}
       <ambientLight intensity={0.21} color="#a9b4d4" />
       <Decor />
-      <VoitureGaree vol={vol} />
+      <VoitureGaree vol={vol} cockpit={cockpit} veille={veille} vivant={vivant} />
       <VieNocturne />
       <Fond />
     </group>

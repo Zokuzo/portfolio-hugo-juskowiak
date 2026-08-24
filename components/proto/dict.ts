@@ -62,6 +62,10 @@ const DICT = {
   gt86Partir: { fr: "Départ", en: "Go" },
   gt86Passer: { fr: "passer l'intro", en: "skip intro" },
   gt86Retour: { fr: "retour", en: "back" },
+  /* le nom du seuil (#31) : identique dans les deux langues, mais il passe
+     par le dictionnaire comme tout texte de l'expérience (doctrine #25) */
+  gt86Nom: { fr: "Hugo Juskowiak", en: "Hugo Juskowiak" },
+  gt86Titre: { fr: "Software Development Engineer", en: "Software Development Engineer" },
   status: {
     fr: "En poste · France",
     en: "Employed · France",

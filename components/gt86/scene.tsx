@@ -13,6 +13,8 @@ import { INTRO, RAILS, REPOS, depart, marqueVue, suivant } from "./machine"
 import Ciel, { CIEL_HDR, VOITURE } from "./ciel"
 import Rue from "./rue"
 import Vol, { VOL_MS, type Trajectoire } from "./vol"
+import Seuil, { SEUIL_MS } from "./seuil"
+import { Pouls, cockpitVide, creeVeille, type Veille } from "./habitacle"
 
 /* LES ASSETS ET LEUR CASCADE — ticket #28.
 
@@ -28,8 +30,10 @@ import Vol, { VOL_MS, type Trajectoire } from "./vol"
    demandera — la voiture et le ciel. `RGBELoader` vient de three-stdlib comme
    dans `<Environment>` de drei : même constructeur, donc MÊME clé de cache —
    les chaînes viennent de `ciel.tsx`, le préchargement d'ici sert donc son
-   dôme et sa voiture sans un octet de plus. */
-const VILLE = "/prototype/decor-habitacle.glb"
+   dôme et sa voiture sans un octet de plus. Les textures de l'habitacle
+   (#31) partent au même rang, depuis habitacle.tsx : elles habillent la
+   voiture. La ville coupée du prototype (`decor-habitacle.glb`) ne sert
+   plus — l'habitacle vit dans la rue entière, déjà montée. */
 
 useGLTF.setDecoderPath("/voiture/draco/")
 useGLTF.preload(VOITURE)
@@ -51,14 +55,11 @@ useLoader.preload(RGBELoader, CIEL_HDR)
 const NUIT = "#08070f"
 const ENCRE = "#e8dff5"
 
-/* Tant que les scènes sont vides, un rail de caméra est une DURÉE, pas un
-   parcours. La valeur vient du #26 : les vols de caméra y ont quitté le lerp
-   par image pour une course à durée fixe, précisément parce qu'une
-   interpolation par image hache dès que la cadence tombe. */
-const RAIL_MS = 1100
 /* Le fondu avant la navigation — même ordre de grandeur que le départ GPS
    du prototype #26. */
 const DEPART_MS = 650
+/* le verre fumé gaté (#21/#24) : la couleur du voile de la plongée */
+const VERRE = "#161b21"
 
 /* Le contexte peut être perdu à chaud (onglet en arrière-plan longtemps,
    pilote qui se réinitialise). three AVALE l'événement — `preventDefault`,
@@ -109,6 +110,17 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
      au départ = la voiture de la rue est posée (skip, session revenante). */
   const vol = useRef<Trajectoire>({ t: 0, plonge: 0, chute: 1 })
   const voile = useRef<HTMLDivElement>(null)
+  /* le seuil (#31) : son voile verre, son nom, et le cockpit — les poignées
+     de la cascade, partagées entre la rue (qui les remplit) et le
+     chorégraphe (qui les réveille) */
+  const voileVerre = useRef<HTMLDivElement>(null)
+  const nom = useRef<HTMLDivElement>(null)
+  const cockpit = useRef(cockpitVide()).current
+  /* l'écran en veille — une seule instance par montage (StrictMode
+     fabriquait deux dalles au prototype, matériau et clics séparés) */
+  const veilleRef = useRef<Veille | null>(null)
+  if (!veilleRef.current) veilleRef.current = creeVeille()
+  const veille = veilleRef.current
   /* voiture + ciel décodés → la rue se monte en sourdine pendant le CIEL
      (décodage meshopt synchrone : jamais pendant le rail) */
   const [cielPret, setCielPret] = useState(false)
@@ -122,12 +134,13 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
      `requestAnimationFrame` est étranglé quand la scène rame, piège payé au
      #26 sur la jauge du GPS. Le nettoyage annule le rail en cours, ce qui
      rend le skip immédiat et sûr même en plein atterrissage.
-     ATTERRISSAGE : le vol (vol.tsx) envoie le vrai « fini » au bout de sa
-     course, toujours en phase avec l'image — l'horloge ne reste qu'en
-     FILET, large, au cas où la boucle de rendu meurt. */
+     ATTERRISSAGE et SEUIL : leurs chorégraphes (vol.tsx, seuil.tsx)
+     envoient le vrai « fini » au bout de leur course, toujours en phase
+     avec l'image — l'horloge ne reste qu'en FILET, large, au cas où la
+     boucle de rendu meurt. */
   useEffect(() => {
     if (!RAILS[etat]) return
-    const h = setTimeout(() => envoie({ t: "fini" }), etat === "ATTERRISSAGE" ? VOL_MS + 4000 : RAIL_MS)
+    const h = setTimeout(() => envoie({ t: "fini" }), (etat === "ATTERRISSAGE" ? VOL_MS : SEUIL_MS) + 4000)
     return () => clearTimeout(h)
   }, [etat])
 
@@ -137,15 +150,11 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
     if (etat === "HABITACLE") marqueVue()
   }, [etat])
 
-  /* LA SUITE DE LA CASCADE (#28) : chaque état télécharge ce dont le SUIVANT
-     aura besoin. Le fetch de la ville part dès l'atterrissage — et aussi à
-     l'habitacle, parce que le skip et les sessions revenantes y arrivent sans
-     passer par l'atterrissage. Le décor ne sera MONTÉ qu'en état de repos
-     (frameloop "demand") : le décodage meshopt, synchrone sur le thread
-     principal, tombe boucle arrêtée — jamais pendant un rail où chaque image
-     compte. `prefetch("/home")` attend que la route existe (#34). */
+  /* LA SUITE DE LA CASCADE (#28) : chaque état télécharge ce dont le
+     SUIVANT aura besoin. Depuis le #31 l'habitacle vit dans la rue déjà
+     chargée — il ne reste à l'habitacle qu'à précharger la route de
+     sortie. `prefetch("/home")` attend que la route existe (#34). */
   useEffect(() => {
-    if (etat === "ATTERRISSAGE" || etat === "HABITACLE") useGLTF.preload(VILLE)
     if (etat === "HABITACLE") router.prefetch("/work")
   }, [etat, router])
 
@@ -172,6 +181,9 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
   if (boom) throw new Error("gt86 : échec de montage simulé (?gt86=boom)")
 
   const passer = INTRO.includes(etat)
+  /* après le seuil (habitacle et états suivants — skip et sessions
+     revenantes compris) : voiture vivante, caméra assise */
+  const apres = !passer
 
   return (
     <div
@@ -202,6 +214,8 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
             soit décodé (ou qu'on l'ait déjà quitté) pour se monter, et
             devient le fond de TOUS les états d'après. */}
         <Vol etat={etat} vol={vol} voile={voile} surBascule={surBascule} fini={() => envoie({ t: "fini" })} />
+        <Seuil etat={etat} cockpit={cockpit} voile={voileVerre} nom={nom} fini={() => envoie({ t: "fini" })} />
+        <Pouls actif={etat === "SEUIL" || apres} veille={veille} />
         <Suspense fallback={null}>
           <Ciel
             visible={etat === "CIEL" || (etat === "ATTERRISSAGE" && !enRue)}
@@ -215,7 +229,10 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
             <Rue
               visible={enRue || (etat !== "CIEL" && etat !== "ATTERRISSAGE")}
               vol={vol}
-              poseFinale={etat !== "CIEL" && etat !== "ATTERRISSAGE"}
+              pose={etat === "SEUIL" ? "rue" : apres ? "assis" : null}
+              cockpit={cockpit}
+              veille={veille}
+              vivant={apres}
             />
           </Suspense>
         )}
@@ -229,6 +246,60 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
           position: "absolute",
           inset: 0,
           background: "#ffe3c4",
+          opacity: 0,
+          pointerEvents: "none",
+        }}
+      />
+
+      {/* le nom du seuil (#24) : posé sur le claquement des phares, dans le
+          tiers haut pour laisser la voiture au centre — opacité pilotée
+          image par image par seuil.tsx */}
+      {etat === "SEUIL" && (
+        <div
+          ref={nom}
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "grid",
+            placeItems: "center",
+            opacity: 0,
+            pointerEvents: "none",
+          }}
+        >
+          <div style={{ textAlign: "center", transform: "translateY(-15vh)" }}>
+            <div
+              style={{
+                font: "500 clamp(22px, 3vw, 34px)/1.25 var(--f-mono)",
+                letterSpacing: "0.1em",
+                color: ENCRE,
+                textShadow: "0 0 26px rgba(138, 92, 255, 0.4)",
+              }}
+            >
+              {t(lang, "gt86Nom")}
+            </div>
+            <div
+              style={{
+                marginTop: 12,
+                font: "500 12px/1 var(--f-mono)",
+                letterSpacing: "0.34em",
+                color: `${ENCRE}b3`,
+              }}
+            >
+              {t(lang, "gt86Titre").toUpperCase()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* le voile de la plongée (#24) : le verre fumé emplit le cadre et
+          son noir devient l'obscurité — couvre la traversée du near plane,
+          se dissout en CSS sur la vue assise */}
+      <div
+        ref={voileVerre}
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: VERRE,
           opacity: 0,
           pointerEvents: "none",
         }}
@@ -286,8 +357,21 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
           </button>
         )}
 
-        <div style={{ display: "flex", gap: 14, pointerEvents: "auto" }}>
-          {(etat === "ATTERRISSAGE" || etat === "SEUIL") && (
+        {/* les commandes d'état : en bas du cadre depuis le #31 — la vue
+            assise est la scène, les boutons DOM (placeholders jusqu'à
+            l'écran du #32) n'ont plus à squatter son centre */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: 64,
+            left: "50%",
+            transform: "translateX(-50%)",
+            display: "flex",
+            gap: 14,
+            pointerEvents: "auto",
+          }}
+        >
+          {etat === "ATTERRISSAGE" && (
             <span style={{ ...discret, pointerEvents: "none" }}>{t(lang, "gt86EnRoute")}</span>
           )}
 
