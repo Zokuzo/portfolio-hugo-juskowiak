@@ -29,6 +29,10 @@ export const CIEL_HDR = "/prototype/crepuscule.hdr"
 const SOLEIL = new THREE.Vector3(0.25, 0.6, -1.0)
 /* rotation du ciel : 0,25π retenu après balayage en captures (gate #21) */
 const ROT = Math.PI * 0.25
+/* Les mers de nuages en GRIS MÉTALLISÉ (8e retour de gate #33 : « la
+   couleur du début avec le gris métallisé dans les nuages ») : crêtes
+   argent, ombres acier — le dôme rosé du gate #21 reste derrière, la
+   robe Argent de la voiture s'y fond chrome sur chrome. */
 /* LA robe — Argent anodisé poli, seul survivant du testeur de couleurs */
 const ARGENT = "#b4b9bf"
 /* la pose du gate : caméra au flanc, fov 38, la voiture au centre du cadre */
@@ -220,9 +224,9 @@ export default function Ciel({
             carrosserie au creux de la houle), des masses éparses au-dessus */}
         <MerDeNuages
           soleil={SOLEIL}
-          crete="#ffe3c4"
-          ombre="#c28f92"
-          loin="#eba48e"
+          crete="#e9edf3"
+          ombre="#8f96a3"
+          loin="#b6bcc7"
           sommet={-2.6}
           fond={-14}
           couverture={0.1}
@@ -231,9 +235,9 @@ export default function Ciel({
         <MerDeNuages
           sens="plafond"
           soleil={SOLEIL}
-          crete="#fff0da"
-          ombre="#d8a49c"
-          loin="#eba48e"
+          crete="#f2f5f9"
+          ombre="#a6adb9"
+          loin="#b6bcc7"
           sommet={8}
           fond={20}
           couverture={0.5}

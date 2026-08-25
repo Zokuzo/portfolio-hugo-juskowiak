@@ -501,16 +501,16 @@ await pause(1500)
 await clicPoste(0.5, 0.5)
 await attends(async () => (await distanceA(-0.075, 0.8403, 0.1358)) < 0.05, 90000, "le rail vers la dalle (Spotify)")
 await pause(1500)
-await clicPoste(0.75, 0.5)
-await attends(async () => (await etat()) === "MUSIQUES", 20000, "la tuile MUSIQUES")
+/* le consentement est LE CLIC DE TUILE (8e retour : direct à l'AMP, la
+   tuile porte la mention SPOTIFY) — zéro octet ne doit précéder CE clic */
 const tiersAvantClic = JSON.parse(
   await sonde(
     `JSON.stringify(performance.getEntriesByType("resource").map((e) => e.name).filter((u) => u.includes("spotify") || u.includes("scdn.co") || u.includes("/api/gt86/mix")))`,
   ),
 )
 assert.deepEqual(tiersAvantClic, [], `la façade a fui : requêtes Spotify AVANT le clic — ${tiersAvantClic}`)
-await clicPoste(0.5, 0.5)
-await attends(async () => (await etat()) === "SPOTIFY", 20000, "la façade démarre le player")
+await clicPoste(0.75, 0.5)
+await attends(async () => (await etat()) === "SPOTIFY", 20000, "la tuile MUSIQUES ouvre l'AMP direct")
 await attends(
   async () =>
     await sonde(
@@ -537,7 +537,7 @@ await attends(async () => (await volumeLu()) < volAvant - 0.01, 15000, "la molet
    peintre, cliquée comme le reste du poste */
 await clicPoste(0.03, 0.05)
 await attends(async () => (await etat()) === "HABITACLE", 15000, "le ‹ du player revient au hub")
-console.log("  4e/6 Spotify en façade : zéro octet avant le clic, le player en texture, le ‹ revient au hub")
+console.log("  4e/6 Spotify direct : zéro octet avant le clic de tuile, l'AMP en texture, la molette, le ‹ revient au hub")
 
 /* 5. La version simple n'est JAMAIS cassée : incapable → rien ne se monte,
       le décor et la voiture sont à leur place. */

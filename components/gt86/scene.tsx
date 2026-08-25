@@ -152,17 +152,42 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
   const [zoome, setZoome] = useState(false)
   const [warning, setWarning] = useState(false)
   const [mixCourant, setMixCourant] = useState(0)
+  /* le moteur SURVIT aux changements d'écran (8e retour : « la musique
+     continue si on n'a pas appuyé sur pause ») — amorcé au premier
+     SPOTIFY, il ne meurt qu'au rejeu (retour CIEL) ou au départ */
+  const [ampVivant, setAmpVivant] = useState(false)
+  useEffect(() => {
+    if (etat === "SPOTIFY") setAmpVivant(true)
+    else if (etat === "CIEL" || etat === "DEPART") setAmpVivant(false)
+  }, [etat])
+  /* le disque du player : "a" | "b" (peints) | "3d" (mesh) — trois
+     candidats au gate, ?disque= les départage */
+  const [disque] = useState<"a" | "b" | "3d">(() => {
+    const v = new URLSearchParams(window.location.search).get("disque")
+    return v === "3d" || v === "b" ? v : "a"
+  })
+  useEffect(() => {
+    ecran.regleDisque(disque === "3d" ? null : disque)
+  }, [ecran, disque])
   const zoomeRef = useRef(zoome)
   zoomeRef.current = zoome
 
   /* rejoindre un écran : GPS et MUSIQUES passent par la machine (deux
      dispatchs en file — `retour` est inerte à l'habitacle), les
      accessoires (hub, horloge, stats) restent au poste */
-  const versEcran = (mode: ModeEcran) => {
+  const versEcran = (mode: ModeEcran, direct = false) => {
     setZoome(true)
     envoie({ t: "retour" })
     if (mode === "gps") envoie({ t: "va", ou: "GPS" })
-    else if (mode === "musiques") envoie({ t: "va", ou: "MUSIQUES" })
+    else if (mode === "musiques") {
+      /* DIRECT à l'AMP (8e retour #33 : « pas d'écran intermédiaire »)
+         SEULEMENT depuis la tuile qui PORTE la mention SPOTIFY — c'est
+         elle, le clic de consentement (revue : le cycle ‹/› et MEDIA
+         auto-confirmaient, des octets partaient vers le CDN sans clic
+         étiqueté) ; les autres chemins gardent la façade d'un clic */
+      envoie({ t: "va", ou: "MUSIQUES" })
+      if (direct) envoie({ t: "confirme" })
+    }
     else if (mode === "hub") ecran.hub()
     else if (mode === "horloge") ecran.horloge()
     else if (mode === "stats") ecran.stats()
@@ -224,7 +249,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
     }
     if (etat === "HABITACLE" && mode === "hub") {
       if (zone.u < 0.48) versEcran("gps")
-      else if (zone.u > 0.52) versEcran("musiques")
+      else if (zone.u > 0.52) versEcran("musiques", true)
       return
     }
     if (etat === "SPOTIFY") {
@@ -457,6 +482,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
               warning={warning}
               surZone={surZone}
               surMolette={surMolette}
+              disque3d={disque === "3d" && etat === "SPOTIFY"}
             />
             <Sentinelle surPret={surRuePrete} />
           </Suspense>
@@ -465,14 +491,15 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
         <RythmeAmp actif={etat === "SPOTIFY"} ecran={ecran} />
       </Canvas>
 
-      {/* le voile de la bascule ciel → rue : crème des crêtes, piloté par
-          le vol image par image, transparent aux clics */}
+      {/* le voile de la bascule ciel → rue : ARGENT des crêtes (les mers
+          sont passées au gris métallisé, 8e retour), piloté par le vol
+          image par image, transparent aux clics */}
       <div
         ref={voile}
         style={{
           position: "absolute",
           inset: 0,
-          background: "#ffe3c4",
+          background: "#e9edf3",
           opacity: 0,
           pointerEvents: "none",
         }}
@@ -628,7 +655,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
       {/* le MOTEUR du player (#33, 7e retour) : plus d'iframe du tout —
           un <audio> maison sur les préversions du CDN, gain (molette) et
           analyseur (spectre) ; il ne rend rien, il nourrit le peintre */}
-      {etat === "SPOTIFY" && <MoteurSpotify ecran={ecran} commandes={commandesSpotify} mix={mixCourant} />}
+      {ampVivant && <MoteurSpotify ecran={ecran} commandes={commandesSpotify} mix={mixCourant} />}
 
       {/* le voile CHARGEMENT (7e retour #33) : couvre le ciel tant que
           les ressources décodent — transparent aux clics (le harnais et
