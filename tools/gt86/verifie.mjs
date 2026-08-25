@@ -451,7 +451,7 @@ await attends(async () => {
     const st = window.__gt86
     const T = st.scene.getObjectByName("moquette").parent
     const V = st.camera.position.constructor
-    const local = new V(-0.075, 0.9, -0.05).add(T.position)
+    const local = new V(-0.075, 0.8403, 0.1358).add(T.position)
     const monde = new V(-local.x - 4.4, local.y - 0.05, -local.z - 19)
     return st.camera.position.distanceTo(monde)
   })()`)
@@ -487,7 +487,7 @@ const distanceA = (lx, ly, lz) => sonde(`(() => {
 await attends(async () => (await distanceA(0.3, 1.05, -0.42)) < 0.05, 90000, "le retour assis avant Spotify")
 await pause(1500)
 await clicPoste(0.5, 0.5)
-await attends(async () => (await distanceA(-0.075, 0.9, -0.05)) < 0.05, 90000, "le rail vers la dalle (Spotify)")
+await attends(async () => (await distanceA(-0.075, 0.8403, 0.1358)) < 0.05, 90000, "le rail vers la dalle (Spotify)")
 await pause(1500)
 await clicPoste(0.75, 0.5)
 await attends(async () => (await etat()) === "MUSIQUES", 20000, "la tuile MUSIQUES")

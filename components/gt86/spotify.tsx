@@ -17,10 +17,9 @@ import type { Cockpit } from "./habitacle"
    tierce » du harnais. Si l'embed ne répond pas (réseau d'entreprise,
    bloqueur), le REPLI « écran custom qui linke » prend sa place. */
 
-const GONFLE_L = 1.34
-const GONFLE_H = 1.75
-/* l'embed compact de Spotify fait 152 px — le panneau garde la place des
-   onglets et du pied */
+/* le panneau ÉPOUSE la dalle au pixel (retour de gate #33 : « qu'il
+   s'affiche dans l'écran de la voiture comme le reste ») — la vue écran
+   rapprochée rend le rectangle assez grand pour l'embed */
 const ATTENTE_EMBED = 6000
 
 /* ---- le projecteur : le cadre de la dalle, suivi à l'image ------------- */
@@ -74,13 +73,15 @@ export function CadreDalle({
       maxX = Math.max(maxX, x)
       maxY = Math.max(maxY, y)
     }
+    /* 1:1 sur la dalle — garde-fous seulement pour les toutes petites
+       fenêtres (l'embed reste utilisable) */
     const cx = (minX + maxX) / 2
     const cy = (minY + maxY) / 2
-    const l = Math.min(600, Math.max(340, (maxX - minX) * GONFLE_L))
-    const h = Math.min(380, Math.max(230, (maxY - minY) * GONFLE_H))
+    const l = Math.max(320, maxX - minX)
+    const h = Math.max(200, maxY - minY)
     const s = boite.current.style
     s.left = `${Math.round(cx - l / 2)}px`
-    s.top = `${Math.round(Math.max(12, cy - h / 2))}px`
+    s.top = `${Math.round(Math.max(8, cy - h / 2))}px`
     s.width = `${Math.round(l)}px`
     s.height = `${Math.round(h)}px`
   })
@@ -126,10 +127,11 @@ export function PanneauSpotify({ lang, surRetour }: { lang: Lang; surRetour: () 
         inset: 0,
         display: "flex",
         flexDirection: "column",
-        background: "rgba(10, 8, 20, 0.94)",
-        border: "1px solid #8f5cff59",
-        borderRadius: 10,
-        boxShadow: "0 10px 44px rgba(0, 0, 0, 0.65)",
+        /* PAS une carte flottante : c'est l'AFFICHAGE de l'écran — opaque,
+           coins de dalle, liseré de la lunette, aucune ombre portée */
+        background: "#0a0814",
+        border: "1px solid #2b2440",
+        borderRadius: 4,
         overflow: "hidden",
         pointerEvents: "auto",
       }}

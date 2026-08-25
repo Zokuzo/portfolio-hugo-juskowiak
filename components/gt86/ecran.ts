@@ -42,9 +42,15 @@ const PLAN_NORMALE = new THREE.Vector3(0, Math.sin(ECRAN_NATIF.bascule), Math.co
 const PLAN_AXE_Y = PLAN_NORMALE.clone().cross(new THREE.Vector3(-1, 0, 0))
 const PLAN = new THREE.Plane().setFromNormalAndCoplanarPoint(PLAN_NORMALE, ECRAN_NATIF.centre)
 
-/* la vue « nez sur l'écran » du rail (repère brut du GLB, prototype #23) */
+/* la vue « nez sur l'écran » du rail — RAPPROCHÉE au retour de gate #33
+   (« l'écran devrait être plus zoomé ») : 20 cm dans l'axe NORMAL de la
+   dalle (perpendiculaire, plus de biais) — la dalle emplit ~42 % de la
+   hauteur du cadre et le panneau Spotify loge DEDANS au pixel ; les
+   boutons de façade restent visibles et cliquables aux bords */
 export const VUE_ECRAN = {
-  cam: new THREE.Vector3(-0.075, 0.9, -0.05),
+  cam: ECRAN_NATIF.centre
+    .clone()
+    .add(new THREE.Vector3(0, Math.sin(ECRAN_NATIF.bascule), Math.cos(ECRAN_NATIF.bascule)).normalize().multiplyScalar(-0.2)),
   vise: ECRAN_NATIF.centre.clone(),
 }
 
