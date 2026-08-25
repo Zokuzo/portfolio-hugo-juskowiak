@@ -25,7 +25,7 @@ export const PLAYLISTS = [
 ] as const
 export const PROFIL_SPOTIFY = "https://open.spotify.com/user/9p0f1gx6f10segq9f4rs1cg4n"
 
-export type ModeEcran = "veille" | "hub" | "gps" | "musiques" | "horloge" | "stats" | "eteint"
+export type ModeEcran = "veille" | "hub" | "gps" | "musiques" | "spotify" | "horloge" | "stats" | "eteint"
 export type DestEcran = "maison" | "travail"
 
 const REDUIT =
@@ -101,6 +101,26 @@ export function zoneDuClic(origineLocale: THREE.Vector3, pointLocal: THREE.Vecto
 
 /* ---- la fabrique ------------------------------------------------------- */
 
+export type EtatSpotify = {
+  enLecture: boolean
+  position: number
+  duree: number
+  piste: number
+  indice: number
+  repli: boolean
+}
+
+export type ClicSpotify =
+  | "retour"
+  | "lecture"
+  | "piste-prec"
+  | "piste-suiv"
+  | "mix-prec"
+  | "mix-suiv"
+  | "ouvrir"
+  | "ouvrir-mix"
+  | { mix: number }
+
 export type Ecran = {
   tex: THREE.CanvasTexture
   etatDebug: () => string
@@ -118,6 +138,10 @@ export type Ecran = {
   clicGps: (u: number, v: number) => "retour" | DestEcran | null
   tic: () => void
   choisit: (dest: DestEcran) => void
+  spotify: () => void
+  majSpotify: (maj: Partial<EtatSpotify>) => void
+  ticSpotify: (dt: number) => void
+  clicSpotify: (u: number, v: number) => ClicSpotify | null
 }
 
 export function creeEcran(lang: Lang): Ecran {
@@ -158,6 +182,19 @@ export function creeEcran(lang: Lang): Ecran {
   gpsCalque.height = h
   const gg = gpsCalque.getContext("2d")!
   let gpsSale = true
+  const ampCalque = document.createElement("canvas")
+  ampCalque.width = l
+  ampCalque.height = h
+  const ag = ampCalque.getContext("2d")!
+  let ampSale = true
+  /* l'état du player HJ·AMP (mode "spotify") — nourri par l'hôte de
+     l'iframe invisible via majSpotify */
+  const amp: EtatSpotify = { enLecture: false, position: 0, duree: 0, piste: 1, indice: 0, repli: false }
+  let ampHorloge = 0
+  const LCD_ENCRE_AMP = "#ffd9f6"
+  let ampCumul = 0
+  const ampCretes = new Array(19).fill(0)
+  let ampNiveau = 0
 
   const peintFond = () => {
     if (fondSale) {
@@ -590,6 +627,208 @@ export function creeEcran(lang: Lang): Ecran {
     })
   }
 
+  /* ---- HJ·AMP en texture (retour de gate #33 : « l'AMP doit s'intégrer
+     à l'écran, pas une surcouche ») : la skin années 2000 se peint DANS
+     la dalle 512×256 comme le hub et le GPS — le grain LCD vient du même
+     coup. Calque statique (chrome, biseaux, puits, playlist) + couche
+     vivante (temps, marquee, bougies, crêtes) repeinte par ticSpotify. */
+  const AMP_ZONES = {
+    /* v de la rangée transport et des rangées playlist — les zones de
+       clicSpotify sont calquées sur ce dessin */
+    transportV: [0.875, 1.0] as const,
+    playlistV0: 0.585,
+    playlistDV: 0.0705,
+  }
+  const biseau2d = (ctx: CanvasRenderingContext2D, x: number, y: number, la: number, ha: number, creux = false) => {
+    ctx.fillStyle = creux ? "#160a20" : "#a95fd0"
+    if (!creux) {
+      const grad = ctx.createLinearGradient(0, y, 0, y + ha)
+      grad.addColorStop(0, "#edc4fa")
+      grad.addColorStop(0.45, "#b06ad4")
+      grad.addColorStop(1, "#8e4bb0")
+      ctx.fillStyle = grad
+    }
+    ctx.fillRect(x, y, la, ha)
+    ctx.fillStyle = creux ? "#3a1548" : "#f6e0ff"
+    ctx.fillRect(x, y, la, 1)
+    ctx.fillRect(x, y, 1, ha)
+    ctx.fillStyle = creux ? "#e2b6f4" : "#4d2064"
+    ctx.fillRect(x, y + ha - 1, la, 1)
+    ctx.fillRect(x + la - 1, y, 1, ha)
+  }
+  const peintAmpStatique = () => {
+    /* le chrome plastique */
+    const fondA = ag.createLinearGradient(0, 0, l * 0.4, h)
+    fondA.addColorStop(0, "#d493ec")
+    fondA.addColorStop(0.34, "#a95fd0")
+    fondA.addColorStop(0.62, "#8a45b4")
+    fondA.addColorStop(1, "#6b3193")
+    ag.fillStyle = fondA
+    ag.fillRect(0, 0, l, h)
+    ag.textBaseline = "middle"
+    /* bandeau titre */
+    const bandeau = ag.createLinearGradient(0, 0, l, 0)
+    bandeau.addColorStop(0, "#5a2378")
+    bandeau.addColorStop(0.45, "#a95fd0")
+    bandeau.addColorStop(1, "#5a2378")
+    ag.fillStyle = bandeau
+    ag.fillRect(0, 0, l, 18)
+    biseau2d(ag, 3, 3, 16, 12)
+    ag.fillStyle = "#2e1040"
+    ag.font = "bold 10px monospace"
+    ag.textAlign = "center"
+    ag.fillText("‹", 11, 9)
+    ag.textAlign = "left"
+    ag.fillStyle = "#f3daff"
+    ag.font = "italic bold 9px monospace"
+    ag.fillText("H J · A M P", 26, 9)
+    for (let k = 0; k < 3; k++) {
+      ag.fillStyle = "#33113f"
+      ag.fillRect(l - 30 + k * 9, 6, 6, 6)
+    }
+    /* puits du LCD (temps + marquee) */
+    biseau2d(ag, 6, 22, 108, 40, true)
+    biseau2d(ag, 118, 22, l - 124, 40, true)
+    /* puits de l'égaliseur */
+    ag.fillStyle = "#f3daff"
+    ag.font = "bold 8px monospace"
+    ag.textAlign = "center"
+    ag.fillText("E Q U A L I Z E R", l / 2, 70)
+    ag.textAlign = "left"
+    biseau2d(ag, 6, 75, l - 12, 68, true)
+    /* PLAYLIST */
+    ag.fillStyle = "#f3daff"
+    ag.textAlign = "center"
+    ag.fillText("P L A Y L I S T", l / 2, 151)
+    ag.textAlign = "left"
+    biseau2d(ag, 6, 156, l - 12, 66, true)
+    /* transport */
+    const ty = Math.round(h * AMP_ZONES.transportV[0]) + 3
+    biseau2d(ag, 18, ty, 46, 22)
+    biseau2d(ag, 70, ty, 56, 22)
+    biseau2d(ag, 132, ty, 46, 22)
+    biseau2d(ag, 214, ty, 62, 22)
+    biseau2d(ag, 282, ty, 62, 22)
+    ag.fillStyle = "#2e1040"
+    ag.font = "bold 11px monospace"
+    ag.textAlign = "center"
+    ag.fillText("⏮", 41, ty + 11)
+    ag.fillText("⏭", 155, ty + 11)
+    ag.font = "bold 8px monospace"
+    ag.fillText("‹ MIX", 245, ty + 11)
+    ag.fillText("MIX ›", 313, ty + 11)
+    ag.textAlign = "right"
+    ag.fillStyle = "#f3daff"
+    ag.font = "bold 8px monospace"
+    ag.fillText("SPOTIFY ↗", l - 12, ty + 11)
+    ag.textAlign = "left"
+  }
+  const peintAmp = () => {
+    if (ampSale) {
+      peintAmpStatique()
+      ampSale = false
+    }
+    g.drawImage(ampCalque, 0, 0)
+    g.textBaseline = "middle"
+    /* le ⏯ suit l'état */
+    const ty = Math.round(h * AMP_ZONES.transportV[0]) + 3
+    g.fillStyle = "#2e1040"
+    g.font = "bold 12px monospace"
+    g.textAlign = "center"
+    g.fillText(amp.enLecture ? "⏸" : "▶", 98, ty + 11)
+    g.textAlign = "left"
+    /* LCD : temps réel + piste, marquee du mix */
+    g.fillStyle = LCD_ENCRE_AMP
+    g.shadowColor = "#ff64d2"
+    g.shadowBlur = 5
+    g.font = "bold 24px monospace"
+    g.textAlign = "right"
+    const sPos = Math.max(0, Math.floor(amp.position / 1000))
+    g.fillText(`${Math.floor(sPos / 60)}:${String(sPos % 60).padStart(2, "0")}`, 108, 40)
+    g.shadowBlur = 0
+    g.font = "bold 8px monospace"
+    g.fillStyle = "#8d6aa8"
+    g.fillText(`PISTE ${String(amp.piste).padStart(2, "0")}`, 108, 55)
+    g.textAlign = "left"
+    const sDur = Math.max(0, Math.floor(amp.duree / 1000))
+    const bandeauTexte = `${PLAYLISTS[amp.indice].nom.toUpperCase()} · SPOTIFY · ${Math.floor(sDur / 60)}:${String(sDur % 60).padStart(2, "0")}   `
+    g.save()
+    g.beginPath()
+    g.rect(120, 24, l - 128, 20)
+    g.clip()
+    g.fillStyle = LCD_ENCRE_AMP
+    g.shadowColor = "#ff64d2"
+    g.shadowBlur = 4
+    g.font = "bold 11px monospace"
+    const lt = g.measureText(bandeauTexte).width
+    const defile = (ampHorloge * 26) % lt
+    g.fillText(bandeauTexte + bandeauTexte, 120 - defile, 34)
+    g.restore()
+    g.shadowBlur = 0
+    g.font = "bold 7px monospace"
+    g.fillStyle = "#6a4a86"
+    g.fillText("320 KBPS · 44 KHZ", 122, 55)
+    g.textAlign = "right"
+    g.fillStyle = amp.enLecture ? LCD_ENCRE_AMP : "#6a4a86"
+    g.fillText("STEREO", l - 10, 55)
+    g.textAlign = "left"
+    /* les bougies — une couleur chacune, crêtes qui retombent */
+    const bx0 = 8
+    const bl = l - 16
+    const by1 = 141
+    const bh = 62
+    const N = 19
+    const pas = bl / N
+    ampNiveau += ((amp.enLecture ? 1 : 0) - ampNiveau) * 0.07
+    for (let i = 0; i < N; i++) {
+      const forme = 0.55 + 0.45 * Math.sin((i / N) * Math.PI * 1.4 + 0.4)
+      const danse =
+        0.5 +
+        0.28 * Math.sin(ampHorloge * (2.1 + (i % 5) * 0.9) + i * 1.7) +
+        0.22 * Math.sin(ampHorloge * (5.3 + (i % 3) * 1.3) + i * 0.6)
+      const bh1 = Math.max(1.5, ampNiveau * forme * danse * bh)
+      const teinte = 270 + (i / (N - 1)) * 120
+      const grad = g.createLinearGradient(0, by1, 0, by1 - bh1)
+      grad.addColorStop(0, `hsl(${teinte}, 88%, 32%)`)
+      grad.addColorStop(0.55, `hsl(${teinte}, 92%, 55%)`)
+      grad.addColorStop(1, `hsl(${teinte}, 100%, 78%)`)
+      g.fillStyle = grad
+      g.fillRect(bx0 + i * pas + 2, by1 - bh1, pas - 4, bh1)
+      ampCretes[i] = Math.max(ampCretes[i] - 0.55, bh1)
+      g.fillStyle = "#ffe9fb"
+      g.fillRect(bx0 + i * pas + 2, by1 - ampCretes[i] - 2, pas - 4, 2)
+    }
+    /* PLAYLIST : quatre rangées, l'active en lueur */
+    g.font = "bold 10px monospace"
+    if (amp.repli) {
+      g.fillStyle = "#f3daff"
+      g.textAlign = "center"
+      g.fillText(t(langue, "gt86SpotifyBloque"), l / 2, 176)
+      g.fillStyle = LCD_ENCRE_AMP
+      g.fillText(`${PLAYLISTS[amp.indice].nom} ↗`, l / 2, 196)
+      g.textAlign = "left"
+    } else {
+      for (let i = 0; i < PLAYLISTS.length; i++) {
+        const ry = Math.round(h * (AMP_ZONES.playlistV0 + i * AMP_ZONES.playlistDV)) + 8
+        const actif = i === amp.indice
+        if (actif) {
+          g.fillStyle = "#3d1a55"
+          g.fillRect(9, ry - 7, l - 18, 15)
+        }
+        g.fillStyle = actif ? LCD_ENCRE_AMP : "#b48cd4"
+        if (actif) {
+          g.shadowColor = "#ff64d2"
+          g.shadowBlur = 4
+        }
+        g.fillText(`${i + 1}. ${PLAYLISTS[i].nom}`, 14, ry)
+        g.textAlign = "right"
+        g.fillText(actif && amp.enLecture ? "▶" : "RADIO", l - 14, ry)
+        g.textAlign = "left"
+        g.shadowBlur = 0
+      }
+    }
+  }
+
   const peintHorloge = () => {
     g.textAlign = "center"
     g.font = `bold ${Math.round(u * 30)}px monospace`
@@ -659,6 +898,8 @@ export function creeEcran(lang: Lang): Ecran {
     peintFond()
     if (etat.mode === "gps") {
       peintGps()
+    } else if (etat.mode === "spotify") {
+      peintAmp()
     } else if (etat.mode === "musiques") {
       peintMusiques()
     } else if (etat.mode === "horloge") {
@@ -761,6 +1002,40 @@ export function creeEcran(lang: Lang): Ecran {
       peint()
     },
     musiques: () => passeEn("musiques"),
+    spotify: () => passeEn("spotify"),
+    majSpotify(maj: Partial<EtatSpotify>) {
+      Object.assign(amp, maj)
+      if (etat.mode === "spotify") peint()
+    },
+    /* la couche vivante du player — appelée à l'image pendant SPOTIFY,
+       plafonnée par l'appelant ; ne repeint QUE si le mode est là */
+    ticSpotify(dt: number) {
+      ampHorloge += dt
+      if (etat.mode !== "spotify") return
+      ampCumul += dt
+      if (ampCumul < 0.033) return
+      ampCumul = 0
+      peint()
+    },
+    /* zones calquées sur le dessin du peintre HJ·AMP */
+    clicSpotify(u: number, v: number): ClicSpotify | null {
+      if (u < 0.06 && v < 0.1) return "retour"
+      if (v >= 0.875) {
+        if (u < 0.13) return "piste-prec"
+        if (u < 0.26) return "lecture"
+        if (u < 0.37) return "piste-suiv"
+        if (u >= 0.4 && u < 0.53) return "mix-prec"
+        if (u >= 0.53 && u < 0.68) return "mix-suiv"
+        if (u >= 0.72) return "ouvrir"
+        return null
+      }
+      if (amp.repli && v >= 0.6 && v <= 0.86) return "ouvrir-mix"
+      if (!amp.repli && v >= 0.575 && v < 0.868) {
+        const i = Math.floor((v - 0.575) / 0.0705)
+        if (i >= 0 && i < PLAYLISTS.length) return { mix: i }
+      }
+      return null
+    },
     horloge: () => passeEn("horloge"),
     stats: () => passeEn("stats"),
     eteint: () => passeEn("eteint"),

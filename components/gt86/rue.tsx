@@ -343,6 +343,7 @@ function VoitureGaree({
       m.emissive.set("#ffb340")
       m.emissiveIntensity = allume ? 4 : 0
     }
+    if (cockpit.triangle) cockpit.triangle.opacity = allume ? 0.9 : 0
   })
 
   const ressort = useRef({ tombe: false, tau: -1 })

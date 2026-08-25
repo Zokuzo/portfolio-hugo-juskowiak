@@ -1,10 +1,9 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState, type CSSProperties, type RefObject } from "react"
+import { useEffect, useRef, type MutableRefObject, type RefObject } from "react"
 import { useFrame, useThree } from "@react-three/fiber"
 import * as THREE from "three"
-import { t, type Lang } from "@/components/proto/dict"
-import { ECRAN_NATIF, PLAYLISTS, PROFIL_SPOTIFY } from "./ecran"
+import { ECRAN_NATIF, PLAYLISTS, type Ecran } from "./ecran"
 import { enMondeRepos } from "./rue"
 import type { Cockpit } from "./habitacle"
 
@@ -136,119 +135,43 @@ function chargeApiSpotify(): Promise<ApiSpotify> {
   return window.__spotifyApi
 }
 
-/* ---- la skin ----------------------------------------------------------- */
+/* ---- l'hôte invisible : le moteur audio du HJ·AMP ---------------------- */
 
-const LCD_FOND = "#160a20"
-const LCD_ENCRE = "#ffd9f6"
-const CHROME: CSSProperties = {
-  background: "linear-gradient(165deg, #d493ec 0%, #a95fd0 34%, #8a45b4 62%, #6b3193 100%)",
-}
-const puits: CSSProperties = {
-  background: LCD_FOND,
-  border: "2px solid",
-  borderColor: "#3a1548 #e2b6f4 #e2b6f4 #3a1548",
-  borderRadius: 2,
-}
-const biseau: CSSProperties = {
-  background: "linear-gradient(180deg, #edc4fa, #b06ad4 45%, #8e4bb0)",
-  border: "2px solid",
-  borderColor: "#f6e0ff #4d2064 #4d2064 #f6e0ff",
-  borderRadius: 4,
-  color: "#2e1040",
-  cursor: "pointer",
-  font: "700 11px/1 var(--f-mono)",
-}
-const legende: CSSProperties = {
-  font: "700 9px/1 var(--f-mono)",
-  letterSpacing: "0.22em",
-  color: "#f3daff",
-  textShadow: "1px 1px 0 #4d2064",
+/* Depuis le 6e retour de gate, la skin vit DANS la texture de la dalle
+   (ecran.ts, mode "spotify") — l'iframe de l'embed ne sert plus que de
+   MOTEUR : invisible (opacité 0, pointeurs coupés) mais montée dans le
+   viewport pour que la lecture continue. L'hôte nourrit le peintre
+   (majSpotify) et détecte les CHANGEMENTS DE PISTE : une durée qui change
+   ou une position qui retombe = piste suivante, le compteur s'incrémente. */
+
+export type CommandesSpotify = {
+  bascule: () => void
+  reprend: () => void
+  saute: () => void
+  chargeMix: (i: number) => void
 }
 
-const formatTemps = (ms: number) => {
-  const s = Math.max(0, Math.floor(ms / 1000))
-  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`
-}
-
-/* l'égaliseur : 19 barres qui ne dansent QUE pendant la lecture (niveau
-   lissé vers 0 à la pause), crêtes qui retombent — au canvas, à l'image */
-function Egaliseur({ enLecture }: { enLecture: boolean }) {
-  const toile = useRef<HTMLCanvasElement>(null)
-  const lecture = useRef(enLecture)
-  lecture.current = enLecture
-  useEffect(() => {
-    const c = toile.current
-    if (!c) return
-    const g = c.getContext("2d")!
-    const N = 19
-    const cretes = new Array(N).fill(0)
-    let niveau = 0
-    let vivant = true
-    let rafId = 0
-    const peint = (t: number) => {
-      if (!vivant) return
-      const L = c.width
-      const H = c.height
-      niveau += ((lecture.current ? 1 : 0) - niveau) * 0.06
-      g.fillStyle = LCD_FOND
-      g.fillRect(0, 0, L, H)
-      const pas = L / N
-      const tt = t / 1000
-      for (let i = 0; i < N; i++) {
-        const forme = 0.55 + 0.45 * Math.sin((i / N) * Math.PI * 1.4 + 0.4)
-        const danse =
-          0.5 +
-          0.28 * Math.sin(tt * (2.1 + (i % 5) * 0.9) + i * 1.7) +
-          0.22 * Math.sin(tt * (5.3 + (i % 3) * 1.3) + i * 0.6)
-        const h = Math.max(0.02, niveau * forme * danse) * (H - 6)
-        const x = i * pas + 2
-        const lb = pas - 4
-        /* une couleur PAR BOUGIE (retour de gate) : balayage violet →
-           magenta → rose → orangé sur la rampe des 19 barres */
-        const teinte = 270 + (i / (N - 1)) * 120
-        const grad = g.createLinearGradient(0, H, 0, H - h)
-        grad.addColorStop(0, `hsl(${teinte}, 88%, 32%)`)
-        grad.addColorStop(0.55, `hsl(${teinte}, 92%, 55%)`)
-        grad.addColorStop(1, `hsl(${teinte}, 100%, 78%)`)
-        g.fillStyle = grad
-        g.fillRect(x, H - h, lb, h)
-        cretes[i] = Math.max(cretes[i] - (H / 60) * 0.35, h)
-        g.fillStyle = "#ffe9fb"
-        g.fillRect(x, H - cretes[i] - 2, lb, 2)
-      }
-      rafId = requestAnimationFrame(peint)
-    }
-    rafId = requestAnimationFrame(peint)
-    return () => {
-      vivant = false
-      cancelAnimationFrame(rafId)
-    }
-  }, [])
-  return <canvas ref={toile} width={430} height={72} style={{ width: "100%", height: "100%", display: "block" }} />
-}
-
-export function PanneauSpotify({ lang, surRetour }: { lang: Lang; surRetour: () => void }) {
-  const [indice, setIndice] = useState(0)
-  /* null = en chargement, true = le player a répondu, false = repli */
-  const [charge, setCharge] = useState<boolean | null>(null)
-  const [enLecture, setEnLecture] = useState(false)
-  const [temps, setTemps] = useState({ position: 0, duree: 0 })
+export function HoteSpotify({
+  ecran,
+  commandes,
+}: {
+  ecran: Ecran
+  commandes: MutableRefObject<CommandesSpotify | null>
+}) {
   const nid = useRef<HTMLDivElement>(null)
   const controleur = useRef<ControleurSpotify | null>(null)
-  const indiceRef = useRef(0)
-  const playlist = PLAYLISTS[indice]
+  const memoire = useRef({ duree: 0, position: 0, piste: 1, indice: 0, enLecture: false })
 
-  /* le player : l'API crée l'iframe dans le nid — un seul contrôleur,
-     loadUri au changement de playlist */
   useEffect(() => {
     let vivant = true
-    /* GARDE ÉTAGÉE (payée aux captures mule) : une horloge unique de 6 s
-       basculait sur le repli alors que le contrôleur allait répondre —
-       sa réponse annule la première garde et en arme une seconde, plus
-       patiente, pour `ready` : le repli ne prend la place que si l'embed
-       ne répond vraiment jamais */
+    const m = memoire.current
+    Object.assign(m, { duree: 0, position: 0, piste: 1, indice: 0, enLecture: false })
+    ecran.majSpotify({ enLecture: false, position: 0, duree: 0, piste: 1, indice: 0, repli: false })
+    /* GARDE ÉTAGÉE : la réponse du contrôleur désarme la première horloge
+       et en arme une plus patiente pour `ready` — le repli (peint par le
+       peintre) ne prend la place que si l'embed ne répond vraiment jamais */
     const gardes: ReturnType<typeof setTimeout>[] = []
-    const armeGarde = (ms: number) => gardes.push(setTimeout(() => setCharge((c) => (c === null ? false : c)), ms))
+    const armeGarde = (ms: number) => gardes.push(setTimeout(() => vivant && ecran.majSpotify({ repli: true }), ms))
     const desarme = () => gardes.splice(0).forEach(clearTimeout)
     armeGarde(ATTENTE_EMBED)
     chargeApiSpotify()
@@ -267,270 +190,66 @@ export function PanneauSpotify({ lang, surRetour }: { lang: Lang; surRetour: () 
             armeGarde(ATTENTE_EMBED * 3)
             c.addListener("ready", () => {
               desarme()
-              setCharge(true)
+              if (vivant) ecran.majSpotify({ repli: false })
             })
             c.addListener("playback_update", (e) => {
-              setEnLecture(e.data.isPaused === false)
-              setTemps({ position: e.data.position ?? 0, duree: e.data.duration ?? 0 })
+              if (!vivant) return
+              const duree = e.data.duration ?? 0
+              const position = e.data.position ?? 0
+              /* la détection de changement de piste */
+              if ((duree > 0 && m.duree > 0 && duree !== m.duree) || position + 2000 < m.position) m.piste++
+              m.duree = duree
+              m.position = position
+              m.enLecture = e.data.isPaused === false
+              desarme()
+              ecran.majSpotify({ enLecture: m.enLecture, position, duree, piste: m.piste, repli: false })
             })
           },
         )
       })
-      .catch(() => setCharge(false))
+      .catch(() => vivant && ecran.majSpotify({ repli: true }))
+    commandes.current = {
+      bascule: () => controleur.current?.togglePlay(),
+      reprend: () => controleur.current?.restart(),
+      /* le saut de piste : l'API n'a pas de « suivante » — seek à la
+         dernière seconde, le player enchaîne tout seul */
+      saute: () => {
+        const c = controleur.current
+        if (!c || m.duree < 3000) return
+        c.seek(Math.max(0, m.duree / 1000 - 0.8))
+        if (!m.enLecture) c.play()
+      },
+      chargeMix: (i: number) => {
+        if (i === m.indice) return
+        m.indice = i
+        m.piste = 1
+        Object.assign(m, { duree: 0, position: 0, enLecture: false })
+        controleur.current?.loadUri(`spotify:playlist:${PLAYLISTS[i].id}`)
+        ecran.majSpotify({ indice: i, piste: 1, position: 0, duree: 0, enLecture: false })
+      },
+    }
     return () => {
       vivant = false
       desarme()
+      commandes.current = null
       controleur.current?.destroy()
       controleur.current = null
     }
-  }, [])
+  }, [ecran, commandes])
 
-  /* le SKIP réel : l'API n'a pas de « piste suivante », mais sauter à la
-     dernière seconde fait enchaîner le player sur la piste d'après ; ⏮
-     reprend la piste au début */
-  const saute = useCallback(() => {
-    const c = controleur.current
-    if (!c || temps.duree < 3000) return
-    c.seek(Math.max(0, temps.duree / 1000 - 0.8))
-    if (!enLecture) c.play()
-  }, [temps.duree, enLecture])
-  const reprend = useCallback(() => {
-    controleur.current?.restart()
-  }, [])
-
-  const choisitPlaylist = useCallback((i: number) => {
-    setIndice(i)
-    if (indiceRef.current !== i) {
-      indiceRef.current = i
-      controleur.current?.loadUri(`spotify:playlist:${PLAYLISTS[i].id}`)
-      setEnLecture(false)
-      setTemps({ position: 0, duree: 0 })
-    }
-  }, [])
-
+  /* dans le viewport (la lecture continue), mais invisible et sourd */
   return (
-    <div
-      style={{
-        position: "absolute",
-        inset: 0,
-        display: "flex",
-        flexDirection: "column",
-        ...CHROME,
-        border: "2px solid",
-        borderColor: "#f0ccfc #33113f #33113f #f0ccfc",
-        borderRadius: 4,
-        overflow: "hidden",
-        pointerEvents: "auto",
-      }}
-    >
-      <style>{`@keyframes gt86defile { 0% { transform: translateX(100%) } 100% { transform: translateX(-100%) } }`}</style>
-
-      {/* bandeau titre */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          padding: "3px 6px",
-          background: "linear-gradient(90deg, #5a2378, #a95fd0 45%, #5a2378)",
-          borderBottom: "1px solid #33113f",
-        }}
-      >
-        <button
-          type="button"
-          data-gt86="spotify-retour"
-          onClick={surRetour}
-          style={{ ...biseau, padding: "1px 8px 2px", fontSize: 12 }}
-        >
-          ‹
-        </button>
-        <span style={{ ...legende, fontStyle: "italic", fontSize: 11, letterSpacing: "0.3em" }}>HJ·AMP</span>
-        <span style={{ flex: 1 }} />
-        <span style={{ display: "flex", gap: 3 }}>
-          {[0, 1, 2].map((k) => (
-            <i key={k} style={{ width: 6, height: 6, background: "#33113f", boxShadow: "inset 1px 1px 0 #f0ccfc" }} />
-          ))}
-        </span>
-      </div>
-
-      {/* LCD : temps réel + titre défilant + mentions */}
-      <div style={{ display: "flex", gap: 6, padding: "6px 8px 4px" }}>
-        <div style={{ ...puits, padding: "4px 10px", minWidth: 118, textAlign: "right" }}>
-          <span
-            style={{
-              font: "700 26px/1 var(--f-mono)",
-              color: LCD_ENCRE,
-              textShadow: "0 0 7px #ff64d2",
-              letterSpacing: "0.06em",
-            }}
-          >
-            {formatTemps(temps.position)}
-          </span>
-        </div>
-        <div style={{ ...puits, flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-          <div style={{ overflow: "hidden", whiteSpace: "nowrap" }}>
-            <span
-              style={{
-                display: "inline-block",
-                font: "700 12px/1 var(--f-mono)",
-                letterSpacing: "0.28em",
-                color: LCD_ENCRE,
-                textShadow: "0 0 6px #ff64d2",
-                animation: "gt86defile 9s linear infinite",
-              }}
-            >
-              {playlist.nom.toUpperCase()} · SPOTIFY · {formatTemps(temps.duree)}
-            </span>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              font: "700 8px/1 var(--f-mono)",
-              letterSpacing: "0.2em",
-              color: "#8d6aa8",
-              padding: "4px 2px 0",
-            }}
-          >
-            <span style={{ color: LCD_ENCRE }}>320 KBPS · 44 KHZ</span>
-            <span>
-              MONO <span style={{ color: enLecture ? LCD_ENCRE : "#8d6aa8" }}>STEREO</span>
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* l'égaliseur — les barres suivent le VRAI état de lecture */}
-      <div style={{ padding: "0 8px 4px" }}>
-        <div style={{ textAlign: "center", ...legende, padding: "1px 0 3px" }}>E Q U A L I Z E R</div>
-        <div style={{ ...puits, height: 76, overflow: "hidden" }}>
-          <Egaliseur enLecture={enLecture} />
-        </div>
-      </div>
-
-      {/* la fenêtre de lecture : l'iframe de l'API niche ici — le nid
-          reste MONTÉ même quand le repli s'affiche (l'horloge de repli
-          peut sonner avant un contrôleur lent : s'il finit par répondre,
-          `ready` remet le player en place — repli non destructif). LA
-          SURCOUCHE AMP (retour de gate) recouvre la zone du bouton play
-          de l'embed : pochette et titre restent visibles à gauche, les
-          commandes visibles sont les NÔTRES — ⏯ vraie lecture, ⏭ vrai
-          saut de piste (seek fin de piste), ⏮ reprise de la piste */}
-      <div
-        style={{
-          margin: "0 8px",
-          ...puits,
-          padding: 2,
-          position: "relative",
-          display: charge === false ? "none" : "block",
-        }}
-      >
-        <div ref={nid} style={{ height: 80 }} />
-        <div
-          style={{
-            position: "absolute",
-            top: 2,
-            right: 2,
-            bottom: 2,
-            width: 118,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 4,
-            ...CHROME,
-            borderLeft: "2px solid #33113f",
-            pointerEvents: "auto",
-          }}
-        >
-          <button type="button" style={{ ...biseau, padding: "5px 7px" }} onClick={reprend} title="⏮">
-            ⏮
-          </button>
-          <button type="button" style={{ ...biseau, padding: "5px 9px" }} onClick={() => controleur.current?.togglePlay()}>
-            {enLecture ? "⏸" : "▶"}
-          </button>
-          <button type="button" style={{ ...biseau, padding: "5px 7px" }} onClick={saute} title="⏭">
-            ⏭
-          </button>
-        </div>
-      </div>
-
-      {charge === false ? (
-        /* le repli « écran custom qui linke » (doctrine #18) */
-        <div
-          style={{
-            flex: 1,
-            display: "grid",
-            placeItems: "center",
-            textAlign: "center",
-            padding: 12,
-            font: "700 11px/1.8 var(--f-mono)",
-            color: "#f3daff",
-          }}
-        >
-          <div>
-            {t(lang, "gt86SpotifyBloque")}
-            <br />
-            <a href={playlist.url} target="_blank" rel="noopener noreferrer" style={{ color: "#ffd9f6" }}>
-              {playlist.nom} ↗
-            </a>
-          </div>
-        </div>
-      ) : (
-        <>
-
-          {/* PLAYLIST : les quatre mixes du #19 en rangées Winamp */}
-          <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", padding: "4px 8px 0" }}>
-            <div style={{ textAlign: "center", ...legende, padding: "1px 0 3px" }}>P L A Y L I S T</div>
-            <div style={{ ...puits, flex: 1, minHeight: 0, overflowY: "auto", padding: "3px 6px" }}>
-              {PLAYLISTS.map((pl, i) => (
-                <button
-                  key={pl.id}
-                  type="button"
-                  onClick={() => choisitPlaylist(i)}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    width: "100%",
-                    background: i === indice ? "#3d1a55" : "transparent",
-                    border: "none",
-                    cursor: "pointer",
-                    font: "700 11px/1.8 var(--f-mono)",
-                    letterSpacing: "0.08em",
-                    color: i === indice ? LCD_ENCRE : "#b48cd4",
-                    textShadow: i === indice ? "0 0 6px #ff64d2" : "none",
-                    textAlign: "left",
-                  }}
-                >
-                  <span>
-                    {i + 1}. {pl.nom}
-                  </span>
-                  <span>{i === indice && enLecture ? "▶" : "RADIO"}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* la rangée du bas : le changement de MIX (le transport, lui,
-              vit en surcouche sur la bande de lecture) */}
-          <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 8px 6px" }}>
-            <button type="button" style={{ ...biseau, padding: "3px 8px", fontSize: 9 }} onClick={() => choisitPlaylist((indice + PLAYLISTS.length - 1) % PLAYLISTS.length)}>
-              ‹ MIX
-            </button>
-            <button type="button" style={{ ...biseau, padding: "3px 8px", fontSize: 9 }} onClick={() => choisitPlaylist((indice + 1) % PLAYLISTS.length)}>
-              MIX ›
-            </button>
-            <span style={{ flex: 1 }} />
-            <a
-              href={PROFIL_SPOTIFY}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ ...legende, fontSize: 8, textDecoration: "none" }}
-            >
-              {t(lang, "gt86OuvrirSpotify")}
-            </a>
-          </div>
-        </>
-      )}
+    <div style={{ position: "absolute", inset: 0, opacity: 0, pointerEvents: "none", overflow: "hidden" }} aria-hidden>
+      <div ref={nid} style={{ height: 80 }} />
     </div>
   )
+}
+
+/* la couche vivante du player, cadencée à l'image (plafonnée dans
+   ticSpotify à ~30 repeints/s — bougies, crêtes, marquee, LCD) */
+export function RythmeAmp({ actif, ecran }: { actif: boolean; ecran: Ecran }) {
+  useFrame((_, dt) => {
+    if (actif) ecran.ticSpotify(Math.min(dt, 0.1))
+  })
+  return null
 }

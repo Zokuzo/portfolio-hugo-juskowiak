@@ -80,6 +80,7 @@ export type Cockpit = {
   signature: THREE.MeshStandardMaterial[]
   braises: THREE.MeshStandardMaterial[]
   clignotants: THREE.MeshStandardMaterial[]
+  triangle: THREE.SpriteMaterial | null
   neons: THREE.Group | null
   neonLums: { lum: THREE.SpotLight | THREE.PointLight; plein: number }[]
   phares: THREE.Group | null
@@ -100,6 +101,7 @@ export function cockpitVide(): Cockpit {
     signature: [],
     braises: [],
     clignotants: [],
+    triangle: null,
     neons: null,
     neonLums: [],
     phares: null,
@@ -597,6 +599,23 @@ function Phares({ cockpit }: { cockpit: Cockpit }) {
 export function VieVoiture({ cockpit }: { cockpit: Cockpit }) {
   return (
     <group>
+      {/* le triangle des warnings CLIGNOTE lui-même (dette #32 payée au
+          6e retour : à la vue zoomée, les répétiteurs des ailes sont hors
+          champ — le seul retour visible du bouton est ici). Halo additif
+          seul, PAS de pointLight : la topologie de lumières reste
+          constante. Position : le triangle de la console (plan de la
+          dalle, dy 0,0704, léger retrait). */}
+      <sprite position={[-0.075, 0.7206, 0.297]} scale={[0.09, 0.09, 1]}>
+        <spriteMaterial
+          ref={(m) => { cockpit.triangle = m }}
+          map={halo()}
+          color="#ff2e20"
+          transparent
+          opacity={0}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </sprite>
       <Retro />
       <Neons cockpit={cockpit} />
       <Phares cockpit={cockpit} />

@@ -502,9 +502,11 @@ await attends(
   60000,
   "l'iframe de l'embed à plat (script de l'API + contrôleur — lents sur la mule)",
 )
-await sonde(`document.querySelector('[data-gt86="spotify-retour"]').click()`)
-await attends(async () => (await etat()) === "HABITACLE", 8000, "le ‹ du panneau revient au hub")
-console.log("  4e/6 Spotify en façade : zéro octet avant le clic, l'embed à plat, le ‹ revient au hub")
+/* le player est peint dans la dalle (6e retour) : son ‹ est une ZONE du
+   peintre, cliquée comme le reste du poste */
+await clicPoste(0.03, 0.05)
+await attends(async () => (await etat()) === "HABITACLE", 15000, "le ‹ du player revient au hub")
+console.log("  4e/6 Spotify en façade : zéro octet avant le clic, le player en texture, le ‹ revient au hub")
 
 /* 5. La version simple n'est JAMAIS cassée : incapable → rien ne se monte,
       le décor et la voiture sont à leur place. */

@@ -15,8 +15,8 @@ import Rue from "./rue"
 import Vol, { VOL_MS, type Trajectoire } from "./vol"
 import Seuil, { SEUIL_MS } from "./seuil"
 import { Pouls, cockpitVide } from "./habitacle"
-import { creeEcran, type Ecran, type ModeEcran, type Zone } from "./ecran"
-import { CadreDalle, PanneauSpotify } from "./spotify"
+import { PLAYLISTS, PROFIL_SPOTIFY, creeEcran, type Ecran, type ModeEcran, type Zone } from "./ecran"
+import { CadreDalle, HoteSpotify, RythmeAmp, type CommandesSpotify } from "./spotify"
 
 /* LES ASSETS ET LEUR CASCADE — ticket #28.
 
@@ -117,8 +117,10 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
      chorégraphe (qui les réveille) */
   const voileVerre = useRef<HTMLDivElement>(null)
   const nom = useRef<HTMLDivElement>(null)
-  /* la boîte écran du panneau Spotify, suivie à l'image par CadreDalle */
+  /* la boîte écran de l'hôte Spotify (l'iframe-moteur, invisible),
+     suivie à l'image par CadreDalle ; les commandes du player */
   const cadre = useRef<HTMLDivElement>(null)
+  const commandesSpotify = useRef<CommandesSpotify | null>(null)
   const cockpit = useRef(cockpitVide()).current
   /* L'ÉCRAN MÉDIA (#32) — une seule instance par montage (StrictMode
      fabriquait deux dalles au prototype, matériau et clics séparés) */
@@ -139,6 +141,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
      machine garde GPS/CHOIX/MUSIQUES/DÉPART, l'écran garde son poste */
   const [zoome, setZoome] = useState(false)
   const [warning, setWarning] = useState(false)
+  const [mixCourant, setMixCourant] = useState(0)
   const zoomeRef = useRef(zoome)
   zoomeRef.current = zoome
 
@@ -203,6 +206,30 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
       else if (zone.u > 0.52) versEcran("musiques")
       return
     }
+    if (etat === "SPOTIFY") {
+      /* le player est PEINT dans la dalle : ses zones sont celles du
+         peintre (clicSpotify), ses commandes celles de l'hôte invisible */
+      const r = ecran.clicSpotify(zone.u, zone.v)
+      if (!r) return
+      if (r === "retour") {
+        envoie({ t: "retour" })
+        setZoome(true)
+        ecran.hub()
+      } else if (r === "lecture") commandesSpotify.current?.bascule()
+      else if (r === "piste-prec") commandesSpotify.current?.reprend()
+      else if (r === "piste-suiv") commandesSpotify.current?.saute()
+      else if (r === "mix-prec" || r === "mix-suiv") {
+        const i = (mixCourant + (r === "mix-suiv" ? 1 : PLAYLISTS.length - 1)) % PLAYLISTS.length
+        setMixCourant(i)
+        commandesSpotify.current?.chargeMix(i)
+      } else if (r === "ouvrir") window.open(PROFIL_SPOTIFY, "_blank", "noopener")
+      else if (r === "ouvrir-mix") window.open(PLAYLISTS[mixCourant].url, "_blank", "noopener")
+      else if (typeof r === "object") {
+        setMixCourant(r.mix)
+        commandesSpotify.current?.chargeMix(r.mix)
+      }
+      return
+    }
     if (etat === "MUSIQUES") {
       /* la FAÇADE click-to-load (#33) : c'est CE clic qui autorise
          l'embed — avant lui, pas un octet ne part chez Spotify */
@@ -225,6 +252,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
   useEffect(() => {
     if (etat === "GPS") ecran.gps()
     else if (etat === "MUSIQUES") ecran.musiques()
+    else if (etat === "SPOTIFY") ecran.spotify()
     else if (etat === "CHOIX" && dest) ecran.choisit(dest === "/home" ? "maison" : "travail")
     else if (etat === "HABITACLE" && !zoomeRef.current) ecran.veille()
   }, [etat, dest, ecran])
@@ -393,6 +421,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
         )}
         {fpsVoulu && <Stats />}
         <CadreDalle actif={etat === "SPOTIFY"} cockpit={cockpit} boite={cadre} />
+        <RythmeAmp actif={etat === "SPOTIFY"} ecran={ecran} />
       </Canvas>
 
       {/* le voile de la bascule ciel → rue : crème des crêtes, piloté par
@@ -555,20 +584,11 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
         )}
       </div>
 
-      {/* le panneau Spotify (#33) : l'embed à PLAT sur la dalle — iframe
-          thème sombre, onglets des quatre playlists du #19, repli qui
-          linke si l'embed ne répond pas ; son ‹ revient au hub */}
+      {/* l'hôte Spotify (#33, 6e retour) : le player est PEINT dans la
+          dalle — ne reste ici que l'iframe-MOTEUR, invisible, posée sur
+          le cadre de la dalle pour que la lecture continue */}
       <div ref={cadre} style={{ position: "absolute", pointerEvents: "none" }}>
-        {etat === "SPOTIFY" && (
-          <PanneauSpotify
-            lang={lang}
-            surRetour={() => {
-              envoie({ t: "retour" })
-              setZoome(true)
-              ecran.hub()
-            }}
-          />
-        )}
+        {etat === "SPOTIFY" && <HoteSpotify ecran={ecran} commandes={commandesSpotify} />}
       </div>
 
       {/* le voile de la plongée (#24) : le verre fumé emplit le cadre et
