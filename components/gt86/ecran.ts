@@ -149,7 +149,6 @@ export type Ecran = {
   spotify: () => void
   majSpotify: (maj: Partial<EtatSpotify>) => void
   majSpectre: (bandes: number[]) => void
-  ampLit: () => boolean
   ticSpotify: (dt: number) => void
   clicSpotify: (u: number, v: number) => ClicSpotify | null
 }
@@ -220,6 +219,9 @@ export function creeEcran(lang: Lang): Ecran {
   let ampSpectreMs = -1e9
   /* la surcouche VOL s'affiche 1,4 s après le dernier cran de molette */
   let ampVolMs = -1e9
+  /* le DISQUE 2D (10e retour : le 3D ne prend pas) — l'angle n'avance
+     que quand la musique JOUE */
+  let disqueAngle = 0
 
   let ampHorloge = 0
   const LCD_ENCRE_AMP = "#ffd9f6"
@@ -775,6 +777,108 @@ export function creeEcran(lang: Lang): Ecran {
     ag.fillText("SPOTIFY ↗", l - 12, ty + 11)
     ag.textAlign = "left"
   }
+  /* le sprite KIRBY au pixel (10e retour : « les vrais design ») —
+     transcrit main de la référence pixel-art de Hugo : contour noir,
+     corps rose, pieds carmin, joues, yeux ovales à reflet */
+  const KIRBY = [
+    "    ########    ",
+    "  ##oooooooo##  ",
+    " #oooooooooooo# ",
+    " #oowwoooowwoo# ",
+    "#oooEEooooEEoo# ",
+    "#oooEEooooEEoo# ",
+    "#ooooooooooooo# ",
+    "#obboooooooobb# ",
+    "#oooooomoooooo# ",
+    " #oooooooooooo# ",
+    " #OooooooooooO# ",
+    "  #oooooooooo#  ",
+    " #rrr##oo##rrr# ",
+    " #rrrr#oo#rrrr# ",
+    "  ####    ####  ",
+  ]
+  const KIRBY_TEINTES: Record<string, string> = {
+    "#": "#241a22",
+    o: "#f7a8c9",
+    O: "#e58fb5",
+    w: "#ffffff",
+    E: "#1a1030",
+    b: "#f06fa8",
+    m: "#8f2440",
+    r: "#e5326e",
+  }
+  const peintDisque = () => {
+    /* le disque PEINT dans sa baie CD·ROM (centre 460, 82, r 40) */
+    const r = 40
+    g.save()
+    g.translate(460, 82)
+    g.rotate(disqueAngle)
+    g.beginPath()
+    g.arc(0, 0, r, 0, Math.PI * 2)
+    g.fillStyle = "#f06fb4"
+    g.fill()
+    for (let k = 0; k < 4; k++) {
+      g.beginPath()
+      g.moveTo(0, 0)
+      g.arc(0, 0, r, k * 1.571 + 0.3, k * 1.571 + 1.15)
+      g.closePath()
+      g.fillStyle = k % 2 ? "#ff9ecb" : "#d2408e"
+      g.fill()
+    }
+    /* l'arc holo */
+    const HOLO = ["#ffb3c8", "#ffe2a8", "#c8f0b0", "#a8d8f0", "#d0b8f0"]
+    for (let k = 0; k < HOLO.length; k++) {
+      g.beginPath()
+      g.arc(0, 0, 30 - k * 2, Math.PI * 1.05, Math.PI * 1.95)
+      g.strokeStyle = HOLO[k]
+      g.lineWidth = 2
+      g.globalAlpha = 0.55
+      g.stroke()
+    }
+    g.globalAlpha = 1
+    /* la bande label basse */
+    g.beginPath()
+    g.arc(0, 0, r, 0.46, Math.PI - 0.46)
+    g.closePath()
+    g.fillStyle = "#120716"
+    g.fill()
+    /* le lettrage bulle façon logo : contour lie-de-vin, cœur rose */
+    g.textAlign = "center"
+    g.font = "italic bold 11px monospace"
+    g.strokeStyle = "#8f1f45"
+    g.lineWidth = 3
+    g.strokeText("KIRBY", 0, -26)
+    g.fillStyle = "#f7a8c9"
+    g.fillText("KIRBY", 0, -26)
+    g.fillStyle = "#f5d76e"
+    g.font = "bold 7px monospace"
+    g.fillText("★", 15, -30)
+    g.fillStyle = "#ffd9f6"
+    g.font = "bold 6px monospace"
+    g.fillText("HJ·AMP · 320 KBPS", 0, 30)
+    g.textAlign = "left"
+    /* le sprite, à droite du moyeu comme la référence */
+    const p2 = 2
+    const ox = 4
+    const oy = -14
+    for (let ly = 0; ly < KIRBY.length; ly++)
+      for (let lx = 0; lx < KIRBY[ly].length; lx++) {
+        const ch = KIRBY[ly][lx]
+        if (ch === " ") continue
+        g.fillStyle = KIRBY_TEINTES[ch] ?? "#ffffff"
+        g.fillRect(ox + lx * p2, oy + ly * p2, p2, p2)
+      }
+    /* moyeu : anneau blanc, trou sombre */
+    g.beginPath()
+    g.arc(0, 0, 12, 0, Math.PI * 2)
+    g.fillStyle = "#f2f5f9"
+    g.fill()
+    g.beginPath()
+    g.arc(0, 0, 7, 0, Math.PI * 2)
+    g.fillStyle = "#0f0a18"
+    g.fill()
+    g.restore()
+  }
   const peintAmp = () => {
     if (ampSale) {
       peintAmpStatique()
@@ -912,6 +1016,8 @@ export function creeEcran(lang: Lang): Ecran {
         g.shadowBlur = 0
       }
     }
+    /* le disque dans sa baie, par-dessus le chrome */
+    peintDisque()
   }
 
   const peintHorloge = () => {
@@ -1123,8 +1229,6 @@ export function creeEcran(lang: Lang): Ecran {
       if ("volume" in maj) ampVolMs = performance.now()
       if (etat.mode === "spotify") peint()
     },
-    /* l'état de lecture — le disque 3D (rue.tsx) tourne dessus */
-    ampLit: () => amp.enLecture,
     /* le spectre du moteur — pas de repeinture ici : ticSpotify cadence */
     majSpectre(bandes: number[]) {
       for (let i = 0; i < 19; i++) ampSpectre[i] = bandes[i] ?? 0
@@ -1134,6 +1238,7 @@ export function creeEcran(lang: Lang): Ecran {
        plafonnée par l'appelant ; ne repeint QUE si le mode est là */
     ticSpotify(dt: number) {
       ampHorloge += dt
+      if (amp.enLecture) disqueAngle += dt * 2.6
       if (etat.mode !== "spotify") return
       ampCumul += dt
       if (ampCumul < 0.033) return

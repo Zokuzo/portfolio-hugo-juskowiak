@@ -16,128 +16,6 @@ import {
 } from "./habitacle"
 import { ECRAN_NATIF, VUE_ECRAN, zoneDuClic, type Ecran, type Zone } from "./ecran"
 
-/* LE DISQUE 3D — candidat "3d" du 8e retour #33 (réf. gif mini-disque
-   GameCube) : un disque INCLINÉ qui flotte devant le coin haut-droit de
-   la dalle et tourne quand la musique JOUE. meshBasicMaterial (aucune
-   lumière : la topologie constante tient), face peinte une fois. */
-function faceDisque(): THREE.CanvasTexture {
-  /* la face KIRBY (9e retour, réf. mini-disque Kirby Air Ride) : spirales
-     roses, arc arc-en-ciel, KIRBY au gros pixel (hommage dessiné main,
-     même langage que les icônes du hub), bande label noire. 256 px —
-     le disque emplit son bloc à la vue écran. */
-  const c = document.createElement("canvas")
-  c.width = 256
-  c.height = 256
-  const g = c.getContext("2d")!
-  g.translate(128, 128)
-  g.scale(2, 2)
-  g.beginPath()
-  g.arc(0, 0, 63, 0, Math.PI * 2)
-  g.fillStyle = "#f06fb4"
-  g.fill()
-  /* les bras de spirale */
-  for (let k = 0; k < 4; k++) {
-    g.beginPath()
-    g.moveTo(0, 0)
-    g.arc(0, 0, 63, k * 1.571 + 0.3, k * 1.571 + 1.15)
-    g.closePath()
-    g.fillStyle = k % 2 ? "#ff9ecb" : "#d2408e"
-    g.fill()
-  }
-  /* l'arc arc-en-ciel (le reflet holo de la référence) */
-  const HOLO = ["#ffb3c8", "#ffe2a8", "#c8f0b0", "#a8d8f0", "#d0b8f0"]
-  for (let k = 0; k < HOLO.length; k++) {
-    g.beginPath()
-    g.arc(0, 0, 46 - k * 3, Math.PI * 1.05, Math.PI * 1.95)
-    g.strokeStyle = HOLO[k]
-    g.lineWidth = 3
-    g.globalAlpha = 0.6
-    g.stroke()
-  }
-  g.globalAlpha = 1
-  /* la bande label noire (corde basse) */
-  g.beginPath()
-  g.arc(0, 0, 63, 0.42, Math.PI - 0.42)
-  g.closePath()
-  g.fillStyle = "#120716"
-  g.fill()
-  g.fillStyle = "#ffd9f6"
-  g.font = "bold 9px monospace"
-  g.textAlign = "center"
-  g.fillText("HJ·AMP", 0, 46)
-  g.fillStyle = "#9d86bd"
-  g.font = "bold 5px monospace"
-  g.fillText("GT·CUBE · 320 KBPS", 0, 56)
-  /* KIRBY au gros pixel, à droite du moyeu comme la référence */
-  const K = [
-    "  ######  ",
-    " #oooooo# ",
-    "#oooooooo#",
-    "#oEooooEo#",
-    "#oEooooEo#",
-    "#oooooooo#",
-    "#obo..obo#",
-    "#oooooooo#",
-    " #oooooo# ",
-    "  ######  ",
-    " #rr##rr# ",
-    " #rrr#rrr#",
-    "  ###  ## ",
-  ]
-  const TEINTES: Record<string, string> = {
-    "#": "#7a2050",
-    o: "#ff9ecb",
-    E: "#1a1030",
-    b: "#f0619e",
-    ".": "#a03060",
-    r: "#e0345c",
-  }
-  const p4 = 3
-  const ox = 18
-  const oy = -34
-  for (let ly = 0; ly < K.length; ly++)
-    for (let lx = 0; lx < K[ly].length; lx++) {
-      const ch = K[ly][lx]
-      if (ch === " ") continue
-      g.fillStyle = TEINTES[ch] ?? "#ffffff"
-      g.fillRect(ox + lx * p4, oy + ly * p4, p4, p4)
-    }
-  /* moyeu : anneau blanc, trou sombre */
-  g.beginPath()
-  g.arc(0, 0, 14, 0, Math.PI * 2)
-  g.fillStyle = "#f2f5f9"
-  g.fill()
-  g.beginPath()
-  g.arc(0, 0, 8, 0, Math.PI * 2)
-  g.fillStyle = "#0f0a18"
-  g.fill()
-  const tex = new THREE.CanvasTexture(c)
-  tex.colorSpace = THREE.SRGBColorSpace
-  return tex
-}
-
-function Disque3D({ ecran }: { ecran: Ecran }) {
-  const face = useMemo(faceDisque, [])
-  useEffect(() => () => face.dispose(), [face])
-  const meshRef = useRef<THREE.Mesh>(null)
-  const spin = useRef(0)
-  useFrame((_, delta) => {
-    if (ecran.ampLit()) spin.current -= Math.min(delta, 0.1) * 3.2
-    if (meshRef.current) meshRef.current.rotation.z = spin.current
-  })
-  /* le centre du BLOC CD du peintre (puits l−98..l−6 × 22..143, centre
-     texture (460, 82)) reprojeté sur le plan de la dalle, 2,6 cm côté
-     spectateur (−normale) — le disque flotte DANS son puits, incliné */
-  return (
-    <group position={[-0.1268, 0.804, 0.306]} rotation={[ECRAN_NATIF.bascule - 0.35, 0.28, 0]}>
-      <mesh ref={meshRef}>
-        <circleGeometry args={[0.0125, 48]} />
-        <meshBasicMaterial map={face} side={THREE.DoubleSide} toneMapped={false} />
-      </mesh>
-    </group>
-  )
-}
-
 /* LA RUE NOCTURNE — ticket #30 : le décor gaté au #22, porté du prototype
    (`app/prototype/rue`, route jetable) dans la coquille. City procédurale
    à l'échelle métrique native, GT86 rangée au bas-côté ouest de la rue
@@ -335,7 +213,6 @@ function VoitureGaree({
   warning,
   surZone,
   surMolette,
-  disque3d,
 }: {
   vol: MutableRefObject<Trajectoire>
   cockpit: Cockpit
@@ -344,7 +221,6 @@ function VoitureGaree({
   warning: boolean
   surZone?: (zone: Zone) => void
   surMolette?: (deltaY: number) => void
-  disque3d?: boolean
 }) {
   const { scene } = useGLTF("/prototype/gt86.glb")
   const [art, lueur, compteur] = useTexture([
@@ -558,7 +434,6 @@ function VoitureGaree({
               GLB — le groupe copie l'offset d'assise du clone */}
           <group position={[modele.position.x, modele.position.y, modele.position.z]}>
             <VieVoiture cockpit={cockpit} />
-            {disque3d && <Disque3D ecran={ecran} />}
           </group>
         </group>
       </group>
@@ -813,7 +688,6 @@ export default function Rue({
   warning,
   surZone,
   surMolette,
-  disque3d,
 }: {
   visible: boolean
   vol: MutableRefObject<Trajectoire>
@@ -828,7 +702,6 @@ export default function Rue({
   warning: boolean
   surZone?: (zone: Zone) => void
   surMolette?: (deltaY: number) => void
-  disque3d?: boolean
 }) {
   const scene3 = useThree((s) => s.scene)
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
@@ -925,7 +798,7 @@ export default function Rue({
           volumes, plus assez pour ressembler à un crépuscule (gate #22) */}
       <ambientLight intensity={0.21} color="#a9b4d4" />
       <Decor />
-      <VoitureGaree vol={vol} cockpit={cockpit} ecran={ecran} vivant={vivant} warning={warning} surZone={surZone} surMolette={surMolette} disque3d={disque3d} />
+      <VoitureGaree vol={vol} cockpit={cockpit} ecran={ecran} vivant={vivant} warning={warning} surZone={surZone} surMolette={surMolette} />
       <VieNocturne />
       <Fond />
     </group>

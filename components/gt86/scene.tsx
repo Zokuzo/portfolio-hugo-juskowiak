@@ -474,7 +474,6 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
               warning={warning}
               surZone={surZone}
               surMolette={surMolette}
-              disque3d={etat === "SPOTIFY"}
             />
             <Sentinelle surPret={surRuePrete} />
           </Suspense>
