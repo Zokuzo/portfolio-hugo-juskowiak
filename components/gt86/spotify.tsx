@@ -103,6 +103,9 @@ export function CadreDalle({
 type ControleurSpotify = {
   loadUri: (uri: string) => void
   togglePlay: () => void
+  play: () => void
+  restart: () => void
+  seek: (secondes: number) => void
   destroy: () => void
   addListener: (evt: string, cb: (e: { data: { isPaused?: boolean; position?: number; duration?: number } }) => void) => void
 }
@@ -200,10 +203,13 @@ function Egaliseur({ enLecture }: { enLecture: boolean }) {
         const h = Math.max(0.02, niveau * forme * danse) * (H - 6)
         const x = i * pas + 2
         const lb = pas - 4
+        /* une couleur PAR BOUGIE (retour de gate) : balayage violet →
+           magenta → rose → orangé sur la rampe des 19 barres */
+        const teinte = 270 + (i / (N - 1)) * 120
         const grad = g.createLinearGradient(0, H, 0, H - h)
-        grad.addColorStop(0, "#7a2cf0")
-        grad.addColorStop(0.6, "#c86df0")
-        grad.addColorStop(1, "#ffd9f6")
+        grad.addColorStop(0, `hsl(${teinte}, 88%, 32%)`)
+        grad.addColorStop(0.55, `hsl(${teinte}, 92%, 55%)`)
+        grad.addColorStop(1, `hsl(${teinte}, 100%, 78%)`)
         g.fillStyle = grad
         g.fillRect(x, H - h, lb, h)
         cretes[i] = Math.max(cretes[i] - (H / 60) * 0.35, h)
@@ -218,7 +224,7 @@ function Egaliseur({ enLecture }: { enLecture: boolean }) {
       cancelAnimationFrame(rafId)
     }
   }, [])
-  return <canvas ref={toile} width={430} height={44} style={{ width: "100%", height: "100%", display: "block" }} />
+  return <canvas ref={toile} width={430} height={72} style={{ width: "100%", height: "100%", display: "block" }} />
 }
 
 export function PanneauSpotify({ lang, surRetour }: { lang: Lang; surRetour: () => void }) {
@@ -236,7 +242,15 @@ export function PanneauSpotify({ lang, surRetour }: { lang: Lang; surRetour: () 
      loadUri au changement de playlist */
   useEffect(() => {
     let vivant = true
-    const garde = setTimeout(() => setCharge((c) => (c === null ? false : c)), ATTENTE_EMBED)
+    /* GARDE ÉTAGÉE (payée aux captures mule) : une horloge unique de 6 s
+       basculait sur le repli alors que le contrôleur allait répondre —
+       sa réponse annule la première garde et en arme une seconde, plus
+       patiente, pour `ready` : le repli ne prend la place que si l'embed
+       ne répond vraiment jamais */
+    const gardes: ReturnType<typeof setTimeout>[] = []
+    const armeGarde = (ms: number) => gardes.push(setTimeout(() => setCharge((c) => (c === null ? false : c)), ms))
+    const desarme = () => gardes.splice(0).forEach(clearTimeout)
+    armeGarde(ATTENTE_EMBED)
     chargeApiSpotify()
       .then((api) => {
         if (!vivant || !nid.current) return
@@ -249,7 +263,12 @@ export function PanneauSpotify({ lang, surRetour }: { lang: Lang; surRetour: () 
               return
             }
             controleur.current = c
-            c.addListener("ready", () => setCharge(true))
+            desarme()
+            armeGarde(ATTENTE_EMBED * 3)
+            c.addListener("ready", () => {
+              desarme()
+              setCharge(true)
+            })
             c.addListener("playback_update", (e) => {
               setEnLecture(e.data.isPaused === false)
               setTemps({ position: e.data.position ?? 0, duree: e.data.duration ?? 0 })
@@ -260,10 +279,23 @@ export function PanneauSpotify({ lang, surRetour }: { lang: Lang; surRetour: () 
       .catch(() => setCharge(false))
     return () => {
       vivant = false
-      clearTimeout(garde)
+      desarme()
       controleur.current?.destroy()
       controleur.current = null
     }
+  }, [])
+
+  /* le SKIP réel : l'API n'a pas de « piste suivante », mais sauter à la
+     dernière seconde fait enchaîner le player sur la piste d'après ; ⏮
+     reprend la piste au début */
+  const saute = useCallback(() => {
+    const c = controleur.current
+    if (!c || temps.duree < 3000) return
+    c.seek(Math.max(0, temps.duree / 1000 - 0.8))
+    if (!enLecture) c.play()
+  }, [temps.duree, enLecture])
+  const reprend = useCallback(() => {
+    controleur.current?.restart()
   }, [])
 
   const choisitPlaylist = useCallback((i: number) => {
@@ -371,7 +403,7 @@ export function PanneauSpotify({ lang, surRetour }: { lang: Lang; surRetour: () 
       {/* l'égaliseur — les barres suivent le VRAI état de lecture */}
       <div style={{ padding: "0 8px 4px" }}>
         <div style={{ textAlign: "center", ...legende, padding: "1px 0 3px" }}>E Q U A L I Z E R</div>
-        <div style={{ ...puits, height: 46, overflow: "hidden" }}>
+        <div style={{ ...puits, height: 76, overflow: "hidden" }}>
           <Egaliseur enLecture={enLecture} />
         </div>
       </div>
@@ -379,9 +411,47 @@ export function PanneauSpotify({ lang, surRetour }: { lang: Lang; surRetour: () 
       {/* la fenêtre de lecture : l'iframe de l'API niche ici — le nid
           reste MONTÉ même quand le repli s'affiche (l'horloge de repli
           peut sonner avant un contrôleur lent : s'il finit par répondre,
-          `ready` remet le player en place — repli non destructif) */}
-      <div style={{ margin: "0 8px", ...puits, padding: 2, display: charge === false ? "none" : "block" }}>
+          `ready` remet le player en place — repli non destructif). LA
+          SURCOUCHE AMP (retour de gate) recouvre la zone du bouton play
+          de l'embed : pochette et titre restent visibles à gauche, les
+          commandes visibles sont les NÔTRES — ⏯ vraie lecture, ⏭ vrai
+          saut de piste (seek fin de piste), ⏮ reprise de la piste */}
+      <div
+        style={{
+          margin: "0 8px",
+          ...puits,
+          padding: 2,
+          position: "relative",
+          display: charge === false ? "none" : "block",
+        }}
+      >
         <div ref={nid} style={{ height: 80 }} />
+        <div
+          style={{
+            position: "absolute",
+            top: 2,
+            right: 2,
+            bottom: 2,
+            width: 118,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 4,
+            ...CHROME,
+            borderLeft: "2px solid #33113f",
+            pointerEvents: "auto",
+          }}
+        >
+          <button type="button" style={{ ...biseau, padding: "5px 7px" }} onClick={reprend} title="⏮">
+            ⏮
+          </button>
+          <button type="button" style={{ ...biseau, padding: "5px 9px" }} onClick={() => controleur.current?.togglePlay()}>
+            {enLecture ? "⏸" : "▶"}
+          </button>
+          <button type="button" style={{ ...biseau, padding: "5px 7px" }} onClick={saute} title="⏭">
+            ⏭
+          </button>
+        </div>
       </div>
 
       {charge === false ? (
@@ -440,16 +510,14 @@ export function PanneauSpotify({ lang, surRetour }: { lang: Lang; surRetour: () 
             </div>
           </div>
 
-          {/* transport : ⏯ pilote la VRAIE lecture, ◀ ▶ changent de mix */}
+          {/* la rangée du bas : le changement de MIX (le transport, lui,
+              vit en surcouche sur la bande de lecture) */}
           <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 8px 6px" }}>
-            <button type="button" style={{ ...biseau, padding: "3px 9px" }} onClick={() => choisitPlaylist((indice + PLAYLISTS.length - 1) % PLAYLISTS.length)}>
-              ⏮
+            <button type="button" style={{ ...biseau, padding: "3px 8px", fontSize: 9 }} onClick={() => choisitPlaylist((indice + PLAYLISTS.length - 1) % PLAYLISTS.length)}>
+              ‹ MIX
             </button>
-            <button type="button" style={{ ...biseau, padding: "3px 11px" }} onClick={() => controleur.current?.togglePlay()}>
-              {enLecture ? "⏸" : "▶"}
-            </button>
-            <button type="button" style={{ ...biseau, padding: "3px 9px" }} onClick={() => choisitPlaylist((indice + 1) % PLAYLISTS.length)}>
-              ⏭
+            <button type="button" style={{ ...biseau, padding: "3px 8px", fontSize: 9 }} onClick={() => choisitPlaylist((indice + 1) % PLAYLISTS.length)}>
+              MIX ›
             </button>
             <span style={{ flex: 1 }} />
             <a
