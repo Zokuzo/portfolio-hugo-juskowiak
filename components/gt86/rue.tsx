@@ -245,12 +245,12 @@ function VoitureGaree({
        l'equirect les distingue */
     const peinture = new THREE.MeshPhysicalMaterial({
       color: "#b4b9bf",
-      metalness: 0.85,
-      roughness: 0.28,
+      metalness: 0.45,
+      roughness: 0.32,
       clearcoat: 1,
       clearcoatRoughness: 0.08,
       envMap: env,
-      envMapIntensity: 1.4,
+      envMapIntensity: 1.6,
     })
     peinture.name = "Paint"
     clone.traverse((o) => {

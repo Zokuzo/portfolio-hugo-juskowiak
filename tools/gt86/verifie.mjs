@@ -177,6 +177,11 @@ const ASSETS = {
   /* la carte vue du dessus de l'écran GPS (#32, générée par
      tools/monde/carte-quartier.mjs) */
   "public/prototype/carte-quartier.png": { max: 1_600 },
+  /* la face du disque de l'AMP (#33, 11e retour : les images fournies
+     par Hugo) — chargées paresseusement à la première entrée AMP, donc
+     HORS de la cascade de la passe 7 */
+  "public/amp/kirby-sprite.jpg": { max: 22_000 },
+  "public/amp/kirby-logo.jpg": { max: 29_000 },
 }
 
 const jsonDuGlb = (buf) => JSON.parse(buf.subarray(20, 20 + buf.readUInt32LE(12)).toString("utf8"))

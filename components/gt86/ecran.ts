@@ -220,8 +220,43 @@ export function creeEcran(lang: Lang): Ecran {
   /* la surcouche VOL s'affiche 1,4 s après le dernier cran de molette */
   let ampVolMs = -1e9
   /* le DISQUE 2D (10e retour : le 3D ne prend pas) — l'angle n'avance
-     que quand la musique JOUE */
+     que quand la musique JOUE. 11e retour : la face porte les IMAGES
+     fournies par Hugo (public/amp/), détourées de leur fond blanc à la
+     volée — chargées PARESSEUSEMENT à la première entrée AMP (la
+     cascade de la passe 7 ne les voit jamais). */
   let disqueAngle = 0
+  let kirbySprite: HTMLCanvasElement | null = null
+  let kirbyLogo: HTMLCanvasElement | null = null
+  let kirbyDemande = false
+  const detoure = (img: HTMLImageElement, cote: number): HTMLCanvasElement => {
+    const cnv = document.createElement("canvas")
+    cnv.width = cote
+    cnv.height = Math.round((img.height / img.width) * cote)
+    const cg = cnv.getContext("2d")!
+    cg.drawImage(img, 0, 0, cnv.width, cnv.height)
+    const donnees = cg.getImageData(0, 0, cnv.width, cnv.height)
+    const d = donnees.data
+    for (let i = 0; i < d.length; i += 4) {
+      if (d[i] > 232 && d[i + 1] > 232 && d[i + 2] > 232) d[i + 3] = 0
+    }
+    cg.putImageData(donnees, 0, 0)
+    return cnv
+  }
+  const chargeKirby = () => {
+    if (kirbyDemande) return
+    kirbyDemande = true
+    for (const [src, cote, pose] of [
+      ["/amp/kirby-sprite.jpg", 96, (c: HTMLCanvasElement) => (kirbySprite = c)],
+      ["/amp/kirby-logo.jpg", 128, (c: HTMLCanvasElement) => (kirbyLogo = c)],
+    ] as const) {
+      const im = new Image()
+      im.onload = () => {
+        pose(detoure(im, cote))
+        if (etat.mode === "spotify") peint()
+      }
+      im.src = src
+    }
+  }
 
   let ampHorloge = 0
   const LCD_ENCRE_AMP = "#ffd9f6"
@@ -777,36 +812,6 @@ export function creeEcran(lang: Lang): Ecran {
     ag.fillText("SPOTIFY ↗", l - 12, ty + 11)
     ag.textAlign = "left"
   }
-  /* le sprite KIRBY au pixel (10e retour : « les vrais design ») —
-     transcrit main de la référence pixel-art de Hugo : contour noir,
-     corps rose, pieds carmin, joues, yeux ovales à reflet */
-  const KIRBY = [
-    "    ########    ",
-    "  ##oooooooo##  ",
-    " #oooooooooooo# ",
-    " #oowwoooowwoo# ",
-    "#oooEEooooEEoo# ",
-    "#oooEEooooEEoo# ",
-    "#ooooooooooooo# ",
-    "#obboooooooobb# ",
-    "#oooooomoooooo# ",
-    " #oooooooooooo# ",
-    " #OooooooooooO# ",
-    "  #oooooooooo#  ",
-    " #rrr##oo##rrr# ",
-    " #rrrr#oo#rrrr# ",
-    "  ####    ####  ",
-  ]
-  const KIRBY_TEINTES: Record<string, string> = {
-    "#": "#241a22",
-    o: "#f7a8c9",
-    O: "#e58fb5",
-    w: "#ffffff",
-    E: "#1a1030",
-    b: "#f06fa8",
-    m: "#8f2440",
-    r: "#e5326e",
-  }
   const peintDisque = () => {
     /* le disque PEINT dans sa baie CD·ROM (centre 460, 82, r 40) */
     const r = 40
@@ -842,32 +847,23 @@ export function creeEcran(lang: Lang): Ecran {
     g.closePath()
     g.fillStyle = "#120716"
     g.fill()
-    /* le lettrage bulle façon logo : contour lie-de-vin, cœur rose */
     g.textAlign = "center"
-    g.font = "italic bold 11px monospace"
-    g.strokeStyle = "#8f1f45"
-    g.lineWidth = 3
-    g.strokeText("KIRBY", 0, -26)
-    g.fillStyle = "#f7a8c9"
-    g.fillText("KIRBY", 0, -26)
-    g.fillStyle = "#f5d76e"
-    g.font = "bold 7px monospace"
-    g.fillText("★", 15, -30)
     g.fillStyle = "#ffd9f6"
     g.font = "bold 6px monospace"
     g.fillText("HJ·AMP · 320 KBPS", 0, 30)
     g.textAlign = "left"
-    /* le sprite, à droite du moyeu comme la référence */
-    const p2 = 2
-    const ox = 4
-    const oy = -14
-    for (let ly = 0; ly < KIRBY.length; ly++)
-      for (let lx = 0; lx < KIRBY[ly].length; lx++) {
-        const ch = KIRBY[ly][lx]
-        if (ch === " ") continue
-        g.fillStyle = KIRBY_TEINTES[ch] ?? "#ffffff"
-        g.fillRect(ox + lx * p2, oy + ly * p2, p2, p2)
-      }
+    /* LES IMAGES de Hugo (11e retour), détourées : le logo au-dessus du
+       moyeu, le sprite à cheval sur la droite comme le pressage réf. */
+    if (kirbyLogo) {
+      const ll = 54
+      const lh = (kirbyLogo.height / kirbyLogo.width) * ll
+      g.drawImage(kirbyLogo, -ll / 2, -21 - lh / 2, ll, lh)
+    }
+    if (kirbySprite) {
+      const sl = 34
+      const sh = (kirbySprite.height / kirbySprite.width) * sl
+      g.drawImage(kirbySprite, 6, -sh / 2 - 2, sl, sh)
+    }
     /* moyeu : anneau blanc, trou sombre */
     g.beginPath()
     g.arc(0, 0, 12, 0, Math.PI * 2)
@@ -1223,7 +1219,10 @@ export function creeEcran(lang: Lang): Ecran {
       peint()
     },
     musiques: () => passeEn("musiques"),
-    spotify: () => passeEn("spotify"),
+    spotify: () => {
+      chargeKirby()
+      passeEn("spotify")
+    },
     majSpotify(maj: Partial<EtatSpotify>) {
       Object.assign(amp, maj)
       if ("volume" in maj) ampVolMs = performance.now()

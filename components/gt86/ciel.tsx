@@ -34,9 +34,13 @@ const ROT = Math.PI * 0.25
    gate #21 (l'essai argent du 8e ne prend pas) — c'est la VOITURE qui
    doit lire « gris métallisé », jantes comprises : le miroir pur
    (metalness 1, roughness 0,03) reflétait surtout le dessous SOMBRE du
-   banc — elle rendait noire. Argent BROSSÉ : la réflexion floutée moyenne
-   le ciel clair, la robe redevient gris métal lisible. Même recette sur
-   la voiture de la rue (unification demandée au gate). */
+   banc — elle rendait noire. 11e retour (« la voiture reste sombre ») :
+   même brossée, la robe restait charbon — la mer de nuages LUMINEUSE que
+   l'œil voit n'existe PAS dans la sonde d'éclairage (l'IBL du gate #21,
+   c'est trois Lightformer + le dôme : sombre en moyenne). Le métal ne
+   peut refléter que ça — la DIFFUSE porte donc l'argent : metalness
+   descendu, les lumières directes (directionnelle, hémisphère, ambiante)
+   éclairent le #b4b9bf. Même recette sur la voiture de la rue. */
 const ARGENT = "#b4b9bf"
 /* la pose du gate : caméra au flanc, fov 38, la voiture au centre du cadre */
 const POSE = new THREE.Vector3(-4.2, -0.4, 7.8)
@@ -96,11 +100,11 @@ function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<
   const peinture = useMemo(() => {
     const p = new THREE.MeshPhysicalMaterial({
       color: ARGENT,
-      metalness: 0.85,
-      roughness: 0.28,
+      metalness: 0.45,
+      roughness: 0.32,
       clearcoat: 1,
       clearcoatRoughness: 0.08,
-      envMapIntensity: 3.2,
+      envMapIntensity: 2.4,
     })
     p.name = "Paint"
     return p

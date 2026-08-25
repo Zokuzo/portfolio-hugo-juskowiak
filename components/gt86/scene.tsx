@@ -322,6 +322,15 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
   const surRuePrete = useCallback(() => setRuePrete(true), [])
   const chargePret = cielPret && ruePrete
   const [chargeVisible, setChargeVisible] = useState(false)
+  /* le RIDEAU du rejeu (11e retour : « revoir la scène doit avoir un
+     chargement ») : tout est déjà décodé au ↺, mais le ciel reprenait
+     la main à l'image sèche — un battement de voile couvre la reprise */
+  const [rideauRejeu, setRideauRejeu] = useState(false)
+  useEffect(() => {
+    if (!rideauRejeu) return
+    const t0 = setTimeout(() => setRideauRejeu(false), 1100)
+    return () => clearTimeout(t0)
+  }, [rideauRejeu])
   useEffect(() => {
     if (etat !== "CIEL" || chargePret) {
       setChargeVisible(false)
@@ -636,7 +645,11 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
           <button
             type="button"
             style={{ ...discret, position: "absolute", left: 20, bottom: 18, pointerEvents: "auto" }}
-            data-gt86="rejouer" onClick={() => envoie({ t: "rejoue" })}
+            data-gt86="rejouer"
+            onClick={() => {
+              setRideauRejeu(true)
+              envoie({ t: "rejoue" })
+            }}
           >
             ↺ {t(lang, "gt86Rejouer")}
           </button>
@@ -659,12 +672,12 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
             display: "grid",
             placeItems: "center",
             background: NUIT,
-            opacity: chargeVisible && !chargePret ? 1 : 0,
+            opacity: (chargeVisible && !chargePret) || rideauRejeu ? 1 : 0,
             transition: "opacity 450ms ease",
             /* opaque = il MANGE les clics (un DÉMARRER invisible cliquable
                lançait le vol sur une rue non décodée — revue) ; levé, il
                redevient transparent aux gestes pendant son fondu */
-            pointerEvents: chargeVisible && !chargePret ? "auto" : "none",
+            pointerEvents: (chargeVisible && !chargePret) || rideauRejeu ? "auto" : "none",
           }}
         >
           <div style={{ textAlign: "center" }}>
