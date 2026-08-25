@@ -1,248 +1,242 @@
 "use client"
 
-import { useEffect, useRef, type MutableRefObject, type RefObject } from "react"
-import { useFrame, useThree } from "@react-three/fiber"
-import * as THREE from "three"
-import { ECRAN_NATIF, PLAYLISTS, type Ecran } from "./ecran"
-import { enMondeRepos } from "./rue"
-import type { Cockpit } from "./habitacle"
+import { useEffect, useRef, type MutableRefObject } from "react"
+import { useFrame } from "@react-three/fiber"
+import { PLAYLISTS, type Ecran } from "./ecran"
 
-/* SPOTIFY DANS L'ÉCRAN — ticket #33, doctrine des #18/#25 : l'embed est
-   À PLAT en overlay DOM, épousant la dalle au pixel. La FAÇADE
-   click-to-load (RGPD) vit dans la texture de l'écran : PAS UN OCTET ne
-   part chez Spotify avant le clic — c'est aussi ce qui tient la passe
-   « zéro requête tierce » du harnais. Repli « écran custom qui linke »
-   si rien ne répond.
+/* LE MOTEUR DU HJ·AMP — ticket #33, 7e retour de gate (« tourner la
+   molette pour baisser le son »). L'iframe officielle de l'embed est
+   MORTE ici : son protocole n'a aucune commande volume (énum vérifiée
+   dans le wrapper ET dans la page embed — play/pause/resume/toggle/
+   seek/ack/fullscreen, rien d'autre) et son audio est inaccessible
+   cross-origin. Le son passe donc par un moteur À NOUS :
 
-   LE PLAYER ANNÉES 2000 (retour de gate #33, référence skin Winamp
-   violette de Hugo) : bandeau titre, LCD à digits, ÉGALISEUR dont les
-   barres ne dansent QUE quand la musique joue vraiment, fenêtre de
-   lecture, panneau PLAYLIST, transport biseauté. Le « réellement » passe
-   par l'API officielle de l'embed (open.spotify.com/embed/iframe-api/v1,
-   chargée APRÈS le clic de façade — même consentement) : elle pousse
-   playback_update (position, durée, pause) — le LCD compte le vrai
-   temps, ⏯ pilote la vraie lecture, les barres suivent le vrai état.
-   L'audio lui-même reste inaccessible (iframe cross-origin) : les barres
-   réagissent à l'état de lecture, pas au spectre — c'est déjà ce que
-   faisaient la moitié des skins de l'époque. */
+   - /api/gt86/mix/[id] (notre serveur) rend titres + préversions MP3
+     du mix — le client ne parle jamais à open.spotify.com ;
+   - un <audio> maison lit les préversions (p.scdn.co, CORS ouvert) à
+     travers un GainNode : la molette pilote un VRAI volume ;
+   - un AnalyserNode tape le flux : les 19 bougies dansent sur le VRAI
+     spectre — la limite documentée aux gates précédents tombe ;
+   - ⏮/⏭ deviennent de VRAIS changements de piste (fini le seek à la
+     dernière seconde), et le marquee affiche le VRAI titre.
 
-/* le panneau ÉPOUSE la dalle au pixel (retour de gate #33 : « qu'il
-   s'affiche dans l'écran de la voiture comme le reste ») — la vue écran
-   rapprochée rend le rectangle assez grand pour l'embed */
-const ATTENTE_EMBED = 6000
+   Ce qu'on perd : la lecture complète pour les comptes connectés —
+   l'embed sans session ne servait déjà que ces mêmes préversions 30 s.
+   La FAÇADE RGPD tient inchangée : PAS UN OCTET (ni chez nous ni chez
+   le CDN) avant le clic MUSIQUES — le moteur ne se monte qu'après. */
 
-/* ---- le projecteur : le cadre de la dalle, suivi à l'image ------------- */
-
-/* les coins de la zone visible de la dalle (repère plan du #26) */
-const DEMI_L = 0.065
-const DEMI_H = 0.035
-const normale = new THREE.Vector3(0, Math.sin(ECRAN_NATIF.bascule), Math.cos(ECRAN_NATIF.bascule)).normalize()
-const axeY = normale.clone().cross(new THREE.Vector3(-1, 0, 0))
-const coinsLocaux = [
-  [-DEMI_L, -DEMI_H],
-  [DEMI_L, -DEMI_H],
-  [-DEMI_L, DEMI_H],
-  [DEMI_L, DEMI_H],
-].map(([dx, dy]) =>
-  ECRAN_NATIF.centre
-    .clone()
-    .add(new THREE.Vector3(dx, 0, 0))
-    .add(axeY.clone().multiplyScalar(dy)),
-)
-const coin = new THREE.Vector3()
-
-/* Écrit chaque image la boîte écran (px) du panneau dans le style du
-   conteneur DOM — suivi vivant : si le rail est encore en vol quand
-   SPOTIFY s'ouvre, le panneau accompagne la dalle. */
-export function CadreDalle({
-  actif,
-  cockpit,
-  boite,
-}: {
-  actif: boolean
-  cockpit: Cockpit
-  boite: RefObject<HTMLDivElement | null>
-}) {
-  const camera = useThree((s) => s.camera)
-  const taille = useThree((s) => s.size)
-  useFrame(() => {
-    if (!actif || !boite.current) return
-    const voiture = cockpit.voiture
-    if (!voiture) return
-    let minX = Infinity
-    let minY = Infinity
-    let maxX = -Infinity
-    let maxY = -Infinity
-    for (const local of coinsLocaux) {
-      enMondeRepos(coin, local, voiture).project(camera)
-      const x = ((coin.x + 1) / 2) * taille.width
-      const y = ((1 - coin.y) / 2) * taille.height
-      minX = Math.min(minX, x)
-      minY = Math.min(minY, y)
-      maxX = Math.max(maxX, x)
-      maxY = Math.max(maxY, y)
-    }
-    /* 1:1 sur la dalle — garde-fous seulement pour les toutes petites
-       fenêtres (l'embed reste utilisable) */
-    const cx = (minX + maxX) / 2
-    const cy = (minY + maxY) / 2
-    const l = Math.max(320, maxX - minX)
-    const h = Math.max(200, maxY - minY)
-    const s = boite.current.style
-    s.left = `${Math.round(cx - l / 2)}px`
-    s.top = `${Math.round(Math.max(8, cy - h / 2))}px`
-    s.width = `${Math.round(l)}px`
-    s.height = `${Math.round(h)}px`
-  })
-  return null
-}
-
-/* ---- l'API iframe de Spotify (chargée après consentement) -------------- */
-
-type ControleurSpotify = {
-  loadUri: (uri: string) => void
-  togglePlay: () => void
-  play: () => void
-  restart: () => void
-  seek: (secondes: number) => void
-  destroy: () => void
-  addListener: (evt: string, cb: (e: { data: { isPaused?: boolean; position?: number; duration?: number } }) => void) => void
-}
-type ApiSpotify = {
-  createController: (
-    el: HTMLElement,
-    options: { uri: string; width?: string | number; height?: string | number; theme?: string },
-    cb: (c: ControleurSpotify) => void,
-  ) => void
-}
-declare global {
-  interface Window {
-    onSpotifyIframeApiReady?: (api: ApiSpotify) => void
-    __spotifyApi?: Promise<ApiSpotify>
-  }
-}
-
-function chargeApiSpotify(): Promise<ApiSpotify> {
-  if (window.__spotifyApi) return window.__spotifyApi
-  window.__spotifyApi = new Promise<ApiSpotify>((resoud, rejette) => {
-    window.onSpotifyIframeApiReady = (api) => resoud(api)
-    const script = document.createElement("script")
-    script.src = "https://open.spotify.com/embed/iframe-api/v1"
-    script.async = true
-    script.onerror = () => rejette(new Error("script embed"))
-    document.head.appendChild(script)
-  })
-  return window.__spotifyApi
-}
-
-/* ---- l'hôte invisible : le moteur audio du HJ·AMP ---------------------- */
-
-/* Depuis le 6e retour de gate, la skin vit DANS la texture de la dalle
-   (ecran.ts, mode "spotify") — l'iframe de l'embed ne sert plus que de
-   MOTEUR : invisible (opacité 0, pointeurs coupés) mais montée dans le
-   viewport pour que la lecture continue. L'hôte nourrit le peintre
-   (majSpotify) et détecte les CHANGEMENTS DE PISTE : une durée qui change
-   ou une position qui retombe = piste suivante, le compteur s'incrémente. */
+type Piste = { titre: string; artiste: string; apercu: string }
 
 export type CommandesSpotify = {
   bascule: () => void
+  /* ⏮ : recommence la piste si elle a plus de 3 s, sinon la précédente */
   reprend: () => void
   saute: () => void
   chargeMix: (i: number) => void
+  /* la molette : delta signé, borné [0 ; 1] — pousse `volume` au peintre */
+  volume: (delta: number) => void
 }
 
-export function HoteSpotify({
+/* le volume survit aux allers-retours hub ↔ player (module, pas d'état React) */
+let volumeMemorise = 0.8
+/* UN SEUL AudioContext pour la session (revue adversariale : un contexte
+   par visite fuyait — jamais fermé, chacun retenant son <audio> ; et
+   Safari plafonne les contextes simultanés). Les nœuds, eux, vivent par
+   montage et se déconnectent au démontage. */
+let ctxAudio: AudioContext | null = null
+
+export function MoteurSpotify({
   ecran,
   commandes,
+  mix,
 }: {
   ecran: Ecran
   commandes: MutableRefObject<CommandesSpotify | null>
+  mix: number
 }) {
-  const nid = useRef<HTMLDivElement>(null)
-  const controleur = useRef<ControleurSpotify | null>(null)
-  const memoire = useRef({ duree: 0, position: 0, piste: 1, indice: 0, enLecture: false })
+  /* `mix` ne sert qu'au montage — changer de mix passe par chargeMix */
+  const mixInitial = useRef(mix)
 
   useEffect(() => {
     let vivant = true
-    const m = memoire.current
-    Object.assign(m, { duree: 0, position: 0, piste: 1, indice: 0, enLecture: false })
-    ecran.majSpotify({ enLecture: false, position: 0, duree: 0, piste: 1, indice: 0, repli: false })
-    /* GARDE ÉTAGÉE : la réponse du contrôleur désarme la première horloge
-       et en arme une plus patiente pour `ready` — le repli (peint par le
-       peintre) ne prend la place que si l'embed ne répond vraiment jamais */
-    const gardes: ReturnType<typeof setTimeout>[] = []
-    const armeGarde = (ms: number) => gardes.push(setTimeout(() => vivant && ecran.majSpotify({ repli: true }), ms))
-    const desarme = () => gardes.splice(0).forEach(clearTimeout)
-    armeGarde(ATTENTE_EMBED)
-    chargeApiSpotify()
-      .then((api) => {
-        if (!vivant || !nid.current) return
-        api.createController(
-          nid.current,
-          { uri: `spotify:playlist:${PLAYLISTS[0].id}`, width: "100%", height: 80, theme: "dark" },
-          (c) => {
-            if (!vivant) {
-              c.destroy()
-              return
-            }
-            controleur.current = c
-            desarme()
-            armeGarde(ATTENTE_EMBED * 3)
-            c.addListener("ready", () => {
-              desarme()
-              if (vivant) ecran.majSpotify({ repli: false })
-            })
-            c.addListener("playback_update", (e) => {
-              if (!vivant) return
-              const duree = e.data.duration ?? 0
-              const position = e.data.position ?? 0
-              /* la détection de changement de piste */
-              if ((duree > 0 && m.duree > 0 && duree !== m.duree) || position + 2000 < m.position) m.piste++
-              m.duree = duree
-              m.position = position
-              m.enLecture = e.data.isPaused === false
-              desarme()
-              ecran.majSpotify({ enLecture: m.enLecture, position, duree, piste: m.piste, repli: false })
-            })
-          },
-        )
+    const m = {
+      pistes: [] as Piste[],
+      indice: 0,
+      mix: mixInitial.current,
+      volume: volumeMemorise,
+      rates: 0,
+    }
+    const audio = new Audio()
+    audio.crossOrigin = "anonymous"
+    audio.preload = "auto"
+    /* le repli sans Web Audio (contexte refusé) : el.volume porte le
+       réglage — initialisé, sinon la lecture partait à fond */
+    audio.volume = volumeMemorise * volumeMemorise
+
+    /* le graphe Web Audio — APRÈS le premier play() (le contexte exige un
+       geste utilisateur ; le clic de façade l'a déjà donné, mais un
+       navigateur têtu le refuse sans casser l'audio : gain et analyseur
+       deviennent alors optionnels, el.volume prend le relais) */
+    let gain: GainNode | null = null
+    let analyseur: AnalyserNode | null = null
+    let noeuds: AudioNode[] = []
+    const armeGraphe = () => {
+      /* resume À CHAQUE appel — bascule() tourne dans la pile du clic,
+         c'est là que Safari accepte de sortir un contexte de 'suspended'
+         (revue : le resume unique à la création laissait le son mort) */
+      if (gain) {
+        void ctxAudio?.resume()
+        return
+      }
+      try {
+        ctxAudio ??= new AudioContext()
+        const source = ctxAudio.createMediaElementSource(audio)
+        gain = ctxAudio.createGain()
+        analyseur = ctxAudio.createAnalyser()
+        analyseur.fftSize = 128
+        analyseur.smoothingTimeConstant = 0.55
+        source.connect(gain)
+        gain.connect(ctxAudio.destination)
+        /* l'analyseur écoute APRÈS le gain : les bougies suivent ce qui
+           SORT — baisser la molette couche le spectre, comme la skin
+           de référence suivait la sortie, pas la source */
+        gain.connect(analyseur)
+        gain.gain.value = m.volume * m.volume
+        noeuds = [source, gain, analyseur]
+        void ctxAudio.resume()
+      } catch {
+        gain = null
+        analyseur = null
+      }
+    }
+
+    const pousse = () => {
+      if (!vivant) return
+      const p = m.pistes[m.indice]
+      ecran.majSpotify({
+        enLecture: !audio.paused && !audio.ended,
+        position: audio.currentTime * 1000,
+        duree: (Number.isFinite(audio.duration) ? audio.duration : 30) * 1000,
+        piste: m.indice + 1,
+        pistes: m.pistes.length,
+        titre: p ? `${p.titre} — ${p.artiste}` : "",
+        indice: m.mix,
       })
-      .catch(() => vivant && ecran.majSpotify({ repli: true }))
+    }
+
+    const joue = (k: number) => {
+      if (!m.pistes.length) return
+      m.indice = ((k % m.pistes.length) + m.pistes.length) % m.pistes.length
+      audio.src = m.pistes[m.indice].apercu
+      armeGraphe()
+      audio.play().catch(() => {})
+      pousse()
+    }
+
+    audio.addEventListener("timeupdate", pousse)
+    audio.addEventListener("play", pousse)
+    audio.addEventListener("playing", () => {
+      m.rates = 0
+    })
+    audio.addEventListener("pause", pousse)
+    audio.addEventListener("ended", () => joue(m.indice + 1))
+    audio.addEventListener("error", () => {
+      /* une préversion peut mourir (lien périmé) : on passe à la
+         suivante — tout le mix mort = repli */
+      if (!vivant || !m.pistes.length) return
+      m.rates += 1
+      if (m.rates >= m.pistes.length) {
+        audio.pause()
+        ecran.majSpotify({ repli: true })
+      } else joue(m.indice + 1)
+    })
+
+    const charge = (i: number) => {
+      m.mix = i
+      m.rates = 0
+      /* l'ancien mix se TAIT tout de suite (revue : il continuait de
+         jouer pendant le fetch, et son timeupdate écrasait le repli) */
+      audio.pause()
+      m.pistes = []
+      ecran.majSpotify({ indice: i, piste: 1, position: 0, duree: 0, enLecture: false, titre: "" })
+      fetch(`/api/gt86/mix/${PLAYLISTS[i].id}`, { signal: AbortSignal.timeout(12000) })
+        .then((r) => r.json())
+        .then((corps: { pistes?: Piste[] }) => {
+          if (!vivant || m.mix !== i) return
+          m.pistes = corps.pistes ?? []
+          if (!m.pistes.length) ecran.majSpotify({ repli: true })
+          else {
+            ecran.majSpotify({ repli: false })
+            joue(0)
+          }
+        })
+        .catch(() => vivant && m.mix === i && ecran.majSpotify({ repli: true }))
+    }
+
+    /* le spectre — 64 bacs FFT groupés en 19 bandes géométriques ;
+       poussé ~25×/s, seulement quand ça joue (le peintre retombe en
+       danse procédurale dès que le flux se tarit) */
+    const bacs = new Uint8Array(64)
+    const bandes = new Array<number>(19)
+    /* bornes géométriques STRICTEMENT croissantes : chaque bougie lit ses
+       propres bacs (revue : le floor dégénérait le tiers gauche) */
+    const bords = [1]
+    for (let i = 1; i <= 19; i++) bords.push(Math.max(bords[i - 1] + 1, Math.round(Math.pow(48, i / 19))))
+    const horlogeSpectre = setInterval(() => {
+      if (!vivant || !analyseur || audio.paused) return
+      analyseur.getByteFrequencyData(bacs)
+      for (let i = 0; i < 19; i++) {
+        let somme = 0
+        for (let b = bords[i]; b < bords[i + 1]; b++) somme += bacs[b]
+        bandes[i] = Math.pow(somme / (bords[i + 1] - bords[i]) / 255, 0.75)
+      }
+      ecran.majSpectre(bandes)
+    }, 40)
+
     commandes.current = {
-      bascule: () => controleur.current?.togglePlay(),
-      reprend: () => controleur.current?.restart(),
-      /* le saut de piste : l'API n'a pas de « suivante » — seek à la
-         dernière seconde, le player enchaîne tout seul */
-      saute: () => {
-        const c = controleur.current
-        if (!c || m.duree < 3000) return
-        c.seek(Math.max(0, m.duree / 1000 - 0.8))
-        if (!m.enLecture) c.play()
+      bascule: () => {
+        if (audio.paused) {
+          armeGraphe()
+          audio.play().catch(() => {})
+        } else audio.pause()
       },
+      reprend: () => {
+        if (audio.currentTime > 3) {
+          audio.currentTime = 0
+          pousse()
+        } else joue(m.indice - 1)
+      },
+      saute: () => joue(m.indice + 1),
       chargeMix: (i: number) => {
-        if (i === m.indice) return
-        m.indice = i
-        m.piste = 1
-        Object.assign(m, { duree: 0, position: 0, enLecture: false })
-        controleur.current?.loadUri(`spotify:playlist:${PLAYLISTS[i].id}`)
-        ecran.majSpotify({ indice: i, piste: 1, position: 0, duree: 0, enLecture: false })
+        if (i !== m.mix || !m.pistes.length) charge(i)
+      },
+      volume: (delta: number) => {
+        m.volume = Math.min(1, Math.max(0, m.volume + delta))
+        volumeMemorise = m.volume
+        /* courbe quadratique — l'oreille est logarithmique */
+        if (gain) gain.gain.value = m.volume * m.volume
+        else audio.volume = m.volume * m.volume
+        ecran.majSpotify({ volume: m.volume })
       },
     }
+
+    /* pas de `volume` ici : l'écran garde le sien (une poussée armerait
+       la surcouche VOL sans geste de molette) — les deux mémoires ne
+       divergent jamais, chaque cran passe par majSpotify */
+    ecran.majSpotify({ repli: false })
+    charge(m.mix)
+
     return () => {
       vivant = false
-      desarme()
+      clearInterval(horlogeSpectre)
       commandes.current = null
-      controleur.current?.destroy()
-      controleur.current = null
+      audio.pause()
+      audio.removeAttribute("src")
+      for (const n of noeuds) n.disconnect()
     }
   }, [ecran, commandes])
 
-  /* dans le viewport (la lecture continue), mais invisible et sourd */
-  return (
-    <div style={{ position: "absolute", inset: 0, opacity: 0, pointerEvents: "none", overflow: "hidden" }} aria-hidden>
-      <div ref={nid} style={{ height: 80 }} />
-    </div>
-  )
+  return null
 }
 
 /* la couche vivante du player, cadencée à l'image (plafonnée dans

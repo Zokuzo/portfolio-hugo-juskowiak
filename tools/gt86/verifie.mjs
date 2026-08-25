@@ -288,6 +288,14 @@ console.log("  2/6 surcouche montée, un seul contexte WebGL")
       inerte. Puis le skip rassoit, même en plein rail, et la session
       retient que l'intro est vue. */
 assert.equal(await etat(), "CIEL", "l'expérience devrait s'ouvrir au CIEL")
+/* le voile CHARGEMENT (7e retour #33) est OPAQUE ET BLOQUANT tant que la
+   rue décode — comme pour l'œil, le clic n'existe qu'une fois le voile
+   levé (data-pret) ; budget mule : décodage meshopt + compiles */
+await attends(
+  async () => (await sonde(`document.querySelector("[data-etat]")?.dataset.pret`)) === "1",
+  90000,
+  "le voile CHARGEMENT se lève (ciel + rue décodés)",
+)
 const [cx, cy] = JSON.parse(await sonde(`JSON.stringify([innerWidth / 2, innerHeight / 2])`))
 const clicToile = async () => {
   await cdp.envoie("Input.dispatchMouseEvent", { type: "mousePressed", x: cx, y: cy, button: "left", clickCount: 1 })
@@ -306,7 +314,10 @@ assert.equal(await etat(), "HABITACLE", "le skip devrait rassoir à l'habitacle"
 console.log("  3/6 le clic sur la voiture lance l'atterrissage, le skip rassoit")
 
 await va(base + "/")
-await attends(async () => await etat(), 8000, "remontage")
+/* budget MULE : la passe 3 attend désormais le voile CHARGEMENT (rue
+   décodée + compiles) AVANT ses clics — la navigation repart donc sur un
+   renderer en pleine tempête de compilation, le remontage peut traîner */
+await attends(async () => await etat(), 30000, "remontage")
 assert.equal(await etat(), "HABITACLE", "l'intro s'est rejouée dans la même session")
 console.log("  4/6 intro une seule fois par session")
 
@@ -474,8 +485,9 @@ console.log("  4d/6 le poste répond : dalle → hub → GPS → MAISON, ?nodepa
 
 /* 4 quinquies. SPOTIFY EN FAÇADE (#33) : l'écran MUSIQUES ne fait AUCUNE
       requête tierce — c'est le clic sur la dalle (click-to-load, doctrine
-      RGPD du #18) qui monte l'embed à plat. Le ‹ du panneau revient au
-      hub. Budgets mule : chaque vol de rail ≈ 26 s de mur. */
+      RGPD du #18) qui démarre le MOTEUR maison (7e retour : plus
+      d'iframe — notre API sert les pistes, le CDN l'audio). Le ‹ du
+      player revient au hub. Budgets mule : chaque vol de rail ≈ 26 s. */
 const distanceA = (lx, ly, lz) => sonde(`(() => {
   const st = window.__gt86
   const T = st.scene.getObjectByName("moquette").parent
@@ -492,16 +504,35 @@ await pause(1500)
 await clicPoste(0.75, 0.5)
 await attends(async () => (await etat()) === "MUSIQUES", 20000, "la tuile MUSIQUES")
 const tiersAvantClic = JSON.parse(
-  await sonde(`JSON.stringify(performance.getEntriesByType("resource").map((e) => e.name).filter((u) => u.includes("spotify")))`),
+  await sonde(
+    `JSON.stringify(performance.getEntriesByType("resource").map((e) => e.name).filter((u) => u.includes("spotify") || u.includes("scdn.co") || u.includes("/api/gt86/mix")))`,
+  ),
 )
 assert.deepEqual(tiersAvantClic, [], `la façade a fui : requêtes Spotify AVANT le clic — ${tiersAvantClic}`)
 await clicPoste(0.5, 0.5)
-await attends(async () => (await etat()) === "SPOTIFY", 20000, "la façade charge l'embed")
+await attends(async () => (await etat()) === "SPOTIFY", 20000, "la façade démarre le player")
 await attends(
-  async () => await sonde(`document.querySelector('iframe[src*="open.spotify.com/embed"]') !== null`),
+  async () =>
+    await sonde(
+      `performance.getEntriesByType("resource").some((e) => e.name.includes("/api/gt86/mix/"))`,
+    ),
   60000,
-  "l'iframe de l'embed à plat (script de l'API + contrôleur — lents sur la mule)",
+  "le moteur appelle notre API des pistes (réseau Spotify lent sur la mule)",
 )
+/* la MOLETTE (7e retour) : trois crans de roulette sur le bouton rotatif
+   gauche (zone plan étendue u ≈ −0,18) → le volume du moteur baisse —
+   lu à la poignée __gt86ecran (etatDebug porte amp.volume) */
+const volumeLu = async () => JSON.parse(await sonde(`window.__gt86ecran.etatDebug()`)).volume
+const volAvant = await volumeLu()
+const pxMolette = await pixelDalle(-0.177, 0.114)
+for (let k = 0; k < 3; k++) {
+  await cdp.envoie("Input.dispatchMouseEvent", {
+    type: "mouseWheel", x: pxMolette.x, y: pxMolette.y, deltaX: 0, deltaY: 120,
+  })
+  await pause(400)
+}
+await attends(async () => (await volumeLu()) < volAvant - 0.01, 15000, "la molette baisse le volume")
+
 /* le player est peint dans la dalle (6e retour) : son ‹ est une ZONE du
    peintre, cliquée comme le reste du poste */
 await clicPoste(0.03, 0.05)

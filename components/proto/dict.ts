@@ -55,6 +55,7 @@ const DICT = {
     en: "Click to start",
   },
   gt86EnRoute: { fr: "en route…", en: "on the way…" },
+  gt86Chargement: { fr: "chargement", en: "loading" },
   gt86Gps: { fr: "GPS", en: "GPS" },
   gt86Musiques: { fr: "Musiques", en: "Music" },
   gt86Maison: { fr: "Maison", en: "Home" },

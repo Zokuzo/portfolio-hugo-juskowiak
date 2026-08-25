@@ -120,6 +120,10 @@ export async function lanceChrome({ chrome = trouveChrome(), args = [], url = "a
     `--remote-debugging-port=${port}`,
     `--user-data-dir=${profil}`,
     "--no-first-run", "--no-default-browser-check", "--disable-extensions", "--mute-audio",
+    /* le moteur audio du HJ·AMP (#33) doit pouvoir jouer sans geste
+       « frais » sur la mule — l'audio reste muet (--mute-audio), seul
+       l'état logique de lecture compte pour les passes */
+    "--autoplay-policy=no-user-gesture-required",
     ...args,
     url,
   ], { stdio: "ignore" })

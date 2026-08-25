@@ -69,6 +69,7 @@ const BOUTONS: [NomBouton, number, number][] = [
 export type Zone =
   | { type: "ecran"; u: number; v: number }
   | { type: "bouton"; nom: NomBouton }
+  | { type: "molette" }
   | { type: "dehors" }
 
 /* brouillon partagé — zéro allocation par clic */
@@ -93,6 +94,10 @@ export function zoneDuClic(origineLocale: THREE.Vector3, pointLocal: THREE.Vecto
   for (const [nom, bx, by] of BOUTONS) {
     if (Math.abs(d.x - bx) < 0.011 && Math.abs(dy - by) < 0.007) return { type: "bouton", nom }
   }
+  /* la molette VOLUME — le bouton rotatif gauche de la façade (7e retour
+     de gate #33 : « tourner la molette pour baisser le son ») ; on la
+     TOURNE à la roulette, le geste du bouton rotatif à la souris */
+  if (Math.abs(d.x - 0.088) < 0.016 && Math.abs(dy + 0.027) < 0.016) return { type: "molette" }
   /* frange neutre entre la façade et le dehors : un clic à quelques
      millimètres du bord ne doit pas éjecter du zoom */
   if (Math.abs(d.x) > 0.16 || Math.abs(dy) > 0.1) return { type: "dehors" }
@@ -106,6 +111,9 @@ export type EtatSpotify = {
   position: number
   duree: number
   piste: number
+  pistes: number
+  titre: string
+  volume: number
   indice: number
   repli: boolean
 }
@@ -140,6 +148,7 @@ export type Ecran = {
   choisit: (dest: DestEcran) => void
   spotify: () => void
   majSpotify: (maj: Partial<EtatSpotify>) => void
+  majSpectre: (bandes: number[]) => void
   ticSpotify: (dt: number) => void
   clicSpotify: (u: number, v: number) => ClicSpotify | null
 }
@@ -189,7 +198,23 @@ export function creeEcran(lang: Lang): Ecran {
   let ampSale = true
   /* l'état du player HJ·AMP (mode "spotify") — nourri par l'hôte de
      l'iframe invisible via majSpotify */
-  const amp: EtatSpotify = { enLecture: false, position: 0, duree: 0, piste: 1, indice: 0, repli: false }
+  const amp: EtatSpotify = {
+    enLecture: false,
+    position: 0,
+    duree: 0,
+    piste: 1,
+    pistes: 0,
+    titre: "",
+    volume: 0.8,
+    indice: 0,
+    repli: false,
+  }
+  /* le VRAI spectre poussé par le moteur (7e retour) — périmé après
+     250 ms, le peintre retombe alors en danse procédurale */
+  const ampSpectre = new Array(19).fill(0)
+  let ampSpectreMs = -1e9
+  /* la surcouche VOL s'affiche 1,4 s après le dernier cran de molette */
+  let ampVolMs = -1e9
   let ampHorloge = 0
   const LCD_ENCRE_AMP = "#ffd9f6"
   let ampCumul = 0
@@ -633,11 +658,13 @@ export function creeEcran(lang: Lang): Ecran {
      coup. Calque statique (chrome, biseaux, puits, playlist) + couche
      vivante (temps, marquee, bougies, crêtes) repeinte par ticSpotify. */
   const AMP_ZONES = {
-    /* v de la rangée transport et des rangées playlist — les zones de
-       clicSpotify sont calquées sur ce dessin */
+    /* v de la rangée transport, et la GRILLE PLAYLIST en pixels (7e
+       retour de gate : la rangée active mordait le libellé et le bord
+       du puits) — les zones de clicSpotify sont calquées sur ce dessin */
     transportV: [0.875, 1.0] as const,
-    playlistV0: 0.585,
-    playlistDV: 0.0705,
+    playlistY0: 158,
+    playlistDY: 16,
+    playlistHR: 15,
   }
   const biseau2d = (ctx: CanvasRenderingContext2D, x: number, y: number, la: number, ha: number, creux = false) => {
     ctx.fillStyle = creux ? "#160a20" : "#a95fd0"
@@ -748,10 +775,16 @@ export function creeEcran(lang: Lang): Ecran {
     g.shadowBlur = 0
     g.font = "bold 8px monospace"
     g.fillStyle = "#8d6aa8"
-    g.fillText(`PISTE ${String(amp.piste).padStart(2, "0")}`, 108, 55)
+    g.fillText(
+      amp.pistes > 0
+        ? `PISTE ${String(amp.piste).padStart(2, "0")}/${String(amp.pistes).padStart(2, "0")}`
+        : `PISTE ${String(amp.piste).padStart(2, "0")}`,
+      108,
+      55,
+    )
     g.textAlign = "left"
     const sDur = Math.max(0, Math.floor(amp.duree / 1000))
-    const bandeauTexte = `${PLAYLISTS[amp.indice].nom.toUpperCase()} · SPOTIFY · ${Math.floor(sDur / 60)}:${String(sDur % 60).padStart(2, "0")}   `
+    const bandeauTexte = `${(amp.titre || PLAYLISTS[amp.indice].nom).toUpperCase()} · ${PLAYLISTS[amp.indice].nom.toUpperCase()} · ${Math.floor(sDur / 60)}:${String(sDur % 60).padStart(2, "0")}   `
     g.save()
     g.beginPath()
     g.rect(120, 24, l - 128, 20)
@@ -779,24 +812,50 @@ export function creeEcran(lang: Lang): Ecran {
     const bh = 62
     const N = 19
     const pas = bl / N
-    ampNiveau += ((amp.enLecture ? 1 : 0) - ampNiveau) * 0.07
-    for (let i = 0; i < N; i++) {
-      const forme = 0.55 + 0.45 * Math.sin((i / N) * Math.PI * 1.4 + 0.4)
-      const danse =
-        0.5 +
-        0.28 * Math.sin(ampHorloge * (2.1 + (i % 5) * 0.9) + i * 1.7) +
-        0.22 * Math.sin(ampHorloge * (5.3 + (i % 3) * 1.3) + i * 0.6)
-      const bh1 = Math.max(1.5, ampNiveau * forme * danse * bh)
-      const teinte = 270 + (i / (N - 1)) * 120
-      const grad = g.createLinearGradient(0, by1, 0, by1 - bh1)
-      grad.addColorStop(0, `hsl(${teinte}, 88%, 32%)`)
-      grad.addColorStop(0.55, `hsl(${teinte}, 92%, 55%)`)
-      grad.addColorStop(1, `hsl(${teinte}, 100%, 78%)`)
-      g.fillStyle = grad
-      g.fillRect(bx0 + i * pas + 2, by1 - bh1, pas - 4, bh1)
-      ampCretes[i] = Math.max(ampCretes[i] - 0.55, bh1)
-      g.fillStyle = "#ffe9fb"
-      g.fillRect(bx0 + i * pas + 2, by1 - ampCretes[i] - 2, pas - 4, 2)
+    const volActif = performance.now() - ampVolMs < 1400
+    if (volActif) {
+      /* la surcouche VOL — le retour de la molette, à la place de
+         l'égaliseur le temps du geste (comme les vrais postes) */
+      g.fillStyle = LCD_ENCRE_AMP
+      g.shadowColor = "#ff64d2"
+      g.shadowBlur = 5
+      g.font = "bold 15px monospace"
+      g.fillText(`VOL ${String(Math.round(amp.volume * 100)).padStart(3, " ")}`, 22, 96)
+      g.shadowBlur = 0
+      const crans = 24
+      const plein = Math.round(amp.volume * crans)
+      for (let k = 0; k < crans; k++) {
+        const teinte = 270 + (k / (crans - 1)) * 120
+        g.fillStyle = k < plein ? `hsl(${teinte}, 92%, 62%)` : "#2a1038"
+        g.fillRect(22 + k * 20, 108, 15, 26)
+      }
+    } else {
+      const spectreFrais = performance.now() - ampSpectreMs < 250
+      ampNiveau += ((amp.enLecture ? 1 : 0) - ampNiveau) * 0.07
+      for (let i = 0; i < N; i++) {
+        let bh1: number
+        if (spectreFrais) {
+          /* le VRAI spectre (7e retour) — l'analyseur du moteur */
+          bh1 = Math.max(1.5, ampSpectre[i] * bh)
+        } else {
+          const forme = 0.55 + 0.45 * Math.sin((i / N) * Math.PI * 1.4 + 0.4)
+          const danse =
+            0.5 +
+            0.28 * Math.sin(ampHorloge * (2.1 + (i % 5) * 0.9) + i * 1.7) +
+            0.22 * Math.sin(ampHorloge * (5.3 + (i % 3) * 1.3) + i * 0.6)
+          bh1 = Math.max(1.5, ampNiveau * forme * danse * bh)
+        }
+        const teinte = 270 + (i / (N - 1)) * 120
+        const grad = g.createLinearGradient(0, by1, 0, by1 - bh1)
+        grad.addColorStop(0, `hsl(${teinte}, 88%, 32%)`)
+        grad.addColorStop(0.55, `hsl(${teinte}, 92%, 55%)`)
+        grad.addColorStop(1, `hsl(${teinte}, 100%, 78%)`)
+        g.fillStyle = grad
+        g.fillRect(bx0 + i * pas + 2, by1 - bh1, pas - 4, bh1)
+        ampCretes[i] = Math.max(ampCretes[i] - 0.55, bh1)
+        g.fillStyle = "#ffe9fb"
+        g.fillRect(bx0 + i * pas + 2, by1 - ampCretes[i] - 2, pas - 4, 2)
+      }
     }
     /* PLAYLIST : quatre rangées, l'active en lueur */
     g.font = "bold 10px monospace"
@@ -809,11 +868,12 @@ export function creeEcran(lang: Lang): Ecran {
       g.textAlign = "left"
     } else {
       for (let i = 0; i < PLAYLISTS.length; i++) {
-        const ry = Math.round(h * (AMP_ZONES.playlistV0 + i * AMP_ZONES.playlistDV)) + 8
+        const haut = AMP_ZONES.playlistY0 + i * AMP_ZONES.playlistDY
+        const ry = haut + Math.floor(AMP_ZONES.playlistHR / 2) + 1
         const actif = i === amp.indice
         if (actif) {
           g.fillStyle = "#3d1a55"
-          g.fillRect(9, ry - 7, l - 18, 15)
+          g.fillRect(9, haut, l - 18, AMP_ZONES.playlistHR)
         }
         g.fillStyle = actif ? LCD_ENCRE_AMP : "#b48cd4"
         if (actif) {
@@ -965,7 +1025,7 @@ export function creeEcran(lang: Lang): Ecran {
 
   return {
     tex,
-    etatDebug: () => JSON.stringify(etat),
+    etatDebug: () => JSON.stringify({ ...etat, volume: amp.volume, piste: amp.piste }),
     mode: () => etat.mode,
     langue(nouvelle: Lang) {
       langue = nouvelle
@@ -1005,7 +1065,13 @@ export function creeEcran(lang: Lang): Ecran {
     spotify: () => passeEn("spotify"),
     majSpotify(maj: Partial<EtatSpotify>) {
       Object.assign(amp, maj)
+      if ("volume" in maj) ampVolMs = performance.now()
       if (etat.mode === "spotify") peint()
+    },
+    /* le spectre du moteur — pas de repeinture ici : ticSpotify cadence */
+    majSpectre(bandes: number[]) {
+      for (let i = 0; i < 19; i++) ampSpectre[i] = bandes[i] ?? 0
+      ampSpectreMs = performance.now()
     },
     /* la couche vivante du player — appelée à l'image pendant SPOTIFY,
        plafonnée par l'appelant ; ne repeint QUE si le mode est là */
@@ -1021,17 +1087,21 @@ export function creeEcran(lang: Lang): Ecran {
     clicSpotify(u: number, v: number): ClicSpotify | null {
       if (u < 0.06 && v < 0.1) return "retour"
       if (v >= 0.875) {
-        if (u < 0.13) return "piste-prec"
-        if (u < 0.26) return "lecture"
-        if (u < 0.37) return "piste-suiv"
-        if (u >= 0.4 && u < 0.53) return "mix-prec"
-        if (u >= 0.53 && u < 0.68) return "mix-suiv"
+        /* frontières calées sur les x DESSINÉS des boutons (revue : le
+           bord droit de ‹ MIX rendait « mix suivant ») : ⏮ 18-64,
+           ⏯ 70-126, ⏭ 132-178, ‹MIX 214-276, MIX› 282-344 (sur 512) */
+        if (u < 0.131) return "piste-prec"
+        if (u < 0.252) return "lecture"
+        if (u < 0.354) return "piste-suiv"
+        if (u >= 0.41 && u < 0.545) return "mix-prec"
+        if (u >= 0.545 && u < 0.68) return "mix-suiv"
         if (u >= 0.72) return "ouvrir"
         return null
       }
       if (amp.repli && v >= 0.6 && v <= 0.86) return "ouvrir-mix"
-      if (!amp.repli && v >= 0.575 && v < 0.868) {
-        const i = Math.floor((v - 0.575) / 0.0705)
+      const y = v * h
+      if (!amp.repli && y >= AMP_ZONES.playlistY0 && y < AMP_ZONES.playlistY0 + 4 * AMP_ZONES.playlistDY) {
+        const i = Math.floor((y - AMP_ZONES.playlistY0) / AMP_ZONES.playlistDY)
         if (i >= 0 && i < PLAYLISTS.length) return { mix: i }
       }
       return null

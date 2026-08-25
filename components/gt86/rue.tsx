@@ -212,6 +212,7 @@ function VoitureGaree({
   vivant,
   warning,
   surZone,
+  surMolette,
 }: {
   vol: MutableRefObject<Trajectoire>
   cockpit: Cockpit
@@ -219,6 +220,7 @@ function VoitureGaree({
   vivant: boolean
   warning: boolean
   surZone?: (zone: Zone) => void
+  surMolette?: (deltaY: number) => void
 }) {
   const { scene } = useGLTF("/prototype/gt86.glb")
   const [art, lueur, compteur] = useTexture([
@@ -408,6 +410,21 @@ function VoitureGaree({
               if (!zone) return
               e.stopPropagation()
               surZone(zone)
+            }}
+            onWheel={(e: ThreeEvent<WheelEvent>) => {
+              /* TOURNER la molette (7e retour de gate #33) : la roulette
+                 au-dessus du bouton rotatif — même reprojection plan que
+                 le clic, un cran de volume par geste */
+              if (!surMolette) return
+              const origine = modele.worldToLocal(e.ray.origin.clone())
+              const point = modele.worldToLocal(e.point.clone())
+              const zone = zoneDuClic(origine, point)
+              /* le bouton power EST le bouton rotatif : son rectangle vit au
+                 centre de la zone molette et gagne au clic — à la roulette,
+                 les deux tournent le volume (revue : le centre était mort) */
+              if (zone?.type !== "molette" && !(zone?.type === "bouton" && zone.nom === "power")) return
+              e.stopPropagation()
+              surMolette(e.deltaY)
             }}
           />
           {/* rétro, néons, phares volumétriques : même repère brut que le
@@ -667,6 +684,7 @@ export default function Rue({
   vivant,
   warning,
   surZone,
+  surMolette,
 }: {
   visible: boolean
   vol: MutableRefObject<Trajectoire>
@@ -680,6 +698,7 @@ export default function Rue({
   vivant: boolean
   warning: boolean
   surZone?: (zone: Zone) => void
+  surMolette?: (deltaY: number) => void
 }) {
   const scene3 = useThree((s) => s.scene)
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
@@ -776,7 +795,7 @@ export default function Rue({
           volumes, plus assez pour ressembler à un crépuscule (gate #22) */}
       <ambientLight intensity={0.21} color="#a9b4d4" />
       <Decor />
-      <VoitureGaree vol={vol} cockpit={cockpit} ecran={ecran} vivant={vivant} warning={warning} surZone={surZone} />
+      <VoitureGaree vol={vol} cockpit={cockpit} ecran={ecran} vivant={vivant} warning={warning} surZone={surZone} surMolette={surMolette} />
       <VieNocturne />
       <Fond />
     </group>

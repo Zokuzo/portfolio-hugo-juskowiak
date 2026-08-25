@@ -3,7 +3,7 @@
 import { Suspense, useCallback, useEffect, useReducer, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Canvas, useLoader, useThree } from "@react-three/fiber"
-import { Stats, useGLTF } from "@react-three/drei"
+import { Stats, useGLTF, useProgress } from "@react-three/drei"
 import { RGBELoader } from "three-stdlib"
 import * as THREE from "three"
 import type { CSSProperties } from "react"
@@ -16,7 +16,7 @@ import Vol, { VOL_MS, type Trajectoire } from "./vol"
 import Seuil, { SEUIL_MS } from "./seuil"
 import { Pouls, cockpitVide } from "./habitacle"
 import { PLAYLISTS, PROFIL_SPOTIFY, creeEcran, type Ecran, type ModeEcran, type Zone } from "./ecran"
-import { CadreDalle, HoteSpotify, RythmeAmp, type CommandesSpotify } from "./spotify"
+import { MoteurSpotify, RythmeAmp, type CommandesSpotify } from "./spotify"
 
 /* LES ASSETS ET LEUR CASCADE — ticket #28.
 
@@ -62,6 +62,14 @@ const ENCRE = "#e8dff5"
 const DEPART_MS = 650
 /* le verre fumé gaté (#21/#24) : la couleur du voile de la plongée */
 const VERRE = "#161b21"
+
+/* la sentinelle du chargement : montée DANS le Suspense de la rue, elle
+   ne commit que quand tous les chargeurs du même bord ont résolu — c'est
+   le « rue décodée » de l'écran de chargement */
+function Sentinelle({ surPret }: { surPret: () => void }) {
+  useEffect(() => surPret(), [surPret])
+  return null
+}
 
 /* Le contexte peut être perdu à chaud (onglet en arrière-plan longtemps,
    pilote qui se réinitialise). three AVALE l'événement — `preventDefault`,
@@ -117,9 +125,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
      chorégraphe (qui les réveille) */
   const voileVerre = useRef<HTMLDivElement>(null)
   const nom = useRef<HTMLDivElement>(null)
-  /* la boîte écran de l'hôte Spotify (l'iframe-moteur, invisible),
-     suivie à l'image par CadreDalle ; les commandes du player */
-  const cadre = useRef<HTMLDivElement>(null)
+  /* les commandes du player (le moteur audio maison, 7e retour #33) */
   const commandesSpotify = useRef<CommandesSpotify | null>(null)
   const cockpit = useRef(cockpitVide()).current
   /* L'ÉCRAN MÉDIA (#32) — une seule instance par montage (StrictMode
@@ -132,6 +138,10 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
   useEffect(() => {
     ecran.langue(lang)
   }, [ecran, lang])
+  /* poignée de test (harnais CDP) — même rôle que window.__gt86 */
+  useEffect(() => {
+    Object.assign(window as object, { __gt86ecran: ecran })
+  }, [ecran])
   /* le compteur de cadence à la demande (?fps) — pour mesurer chez Hugo ;
      ?nodepart fige l'itinéraire à l'écran (gates visuels, recette #26) */
   const [fpsVoulu] = useState(() => new URLSearchParams(window.location.search).has("fps"))
@@ -156,6 +166,15 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
     else if (mode === "hub") ecran.hub()
     else if (mode === "horloge") ecran.horloge()
     else if (mode === "stats") ecran.stats()
+  }
+
+  /* la molette VOLUME (7e retour #33) : un cran par geste de roulette,
+     vers le haut = plus fort — vivante seulement quand le player joue */
+  const surMolette = (deltaY: number) => {
+    /* proportionnel au delta, borné à un cran : la molette de souris
+       (±120) donne son cran plein, le trackpad (petits deltas en rafale)
+       règle finement au lieu de claquer la plage (revue adversariale) */
+    if (etat === "SPOTIFY") commandesSpotify.current?.volume(Math.max(-0.07, Math.min(0.07, -deltaY / 1200)))
   }
 
   /* LE POSTE RÉPOND (#32) : zones calibrées remontées par la rue — la
@@ -194,6 +213,8 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
       }
       return
     }
+    /* un CLIC sur la molette est muet — elle se TOURNE (roulette) */
+    if (zone.type === "molette") return
     /* la dalle */
     if (mode === "eteint") return
     if (etat === "HABITACLE" && !zoome) {
@@ -275,6 +296,24 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
      (décodage meshopt synchrone : jamais pendant le rail) */
   const [cielPret, setCielPret] = useState(false)
   const surPret = useCallback(() => setCielPret(true), [])
+  /* L'ÉCRAN DE CHARGEMENT (7e retour #33) : tant que ciel ET rue ne sont
+     pas décodés, un voile CHARGEMENT couvre le dôme — l'animation ne se
+     découvre que prête (compilations lancées, plus d'accroc en vol). Il
+     n'apparaît qu'après 250 ms (« si nécessaire » : cache plein = rien),
+     ne mange AUCUN clic, et ne concerne que le chemin d'intro. */
+  const [ruePrete, setRuePrete] = useState(false)
+  const surRuePrete = useCallback(() => setRuePrete(true), [])
+  const chargePret = cielPret && ruePrete
+  const [chargeVisible, setChargeVisible] = useState(false)
+  useEffect(() => {
+    if (etat !== "CIEL" || chargePret) {
+      setChargeVisible(false)
+      return
+    }
+    const t0 = setTimeout(() => setChargeVisible(true), 250)
+    return () => clearTimeout(t0)
+  }, [etat, chargePret])
+  const { progress: chargeProgres } = useProgress()
   /* la bascule ciel → rue du vol, derrière le voile plein — un état React,
      pas un `visible` impératif : une seule source de vérité */
   const [enRue, setEnRue] = useState(false)
@@ -354,6 +393,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
   return (
     <div
       data-etat={etat}
+      data-pret={chargePret ? "1" : "0"}
       style={{ position: "fixed", inset: 0, zIndex: 50, background: NUIT }}
     >
       <Canvas
@@ -416,11 +456,12 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
               vivant={apres}
               warning={warning}
               surZone={surZone}
+              surMolette={surMolette}
             />
+            <Sentinelle surPret={surRuePrete} />
           </Suspense>
         )}
         {fpsVoulu && <Stats />}
-        <CadreDalle actif={etat === "SPOTIFY"} cockpit={cockpit} boite={cadre} />
         <RythmeAmp actif={etat === "SPOTIFY"} ecran={ecran} />
       </Canvas>
 
@@ -584,12 +625,72 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
         )}
       </div>
 
-      {/* l'hôte Spotify (#33, 6e retour) : le player est PEINT dans la
-          dalle — ne reste ici que l'iframe-MOTEUR, invisible, posée sur
-          le cadre de la dalle pour que la lecture continue */}
-      <div ref={cadre} style={{ position: "absolute", pointerEvents: "none" }}>
-        {etat === "SPOTIFY" && <HoteSpotify ecran={ecran} commandes={commandesSpotify} />}
-      </div>
+      {/* le MOTEUR du player (#33, 7e retour) : plus d'iframe du tout —
+          un <audio> maison sur les préversions du CDN, gain (molette) et
+          analyseur (spectre) ; il ne rend rien, il nourrit le peintre */}
+      {etat === "SPOTIFY" && <MoteurSpotify ecran={ecran} commandes={commandesSpotify} mix={mixCourant} />}
+
+      {/* le voile CHARGEMENT (7e retour #33) : couvre le ciel tant que
+          les ressources décodent — transparent aux clics (le harnais et
+          le skip passent au travers), fondu dès que tout est prêt */}
+      {etat === "CIEL" && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "grid",
+            placeItems: "center",
+            background: NUIT,
+            opacity: chargeVisible && !chargePret ? 1 : 0,
+            transition: "opacity 450ms ease",
+            /* opaque = il MANGE les clics (un DÉMARRER invisible cliquable
+               lançait le vol sur une rue non décodée — revue) ; levé, il
+               redevient transparent aux gestes pendant son fondu */
+            pointerEvents: chargeVisible && !chargePret ? "auto" : "none",
+          }}
+        >
+          <div style={{ textAlign: "center" }}>
+            <div
+              style={{
+                font: "500 12px/1 var(--f-mono)",
+                letterSpacing: "0.34em",
+                color: `${ENCRE}8c`,
+              }}
+            >
+              {t(lang, "gt86Chargement").toUpperCase()}
+            </div>
+            <div
+              style={{
+                margin: "18px auto 0",
+                width: 180,
+                height: 2,
+                background: `${ENCRE}26`,
+              }}
+            >
+              <div
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  background: ENCRE,
+                  transform: `scaleX(${Math.round(chargeProgres) / 100})`,
+                  transformOrigin: "left",
+                  transition: "transform 300ms ease",
+                }}
+              />
+            </div>
+            <div
+              style={{
+                marginTop: 12,
+                font: "500 11px/1 var(--f-mono)",
+                letterSpacing: "0.18em",
+                color: `${ENCRE}59`,
+              }}
+            >
+              {Math.round(chargeProgres)}%
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* le voile de la plongée (#24) : le verre fumé emplit le cadre et
           son noir devient l'obscurité — se dissout en CSS sur la vue
