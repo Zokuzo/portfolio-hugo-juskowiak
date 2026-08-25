@@ -182,6 +182,10 @@ const ASSETS = {
      HORS de la cascade de la passe 7 */
   "public/amp/kirby-sprite.jpg": { max: 22_000 },
   "public/amp/kirby-logo.jpg": { max: 29_000 },
+  /* les icônes du hub (12e retour, fournies par Hugo — recolorées à la
+     volée dans la palette de l'écran) */
+  "public/amp/icone-gps.jpg": { max: 43_000 },
+  "public/amp/icone-musiques.jpg": { max: 21_000 },
 }
 
 const jsonDuGlb = (buf) => JSON.parse(buf.subarray(20, 20 + buf.readUInt32LE(12)).toString("utf8"))

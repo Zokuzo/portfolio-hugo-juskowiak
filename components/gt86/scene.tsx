@@ -149,6 +149,24 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
   /* le ZOOM sur la dalle (hub/horloge/stats, machine à l'habitacle) et
      les feux de détresse — des états d'ÉCRAN, pas de navigation : la
      machine garde GPS/CHOIX/MUSIQUES/DÉPART, l'écran garde son poste */
+  /* LA VERSION CRT (12e retour : « une version du site avec un filtre
+     année 2000 ») : sous-pixels RVB + balayage + vignette en simple
+     surcouche composée — opt-in (?crt ou le bouton), mémorisée */
+  const [crt, setCrt] = useState(() => {
+    try {
+      if (new URLSearchParams(window.location.search).has("crt")) return true
+      return localStorage.getItem("gt86-crt") === "1"
+    } catch {
+      return false
+    }
+  })
+  useEffect(() => {
+    try {
+      localStorage.setItem("gt86-crt", crt ? "1" : "0")
+    } catch {
+      /* stockage indisponible : la préférence ne survit pas, sans gravité */
+    }
+  }, [crt])
   const [zoome, setZoome] = useState(false)
   const [warning, setWarning] = useState(false)
   const [mixCourant, setMixCourant] = useState(0)
@@ -572,6 +590,22 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
           {t(lang, "gt86Chantier")} · {etat}
         </span>
 
+        <button
+          type="button"
+          aria-pressed={crt}
+          style={{
+            ...discret,
+            position: "absolute",
+            top: 12,
+            right: 20,
+            pointerEvents: "auto",
+            color: crt ? ENCRE : `${ENCRE}59`,
+          }}
+          data-gt86="crt" onClick={() => setCrt((v) => !v)}
+        >
+          CRT
+        </button>
+
         {/* La consigne du gate #21 : sous la mer de nuages, encre sombre sur
             les crêtes claires — un bouton, pas un décor : même signal que le
             clic sur la carrosserie, et accessible au clavier. Elle quitte le
@@ -739,6 +773,25 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
           pointerEvents: "none",
         }}
       />
+
+      {/* la surcouche CRT : grille de sous-pixels RVB, lignes de balayage,
+          vignette — gradients statiques composés par le GPU, zéro coût
+          d'animation ; au-dessus de tout, transparente aux gestes */}
+      {crt && (
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            pointerEvents: "none",
+            backgroundImage: [
+              "repeating-linear-gradient(90deg, rgba(255,60,90,0.055) 0px, rgba(255,60,90,0.055) 1px, rgba(60,255,140,0.045) 1px, rgba(60,255,140,0.045) 2px, rgba(80,120,255,0.055) 2px, rgba(80,120,255,0.055) 3px)",
+              "repeating-linear-gradient(0deg, rgba(8,6,14,0.16) 0px, rgba(8,6,14,0.16) 1px, transparent 1px, transparent 3px)",
+              "radial-gradient(ellipse at center, transparent 58%, rgba(8,6,14,0.28) 100%)",
+            ].join(", "),
+          }}
+        />
+      )}
 
       {/* le fondu du DÉPART : la jauge est pleine, on plonge dans le
           portfolio relié (recette #26 — 600 ms, puis la navigation) */}

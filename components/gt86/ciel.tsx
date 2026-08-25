@@ -100,8 +100,8 @@ function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<
   const peinture = useMemo(() => {
     const p = new THREE.MeshPhysicalMaterial({
       color: ARGENT,
-      metalness: 0.45,
-      roughness: 0.32,
+      metalness: 0.6,
+      roughness: 0.22,
       clearcoat: 1,
       clearcoatRoughness: 0.08,
       envMapIntensity: 2.4,
@@ -221,7 +221,12 @@ export default function Ciel({
             fog={false}
           />
         </mesh>
-        <directionalLight position={[3, 7, -12]} intensity={1.4} color="#ffa05a" />
+        {/* 12e retour (« la lumière n'est pas dirigée vers la voiture ») :
+            la directionnelle vivait DERRIÈRE la voiture — le flanc que la
+            caméra regarde (POSE −4.2, −0.4, 7.8) n'était éclairé que par
+            l'hémisphère. Elle passe côté caméra : même lumière, même
+            topologie, juste braquée sur la robe. */}
+        <directionalLight position={[-9, 5, 13]} intensity={1.7} color="#ffc9a0" />
         <hemisphereLight args={["#e8b8d8", "#ff9a6b", 0.6]} />
         {/* débouche l'habitacle derrière le verre fumé */}
         <ambientLight intensity={0.55} color="#ffe2d2" />

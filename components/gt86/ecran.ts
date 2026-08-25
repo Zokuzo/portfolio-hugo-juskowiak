@@ -228,7 +228,7 @@ export function creeEcran(lang: Lang): Ecran {
   let kirbySprite: HTMLCanvasElement | null = null
   let kirbyLogo: HTMLCanvasElement | null = null
   let kirbyDemande = false
-  const detoure = (img: HTMLImageElement, cote: number): HTMLCanvasElement => {
+  const detoure = (img: HTMLImageElement, cote: number, seuil = 232): HTMLCanvasElement => {
     const cnv = document.createElement("canvas")
     cnv.width = cote
     cnv.height = Math.round((img.height / img.width) * cote)
@@ -237,10 +237,75 @@ export function creeEcran(lang: Lang): Ecran {
     const donnees = cg.getImageData(0, 0, cnv.width, cnv.height)
     const d = donnees.data
     for (let i = 0; i < d.length; i += 4) {
-      if (d[i] > 232 && d[i + 1] > 232 && d[i + 2] > 232) d[i + 3] = 0
+      if (d[i] > seuil && d[i + 1] > seuil && d[i + 2] > seuil) d[i + 3] = 0
     }
     cg.putImageData(donnees, 0, 0)
     return cnv
+  }
+  /* les icônes du hub (12e retour : les images fournies par Hugo) —
+     détourées ET adaptées à la palette : les teintes pleines glissent
+     dans la bande violet→rose de l'écran, les gris/contours restent */
+  let iconeGps: HTMLCanvasElement | null = null
+  let iconeMusiques: HTMLCanvasElement | null = null
+  const adaptePalette = (cnv: HTMLCanvasElement, eclaircit: boolean) => {
+    const cg = cnv.getContext("2d")!
+    const donnees = cg.getImageData(0, 0, cnv.width, cnv.height)
+    const d = donnees.data
+    for (let i = 0; i < d.length; i += 4) {
+      if (d[i + 3] === 0) continue
+      let [r, gg, b] = [d[i] / 255, d[i + 1] / 255, d[i + 2] / 255]
+      const max = Math.max(r, gg, b)
+      const min = Math.min(r, gg, b)
+      let l = (max + min) / 2
+      const sat = max === min ? 0 : (max - min) / (1 - Math.abs(2 * l - 1))
+      if (eclaircit && l < 0.28) l = 0.45
+      if (sat < 0.15) {
+        /* gris clair désaturé = frange d'anticrénelage du fond blanc
+           (les contours des icônes sont NOIRS) : dehors */
+        if (l > 0.68) {
+          d[i + 3] = 0
+          continue
+        }
+        /* gris et contours : seule la clarté bouge */
+        const v = Math.round(l * 255)
+        d[i] = v
+        d[i + 1] = v
+        d[i + 2] = v
+        continue
+      }
+      let h = 0
+      if (max === r) h = ((gg - b) / (max - min)) % 6
+      else if (max === gg) h = (b - r) / (max - min) + 2
+      else h = (r - gg) / (max - min) + 4
+      h = ((h * 60 + 360) % 360)
+      /* toutes les teintes glissent dans [250 ; 330] : violet → rose */
+      const h2 = (250 + (h / 360) * 80) / 360
+      const c = (1 - Math.abs(2 * l - 1)) * sat
+      const x = c * (1 - Math.abs(((h2 * 6) % 2) - 1))
+      const m = l - c / 2
+      const seg = Math.floor(h2 * 6)
+      const [r2, g2, b2] = [
+        [c, x, 0], [x, c, 0], [0, c, x], [0, x, c], [x, 0, c], [c, 0, x],
+      ][seg % 6]
+      d[i] = Math.round((r2 + m) * 255)
+      d[i + 1] = Math.round((g2 + m) * 255)
+      d[i + 2] = Math.round((b2 + m) * 255)
+    }
+    cg.putImageData(donnees, 0, 0)
+    return cnv
+  }
+  for (const [src, eclaircit, pose] of [
+    ["/amp/icone-gps.jpg", false, (c: HTMLCanvasElement) => (iconeGps = c)],
+    ["/amp/icone-musiques.jpg", true, (c: HTMLCanvasElement) => (iconeMusiques = c)],
+  ] as const) {
+    const im = new Image()
+    im.onload = () => {
+      /* seuil plus dur que la galette : le halo d'anticrénelage du fond
+         blanc laissait un liseré autour des icônes */
+      pose(adaptePalette(detoure(im, 112, 213), eclaircit))
+      if (etat.mode === "hub") peint()
+    }
+    im.src = src
   }
   const chargeKirby = () => {
     if (kirbyDemande) return
@@ -849,8 +914,8 @@ export function creeEcran(lang: Lang): Ecran {
     g.fill()
     g.textAlign = "center"
     g.fillStyle = "#ffd9f6"
-    g.font = "bold 6px monospace"
-    g.fillText("HJ·AMP · 320 KBPS", 0, 30)
+    g.font = "bold 5px monospace"
+    g.fillText("320 KBPS · 44 KHZ", 0, 28)
     g.textAlign = "left"
     /* LES IMAGES de Hugo (11e retour), détourées : le logo au-dessus du
        moyeu, le sprite à cheval sur la droite comme le pressage réf. */
@@ -1108,46 +1173,16 @@ export function creeEcran(lang: Lang): Ecran {
         g.textAlign = "left"
       }
     } else if (etat.mode === "hub") {
-      /* deux icônes PIXEL façon pack Y2K (planche) : le globe-viseur du
-         GPS, le disque du player — dessinées au gros pixel (grille 4 px) */
-      const px4 = (cx0: number, cy0: number, taille: number, motif: string[], teintes: Record<string, string>) => {
-        const p4 = Math.max(4, Math.round(taille / 5))
-        const ox = cx0 - (motif[0].length * p4) / 2
-        const oy = cy0 - (motif.length * p4) / 2
-        for (let ly = 0; ly < motif.length; ly++)
-          for (let lx = 0; lx < motif[ly].length; lx++) {
-            const ch = motif[ly][lx]
-            if (ch === " ") continue
-            g.fillStyle = teintes[ch] ?? "#ffffff"
-            g.fillRect(ox + lx * p4, oy + ly * p4, p4, p4)
-          }
+      const dessine = (img: HTMLCanvasElement | null) => (cx: number, cy: number, r: number) => {
+        if (!img) return
+        const la = r * 2.6
+        const ha = (img.height / img.width) * la
+        g.imageSmoothingEnabled = false
+        g.drawImage(img, cx - la / 2, cy - ha / 2, la, ha)
+        g.imageSmoothingEnabled = true
       }
-      tuile(12, t(langue, "gt86Gps").toUpperCase(), "NAV · MAP", "#b57aff", (cx, cy, r) => {
-        px4(cx, cy, r, [
-          "   ####   ",
-          "  #....#  ",
-          " #..##..# ",
-          "##..##..##",
-          "#...##...#",
-          "#...##...#",
-          "##..##..##",
-          " #..##..# ",
-          "  #....#  ",
-          "   ####   ",
-        ], { "#": "#b57aff", ".": "#2c1a44" })
-      })
-      tuile(l / 2 + 8, t(langue, "gt86Musiques").toUpperCase(), "SPOTIFY · AMP", "#f473e8", (cx, cy, r) => {
-        px4(cx, cy, r, [
-          "   ####   ",
-          " ##....## ",
-          " #..oo..# ",
-          "#..o##o..#",
-          "#..o##o..#",
-          " #..oo..# ",
-          " ##....## ",
-          "   ####   ",
-        ], { "#": "#f473e8", ".": "#5a1f4e", o: "#ffd9f6" })
-      })
+      tuile(12, t(langue, "gt86Gps").toUpperCase(), "NAV · MAP", "#b57aff", dessine(iconeGps))
+      tuile(l / 2 + 8, t(langue, "gt86Musiques").toUpperCase(), "SPOTIFY · AMP", "#f473e8", dessine(iconeMusiques))
     }
     tex.needsUpdate = true
   }
