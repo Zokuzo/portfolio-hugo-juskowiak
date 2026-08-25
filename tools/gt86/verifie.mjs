@@ -472,6 +472,40 @@ await sonde(`window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }
 await attends(async () => (await etat()) === "HABITACLE", 8000, "Échap rassoit depuis l'itinéraire")
 console.log("  4d/6 le poste répond : dalle → hub → GPS → MAISON, ?nodepart fige, Échap rassoit")
 
+/* 4 quinquies. SPOTIFY EN FAÇADE (#33) : l'écran MUSIQUES ne fait AUCUNE
+      requête tierce — c'est le clic sur la dalle (click-to-load, doctrine
+      RGPD du #18) qui monte l'embed à plat. Le ‹ du panneau revient au
+      hub. Budgets mule : chaque vol de rail ≈ 26 s de mur. */
+const distanceA = (lx, ly, lz) => sonde(`(() => {
+  const st = window.__gt86
+  const T = st.scene.getObjectByName("moquette").parent
+  const V = st.camera.position.constructor
+  const local = new V(${lx}, ${ly}, ${lz}).add(T.position)
+  const monde = new V(-local.x - 4.4, local.y - 0.05, -local.z - 19)
+  return st.camera.position.distanceTo(monde)
+})()`)
+await attends(async () => (await distanceA(0.3, 1.05, -0.42)) < 0.05, 90000, "le retour assis avant Spotify")
+await pause(1500)
+await clicPoste(0.5, 0.5)
+await attends(async () => (await distanceA(-0.075, 0.9, -0.05)) < 0.05, 90000, "le rail vers la dalle (Spotify)")
+await pause(1500)
+await clicPoste(0.75, 0.5)
+await attends(async () => (await etat()) === "MUSIQUES", 20000, "la tuile MUSIQUES")
+const tiersAvantClic = JSON.parse(
+  await sonde(`JSON.stringify(performance.getEntriesByType("resource").map((e) => e.name).filter((u) => u.includes("spotify")))`),
+)
+assert.deepEqual(tiersAvantClic, [], `la façade a fui : requêtes Spotify AVANT le clic — ${tiersAvantClic}`)
+await clicPoste(0.5, 0.5)
+await attends(async () => (await etat()) === "SPOTIFY", 20000, "la façade charge l'embed")
+await attends(
+  async () => await sonde(`document.querySelector('iframe[src*="open.spotify.com/embed"]') !== null`),
+  8000,
+  "l'iframe de l'embed à plat",
+)
+await sonde(`document.querySelector('[data-gt86="spotify-retour"]').click()`)
+await attends(async () => (await etat()) === "HABITACLE", 8000, "le ‹ du panneau revient au hub")
+console.log("  4e/6 Spotify en façade : zéro octet avant le clic, l'embed à plat, le ‹ revient au hub")
+
 /* 5. La version simple n'est JAMAIS cassée : incapable → rien ne se monte,
       le décor et la voiture sont à leur place. */
 await va(base + "/?gt86=off")

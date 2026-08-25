@@ -69,8 +69,12 @@ const DICT = {
   gt86Rejouer: { fr: "revoir la scène", en: "replay the scene" },
   /* l'écran média (#32) : les libellés du peintre passent par le dict */
   gt86OuVaTOn: { fr: "OÙ VA-T-ON ?", en: "WHERE TO?" },
-  gt86RienNeJoue: { fr: "RIEN NE JOUE", en: "NOTHING PLAYING" },
-  gt86SpotifyArrive: { fr: "Spotify arrive (#33)", en: "Spotify coming (#33)" },
+  gt86ChargerSpotify: { fr: "cliquer pour écouter via Spotify", en: "click to listen via Spotify" },
+  gt86OuvrirSpotify: { fr: "ouvrir dans Spotify ↗", en: "open in Spotify ↗" },
+  gt86SpotifyBloque: {
+    fr: "l'embed n'a pas répondu — écouter directement :",
+    en: "the embed didn't respond — listen directly:",
+  },
   gt86Date: { fr: "mar. 19 août", en: "Tue, Aug 19" },
   status: {
     fr: "En poste · France",

@@ -16,6 +16,7 @@ import Vol, { VOL_MS, type Trajectoire } from "./vol"
 import Seuil, { SEUIL_MS } from "./seuil"
 import { Pouls, cockpitVide } from "./habitacle"
 import { creeEcran, type Ecran, type ModeEcran, type Zone } from "./ecran"
+import { CadreDalle, PanneauSpotify } from "./spotify"
 
 /* LES ASSETS ET LEUR CASCADE — ticket #28.
 
@@ -116,6 +117,8 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
      chorégraphe (qui les réveille) */
   const voileVerre = useRef<HTMLDivElement>(null)
   const nom = useRef<HTMLDivElement>(null)
+  /* la boîte écran du panneau Spotify, suivie à l'image par CadreDalle */
+  const cadre = useRef<HTMLDivElement>(null)
   const cockpit = useRef(cockpitVide()).current
   /* L'ÉCRAN MÉDIA (#32) — une seule instance par montage (StrictMode
      fabriquait deux dalles au prototype, matériau et clics séparés) */
@@ -198,6 +201,12 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
     if (etat === "HABITACLE" && mode === "hub") {
       if (zone.u < 0.48) versEcran("gps")
       else if (zone.u > 0.52) versEcran("musiques")
+      return
+    }
+    if (etat === "MUSIQUES") {
+      /* la FAÇADE click-to-load (#33) : c'est CE clic qui autorise
+         l'embed — avant lui, pas un octet ne part chez Spotify */
+      envoie({ t: "confirme" })
       return
     }
     if (etat === "GPS" || etat === "CHOIX") {
@@ -383,6 +392,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
           </Suspense>
         )}
         {fpsVoulu && <Stats />}
+        <CadreDalle actif={etat === "SPOTIFY"} cockpit={cockpit} boite={cadre} />
       </Canvas>
 
       {/* le voile de la bascule ciel → rue : crème des crêtes, piloté par
@@ -542,6 +552,22 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
           >
             ↺ {t(lang, "gt86Rejouer")}
           </button>
+        )}
+      </div>
+
+      {/* le panneau Spotify (#33) : l'embed à PLAT sur la dalle — iframe
+          thème sombre, onglets des quatre playlists du #19, repli qui
+          linke si l'embed ne répond pas ; son ‹ revient au hub */}
+      <div ref={cadre} style={{ position: "absolute", pointerEvents: "none" }}>
+        {etat === "SPOTIFY" && (
+          <PanneauSpotify
+            lang={lang}
+            surRetour={() => {
+              envoie({ t: "retour" })
+              setZoome(true)
+              ecran.hub()
+            }}
+          />
         )}
       </div>
 

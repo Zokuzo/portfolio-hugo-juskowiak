@@ -15,6 +15,16 @@ import { t, type Lang } from "@/components/proto/dict"
    prototype). PIÈGE gravé au #26 : l'axe vertical du plan pointe vers le
    BAS — le v du clic suit le dessin grâce au signe de `zoneDuClic`. */
 
+/* les quatre playlists arrêtées au #19 (mixes Spotify, vérifiées 200 au
+   build #33) et le profil pour le lien discret */
+export const PLAYLISTS = [
+  { nom: "yaego Radio", id: "37i9dQZF1E4vFjPhXGCpFQ", url: "https://open.spotify.com/playlist/37i9dQZF1E4vFjPhXGCpFQ" },
+  { nom: "Super Eurobeat Mix", id: "37i9dQZF1EIdXhbTpFjYwG", url: "https://open.spotify.com/playlist/37i9dQZF1EIdXhbTpFjYwG" },
+  { nom: "berlioz Radio", id: "37i9dQZF1E4ytDbsAetara", url: "https://open.spotify.com/playlist/37i9dQZF1E4ytDbsAetara" },
+  { nom: "Lieless Radio", id: "37i9dQZF1E4wUbdv72Tm7c", url: "https://open.spotify.com/playlist/37i9dQZF1E4wUbdv72Tm7c" },
+] as const
+export const PROFIL_SPOTIFY = "https://open.spotify.com/user/9p0f1gx6f10segq9f4rs1cg4n"
+
 export type ModeEcran = "veille" | "hub" | "gps" | "musiques" | "horloge" | "stats" | "eteint"
 export type DestEcran = "maison" | "travail"
 
@@ -524,10 +534,12 @@ export function creeEcran(lang: Lang): Ecran {
     g.strokeRect(l * 0.12, h * 0.27, h * 0.48, h * 0.48)
     g.font = `bold ${Math.round(u * 7.5)}px monospace`
     g.fillStyle = "#f2ecff"
-    g.fillText(t(langue, "gt86RienNeJoue"), l * 0.4, h * 0.34)
+    g.fillText(PLAYLISTS[0].nom, l * 0.4, h * 0.34)
+    /* la FAÇADE click-to-load (#33, doctrine RGPD du #18) : rien ne part
+       chez Spotify avant le clic — la ligne invite, le clic charge */
     g.font = `${Math.round(u * 5.5)}px monospace`
     g.fillStyle = "#a99cc8"
-    g.fillText(t(langue, "gt86SpotifyArrive"), l * 0.4, h * 0.44)
+    g.fillText(t(langue, "gt86ChargerSpotify"), l * 0.4, h * 0.44)
     g.beginPath()
     g.roundRect(l * 0.4, h * 0.55, l * 0.46, u * 2, u)
     g.fillStyle = "#37305c"
