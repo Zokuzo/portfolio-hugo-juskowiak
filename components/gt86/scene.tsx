@@ -166,6 +166,9 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
     } catch {
       /* stockage indisponible : la préférence ne survit pas, sans gravité */
     }
+    /* la surcouche vit au layout racine (14e retour : tout le site, 3D
+       comprise) — la scène ne fait que diffuser la bascule */
+    window.dispatchEvent(new CustomEvent("gt86-crt", { detail: crt }))
   }, [crt])
   useEffect(() => {
     ecran.regleCrt(crt)
@@ -780,25 +783,6 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
           pointerEvents: "none",
         }}
       />
-
-      {/* la surcouche CRT : grille de sous-pixels RVB, lignes de balayage,
-          vignette — gradients statiques composés par le GPU, zéro coût
-          d'animation ; au-dessus de tout, transparente aux gestes */}
-      {crt && (
-        <div
-          aria-hidden
-          style={{
-            position: "absolute",
-            inset: 0,
-            pointerEvents: "none",
-            backgroundImage: [
-              "repeating-linear-gradient(90deg, rgba(255,60,90,0.055) 0px, rgba(255,60,90,0.055) 1px, rgba(60,255,140,0.045) 1px, rgba(60,255,140,0.045) 2px, rgba(80,120,255,0.055) 2px, rgba(80,120,255,0.055) 3px)",
-              "repeating-linear-gradient(0deg, rgba(8,6,14,0.16) 0px, rgba(8,6,14,0.16) 1px, transparent 1px, transparent 3px)",
-              "radial-gradient(ellipse at center, transparent 58%, rgba(8,6,14,0.28) 100%)",
-            ].join(", "),
-          }}
-        />
-      )}
 
       {/* le fondu du DÉPART : la jauge est pleine, on plonge dans le
           portfolio relié (recette #26 — 600 ms, puis la navigation) */}

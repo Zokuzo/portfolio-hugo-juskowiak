@@ -2,6 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Archivo, JetBrains_Mono, Noto_Sans_JP } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
+import FiltreCrt from "@/components/filtre-crt"
 import "./globals.css"
 import "./planche.css"
 
@@ -78,6 +79,8 @@ export default function RootLayout({
       </head>
       <body className="antialiased">
         <div className={`${display.variable} ${mono.variable} ${jp.variable} proto-root`}>{children}</div>
+        {/* la version CRT (#33) : surcouche globale, toutes routes et 3D */}
+        <FiltreCrt />
         <Analytics />
       </body>
     </html>
