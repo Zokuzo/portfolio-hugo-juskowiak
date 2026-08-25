@@ -167,6 +167,9 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
       /* stockage indisponible : la préférence ne survit pas, sans gravité */
     }
   }, [crt])
+  useEffect(() => {
+    ecran.regleCrt(crt)
+  }, [ecran, crt])
   const [zoome, setZoome] = useState(false)
   const [warning, setWarning] = useState(false)
   const [mixCourant, setMixCourant] = useState(0)
@@ -271,7 +274,8 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
         envoie({ t: "retour" })
         setZoome(true)
         ecran.hub()
-      } else if (r === "lecture") commandesSpotify.current?.bascule()
+      } else if (r === "crt") setCrt((v) => !v)
+      else if (r === "lecture") commandesSpotify.current?.bascule()
       else if (r === "piste-prec") commandesSpotify.current?.reprend()
       else if (r === "piste-suiv") commandesSpotify.current?.saute()
       else if (r === "mix-prec" || r === "mix-suiv") {
@@ -599,7 +603,10 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
             top: 12,
             right: 20,
             pointerEvents: "auto",
-            color: crt ? ENCRE : `${ENCRE}59`,
+            color: crt ? ENCRE : `${ENCRE}8c`,
+            border: `1px solid ${crt ? ENCRE : `${ENCRE}47`}`,
+            borderRadius: 2,
+            padding: "6px 10px",
           }}
           data-gt86="crt" onClick={() => setCrt((v) => !v)}
         >

@@ -120,6 +120,7 @@ export type EtatSpotify = {
 
 export type ClicSpotify =
   | "retour"
+  | "crt"
   | "lecture"
   | "piste-prec"
   | "piste-suiv"
@@ -149,6 +150,7 @@ export type Ecran = {
   spotify: () => void
   majSpotify: (maj: Partial<EtatSpotify>) => void
   majSpectre: (bandes: number[]) => void
+  regleCrt: (actif: boolean) => void
   ticSpotify: (dt: number) => void
   clicSpotify: (u: number, v: number) => ClicSpotify | null
 }
@@ -219,6 +221,9 @@ export function creeEcran(lang: Lang): Ecran {
   let ampSpectreMs = -1e9
   /* la surcouche VOL s'affiche 1,4 s après le dernier cran de molette */
   let ampVolMs = -1e9
+  /* l'état du filtre CRT, reflété par le bouton peint du bandeau AMP
+     (13e retour : le badge global seul était invisible à l'œil) */
+  let crtAllume = false
   /* le DISQUE 2D (10e retour : le 3D ne prend pas) — l'angle n'avance
      que quand la musique JOUE. 11e retour : la face porte les IMAGES
      fournies par Hugo (public/amp/), détourées de leur fond blanc à la
@@ -953,6 +958,19 @@ export function creeEcran(lang: Lang): Ecran {
     g.font = "bold 12px monospace"
     g.textAlign = "center"
     g.fillText(amp.enLecture ? "⏸" : "▶", 98, ty + 11)
+    /* le bouton CRT du bandeau : biseau miniature, allumé quand le
+       filtre l'est — la zone de clicSpotify est calquée dessus */
+    biseau2d(g, l - 64, 3, 28, 12, !crtAllume)
+    g.font = "bold 7px monospace"
+    if (crtAllume) {
+      g.fillStyle = "#2e1040"
+    } else {
+      g.fillStyle = LCD_ENCRE_AMP
+      g.shadowColor = "#ff64d2"
+      g.shadowBlur = 3
+    }
+    g.fillText("CRT", l - 50, 9)
+    g.shadowBlur = 0
     g.textAlign = "left"
     /* LCD : temps réel + piste, marquee du mix */
     g.fillStyle = LCD_ENCRE_AMP
@@ -1263,6 +1281,10 @@ export function creeEcran(lang: Lang): Ecran {
       if ("volume" in maj) ampVolMs = performance.now()
       if (etat.mode === "spotify") peint()
     },
+    regleCrt(actif: boolean) {
+      crtAllume = actif
+      if (etat.mode === "spotify") peint()
+    },
     /* le spectre du moteur — pas de repeinture ici : ticSpotify cadence */
     majSpectre(bandes: number[]) {
       for (let i = 0; i < 19; i++) ampSpectre[i] = bandes[i] ?? 0
@@ -1282,6 +1304,8 @@ export function creeEcran(lang: Lang): Ecran {
     /* zones calquées sur le dessin du peintre HJ·AMP */
     clicSpotify(u: number, v: number): ClicSpotify | null {
       if (u < 0.06 && v < 0.1) return "retour"
+      /* le bouton CRT du bandeau : x ∈ [l−64 ; l−36] → u [0,875 ; 0,93] */
+      if (v < 0.08 && u >= 0.86 && u < 0.945) return "crt"
       if (v >= 0.875) {
         /* frontières calées sur les x DESSINÉS des boutons (revue : le
            bord droit de ‹ MIX rendait « mix suivant ») : ⏮ 18-64,
