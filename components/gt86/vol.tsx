@@ -40,6 +40,26 @@ const CAM_AERIENNE = new THREE.Vector3(6, 78, 8)
 const VISE_AERIENNE = new THREE.Vector3(-4.4, 4, -19)
 const ARRIVEE = new THREE.Vector3(...CAM_FINALE)
 const CIBLE = new THREE.Vector3(...CIBLE_FINALE)
+/* LA FLARE (9e retour de gate : « le passage d'une transition à l'autre
+   dans la ville reste très brut ») : la descente était une DROITE — la
+   caméra plantait à la verticale puis le seuil repartait à l'horizontale,
+   un coin net dans la trajectoire au raccord. L'acte II devient une
+   Bézier quadratique dont la TANGENTE FINALE s'aligne sur la marche du
+   seuil ; |ARRIVEE−CONTROLE| = L/2 conserve EXACTEMENT la vitesse
+   d'arrivée (2·L/2 = L), seule la direction se replie — l'atterrissage
+   s'évase comme une vraie finale. La MARCHE est la première ancre
+   INTÉRIEURE de la courbe du seuil en monde (CHEMIN[0] « large autour
+   du flanc », (−5.0, 1.7, −0.5) local → repère voiture posée) — viser
+   la VOITURE laissait un coin résiduel de 43° au raccord (revue,
+   tangente réelle du seuil mesurée (0.287, −0.056, −0.956)). */
+const MARCHE_SEUIL = new THREE.Vector3(0.6, 1.65, -18.5)
+const TANGENTE_SEUIL = MARCHE_SEUIL.clone().sub(ARRIVEE).normalize()
+const CONTROLE = ARRIVEE.clone().sub(
+  TANGENTE_SEUIL.clone().multiplyScalar(CAM_AERIENNE.distanceTo(ARRIVEE) / 2),
+)
+const bez = new THREE.Vector3()
+const bezA = new THREE.Vector3()
+const bezB = new THREE.Vector3()
 
 const adoucit = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
 const lisse = (a: number, b: number, t: number) => Math.min(1, Math.max(0, (t - a) / (b - a)))
@@ -130,7 +150,9 @@ export default function Vol({
        laquelle le seuil démarre — la jonction vol → seuil est raccordée */
     const u = (v.t - BASCULE) / (1 - BASCULE)
     const e = PENTE_ARRIVEE * u + (1 - PENTE_ARRIVEE) * adoucit(u)
-    camera.position.lerpVectors(CAM_AERIENNE, ARRIVEE, e)
+    bezA.lerpVectors(CAM_AERIENNE, CONTROLE, e)
+    bezB.lerpVectors(CONTROLE, ARRIVEE, e)
+    camera.position.copy(bez.lerpVectors(bezA, bezB, e))
     i.vise.lerpVectors(VISE_AERIENNE, CIBLE, e)
     v.chute = lisse(CHUTE_FENETRE[0], CHUTE_FENETRE[1], v.t)
 

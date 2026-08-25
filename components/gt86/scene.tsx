@@ -160,15 +160,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
     if (etat === "SPOTIFY") setAmpVivant(true)
     else if (etat === "CIEL" || etat === "DEPART") setAmpVivant(false)
   }, [etat])
-  /* le disque du player : "a" | "b" (peints) | "3d" (mesh) — trois
-     candidats au gate, ?disque= les départage */
-  const [disque] = useState<"a" | "b" | "3d">(() => {
-    const v = new URLSearchParams(window.location.search).get("disque")
-    return v === "3d" || v === "b" ? v : "a"
-  })
-  useEffect(() => {
-    ecran.regleDisque(disque === "3d" ? null : disque)
-  }, [ecran, disque])
+
   const zoomeRef = useRef(zoome)
   zoomeRef.current = zoome
 
@@ -482,7 +474,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
               warning={warning}
               surZone={surZone}
               surMolette={surMolette}
-              disque3d={disque === "3d" && etat === "SPOTIFY"}
+              disque3d={etat === "SPOTIFY"}
             />
             <Sentinelle surPret={surRuePrete} />
           </Suspense>
@@ -491,15 +483,15 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
         <RythmeAmp actif={etat === "SPOTIFY"} ecran={ecran} />
       </Canvas>
 
-      {/* le voile de la bascule ciel → rue : ARGENT des crêtes (les mers
-          sont passées au gris métallisé, 8e retour), piloté par le vol
-          image par image, transparent aux clics */}
+      {/* le voile de la bascule ciel → rue : crème des crêtes (revenues
+          aux teintes du gate #21 au 9e retour), piloté par le vol image
+          par image, transparent aux clics */}
       <div
         ref={voile}
         style={{
           position: "absolute",
           inset: 0,
-          background: "#e9edf3",
+          background: "#ffe3c4",
           opacity: 0,
           pointerEvents: "none",
         }}

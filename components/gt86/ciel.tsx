@@ -29,11 +29,14 @@ export const CIEL_HDR = "/prototype/crepuscule.hdr"
 const SOLEIL = new THREE.Vector3(0.25, 0.6, -1.0)
 /* rotation du ciel : 0,25π retenu après balayage en captures (gate #21) */
 const ROT = Math.PI * 0.25
-/* Les mers de nuages en GRIS MÉTALLISÉ (8e retour de gate #33 : « la
-   couleur du début avec le gris métallisé dans les nuages ») : crêtes
-   argent, ombres acier — le dôme rosé du gate #21 reste derrière, la
-   robe Argent de la voiture s'y fond chrome sur chrome. */
-/* LA robe — Argent anodisé poli, seul survivant du testeur de couleurs */
+/* LA robe — Argent anodisé poli, seul survivant du testeur de couleurs.
+   9e retour de gate : les nuages REVIENNENT aux teintes crème/rosé du
+   gate #21 (l'essai argent du 8e ne prend pas) — c'est la VOITURE qui
+   doit lire « gris métallisé », jantes comprises : le miroir pur
+   (metalness 1, roughness 0,03) reflétait surtout le dessous SOMBRE du
+   banc — elle rendait noire. Argent BROSSÉ : la réflexion floutée moyenne
+   le ciel clair, la robe redevient gris métal lisible. Même recette sur
+   la voiture de la rue (unification demandée au gate). */
 const ARGENT = "#b4b9bf"
 /* la pose du gate : caméra au flanc, fov 38, la voiture au centre du cadre */
 const POSE = new THREE.Vector3(-4.2, -0.4, 7.8)
@@ -93,11 +96,11 @@ function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<
   const peinture = useMemo(() => {
     const p = new THREE.MeshPhysicalMaterial({
       color: ARGENT,
-      metalness: 1.0,
-      roughness: 0.03,
+      metalness: 0.85,
+      roughness: 0.28,
       clearcoat: 1,
-      clearcoatRoughness: 0.02,
-      envMapIntensity: 3.5,
+      clearcoatRoughness: 0.08,
+      envMapIntensity: 3.2,
     })
     p.name = "Paint"
     return p
@@ -224,9 +227,9 @@ export default function Ciel({
             carrosserie au creux de la houle), des masses éparses au-dessus */}
         <MerDeNuages
           soleil={SOLEIL}
-          crete="#e9edf3"
-          ombre="#8f96a3"
-          loin="#b6bcc7"
+          crete="#ffe3c4"
+          ombre="#c28f92"
+          loin="#eba48e"
           sommet={-2.6}
           fond={-14}
           couverture={0.1}
@@ -235,9 +238,9 @@ export default function Ciel({
         <MerDeNuages
           sens="plafond"
           soleil={SOLEIL}
-          crete="#f2f5f9"
-          ombre="#a6adb9"
-          loin="#b6bcc7"
+          crete="#fff0da"
+          ombre="#d8a49c"
+          loin="#eba48e"
           sommet={8}
           fond={20}
           couverture={0.5}

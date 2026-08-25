@@ -21,8 +21,10 @@ import { ECRAN_NATIF, VUE_ECRAN, zoneDuClic, type Ecran, type Zone } from "./ecr
    la dalle et tourne quand la musique JOUE. meshBasicMaterial (aucune
    lumière : la topologie constante tient), face peinte une fois. */
 function faceDisque(): THREE.CanvasTexture {
-  /* 256 px : à VUE_ECRAN le disque sous-tend ~un tiers du cadre — 128 px
-     rendait la face floue (revue, grossissement ~4×) */
+  /* la face KIRBY (9e retour, réf. mini-disque Kirby Air Ride) : spirales
+     roses, arc arc-en-ciel, KIRBY au gros pixel (hommage dessiné main,
+     même langage que les icônes du hub), bande label noire. 256 px —
+     le disque emplit son bloc à la vue écran. */
   const c = document.createElement("canvas")
   c.width = 256
   c.height = 256
@@ -31,41 +33,84 @@ function faceDisque(): THREE.CanvasTexture {
   g.scale(2, 2)
   g.beginPath()
   g.arc(0, 0, 63, 0, Math.PI * 2)
-  g.fillStyle = "#e5559f"
+  g.fillStyle = "#f06fb4"
   g.fill()
+  /* les bras de spirale */
   for (let k = 0; k < 4; k++) {
     g.beginPath()
     g.moveTo(0, 0)
-    g.arc(0, 0, 63, k * 1.571, k * 1.571 + 0.9)
+    g.arc(0, 0, 63, k * 1.571 + 0.3, k * 1.571 + 1.15)
     g.closePath()
-    g.fillStyle = k % 2 ? "#ff8fd0" : "#c22f86"
+    g.fillStyle = k % 2 ? "#ff9ecb" : "#d2408e"
     g.fill()
   }
+  /* l'arc arc-en-ciel (le reflet holo de la référence) */
+  const HOLO = ["#ffb3c8", "#ffe2a8", "#c8f0b0", "#a8d8f0", "#d0b8f0"]
+  for (let k = 0; k < HOLO.length; k++) {
+    g.beginPath()
+    g.arc(0, 0, 46 - k * 3, Math.PI * 1.05, Math.PI * 1.95)
+    g.strokeStyle = HOLO[k]
+    g.lineWidth = 3
+    g.globalAlpha = 0.6
+    g.stroke()
+  }
+  g.globalAlpha = 1
+  /* la bande label noire (corde basse) */
   g.beginPath()
-  g.arc(0, 0, 63, 0.5, Math.PI - 0.5)
-  g.lineTo(-39, 26)
+  g.arc(0, 0, 63, 0.42, Math.PI - 0.42)
   g.closePath()
   g.fillStyle = "#120716"
   g.fill()
   g.fillStyle = "#ffd9f6"
-  g.font = "bold 12px monospace"
+  g.font = "bold 9px monospace"
   g.textAlign = "center"
-  g.fillText("HJ·AMP", 0, 44)
+  g.fillText("HJ·AMP", 0, 46)
+  g.fillStyle = "#9d86bd"
+  g.font = "bold 5px monospace"
+  g.fillText("GT·CUBE · 320 KBPS", 0, 56)
+  /* KIRBY au gros pixel, à droite du moyeu comme la référence */
+  const K = [
+    "  ######  ",
+    " #oooooo# ",
+    "#oooooooo#",
+    "#oEooooEo#",
+    "#oEooooEo#",
+    "#oooooooo#",
+    "#obo..obo#",
+    "#oooooooo#",
+    " #oooooo# ",
+    "  ######  ",
+    " #rr##rr# ",
+    " #rrr#rrr#",
+    "  ###  ## ",
+  ]
+  const TEINTES: Record<string, string> = {
+    "#": "#7a2050",
+    o: "#ff9ecb",
+    E: "#1a1030",
+    b: "#f0619e",
+    ".": "#a03060",
+    r: "#e0345c",
+  }
+  const p4 = 3
+  const ox = 18
+  const oy = -34
+  for (let ly = 0; ly < K.length; ly++)
+    for (let lx = 0; lx < K[ly].length; lx++) {
+      const ch = K[ly][lx]
+      if (ch === " ") continue
+      g.fillStyle = TEINTES[ch] ?? "#ffffff"
+      g.fillRect(ox + lx * p4, oy + ly * p4, p4, p4)
+    }
+  /* moyeu : anneau blanc, trou sombre */
   g.beginPath()
-  g.arc(0, 0, 26, 0, Math.PI * 2)
-  const holo = g.createLinearGradient(-25, -25, 25, 25)
-  holo.addColorStop(0, "#cfeaff")
-  holo.addColorStop(0.5, "#ffd9f6")
-  holo.addColorStop(1, "#d6ffe8")
-  g.fillStyle = holo
+  g.arc(0, 0, 14, 0, Math.PI * 2)
+  g.fillStyle = "#f2f5f9"
   g.fill()
   g.beginPath()
-  g.arc(0, 0, 12, 0, Math.PI * 2)
+  g.arc(0, 0, 8, 0, Math.PI * 2)
   g.fillStyle = "#0f0a18"
   g.fill()
-  g.strokeStyle = "#e8ecf2"
-  g.lineWidth = 4
-  g.stroke()
   const tex = new THREE.CanvasTexture(c)
   tex.colorSpace = THREE.SRGBColorSpace
   return tex
@@ -80,13 +125,13 @@ function Disque3D({ ecran }: { ecran: Ecran }) {
     if (ecran.ampLit()) spin.current -= Math.min(delta, 0.1) * 3.2
     if (meshRef.current) meshRef.current.rotation.z = spin.current
   })
-  /* coin haut-droit de la dalle + 4 cm CÔTÉ SPECTATEUR (la caméra vit du
-     côté −normale du plan — le premier jet l'avait posé dans la planche
-     de bord, invisible) */
+  /* le centre du BLOC CD du peintre (puits l−98..l−6 × 22..143, centre
+     texture (460, 82)) reprojeté sur le plan de la dalle, 2,6 cm côté
+     spectateur (−normale) — le disque flotte DANS son puits, incliné */
   return (
-    <group position={[-0.137, 0.833, 0.3]} rotation={[ECRAN_NATIF.bascule - 0.5, 0.35, 0]}>
+    <group position={[-0.1268, 0.804, 0.306]} rotation={[ECRAN_NATIF.bascule - 0.35, 0.28, 0]}>
       <mesh ref={meshRef}>
-        <circleGeometry args={[0.024, 48]} />
+        <circleGeometry args={[0.0125, 48]} />
         <meshBasicMaterial map={face} side={THREE.DoubleSide} toneMapped={false} />
       </mesh>
     </group>
@@ -319,14 +364,17 @@ function VoitureGaree({
        (payé : la voiture garée flottait d'un demi-mètre en capture) */
     clone.position.set(0, 0, 0)
     const env = envNuit()
+    /* MÊME recette d'argent brossé que la voiture du ciel (9e retour :
+       « unifie les couleurs des deux voitures ») — seule la nuit de
+       l'equirect les distingue */
     const peinture = new THREE.MeshPhysicalMaterial({
       color: "#b4b9bf",
-      metalness: 1.0,
-      roughness: 0.06,
+      metalness: 0.85,
+      roughness: 0.28,
       clearcoat: 1,
-      clearcoatRoughness: 0.03,
+      clearcoatRoughness: 0.08,
       envMap: env,
-      envMapIntensity: 1.0,
+      envMapIntensity: 1.4,
     })
     peinture.name = "Paint"
     clone.traverse((o) => {

@@ -149,7 +149,6 @@ export type Ecran = {
   spotify: () => void
   majSpotify: (maj: Partial<EtatSpotify>) => void
   majSpectre: (bandes: number[]) => void
-  regleDisque: (mode: "a" | "b" | null) => void
   ampLit: () => boolean
   ticSpotify: (dt: number) => void
   clicSpotify: (u: number, v: number) => ClicSpotify | null
@@ -221,11 +220,7 @@ export function creeEcran(lang: Lang): Ecran {
   let ampSpectreMs = -1e9
   /* la surcouche VOL s'affiche 1,4 s après le dernier cran de molette */
   let ampVolMs = -1e9
-  /* le DISQUE (8e retour) : "a" (sticker couleur) | "b" (brutaliste) |
-     null (la version 3D vit en mesh, le peintre n'en dessine pas) —
-     l'angle n'avance que quand la musique JOUE */
-  let disqueMode: "a" | "b" | null = "a"
-  let disqueAngle = 0
+
   let ampHorloge = 0
   const LCD_ENCRE_AMP = "#ffd9f6"
   let ampCumul = 0
@@ -507,22 +502,30 @@ export function creeEcran(lang: Lang): Ecran {
       const px0 = l * 0.2
       const pl = l * 0.6
       const py0 = h * 0.42
-      g.save()
-      g.shadowColor = "rgba(0, 0, 0, 0.55)"
-      g.shadowBlur = u * 5
-      g.beginPath()
-      g.roundRect(px0, py0, pl, h * 0.5, u * 5)
-      g.fillStyle = "#221c40"
-      g.fill()
-      g.restore()
-      g.font = `bold ${Math.round(u * 6.5)}px monospace`
-      g.fillStyle = "#a99cc8"
+      const cadreSel = g.createLinearGradient(0, py0, 0, py0 + h * 0.5)
+      cadreSel.addColorStop(0, "#b47ad2")
+      cadreSel.addColorStop(1, "#7a3fa2")
+      g.fillStyle = cadreSel
+      g.fillRect(px0, py0, pl, h * 0.5)
+      g.fillStyle = "#f0d4fc"
+      g.fillRect(px0, py0, pl, 2)
+      g.fillRect(px0, py0, 2, h * 0.5)
+      g.fillStyle = "#3a1450"
+      g.fillRect(px0, py0 + h * 0.5 - 2, pl, 2)
+      g.fillRect(px0 + pl - 2, py0, 2, h * 0.5)
+      g.fillStyle = "#150a20"
+      g.fillRect(px0 + 4, py0 + 4, pl - 8, h * 0.5 - 8)
+      g.font = `italic bold ${Math.round(u * 6.5)}px monospace`
+      g.fillStyle = "#f3daff"
+      g.shadowColor = "#ff64d2"
+      g.shadowBlur = 3
       g.fillText(t(langue, "gt86OuVaTOn"), px0 + u * 6, py0 + h * 0.075)
+      g.shadowBlur = 0
       const rangee = (ry: number, titre: string, teinte: string, glyphe: (cx: number, cy: number, r: number) => void) => {
-        g.beginPath()
-        g.roundRect(px0 + u * 4, ry, pl - u * 8, h * 0.155, u * 3)
-        g.fillStyle = "#2c2452"
-        g.fill()
+        g.fillStyle = "#241238"
+        g.fillRect(px0 + u * 4, ry, pl - u * 8, h * 0.155)
+        g.fillStyle = "#4a2668"
+        g.fillRect(px0 + u * 4, ry, pl - u * 8, 1)
         const cy = ry + h * 0.078
         g.beginPath()
         g.arc(px0 + u * 12, cy, u * 4.6, 0, Math.PI * 2)
@@ -543,24 +546,31 @@ export function creeEcran(lang: Lang): Ecran {
       rangee(py0 + h * 0.115, MAISON(), "#8f5cff", glypheMaison)
       rangee(py0 + h * 0.3, TRAVAIL(), "#e561d3", glypheTravail)
     }
-    /* chrome flottant : retour en cercle, horloge en pilule */
-    g.save()
-    g.shadowColor = "rgba(0, 0, 0, 0.5)"
-    g.shadowBlur = u * 3
-    g.beginPath()
-    g.arc(u * 9, u * 10, u * 6, 0, Math.PI * 2)
-    g.fillStyle = "#221c40"
-    g.fill()
-    g.beginPath()
-    g.roundRect(l - u * 26, u * 4.5, u * 22, u * 11, u * 5.5)
-    g.fill()
-    g.restore()
+    /* le bandeau HJ·NAV (9e retour : le GPS rejoint le langage de l'AMP)
+       — la zone retour u<0,22 × v<0,26 couvre le ‹ inchangée */
+    const bandeauNav = g.createLinearGradient(0, 0, l, 0)
+    bandeauNav.addColorStop(0, "#5a2378")
+    bandeauNav.addColorStop(0.45, "#a95fd0")
+    bandeauNav.addColorStop(1, "#5a2378")
+    g.fillStyle = bandeauNav
+    g.fillRect(0, 0, l, 16)
+    biseau2d(g, 3, 2, 16, 12)
+    g.fillStyle = "#2e1040"
+    g.font = "bold 10px monospace"
     g.textAlign = "center"
-    g.font = `bold ${Math.round(u * 9)}px monospace`
-    g.fillStyle = "#e8def8"
-    g.fillText("‹", u * 9, u * 10.5)
-    g.font = `${Math.round(u * 6.5)}px monospace`
-    g.fillText("23:42", l - u * 15, u * 10.5)
+    g.fillText("‹", 11, 8)
+    g.textAlign = "left"
+    g.fillStyle = "#f3daff"
+    g.font = "italic bold 9px monospace"
+    g.fillText("H J · N A V", 26, 8)
+    for (let k = 0; k < 3; k++) {
+      g.fillStyle = "#33113f"
+      g.fillRect(l - 30 + k * 9, 5, 6, 6)
+    }
+    g.font = "bold 8px monospace"
+    g.fillStyle = "#e2c8f4"
+    g.textAlign = "right"
+    g.fillText("23:42", l - 36, 8)
     g.textAlign = "left"
     /* la sélection : carte ETA façon Waze, jauge fine tenue 2,6 s */
     if (etat.choix) {
@@ -569,14 +579,19 @@ export function creeEcran(lang: Lang): Ecran {
       const bl = l * 0.5
       const bx = (l - bl) / 2
       const by = h * 0.74
-      g.save()
-      g.shadowColor = "rgba(0, 0, 0, 0.55)"
-      g.shadowBlur = u * 4
-      g.beginPath()
-      g.roundRect(bx, by, bl, h * 0.19, u * 5)
-      g.fillStyle = "#221c40"
-      g.fill()
-      g.restore()
+      const cadreEta = g.createLinearGradient(0, by, 0, by + h * 0.19)
+      cadreEta.addColorStop(0, "#b47ad2")
+      cadreEta.addColorStop(1, "#7a3fa2")
+      g.fillStyle = cadreEta
+      g.fillRect(bx, by, bl, h * 0.19)
+      g.fillStyle = "#f0d4fc"
+      g.fillRect(bx, by, bl, 2)
+      g.fillRect(bx, by, 2, h * 0.19)
+      g.fillStyle = "#3a1450"
+      g.fillRect(bx, by + h * 0.19 - 2, bl, 2)
+      g.fillRect(bx + bl - 2, by, 2, h * 0.19)
+      g.fillStyle = "#150a20"
+      g.fillRect(bx + 3, by + 3, bl - 6, h * 0.19 - 6)
       g.beginPath()
       g.arc(bx + u * 9, by + h * 0.095, u * 5, 0, Math.PI * 2)
       g.fillStyle = teinte
@@ -596,7 +611,7 @@ export function creeEcran(lang: Lang): Ecran {
       g.fillStyle = "#a99cc8"
       g.fillText("0,4 km · 2 min", bx + u * 17, by + h * 0.128)
       g.beginPath()
-      g.roundRect(bx + u * 4, by + h * 0.163, bl - u * 8, u * 1.8, u * 0.9)
+      g.roundRect(bx + u * 4, by + h * 0.157, bl - u * 8, u * 1.8, u * 0.9)
       g.fillStyle = "#37305c"
       g.fill()
     }
@@ -631,7 +646,7 @@ export function creeEcran(lang: Lang): Ecran {
       else patte(406, 14, 92, 100)
       const teinte = etat.choix === "maison" ? "#8f5cff" : "#e561d3"
       g.beginPath()
-      g.roundRect(bx + u * 4, by + h * 0.163, (bl - u * 8) * etat.transition, u * 1.8, u * 0.9)
+      g.roundRect(bx + u * 4, by + h * 0.157, (bl - u * 8) * etat.transition, u * 1.8, u * 0.9)
       g.fillStyle = teinte
       g.fill()
     }
@@ -715,16 +730,24 @@ export function creeEcran(lang: Lang): Ecran {
       ag.fillStyle = "#33113f"
       ag.fillRect(l - 30 + k * 9, 6, 6, 6)
     }
-    /* puits du LCD (temps + marquee) */
+    /* puits du LCD (temps + marquee) — le marquee cède sa droite au CD */
     biseau2d(ag, 6, 22, 108, 40, true)
-    biseau2d(ag, 118, 22, l - 124, 40, true)
-    /* puits de l'égaliseur */
+    biseau2d(ag, 118, 22, 290, 40, true)
+    /* LE BLOC CD (9e retour : « un bloc destiné au cd ») : un puits haut
+       à droite, LCD + égaliseur de haut — le disque 3D flotte devant */
+    biseau2d(ag, l - 98, 22, 92, 121, true)
+    ag.fillStyle = "#6a4a86"
+    ag.font = "bold 6px monospace"
+    ag.textAlign = "center"
+    ag.fillText("CD·ROM", l - 52, 137)
+    ag.textAlign = "left"
+    /* puits de l'égaliseur (rétréci du bloc CD) */
     ag.fillStyle = "#f3daff"
     ag.font = "bold 8px monospace"
     ag.textAlign = "center"
-    ag.fillText("E Q U A L I Z E R", l / 2, 70)
+    ag.fillText("E Q U A L I Z E R", 207, 70)
     ag.textAlign = "left"
-    biseau2d(ag, 6, 75, l - 12, 68, true)
+    biseau2d(ag, 6, 75, 402, 68, true)
     /* PLAYLIST */
     ag.fillStyle = "#f3daff"
     ag.textAlign = "center"
@@ -751,85 +774,6 @@ export function creeEcran(lang: Lang): Ecran {
     ag.font = "bold 8px monospace"
     ag.fillText("SPOTIFY ↗", l - 12, ty + 11)
     ag.textAlign = "left"
-  }
-  const peintDisque = () => {
-    if (!disqueMode) return
-    const cx = l - 40
-    const cy = 40
-    const r = 31
-    g.save()
-    g.translate(cx, cy)
-    g.rotate(disqueAngle)
-    if (disqueMode === "a") {
-      /* VARIANTE A — le sticker couleur (réf. mini-disque GameCube) :
-         spirales magenta/rose, anneau holo, bande label noire */
-      g.beginPath()
-      g.arc(0, 0, r, 0, Math.PI * 2)
-      g.fillStyle = "#e5559f"
-      g.fill()
-      for (let k = 0; k < 4; k++) {
-        g.beginPath()
-        g.moveTo(0, 0)
-        g.arc(0, 0, r, k * 1.571, k * 1.571 + 0.9)
-        g.closePath()
-        g.fillStyle = k % 2 ? "#ff8fd0" : "#c22f86"
-        g.fill()
-      }
-      /* la bande label */
-      g.beginPath()
-      g.arc(0, 0, r, 0.5, Math.PI - 0.5)
-      g.lineTo(-r * 0.62, r * 0.42)
-      g.closePath()
-      g.fillStyle = "#120716"
-      g.fill()
-      g.fillStyle = "#ffd9f6"
-      g.font = "bold 6px monospace"
-      g.textAlign = "center"
-      g.fillText("HJ·AMP", 0, r * 0.62)
-      g.textAlign = "left"
-      /* anneau holo + moyeu */
-      g.beginPath()
-      g.arc(0, 0, r * 0.42, 0, Math.PI * 2)
-      const holo = g.createLinearGradient(-r * 0.4, -r * 0.4, r * 0.4, r * 0.4)
-      holo.addColorStop(0, "#cfeaff")
-      holo.addColorStop(0.5, "#ffd9f6")
-      holo.addColorStop(1, "#d6ffe8")
-      g.fillStyle = holo
-      g.fill()
-      g.beginPath()
-      g.arc(0, 0, r * 0.2, 0, Math.PI * 2)
-      g.fillStyle = "#0f0a18"
-      g.fill()
-      g.strokeStyle = "#e8ecf2"
-      g.lineWidth = 2
-      g.stroke()
-    } else {
-      /* VARIANTE B — brutaliste : argent plat, contour noir épais,
-         bras de spirale au pixel, trame pointillée */
-      g.beginPath()
-      g.arc(0, 0, r, 0, Math.PI * 2)
-      g.fillStyle = "#d7dbe2"
-      g.fill()
-      g.lineWidth = 3
-      g.strokeStyle = "#120716"
-      g.stroke()
-      for (let k = 0; k < 3; k++) {
-        g.beginPath()
-        g.arc(0, 0, r * 0.72, k * 2.094, k * 2.094 + 1.1)
-        g.lineWidth = 7
-        g.strokeStyle = "#ff64d2"
-        g.stroke()
-      }
-      for (let k = 0; k < 10; k++) {
-        g.fillStyle = "#120716"
-        g.fillRect(Math.cos(k * 0.628) * r * 0.88 - 1, Math.sin(k * 0.628) * r * 0.88 - 1, 2, 2)
-      }
-      g.beginPath()
-      g.arc(0, 0, r * 0.2, 0, Math.PI * 2)
-      g.fillStyle = "#120716"
-      g.fill()
-    }
-    g.restore()
   }
   const peintAmp = () => {
     if (ampSale) {
@@ -868,7 +812,7 @@ export function creeEcran(lang: Lang): Ecran {
     const bandeauTexte = `${(amp.titre || PLAYLISTS[amp.indice].nom).toUpperCase()} · ${PLAYLISTS[amp.indice].nom.toUpperCase()} · ${Math.floor(sDur / 60)}:${String(sDur % 60).padStart(2, "0")}   `
     g.save()
     g.beginPath()
-    g.rect(120, 24, l - 128, 20)
+    g.rect(120, 24, 286, 20)
     g.clip()
     g.fillStyle = LCD_ENCRE_AMP
     g.shadowColor = "#ff64d2"
@@ -884,11 +828,11 @@ export function creeEcran(lang: Lang): Ecran {
     g.fillText("320 KBPS · 44 KHZ", 122, 55)
     g.textAlign = "right"
     g.fillStyle = amp.enLecture ? LCD_ENCRE_AMP : "#6a4a86"
-    g.fillText("STEREO", l - 10, 55)
+    g.fillText("STEREO", 404, 55)
     g.textAlign = "left"
     /* les bougies — une couleur chacune, crêtes qui retombent */
     const bx0 = 8
-    const bl = l - 16
+    const bl = 396
     const by1 = 141
     const bh = 62
     const N = 19
@@ -908,7 +852,7 @@ export function creeEcran(lang: Lang): Ecran {
       for (let k = 0; k < crans; k++) {
         const teinte = 270 + (k / (crans - 1)) * 120
         g.fillStyle = k < plein ? `hsl(${teinte}, 92%, 62%)` : "#2a1038"
-        g.fillRect(22 + k * 20, 108, 15, 26)
+        g.fillRect(22 + k * 16, 108, 11, 26)
       }
     } else {
       const spectreFrais = performance.now() - ampSpectreMs < 250
@@ -968,8 +912,6 @@ export function creeEcran(lang: Lang): Ecran {
         g.shadowBlur = 0
       }
     }
-    /* le disque en COLLAGE par-dessus le chrome (variantes peintes) */
-    peintDisque()
   }
 
   const peintHorloge = () => {
@@ -1181,11 +1123,7 @@ export function creeEcran(lang: Lang): Ecran {
       if ("volume" in maj) ampVolMs = performance.now()
       if (etat.mode === "spotify") peint()
     },
-    /* le disque candidat (gate) et l'état de lecture (mesh 3D) */
-    regleDisque(mode: "a" | "b" | null) {
-      disqueMode = mode
-      if (etat.mode === "spotify") peint()
-    },
+    /* l'état de lecture — le disque 3D (rue.tsx) tourne dessus */
     ampLit: () => amp.enLecture,
     /* le spectre du moteur — pas de repeinture ici : ticSpotify cadence */
     majSpectre(bandes: number[]) {
@@ -1196,7 +1134,6 @@ export function creeEcran(lang: Lang): Ecran {
        plafonnée par l'appelant ; ne repeint QUE si le mode est là */
     ticSpotify(dt: number) {
       ampHorloge += dt
-      if (amp.enLecture) disqueAngle += dt * 3.2
       if (etat.mode !== "spotify") return
       ampCumul += dt
       if (ampCumul < 0.033) return
