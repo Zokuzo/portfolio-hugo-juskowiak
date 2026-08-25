@@ -499,8 +499,8 @@ await clicPoste(0.5, 0.5)
 await attends(async () => (await etat()) === "SPOTIFY", 20000, "la façade charge l'embed")
 await attends(
   async () => await sonde(`document.querySelector('iframe[src*="open.spotify.com/embed"]') !== null`),
-  8000,
-  "l'iframe de l'embed à plat",
+  60000,
+  "l'iframe de l'embed à plat (script de l'API + contrôleur — lents sur la mule)",
 )
 await sonde(`document.querySelector('[data-gt86="spotify-retour"]').click()`)
 await attends(async () => (await etat()) === "HABITACLE", 8000, "le ‹ du panneau revient au hub")
