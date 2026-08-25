@@ -693,6 +693,16 @@ export default function Rue({
     scene3.fog = new THREE.Fog(BRUME[0], BRUME[1], BRUME[2])
   }, [scene3])
 
+  /* LA CHAUFFE (5e retour de gate : « trop de saccades ») : tous les
+     programmes de la scène se compilent EN PARALLÈLE dès le montage de la
+     rue (compileAsync, KHR_parallel_shader_compile) — sans elle, chaque
+     première apparition (cônes au claquement, néons, éclats) compilait
+     son shader en pleine mise en scène, une saccade par première fois. */
+  const gl = useThree((s) => s.gl)
+  useEffect(() => {
+    gl.compileAsync(scene3, camera).catch(() => {})
+  }, [gl, scene3, camera])
+
   /* LE RAIL (recette #26, portée au #32) : les poses se posent NET —
      sauf assis ⇄ ecran, le seul trajet volé (1,1 s, courbe douce, delta
      plafonné). En LAYOUT : au skip en plein seuil, un effet passif

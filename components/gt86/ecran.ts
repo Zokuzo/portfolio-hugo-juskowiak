@@ -126,23 +126,44 @@ export function creeEcran(lang: Lang): Ecran {
   const MAISON = () => t(langue, "gt86Maison").toUpperCase()
   const TRAVAIL = () => t(langue, "gt86Travail").toUpperCase()
 
+  /* CONTRE LES SACCADES (5e retour de gate #31/#32) : les parties FIXES
+     du dessin — fond, cadre, carte, rubans, ombres portées (shadowBlur
+     est cher) — se peignent UNE FOIS par changement d'état dans des
+     calques hors-écran ; chaque tic d'animation ne redessine plus que
+     les points qui avancent et la jauge (~0,2 ms au lieu de la carte
+     entière jusqu'à ~36×/s). */
+  const fondCalque = document.createElement("canvas")
+  fondCalque.width = l
+  fondCalque.height = h
+  const fg = fondCalque.getContext("2d")!
+  let fondSale = true
+  const gpsCalque = document.createElement("canvas")
+  gpsCalque.width = l
+  gpsCalque.height = h
+  const gg = gpsCalque.getContext("2d")!
+  let gpsSale = true
+
   const peintFond = () => {
-    g.fillStyle = "#0b0d14"
-    g.fillRect(0, 0, l, h)
-    if (fond) {
-      g.drawImage(fond, 0, 0, l, h)
-      g.fillStyle = "rgba(7, 9, 16, 0.42)"
-      g.fillRect(0, 0, l, h)
+    if (fondSale) {
+      fg.fillStyle = "#0b0d14"
+      fg.fillRect(0, 0, l, h)
+      if (fond) {
+        fg.drawImage(fond, 0, 0, l, h)
+        fg.fillStyle = "rgba(7, 9, 16, 0.42)"
+        fg.fillRect(0, 0, l, h)
+      }
+      fg.strokeStyle = "#2b2440"
+      fg.lineWidth = Math.max(2, u * 1.2)
+      fg.strokeRect(u * 2, u * 2, l - u * 4, h - u * 4)
+      fg.textBaseline = "middle"
+      fg.font = `${Math.round(u * 8)}px monospace`
+      fg.fillStyle = "#b7a8d8"
+      fg.textAlign = "right"
+      fg.fillText("23:42", l - u * 8, u * 10)
+      fg.textAlign = "left"
+      fondSale = false
     }
-    g.strokeStyle = "#2b2440"
-    g.lineWidth = Math.max(2, u * 1.2)
-    g.strokeRect(u * 2, u * 2, l - u * 4, h - u * 4)
-    g.textBaseline = "middle"
-    g.font = `${Math.round(u * 8)}px monospace`
-    g.fillStyle = "#b7a8d8"
-    g.textAlign = "right"
-    g.fillText("23:42", l - u * 8, u * 10)
-    g.textAlign = "left"
+    g.drawImage(fondCalque, 0, 0)
   }
 
   const tuile = (x: number, titre: string, teinte: string, glyphe: (cx: number, cy: number, r: number) => void) => {
@@ -234,6 +255,21 @@ export function creeEcran(lang: Lang): Ecran {
     g.textAlign = "left"
   }
 
+  /* les chemins de l'itinéraire — partagés entre le calque statique
+     (rubans) et la couche dynamique (points qui avancent) */
+  const tronc = () => {
+    g.moveTo(256, 246)
+    g.bezierCurveTo(252, 215, 262, 160, 274, 112)
+  }
+  const brancheGauche = () => {
+    g.moveTo(274, 112)
+    g.bezierCurveTo(240, 100, 180, 98, 116, 98)
+  }
+  const brancheDroite = () => {
+    g.moveTo(274, 112)
+    g.bezierCurveTo(320, 100, 380, 94, 436, 96)
+  }
+
   const glypheMaison = (cx: number, cy: number, r: number) => {
     g.beginPath()
     g.moveTo(cx - r, cy + r * 0.15)
@@ -255,7 +291,7 @@ export function creeEcran(lang: Lang): Ecran {
     g.stroke()
   }
 
-  const peintGps = () => {
+  const peintGpsStatique = () => {
     /* une carte est une SURFACE : fond opaque façon Waze nuit — et les
        bâtiments RÉELS du GLB (tools/monde/carte-quartier.mjs, 4 px/m,
        cap sud en haut) : ce qu'on voit au pare-brise EST la carte */
@@ -282,19 +318,8 @@ export function creeEcran(lang: Lang): Ecran {
       g.bezierCurveTo(490, 190, 502, 120, 496, 60)
     })
     /* l'itinéraire : tronc en S puis la fourche — rubans VIOLETS (le code
-       Waze de la route optimale), points blancs qui avancent */
-    const tronc = () => {
-      g.moveTo(256, 246)
-      g.bezierCurveTo(252, 215, 262, 160, 274, 112)
-    }
-    const gauche = () => {
-      g.moveTo(274, 112)
-      g.bezierCurveTo(240, 100, 180, 98, 116, 98)
-    }
-    const droite = () => {
-      g.moveTo(274, 112)
-      g.bezierCurveTo(320, 100, 380, 94, 436, 96)
-    }
+       Waze de la route optimale) ; les points qui avancent vivent dans la
+       couche DYNAMIQUE */
     const vive = (chemin: () => void, choisi: boolean) => {
       if (choisi) {
         g.save()
@@ -305,22 +330,21 @@ export function creeEcran(lang: Lang): Ecran {
       } else {
         ruban(chemin, "#0e0a1d", u * 1.6, "#8f5cff", u * 4.2)
       }
-      pointsQuiAvancent(chemin)
     }
     /* sans destination, la fourche n'est que des rues normales (façon
        Waze — l'itinéraire n'existe qu'après le choix) */
     if (etat.choix === null) {
       morte(tronc, 1.2)
-      morte(gauche, 1.2)
-      morte(droite, 1.2)
+      morte(brancheGauche, 1.2)
+      morte(brancheDroite, 1.2)
     } else {
       vive(tronc, true)
       if (etat.choix === "maison") {
-        morte(droite, 1.2)
-        vive(gauche, true)
+        morte(brancheDroite, 1.2)
+        vive(brancheGauche, true)
       } else {
-        morte(gauche, 1.2)
-        vive(droite, true)
+        morte(brancheGauche, 1.2)
+        vive(brancheDroite, true)
       }
     }
     /* la voiture : flèche blanche en écusson violet */
@@ -446,6 +470,37 @@ export function creeEcran(lang: Lang): Ecran {
       g.roundRect(bx + u * 4, by + h * 0.163, bl - u * 8, u * 1.8, u * 0.9)
       g.fillStyle = "#37305c"
       g.fill()
+    }
+  }
+
+  /* le GPS servi : calque statique (photographié du canvas au premier
+     dessin de l'état), puis SEULES les couches vivantes par tic */
+  const peintGps = () => {
+    if (gpsSale) {
+      peintGpsStatique()
+      gg.clearRect(0, 0, l, h)
+      gg.drawImage(c, 0, 0)
+      gpsSale = false
+    } else {
+      g.drawImage(gpsCalque, 0, 0)
+    }
+    if (etat.choix) {
+      pointsQuiAvancent(tronc)
+      pointsQuiAvancent(etat.choix === "maison" ? brancheGauche : brancheDroite)
+      /* le ballon et la carte ETA repassent PAR-DESSUS les points (l'ordre
+         du dessin d'origine) : on retamponne leurs zones depuis le calque */
+      const bl = l * 0.5
+      const bx = (l - bl) / 2
+      const by = h * 0.74
+      const patte = (x: number, y: number, la: number, ha: number) => {
+        const px = Math.max(0, x)
+        const py = Math.max(0, y)
+        g.drawImage(gpsCalque, px, py, la, ha, px, py, la, ha)
+      }
+      patte(bx - u * 2, by - u * 2, bl + u * 4, h * 0.19 + u * 4)
+      if (etat.choix === "maison") patte(56, 16, 90, 100)
+      else patte(406, 14, 92, 100)
+      const teinte = etat.choix === "maison" ? "#8f5cff" : "#e561d3"
       g.beginPath()
       g.roundRect(bx + u * 4, by + h * 0.163, (bl - u * 8) * etat.transition, u * 1.8, u * 0.9)
       g.fillStyle = teinte
@@ -631,12 +686,14 @@ export function creeEcran(lang: Lang): Ecran {
   const img = new Image()
   img.onload = () => {
     fond = img
+    fondSale = true
     peint()
   }
   img.src = "/prototype/ecran-fond.jpg"
   const imgQuartier = new Image()
   imgQuartier.onload = () => {
     quartier = imgQuartier
+    gpsSale = true
     peint()
   }
   imgQuartier.src = "/prototype/carte-quartier.png"
@@ -653,6 +710,8 @@ export function creeEcran(lang: Lang): Ecran {
     mode: () => etat.mode,
     langue(nouvelle: Lang) {
       langue = nouvelle
+      fondSale = true
+      gpsSale = true
       peint()
     },
     bat() {
@@ -665,6 +724,7 @@ export function creeEcran(lang: Lang): Ecran {
       etat.allume = true
       etat.choix = null
       etat.transition = 0
+      gpsSale = true
       peint()
     },
     hub() {
@@ -672,12 +732,14 @@ export function creeEcran(lang: Lang): Ecran {
       /* revenir au hub annule une sélection en cours (recette proto) */
       etat.choix = null
       etat.transition = 0
+      gpsSale = true
       peint()
     },
     gps() {
       etat.mode = "gps"
       /* un re-rendu ne doit pas raturer un départ déjà lancé (piège #26) */
       if (etat.transition === 0) etat.choix = null
+      gpsSale = true
       peint()
     },
     musiques: () => passeEn("musiques"),
@@ -708,6 +770,7 @@ export function creeEcran(lang: Lang): Ecran {
       if (etat.choix) return
       etat.choix = dest
       etat.transition = 0
+      gpsSale = true
       const fini = () => {
         setTimeout(() => {
           if (quandDepart) quandDepart(dest)
