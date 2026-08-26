@@ -20,29 +20,30 @@ import { projet } from "@/components/proto/projets"
    comme la coque planche : le morph depuis les feuilles de `/` tient.
    ================================================================== */
 
-type Accent = { c: string; txt: string }
-const ENCRE = "#241f3d"
 /* un accent PAR PROJET (décision du 2026-08-26) — le rose au produit
    courant, le vert acide du feed à Octo, le glacé Sophia à la
-   prédiction mémoire */
+   prédiction mémoire. Plus de `txt` par accent : `--acc-txt` a un
+   défaut AUDITÉ dans y2k.css (la nuit) et rien ici ne le consomme —
+   l'encre morte qu'on posait quand même n'était PAS auditée (revue du
+   re-gate). */
 /* les clés de cette table DOIVENT égaler SLUGS_Y2K de
    app/work/[slug]/page.tsx — un export d'ici n'y arriverait que comme
    référence client opaque (payé au build : `.includes is not a
    function` côté serveur) */
-const ACCENTS: Record<string, Accent> = {
-  "reach-up": { c: "#ff3ea5", txt: ENCRE },
-  octo: { c: "#9be05a", txt: ENCRE },
-  "prediction-memoire": { c: "#8fd0ff", txt: ENCRE },
+const ACCENTS: Record<string, string> = {
+  "reach-up": "#ff3ea5",
+  octo: "#9be05a",
+  "prediction-memoire": "#8fd0ff",
 }
 
 export function FicheY2k({ slug }: { slug: string }) {
   const [lang, setLang] = useState<Lang>("fr")
   const p = projet(lang, slug)
   if (!p) return null
-  const acc = ACCENTS[slug] ?? { c: "#ff3ea5", txt: ENCRE }
+  const acc = ACCENTS[slug] ?? "#ff3ea5"
 
   return (
-    <main lang={lang} className="y2k fy" style={{ "--acc": acc.c, "--acc-txt": acc.txt } as React.CSSProperties}>
+    <main lang={lang} className="y2k fy" style={{ "--acc": acc } as React.CSSProperties}>
       <header className="y2k-barre">
         <span className="y2k-barre-os">{t(lang, "hubOs")}</span>
         <span className="y2k-barre-fichier">{p.nom}</span>

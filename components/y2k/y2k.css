@@ -33,8 +33,15 @@
   --y2k-violet: #a06bff;        /* le milieu — Evangelion */
   --y2k-lcd: #1c1430;           /* fond des readouts */
   --y2k-lcd-txt: #ffb3dc;       /* texte LCD — le rose de l'AMP */
+  /* le rose LISIBLE : du rose vif sur les faces claires, l'audit AA
+     mesure 1,6-2,9:1 — cette encre rose profonde tient ≥4,5:1 sur tout
+     le chrome (pire stop #b6b0d8 : 4,7:1) et garde la voix DesignMart */
+  --y2k-rose-encre: #8a0048;
   --acc: var(--y2k-rose);       /* l'ACCENT LOCAL : chaque expérience pose le sien */
-  --acc-txt: var(--y2k-encre);  /* et SA couleur d'écriture (revue #36 : blanc sur glacé = 1,7:1) */
+  /* la NUIT, pas l'encre : sur l'accent rose, l'encre #241f3d tombait à
+     4,15:1 au pire pixel du vernis (audit AA du re-gate) — la nuit y
+     tient 5,2:1 et reste noire à l'œil sur glacé/ambre */
+  --acc-txt: var(--y2k-nuit);
 
   /* — biseaux Win9x : deux arêtes franches, pas de flou — */
   --bev-haut: inset 1px 1px 0 var(--y2k-clair), inset -1px -1px 0 var(--y2k-ombre),
@@ -90,11 +97,17 @@
   outline: 2px solid var(--y2k-rose);
   outline-offset: 2px;
 }
-/* sur le chrome CLAIR (barres, boutons chromés), le rose vif tombe à
-   2,5:1 — l'anneau passe au rose PROFOND, 4,7:1 sur la face (audit AA) */
+/* L'anneau se dessine à 2px HORS de l'élément : c'est le fond DERRIÈRE
+   qui décide (revue du re-gate, SC 1.4.11 ≥3:1). Sur les faces CLAIRES
+   (barres, produits sur chrome, boutons du dialogue sur la face
+   brossée), le rose vif tombe à 2,0-2,5:1 — l'anneau y passe au rose
+   PROFOND (4,3:1 sur le pire chrome). Le fy-retour, lui, est posé sur
+   la NUIT du desktop : le rose vif par défaut y fait 6,0:1, le profond
+   n'y ferait que 2,9:1 — il reste au défaut. */
 .y2k .y2k-barre :focus-visible,
 .y2k .y2k-pied :focus-visible,
-.y2k .fy-retour:focus-visible {
+.y2k .y2k-produit a:focus-visible,
+.y2k .y2k-dlg-boutons a:focus-visible {
   outline-color: #b3005e;
 }
 
@@ -154,7 +167,7 @@
   background: linear-gradient(180deg, var(--y2k-clair), var(--y2k-chrome));
   box-shadow: var(--bev-haut);
 }
-.y2k-ejecter:hover { color: var(--y2k-rose); }
+.y2k-ejecter:hover { color: var(--y2k-rose-encre); }
 
 /* ------------------------------------------------------------------
    L'EN-TÊTE — le POST du système : wordmark chrome + readout BIOS.
@@ -189,18 +202,27 @@
   line-height: 1.05;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  /* le chrome HOLOGRAPHIQUE : ciel clair qui glisse vers le bleu,
-     HORIZON sombre franc sous la mi-hauteur, rebond IRISÉ rose-bleu
-     dessous (gate #36 : « plus dans ce style », réf. collage holo) —
-     la bande sombre reste LARGE pour survivre à un rendu en 128 px */
-  background: linear-gradient(180deg, #ffffff 4%, #cfe4fb 30%, #6c629e 45%, #221d3e 49%, #16112c 55%, #ffd9f2 62%, #b9e2ff 76%, #978dc9 100%);
+  /* le chrome HOLOGRAPHIQUE — CLAIR de bout en bout : l'horizon sombre
+     de la réf. collage (#221d3e à mi-fût) mesurait ~1,1:1 sur la nuit
+     du desktop et COUPAIT les lettres en deux (retour de gate :
+     « noir sur noir ») — même loi que les noms de fiche (f82a872) :
+     l'identité holo tient par l'iris ciel→argent→rose→bleu, le double
+     rose et le halo ; pire stop #a89ed6 = 7,9:1 sur la nuit */
+  background: linear-gradient(180deg, #ffffff 4%, #cfe4fb 30%, #b3abdd 46%, #e9e4fb 54%, #ffd9f2 64%, #b9e2ff 78%, #a89ed6 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
   filter: drop-shadow(0 0 26px rgba(160 107 255 / 0.5));
 }
 .y2k-wordmark::after {
+  /* le « / "" » : sans texte alternatif vide, le double décoratif est LU
+     par les lecteurs d'écran — le h1 disait « Travail Travail ». La
+     première déclaration est le REPLI : Safari <17.4 / Firefox <128
+     rejettent la syntaxe « / "" » entière et perdraient tout le double
+     (l'identité holo tient par lui) — en cascade, ils gardent le visuel
+     et le statu quo lecteur d'écran, les récents gagnent les deux. */
   content: attr(data-texte);
+  content: attr(data-texte) / "";
   position: absolute;
   inset: 0;
   z-index: -1;
@@ -306,7 +328,10 @@
   /* le vernis par-dessus l'accent : la barre bombe comme un skin */
   background:
     linear-gradient(180deg, rgba(255 255 255 / 0.5), rgba(255 255 255 / 0.12) 45%, rgba(0 0 0 / 0.08) 55%, transparent),
-    linear-gradient(90deg, var(--acc), color-mix(in srgb, var(--acc) 55%, var(--y2k-chrome)));
+    /* 70 % d'accent en queue, pas 55 : avec le cobalt éclairci, la
+       queue à 55 % se fondait dans la lavande de la face — la barre
+       doit rester une BARRE sur toute sa largeur (revue du re-gate) */
+    linear-gradient(90deg, var(--acc), color-mix(in srgb, var(--acc) 70%, var(--y2k-chrome)));
   color: var(--acc-txt);
   font-family: var(--f-pixel), var(--f-mono), monospace;
   font-size: 13px;
@@ -455,7 +480,9 @@
   box-shadow: var(--bev-haut);
   padding: 3px 8px 2px;
 }
-.y2k-produit a:hover { color: var(--acc); }
+/* l'encre rose, pas l'accent : le glacé/le rose vifs tombaient sous
+   3:1 sur la face chromée du bouton au survol */
+.y2k-produit a:hover { color: var(--y2k-rose-encre); }
 .y2k-xp-parc {
   display: flex;
   flex-wrap: wrap;
@@ -504,7 +531,8 @@
 .y2k-touche .num {
   font-family: var(--f-pixel), var(--f-mono), monospace;
   font-size: 13px;
-  color: var(--y2k-rose);
+  /* rose vif sur la touche claire : 1,6:1 (audit AA du re-gate) */
+  color: var(--y2k-rose-encre);
 }
 .y2k-touche .nom {
   font-family: var(--f-chrome), var(--f-display), sans-serif;
@@ -563,7 +591,9 @@
   letter-spacing: 0.08em;
   color: var(--y2k-encre);
 }
-.y2k-groupe h3::before { content: "▸ "; color: var(--y2k-rose); }
+/* la puce est décorative mais suit la loi de la passe : rose ENCRE sur
+   face claire (le vif y mesurait 2,8:1) */
+.y2k-groupe h3::before { content: "▸ "; color: var(--y2k-rose-encre); }
 .y2k-ligne {
   display: flex;
   align-items: baseline;
@@ -626,7 +656,7 @@
   background: linear-gradient(180deg, var(--y2k-clair), var(--y2k-chrome));
   box-shadow: var(--bev-haut);
 }
-.y2k-dlg-boutons a:hover { color: var(--y2k-rose); }
+.y2k-dlg-boutons a:hover { color: var(--y2k-rose-encre); }
 .y2k-dlg-boutons .role {
   display: block;
   font-family: var(--f-pixel), var(--f-mono), monospace;

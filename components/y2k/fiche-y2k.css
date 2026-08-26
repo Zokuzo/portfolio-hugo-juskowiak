@@ -67,6 +67,10 @@
     0 0 22px color-mix(in srgb, var(--acc) 30%, transparent);
 }
 .fy-hero > * { position: relative; }
+/* sous 640px les cartouches de coin s'étrécissent et POUSSENT vers le
+   bas : à 420 le coin gauche mordait l'étoile de 22px (sonde du
+   re-gate) — le plafond monte pour que le contenu centré reste dessous */
+@media (max-width: 640px) { .fy-hero { padding-top: 132px; } }
 /* sans vitrine de captures, l'affiche n'a pas à tenir 860px : le vide
    mort de l'ultra-large est exactement ce que le gate #36 a payé */
 .fy-hero--court { min-height: min(60vh, 620px); }
@@ -90,6 +94,12 @@
 }
 .fy-coin.hg { top: 26px; left: 30px; text-align: left; }
 .fy-coin.hd { top: 26px; right: 30px; text-align: right; }
+/* sous 375px, 30px d'inset ×2 + 42% ×2 dépassent la largeur : les deux
+   cartouches se chevauchaient de 11px à 320 (sonde du re-gate), et en
+   s'étrécissant ils grandissaient jusque sur le contenu centré. Ils
+   sont décoratifs (aria-hidden) et doublonnent le panneau SYSTEM : ils
+   meurent sous 400px plutôt que de se battre pour la place. */
+@media (max-width: 400px) { .fy-coin { display: none; } }
 .fy-vertical {
   position: absolute;
   top: 50%;
@@ -102,6 +112,10 @@
   color: color-mix(in srgb, var(--acc) 70%, #fff);
   opacity: 0.8;
 }
+/* le kanji mordait le nom et l'accroche dès que le titre est long
+   (21px de chevauchement à 768 sur Prédiction, sonde du re-gate) :
+   l'ornement s'efface tant que la marge ne lui revient pas */
+@media (max-width: 980px) { .fy-vertical { display: none; } }
 /* la GRANDE étoile chrome de MAGIA NEGRA — l'ornement de l'affiche */
 .fy-etoile {
   font-family: var(--f-display), sans-serif;
@@ -128,7 +142,9 @@
    trait et l'ombre portée dure. Plafonné 104px. */
 .fy-nom {
   margin: 0;
-  max-width: min(94vw, 1100px);
+  /* 84vw, pas 94 : à 1100 de large, 94vw ne laissait que 33px de marge
+     et le kanji vertical mordait le nom long de 33px (sonde du re-gate) */
+  max-width: min(84vw, 1100px);
   font-family: var(--f-chrome), var(--f-display), sans-serif;
   font-size: clamp(36px, 7.5vw, 104px);
   line-height: 1;
@@ -347,4 +363,4 @@
   box-shadow: var(--bev-haut);
   padding: 8px 14px 7px;
 }
-.fy-retour:hover { color: var(--y2k-rose); }
+.fy-retour:hover { color: var(--y2k-rose-encre); }

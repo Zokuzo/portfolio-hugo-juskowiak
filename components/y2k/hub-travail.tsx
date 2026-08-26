@@ -19,18 +19,21 @@ import { employeurs } from "@/components/proto/parcours"
    ne connaît que `--acc`.
    ================================================================== */
 
-/* Chaque accent vient avec SA couleur d'écriture (revue #36 : blanc sur
-   glacé = 1,7:1) : encre sombre sur les accents clairs, blanc sur les
-   sombres — le CSS ne connaît que --acc / --acc-txt. */
-type Accent = { c: string; txt: string }
-const ENCRE = "#241f3d"
-const ACCENTS: Record<string, Accent> = {
-  upyourbizz: { c: "#ff3ea5", txt: ENCRE },       // le rose DesignMart — le poste courant est le chaud
-  "sophia-genetics": { c: "#8fd0ff", txt: ENCRE }, // le bleu glacé Lightforce — données, santé
-  "the-guill-corp": { c: "#4a63e8", txt: "#fff" }, // le cobalt Nokia — aviation
-  legrand: { c: "#f2a63b", txt: ENCRE },           // l'ambre atelier — l'industrie
+/* L'écriture sur accent est la NUIT pour TOUS — c'est le défaut de
+   `--acc-txt` dans y2k.css (audit AA du re-gate, au pire pixel du
+   vernis des barres) : l'encre #241f3d mesurait 4,15:1 sur le rose, la
+   nuit tient 5,2:1 ; le cobalt d'origine #4a63e8 ne laissait passer NI
+   blanc (2,06:1 sous le vernis clair) ni encre (3,2:1) — il
+   s'éclaircit pour porter la nuit à 4,9:1 en gardant sa voix Nokia.
+   Plus de `txt` par accent : une valeur unique se pose en token, pas
+   en plombage. */
+const ACCENTS: Record<string, string> = {
+  upyourbizz: "#ff3ea5",       // le rose DesignMart — le poste courant est le chaud
+  "sophia-genetics": "#8fd0ff", // le bleu glacé Lightforce — données, santé
+  "the-guill-corp": "#6f83f0",  // le cobalt Nokia — aviation
+  legrand: "#f2a63b",           // l'ambre atelier — l'industrie
 }
-const accVars = (a: Accent) => ({ "--acc": a.c, "--acc-txt": a.txt }) as React.CSSProperties
+const accVars = (c: string) => ({ "--acc": c }) as React.CSSProperties
 
 export default function HubTravail() {
   const [lang, setLang] = useState<Lang>("fr")
@@ -151,7 +154,7 @@ export default function HubTravail() {
             mesure en readout LCD dessous (TELEMETRIE.EXE a vécu — gate
             du 2026-08-26, la feuille 05 de `/` reste seule à la porter) — */}
         <section className="y2k-fen" aria-labelledby="y2k-methode">
-          <div className="y2k-fen-titre" style={accVars({ c: "#8fd0ff", txt: ENCRE })}>
+          <div className="y2k-fen-titre" style={accVars("#8fd0ff")}>
             <span className="pastille" aria-hidden="true" />
             {t(lang, "hubFenMethode")}
             {boutons}
@@ -193,7 +196,7 @@ export default function HubTravail() {
 
         {/* — SPECS.SYS : le gestionnaire de périphériques — */}
         <section className="y2k-fen" aria-labelledby="y2k-spec">
-          <div className="y2k-fen-titre" style={accVars({ c: "#4a63e8", txt: "#fff" })}>
+          <div className="y2k-fen-titre" style={accVars("#6f83f0")}>
             <span className="pastille" aria-hidden="true" />
             {t(lang, "hubFenSpec")}
             {boutons}
