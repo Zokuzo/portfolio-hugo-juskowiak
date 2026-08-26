@@ -2,10 +2,15 @@
 
 import { useCallback, useState, useSyncExternalStore } from "react"
 
-/* « DESKTOP CAPABLE » — la condition d'entrée dans l'expérience 3D, telle
-   que la spec #25 l'arrête : pointeur fin ET viewport ≥ 1024 ET WebGL2
-   créable ET pas de `prefers-reduced-motion`. Sous reduce, l'expérience est
-   un cinématique : la version simple EST la bonne réponse, pas un repli.
+/* LA CAPACITÉ — la condition d'entrée dans l'expérience 3D. La spec #25
+   l'arrêtait « desktop » (pointeur fin ET ≥ 1024) ; le 15e retour de gate
+   #33 (« je veux voir la version avec l'animation sur mon iPad ») ouvre
+   l'entrée au TACTILE : pointeur fin OU grossier, viewport ≥ 768 (l'iPad
+   portrait fait 768-834 — les téléphones restent en version simple),
+   WebGL2 créable, et pas de `prefers-reduced-motion`. Sous reduce,
+   l'expérience est un cinématique : la version simple EST la bonne
+   réponse, pas un repli. Limite tactile connue : la molette de volume vit
+   sur la roulette — sans souris, le volume reste à sa valeur.
 
    CE FICHIER N'IMPORTE NI THREE NI R3F, et ne doit jamais le faire : il est
    dans le paquet de la home, donc dans le chargement de TOUS les visiteurs,
@@ -24,13 +29,14 @@ const serveur = () => false
 
 /* Déclarées AU MODULE, jamais dans le composant : un `matchMedia()` par
    rendu produirait un nouvel objet et `subscribe` se ré-abonnerait sans fin. */
-type Sondes = { fin: MediaQueryList; large: MediaQueryList; reduit: MediaQueryList }
+type Sondes = { fin: MediaQueryList; tactile: MediaQueryList; large: MediaQueryList; reduit: MediaQueryList }
 let sondes: Sondes | null = null
 function mq(): Sondes {
   if (!sondes)
     sondes = {
       fin: matchMedia("(pointer: fine)"),
-      large: matchMedia("(min-width: 1024px)"),
+      tactile: matchMedia("(pointer: coarse)"),
+      large: matchMedia("(min-width: 768px)"),
       /* La NÉGATION de `reduce`, jamais `no-preference` : un agent qui
          ignore la caractéristique répond faux aux deux, et `no-preference`
          replierait alors tout le monde. */
@@ -88,13 +94,13 @@ function instantane(): boolean {
     return false
   }
   if (verrou) return true
-  verrou = s.fin.matches && s.large.matches && webgl2Creable()
+  verrou = (s.fin.matches || s.tactile.matches) && s.large.matches && webgl2Creable()
   return verrou
 }
 
 function abonne(previent: () => void): () => void {
   const s = mq()
-  const l = [s.fin, s.large, s.reduit]
+  const l = [s.fin, s.tactile, s.large, s.reduit]
   for (const m of l) m.addEventListener("change", previent)
   return () => {
     for (const m of l) m.removeEventListener("change", previent)
