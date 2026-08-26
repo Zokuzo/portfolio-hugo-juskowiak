@@ -72,10 +72,13 @@
   bottom: 0;
   height: 42vh;
   pointer-events: none;
+  /* le sol prend L'ACCENT DE LA PAGE (revue #38 : un sol rose sous une
+     affiche verte lit comme une fuite de gabarit — chaque poster de la
+     moisson s'engage sur SA palette) ; sans --acc posé, il reste rose */
   background:
-    linear-gradient(180deg, transparent, rgba(255 62 165 / 0.06) 30%, transparent),
-    repeating-linear-gradient(90deg, rgba(255 62 165 / 0.28) 0 2px, transparent 2px 72px),
-    repeating-linear-gradient(0deg, rgba(255 62 165 / 0.22) 0 2px, transparent 2px 46px);
+    linear-gradient(180deg, transparent, color-mix(in srgb, var(--acc, #ff3ea5) 6%, transparent) 30%, transparent),
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--acc, #ff3ea5) 28%, transparent) 0 2px, transparent 2px 72px),
+    repeating-linear-gradient(0deg, color-mix(in srgb, var(--acc, #ff3ea5) 22%, transparent) 0 2px, transparent 2px 46px);
   transform: perspective(520px) rotateX(58deg);
   transform-origin: 50% 0;
   mask-image: linear-gradient(180deg, transparent, #000 22%);
@@ -86,6 +89,13 @@
 .y2k :focus-visible {
   outline: 2px solid var(--y2k-rose);
   outline-offset: 2px;
+}
+/* sur le chrome CLAIR (barres, boutons chromés), le rose vif tombe à
+   2,5:1 — l'anneau passe au rose PROFOND, 4,7:1 sur la face (audit AA) */
+.y2k .y2k-barre :focus-visible,
+.y2k .y2k-pied :focus-visible,
+.y2k .fy-retour:focus-visible {
+  outline-color: #b3005e;
 }
 
 /* sans ça, la sélection resterait le bleu bureautique de la planche

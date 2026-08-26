@@ -27,24 +27,44 @@
   display: grid;
   align-content: center;
   justify-items: center;
-  gap: 12px;
-  padding: 88px 20px 64px;
+  gap: 14px;
+  padding: 92px 24px 72px;
   overflow: hidden;
   text-align: center;
+  /* l'AFFICHE de la moisson (MAGIA NEGRA, cassette brutalist) : noir
+     profond, BLOOM d'accent saturé, grille graphique — les rayons
+     coniques du premier essai sont MORTS (« ignobles », gate) */
   background:
-    repeating-conic-gradient(from 0deg at 50% 116%, rgba(255 255 255 / 0.045) 0 2.6deg, transparent 2.6deg 9deg),
-    radial-gradient(closest-side at 22% 26%, color-mix(in srgb, var(--acc) 30%, transparent), transparent 70%),
-    radial-gradient(130% 95% at 50% 112%, color-mix(in srgb, var(--acc) 40%, #0d0a18), transparent 70%);
+    radial-gradient(90% 70% at 18% 12%, color-mix(in srgb, var(--acc) 52%, transparent), transparent 62%),
+    radial-gradient(70% 55% at 88% 92%, color-mix(in srgb, var(--acc) 34%, transparent), transparent 65%),
+    repeating-linear-gradient(0deg, color-mix(in srgb, var(--acc) 26%, transparent) 0 1px, transparent 1px 44px),
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--acc) 26%, transparent) 0 1px, transparent 1px 44px),
+    #0b0817;
 }
+/* la trame HALFTONE du collage : des points francs, teintés à l'accent,
+   qui s'évanouissent en diagonale */
 .fy-hero::before {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background-image: radial-gradient(circle, rgba(255 255 255 / 0.13) 1px, transparent 1.6px);
-  background-size: 14px 14px;
-  mask-image: linear-gradient(115deg, #000 10%, transparent 44%);
-  -webkit-mask-image: linear-gradient(115deg, #000 10%, transparent 44%);
+  background-image: radial-gradient(circle, color-mix(in srgb, var(--acc) 65%, #fff) 1.4px, transparent 2.1px);
+  background-size: 16px 16px;
+  opacity: 0.34;
+  mask-image: linear-gradient(115deg, #000 14%, transparent 52%);
+  -webkit-mask-image: linear-gradient(115deg, #000 14%, transparent 52%);
+}
+/* le CADRE pixel-UI du player SYSTEM : la fiche est une façade, pas un
+   fond — liseré d'accent + coches de coins */
+.fy-hero::after {
+  content: "";
+  position: absolute;
+  inset: 14px;
+  pointer-events: none;
+  border: 2px solid color-mix(in srgb, var(--acc) 65%, transparent);
+  box-shadow:
+    inset 0 0 0 1px rgba(11 8 23 / 0.8),
+    0 0 22px color-mix(in srgb, var(--acc) 30%, transparent);
 }
 .fy-hero > * { position: relative; }
 /* sans vitrine de captures, l'affiche n'a pas à tenir 860px : le vide
@@ -58,14 +78,18 @@
      plein glyphe (mesuré en EN par la revue) — bornés, ils replient */
   max-width: 42%;
   font-family: var(--f-mono), monospace;
-  font-size: 11.5px;
+  font-size: 13px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(239 234 255 / 0.72);
+  color: #efeaff;
+  /* cartouche sombre : posés nus sur les halos d'accent CLAIRS (vert,
+     glacé), les coins tombaient à 3,4:1 (audit AA) */
+  background: rgba(11 8 23 / 0.78);
+  padding: 5px 9px;
   white-space: pre-line;
 }
-.fy-coin.hg { top: 16px; left: 20px; text-align: left; }
-.fy-coin.hd { top: 16px; right: 20px; text-align: right; }
+.fy-coin.hg { top: 26px; left: 30px; text-align: left; }
+.fy-coin.hd { top: 26px; right: 30px; text-align: right; }
 .fy-vertical {
   position: absolute;
   top: 50%;
@@ -78,46 +102,56 @@
   color: color-mix(in srgb, var(--acc) 70%, #fff);
   opacity: 0.8;
 }
-/* l'étoile ✦ du lettrage chrome des références */
+/* la GRANDE étoile chrome de MAGIA NEGRA — l'ornement de l'affiche */
 .fy-etoile {
   font-family: var(--f-display), sans-serif;
-  font-size: 20px;
-  color: color-mix(in srgb, var(--acc) 70%, #fff);
-  text-shadow: 0 0 14px color-mix(in srgb, var(--acc) 70%, transparent);
+  font-size: 40px;
+  line-height: 1;
+  background: linear-gradient(180deg, #ffffff, color-mix(in srgb, var(--acc) 60%, #b9b2e2) 55%, #f4efff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 18px color-mix(in srgb, var(--acc) 75%, transparent));
 }
 
 .fy-fiche-type {
   font-family: var(--f-pixel), var(--f-mono), monospace;
-  font-size: 11px;
-  letter-spacing: 0.18em;
+  font-size: 13px;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(239 234 255 / 0.7);
+  color: color-mix(in srgb, var(--acc) 55%, #fff);
 }
-/* LE NOM — chrome liquide : clair, horizon sombre, rebond irisé teinté
-   par l'accent ; halo néon. Plafonné 96px. */
+/* LE NOM — chrome LIQUIDE et penché comme les lettrages de la moisson.
+   Chrome CLAIR de bout en bout : la coupe sombre à mi-fût mesurait
+   1,0:1 au pire point (audit AA — « accessibilité AA minimum » est la
+   commande) ; l'identité chrome tient par l'iris teinté, le skew, le
+   trait et l'ombre portée dure. Plafonné 104px. */
 .fy-nom {
   margin: 0;
   max-width: min(94vw, 1100px);
   font-family: var(--f-chrome), var(--f-display), sans-serif;
-  font-size: clamp(34px, 7.5vw, 96px);
-  line-height: 1.04;
-  letter-spacing: 0.04em;
+  font-size: clamp(36px, 7.5vw, 104px);
+  line-height: 1;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   overflow-wrap: break-word;
-  background: linear-gradient(180deg, #ffffff 5%, color-mix(in srgb, var(--acc) 26%, #d8d3f2) 34%, #241f3d 49%, #f4efff 59%, color-mix(in srgb, var(--acc) 55%, #978dc9) 100%);
+  transform: skewX(-6deg);
+  background: linear-gradient(180deg, #ffffff 8%, color-mix(in srgb, var(--acc) 28%, #e8e3fc) 38%, #b3abdd 50%, #ffffff 62%, color-mix(in srgb, var(--acc) 40%, #d5cff2) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 0 24px color-mix(in srgb, var(--acc) 55%, transparent));
+  -webkit-text-stroke: 1px rgba(255 255 255 / 0.3);
+  filter: drop-shadow(0 0 22px color-mix(in srgb, var(--acc) 40%, transparent)) drop-shadow(0 3px 0 rgba(11 8 23 / 0.95));
 }
-/* l'ACCROCHE de pub — l'italique sous l'objet */
+/* l'ACCROCHE de pub — l'italique sous l'objet, en VRAIE taille */
 .fy-claim {
-  margin: 4px 0 0;
-  max-width: min(92vw, 720px);
-  font-size: clamp(15px, 1.6vw, 19px);
+  margin: 6px 0 0;
+  max-width: min(92vw, 760px);
+  font-size: clamp(17px, 2vw, 22px);
   line-height: 1.5;
   font-style: italic;
-  color: #efeaff;
+  font-weight: 600;
+  color: #ffffff;
 }
 
 /* le panneau SYSTEM — les trois méta en pixel-UI de player */
@@ -139,17 +173,17 @@
 }
 .fy-system dt {
   font-family: var(--f-pixel), var(--f-mono), monospace;
-  font-size: 9.5px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  /* 0,72 et pas 0,55 : mesuré 4,07:1 sur le LCD — sous le seuil AA
-     que la revue #36 a imposé au monde entier */
-  color: rgba(255 179 220 / 0.72);
+  /* 0,8 : le 0,55 initial mesurait 4,07:1 sur le LCD — sous le seuil
+     AA que le gate exige sur tout le site */
+  color: rgba(255 179 220 / 0.8);
 }
 .fy-system dd {
   margin: 0;
   font-family: var(--f-mono), monospace;
-  font-size: 12.5px;
+  font-size: 15px;
   color: var(--y2k-lcd-txt);
 }
 /* les CAPTURES — l'objet de la pub : vitres chromées, la seconde
@@ -178,10 +212,15 @@
   opacity: 0.85;
 }
 .fy-legende {
-  margin: 14px 0 0;
+  margin: 14px auto 0;
+  width: fit-content;
   font-family: var(--f-mono), monospace;
-  font-size: 11.5px;
-  color: rgba(239 234 255 / 0.6);
+  font-size: 13.5px;
+  color: #efeaff;
+  /* cartouche : la légende chevauchait la tranche CLAIRE de l'image
+     inclinée — 1,9:1 au pire point (audit AA) */
+  background: rgba(11 8 23 / 0.85);
+  padding: 4px 10px;
 }
 
 /* ------------------------------------------------------------------
@@ -190,9 +229,11 @@
 .fy-colonne {
   max-width: var(--fy-largeur);
   margin: 0 auto;
-  padding: 56px 20px 96px;
+  /* resserré : les fiches maigres (Octo) lisaient « pas finies » avec
+     leurs déserts — la moisson est DENSE */
+  padding: 48px 20px 64px;
   display: grid;
-  gap: 40px;
+  gap: 34px;
 }
 .fy-pave {
   border-top: 2px solid var(--acc);
@@ -200,22 +241,22 @@
 }
 .fy-pave p {
   margin: 0;
-  font-size: 14.5px;
-  line-height: 1.6;
-  color: #efeaff;
-  max-width: 74ch;
+  font-size: 17px;
+  line-height: 1.65;
+  color: #f4efff;
+  max-width: 70ch;
 }
 .fy-titre-bloc {
-  margin: 0 0 12px;
+  margin: 0 0 14px;
   display: flex;
   align-items: baseline;
   gap: 12px;
   font-family: var(--f-pixel), var(--f-mono), monospace;
-  font-size: 11.5px;
+  font-size: 13px;
   font-weight: 400;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--acc) 75%, #fff);
+  color: color-mix(in srgb, var(--acc) 55%, #fff);
 }
 .fy-titre-bloc::after {
   content: "";
@@ -240,12 +281,14 @@
   gap: 10px;
 }
 .fy-liste li {
-  padding: 10px 14px;
-  background: rgba(20 16 42 / 0.85);
+  padding: 14px 18px;
+  /* NOIR profond, pas bleu-nuit « dashboard » : le contraste dur de la
+     moisson (revue de fidélité) */
+  background: rgba(10 8 20 / 0.94);
   box-shadow: var(--bev-creux);
-  font-size: 13.5px;
-  line-height: 1.55;
-  color: #efeaff;
+  font-size: 15.5px;
+  line-height: 1.6;
+  color: #f4efff;
 }
 .fy-decisions { counter-reset: fy-dec; }
 .fy-decisions li { display: grid; gap: 4px; }
@@ -253,26 +296,26 @@
   counter-increment: fy-dec;
   content: counter(fy-dec, decimal-leading-zero);
   font-family: var(--f-pixel), var(--f-mono), monospace;
-  font-size: 12px;
-  color: var(--acc);
+  font-size: 13px;
+  color: color-mix(in srgb, var(--acc) 75%, #fff);
 }
 .fy-decisions b {
   font-family: var(--f-chrome), var(--f-display), sans-serif;
   font-weight: 400;
-  font-size: 13.5px;
+  font-size: 15.5px;
   letter-spacing: 0.03em;
   text-transform: uppercase;
-  color: #f4efff;
+  color: #ffffff;
 }
 
 /* le RÉSULTAT — un readout LCD, la seule ligne qui brille */
 .fy-resultat {
-  padding: 16px 20px;
+  padding: 18px 22px;
   background: var(--y2k-lcd);
   box-shadow: var(--bev-creux), 0 0 34px color-mix(in srgb, var(--acc) 22%, transparent);
   font-family: var(--f-mono), monospace;
-  font-size: 13.5px;
-  line-height: 1.6;
+  font-size: 15.5px;
+  line-height: 1.65;
   color: var(--y2k-lcd-txt);
 }
 
@@ -280,26 +323,28 @@
 .fy-parc {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
 }
 .fy-parc span {
   font-family: var(--f-mono), monospace;
-  font-size: 11.5px;
-  color: #efeaff;
-  background: #12101f;
-  border: 1px solid rgba(205 201 230 / 0.28);
-  padding: 3px 9px;
+  font-size: 13.5px;
+  color: #f4efff;
+  background: #0a0814;
+  /* l'arête CLAIRE qui fait exister l'étiquette noire sur fond sombre
+     (revue de fidélité : elles se dissolvaient) */
+  border: 1px solid rgba(233 228 255 / 0.55);
+  padding: 4px 11px;
 }
 
 /* le retour au hub, en pied de fiche */
 .fy-retour {
   justify-self: start;
   font-family: var(--f-pixel), var(--f-mono), monospace;
-  font-size: 12px;
+  font-size: 13px;
   text-decoration: none;
   color: var(--y2k-encre);
   background: linear-gradient(180deg, var(--y2k-clair), var(--y2k-chrome));
   box-shadow: var(--bev-haut);
-  padding: 6px 12px 5px;
+  padding: 8px 14px 7px;
 }
 .fy-retour:hover { color: var(--y2k-rose); }
