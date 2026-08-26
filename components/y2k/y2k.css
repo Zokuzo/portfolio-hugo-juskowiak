@@ -1,0 +1,719 @@
+/* ==================================================================
+   Y2K — le monde 2D des hubs et des fiches (#34, direction gravée le
+   2026-08-26 : « années 2000 Y2K Brutalist », un accent par expérience).
+
+   LE CONCEPT : un bureau système an-2000. La page est un desktop de
+   nuit violette ; chaque section est une FENÊTRE au chrome lavande
+   biseauté — le langage du HJ·AMP que l'écran 3D porte déjà (skin
+   façon Winamp, readouts LCD roses, filtre CRT global). Les références
+   de Hugo vivent sur le ticket #34.
+
+   CE FICHIER EST LE SYSTÈME DE TOKENS DU MONDE Y2K ENTIER — les hubs
+   /work et /home (#36, #37) et les gabarits fiche (#38, #39) puisent
+   ici. Tout est scopé sous `.y2k` : la planche (`planche.css`) et ce
+   monde cohabitent sans se voir.
+
+   PAS DE VARIANTE JOUR : un écran système est auto-éclairé, comme la
+   scène 3D. La classe `clair` de <html> ne touche rien ici — c'est un
+   choix, pas un oubli.
+   ================================================================== */
+
+.y2k {
+  /* — palette — */
+  --y2k-nuit: #0d0a18;          /* le desktop — nuit violette, la même famille que l'habitacle */
+  --y2k-nuit-2: #161129;        /* panneaux enfoncés sur la nuit */
+  --y2k-chrome: #cdc9e6;        /* la face des fenêtres — lavande JonAmp */
+  --y2k-chrome-2: #b6b0d8;      /* chrome moyen : barres, pistes */
+  --y2k-clair: #f2f0fd;         /* arête éclairée du biseau */
+  --y2k-ombre: #575178;         /* arête ombrée du biseau */
+  --y2k-encre: #241f3d;         /* l'encre sur chrome */
+  --y2k-encre-2: #4c4670;       /* encre secondaire (notes, légendes) */
+  --y2k-rose: #ff3ea5;          /* l'accent chaud — DesignMart */
+  --y2k-glace: #8fd0ff;         /* le froid — Lightforce */
+  --y2k-violet: #a06bff;        /* le milieu — Evangelion */
+  --y2k-lcd: #1c1430;           /* fond des readouts */
+  --y2k-lcd-txt: #ffb3dc;       /* texte LCD — le rose de l'AMP */
+  --acc: var(--y2k-rose);       /* l'ACCENT LOCAL : chaque expérience pose le sien */
+  --acc-txt: var(--y2k-encre);  /* et SA couleur d'écriture (revue #36 : blanc sur glacé = 1,7:1) */
+
+  /* — biseaux Win9x : deux arêtes franches, pas de flou — */
+  --bev-haut: inset 1px 1px 0 var(--y2k-clair), inset -1px -1px 0 var(--y2k-ombre),
+    inset 2px 2px 0 rgba(255 255 255 / 0.45), inset -2px -2px 0 rgba(36 31 61 / 0.25);
+  --bev-creux: inset 1px 1px 0 var(--y2k-ombre), inset -1px -1px 0 var(--y2k-clair);
+
+  color-scheme: dark;
+  background: var(--y2k-nuit);
+  color: var(--y2k-encre);
+  font-family: var(--f-display), Arial, sans-serif;
+  min-height: 100vh;
+}
+
+/* Le fond du desktop : une grille en perspective à peine visible
+   (l'affiche DesignMart) + une lueur haute. Statique — le mouvement de
+   la page, c'est le filtre CRT global qui le donne. */
+.y2k::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 55% at 50% -10%, rgba(160 107 255 / 0.16), transparent 60%),
+    repeating-linear-gradient(0deg, rgba(205 201 230 / 0.05) 0 1px, transparent 1px 88px),
+    repeating-linear-gradient(90deg, rgba(205 201 230 / 0.045) 0 1px, transparent 1px 88px);
+}
+.y2k { position: relative; }
+
+.y2k :focus-visible {
+  outline: 2px solid var(--y2k-rose);
+  outline-offset: 2px;
+}
+
+/* sans ça, la sélection resterait le bleu bureautique de la planche
+   (`.proto-root ::selection` gagne depuis le layout racine) */
+.y2k ::selection {
+  background: var(--y2k-rose);
+  color: #fff;
+}
+
+/* ------------------------------------------------------------------
+   LA BARRE SYSTÈME — le haut de session : identité, langue, éjection.
+   ------------------------------------------------------------------ */
+.y2k-barre {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 8px 14px;
+  background: linear-gradient(180deg, var(--y2k-chrome), var(--y2k-chrome-2));
+  box-shadow: var(--bev-haut);
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+.y2k-barre-os {
+  color: var(--y2k-encre);
+  background: var(--y2k-lcd);
+  color: var(--y2k-lcd-txt);
+  padding: 3px 8px 2px;
+  box-shadow: var(--bev-creux);
+}
+.y2k-barre-fichier { color: var(--y2k-encre); }
+.y2k-barre-espace { flex: 1; }
+.y2k-langues { display: flex; gap: 2px; }
+.y2k-langues button {
+  font: inherit;
+  padding: 3px 9px 2px;
+  border: 0;
+  cursor: pointer;
+  color: var(--y2k-encre);
+  background: linear-gradient(180deg, var(--y2k-clair), var(--y2k-chrome));
+  box-shadow: var(--bev-haut);
+}
+.y2k-langues button[aria-pressed="true"] {
+  background: var(--y2k-lcd);
+  color: var(--y2k-lcd-txt);
+  box-shadow: var(--bev-creux);
+}
+.y2k-ejecter {
+  color: var(--y2k-encre);
+  text-decoration: none;
+  padding: 3px 9px 2px;
+  background: linear-gradient(180deg, var(--y2k-clair), var(--y2k-chrome));
+  box-shadow: var(--bev-haut);
+}
+.y2k-ejecter:hover { color: var(--y2k-rose); }
+
+/* ------------------------------------------------------------------
+   L'EN-TÊTE — le POST du système : wordmark chrome + readout BIOS.
+   ------------------------------------------------------------------ */
+.y2k-tete {
+  position: relative;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 72px 20px 40px;
+  text-align: center;
+}
+.y2k-boot {
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 12px;
+  color: var(--y2k-glace);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+/* LE WORDMARK : Michroma étiré, dégradé d'argent lavande découpé dans
+   les lettres — le chrome des références (Evangelion, DesignMart).
+   L'ombre rose est portée par un ::after doublé, pas par text-shadow :
+   un dégradé clippé au texte rend le text-shadow invisible. */
+.y2k-wordmark {
+  position: relative;
+  /* isolate : le double rose du ::after vit en z-index -1 — sans
+     contexte d'empilement propre, il plongerait DERRIÈRE le fond du
+     desktop et disparaîtrait (payé à la première capture) */
+  isolation: isolate;
+  margin: 10px 0 4px;
+  font-family: var(--f-chrome), var(--f-display), sans-serif;
+  font-size: clamp(34px, 12vw, 128px);
+  line-height: 1.05;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  /* le chrome : ciel clair en haut, HORIZON sombre franc sous la
+     mi-hauteur, rebond lumineux dessous — la bande doit être LARGE
+     (~10 %) pour survivre à un rendu en 128 px */
+  background: linear-gradient(180deg, #ffffff 4%, #d8d3f2 32%, #6c629e 45%, #221d3e 49%, #16112c 55%, #f6f3ff 63%, #978dc9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.y2k-wordmark::after {
+  content: attr(data-texte);
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  transform: translate(5px, 5px);
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  color: var(--y2k-rose);
+  opacity: 0.8;
+}
+.y2k-identite {
+  font-size: 17px;
+  color: var(--y2k-chrome);
+  letter-spacing: 0.02em;
+}
+.y2k-identite strong { color: #fff; font-weight: 600; }
+.y2k-statut-chip {
+  display: inline-block;
+  margin-top: 14px;
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--y2k-nuit);
+  background: var(--y2k-rose);
+  padding: 4px 10px 3px;
+  box-shadow: 2px 2px 0 rgba(255 62 165 / 0.35);
+}
+/* le readout BIOS : les six paires de `spec`, en LCD */
+.y2k-bios {
+  margin: 28px auto 0;
+  max-width: 620px;
+  text-align: left;
+  background: var(--y2k-lcd);
+  box-shadow: var(--bev-creux), 0 0 34px rgba(160 107 255 / 0.14);
+  padding: 14px 18px;
+  font-family: var(--f-mono), monospace;
+  font-size: 13px;
+  color: var(--y2k-lcd-txt);
+}
+.y2k-bios div {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 3px 0;
+}
+.y2k-bios dt { color: rgba(255 179 220 / 0.7); }
+.y2k-bios dd { margin: 0; text-align: right; }
+
+/* le bandeau défilant — UN seul sur la page, LCD pleine largeur */
+.y2k-marquee {
+  /* positionné, comme ses frères : sinon la surcouche absolue du
+     desktop (.y2k::before) peint par-dessus */
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+  background: var(--y2k-lcd);
+  box-shadow: var(--bev-creux);
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 12px;
+  color: var(--y2k-lcd-txt);
+  padding: 6px 0 5px;
+}
+.y2k-marquee span {
+  display: inline-block;
+  padding-left: 100%;
+  animation: y2k-defile 26s linear infinite;
+}
+@keyframes y2k-defile {
+  to { transform: translateX(-100%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .y2k-marquee span { animation: none; padding-left: 12px; }
+}
+
+/* ------------------------------------------------------------------
+   LES FENÊTRES — la signature du monde. Barre de titre, face chrome,
+   barre d'état. L'accent local teinte la barre de titre.
+   ------------------------------------------------------------------ */
+.y2k-colonne {
+  position: relative;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 26px 20px 90px;
+  display: grid;
+  gap: 54px;
+}
+.y2k-fen {
+  background: var(--y2k-chrome);
+  box-shadow: var(--bev-haut), 0 18px 50px rgba(0 0 0 / 0.5);
+  /* item de grille : sans min-width:0, le min-content de l'égaliseur
+     dictait 444px à TOUTES les fenêtres et la page scrollait
+     horizontalement sur mobile (revue #36, mesuré à 320/375px) */
+  min-width: 0;
+}
+.y2k-fen-titre {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  background: linear-gradient(90deg, var(--acc), color-mix(in srgb, var(--acc) 55%, var(--y2k-chrome)));
+  color: var(--acc-txt);
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+}
+.y2k-fen-titre .pastille {
+  width: 10px;
+  height: 10px;
+  background: currentColor;
+  box-shadow: var(--bev-creux);
+}
+.y2k-fen-titre .boutons {
+  margin-left: auto;
+  display: flex;
+  gap: 3px;
+}
+.y2k-fen-titre .boutons i {
+  width: 16px;
+  height: 14px;
+  font-style: normal;
+  font-size: 9px;
+  line-height: 14px;
+  text-align: center;
+  color: var(--y2k-encre);
+  background: linear-gradient(180deg, var(--y2k-clair), var(--y2k-chrome));
+  box-shadow: var(--bev-haut);
+}
+.y2k-fen-corps { padding: 26px 28px 30px; }
+.y2k-fen-etat {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 10px;
+  background: var(--y2k-chrome-2);
+  box-shadow: var(--bev-creux);
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 11px;
+  color: var(--y2k-encre);
+}
+.y2k-fen h2 {
+  margin: 0 0 6px;
+  font-family: var(--f-chrome), var(--f-display), sans-serif;
+  /* plancher bas : « CARACTÉRISTIQUES » en Michroma doit tenir dans les
+     280px utiles d'un écran de 320 */
+  font-size: clamp(17px, 4.2vw, 28px);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--y2k-encre);
+}
+.y2k-note {
+  margin: 0 0 22px;
+  max-width: 62ch;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--y2k-encre-2);
+}
+
+/* ------------------------------------------------------------------
+   EXPERIENCE.EXE — quatre employeurs, quatre accents.
+   ------------------------------------------------------------------ */
+.y2k-xp-grille {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 22px;
+}
+@media (min-width: 900px) {
+  .y2k-xp-grille { grid-template-columns: 1fr 1fr; }
+}
+.y2k-xp {
+  background: var(--y2k-clair);
+  box-shadow: var(--bev-haut);
+  display: flex;
+  flex-direction: column;
+}
+.y2k-xp-tete {
+  padding: 10px 14px 8px;
+  border-bottom: 2px solid var(--acc);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--acc) 16%, var(--y2k-clair)), var(--y2k-clair));
+}
+.y2k-xp-tete h3 {
+  margin: 0;
+  font-family: var(--f-chrome), var(--f-display), sans-serif;
+  font-size: 18px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--y2k-encre);
+}
+.y2k-xp-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-top: 3px;
+  font-family: var(--f-mono), monospace;
+  font-size: 11.5px;
+  color: var(--y2k-encre-2);
+}
+.y2k-xp-encours {
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--acc-txt);
+  background: var(--acc);
+  padding: 2px 6px 1px;
+}
+/* align-content start : la carte courte (Sophia) est étirée par la
+   grille 2 colonnes — sans ça ses rangées se partageaient le vide */
+.y2k-xp-corps { padding: 12px 14px 14px; display: grid; gap: 10px; flex: 1; align-content: start; }
+.y2k-xp-resume {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--y2k-encre);
+}
+.y2k-produit {
+  padding: 8px 10px;
+  background: var(--y2k-chrome);
+  box-shadow: var(--bev-creux);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--y2k-encre);
+}
+/* 30 % d'accent seulement : à 70 %, le glacé rendait le nom du produit
+   à 1,8:1 sur chrome (revue #36) — l'accent teinte, l'encre porte */
+.y2k-produit b { color: color-mix(in srgb, var(--acc) 30%, var(--y2k-encre)); }
+.y2k-aconf {
+  margin-left: 8px;
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--y2k-encre-2);
+  border: 1px dashed var(--y2k-ombre);
+  padding: 1px 6px 0;
+  white-space: nowrap;
+}
+.y2k-produit a {
+  display: inline-block;
+  margin-top: 6px;
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--y2k-encre);
+  background: linear-gradient(180deg, var(--y2k-clair), var(--y2k-chrome));
+  box-shadow: var(--bev-haut);
+  padding: 3px 8px 2px;
+}
+.y2k-produit a:hover { color: var(--acc); }
+.y2k-xp-parc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding-top: 4px;
+}
+.y2k-xp-parc span {
+  font-family: var(--f-mono), monospace;
+  font-size: 10.5px;
+  color: var(--y2k-encre-2);
+  background: color-mix(in srgb, var(--acc) 10%, var(--y2k-clair));
+  border: 1px solid color-mix(in srgb, var(--acc) 35%, var(--y2k-chrome-2));
+  padding: 1px 6px;
+}
+
+/* ------------------------------------------------------------------
+   TELEMETRIE.EXE — les six voies en ÉGALISEUR. Le palier est la
+   hauteur du curseur ; la voie chère est rose, et c'est la facture.
+   ------------------------------------------------------------------ */
+.y2k-eq {
+  display: flex;
+  align-items: flex-end;
+  gap: clamp(8px, 2.6vw, 26px);
+  justify-content: center;
+  padding: 22px 12px 14px;
+  background: var(--y2k-lcd);
+  box-shadow: var(--bev-creux);
+  /* dans son défileur : max-content pour que, quand ça déborde, le bord
+     gauche reste atteignable (un center qui déborde le perdrait) */
+  width: max-content;
+  min-width: 100%;
+}
+.y2k-eq-voie { text-align: center; }
+.y2k-eq-piste {
+  position: relative;
+  width: clamp(26px, 4vw, 40px);
+  height: 150px;
+  margin: 0 auto;
+  background:
+    repeating-linear-gradient(0deg, rgba(255 179 220 / 0.12) 0 2px, transparent 2px 12px),
+    #241a3e;
+  box-shadow: var(--bev-creux);
+}
+.y2k-eq-niveau {
+  position: absolute;
+  inset: auto 4px 4px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tint) 60%, #fff), var(--tint));
+  box-shadow: 0 0 14px color-mix(in srgb, var(--tint) 60%, transparent);
+}
+.y2k-eq-curseur {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 9px;
+  transform: translateY(-50%);
+  background: linear-gradient(180deg, var(--y2k-clair), var(--y2k-chrome-2));
+  box-shadow: var(--bev-haut);
+}
+.y2k-eq-num {
+  margin-top: 8px;
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 11px;
+  color: var(--y2k-lcd-txt);
+}
+.y2k-eq-nom {
+  font-family: var(--f-mono), monospace;
+  font-size: 10.5px;
+  color: rgba(255 179 220 / 0.6);
+}
+.y2k-eq-legende {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 18px;
+  padding: 10px 0 2px;
+  font-family: var(--f-mono), monospace;
+  font-size: 12px;
+  color: var(--y2k-encre-2);
+}
+.y2k-eq-legende i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 5px;
+  font-style: normal;
+  background: var(--tint);
+  box-shadow: var(--bev-creux);
+}
+.y2k-tel-lecture {
+  margin: 18px 0 10px;
+  max-width: 62ch;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--y2k-encre);
+}
+.y2k-tel-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.y2k-tel-table th {
+  text-align: left;
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--y2k-encre-2);
+  padding: 6px 10px;
+  border-bottom: 2px solid var(--y2k-ombre);
+}
+.y2k-tel-table td {
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--y2k-chrome-2);
+  color: var(--y2k-encre);
+  vertical-align: top;
+}
+.y2k-tel-table td:first-child { font-family: var(--f-mono), monospace; color: var(--y2k-encre-2); }
+.y2k-palier {
+  font-family: var(--f-mono), monospace;
+  white-space: nowrap;
+}
+.y2k-palier i {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 6px;
+  font-style: normal;
+  background: var(--tint);
+}
+/* le tableau déborde en fenêtre étroite : il défile DANS la fenêtre */
+.y2k-defile-x { overflow-x: auto; }
+
+/* ------------------------------------------------------------------
+   METHODE.EXE — l'assistant d'installation : six étapes, une jauge,
+   et le banc de mesure accroché à l'étape 04.
+   ------------------------------------------------------------------ */
+.y2k-jauge {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 3px;
+  padding: 6px;
+  background: var(--y2k-lcd);
+  box-shadow: var(--bev-creux);
+  margin-bottom: 20px;
+}
+.y2k-jauge i {
+  height: 14px;
+  background: linear-gradient(180deg, #ffa5d2, var(--y2k-rose));
+}
+.y2k-etapes { display: grid; gap: 8px; }
+.y2k-etape {
+  display: grid;
+  grid-template-columns: 44px 150px 1fr;
+  align-items: baseline;
+  gap: 12px;
+  padding: 9px 12px;
+  background: var(--y2k-clair);
+  box-shadow: var(--bev-haut);
+}
+.y2k-etape .num {
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 13px;
+  color: var(--y2k-rose);
+}
+.y2k-etape .nom {
+  font-family: var(--f-chrome), var(--f-display), sans-serif;
+  font-size: 13.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.y2k-etape .dit { font-size: 13px; color: var(--y2k-encre-2); }
+@media (max-width: 640px) {
+  .y2k-etape { grid-template-columns: 34px 1fr; }
+  .y2k-etape .dit { grid-column: 2; }
+}
+.y2k-banc {
+  margin: 8px 0 0 56px;
+  padding: 10px 14px;
+  background: var(--y2k-lcd);
+  box-shadow: var(--bev-creux);
+  color: var(--y2k-lcd-txt);
+  font-family: var(--f-mono), monospace;
+  font-size: 12.5px;
+  max-width: 520px;
+}
+.y2k-banc b {
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-right: 8px;
+}
+.y2k-banc .chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+.y2k-banc .chips span { color: rgba(255 179 220 / 0.7); }
+@media (max-width: 640px) { .y2k-banc { margin-left: 0; } }
+
+/* ------------------------------------------------------------------
+   SPECS.SYS — le gestionnaire de périphériques : groupes en arbre,
+   lignes à points de conduite.
+   ------------------------------------------------------------------ */
+.y2k-arbre { display: grid; gap: 16px; }
+@media (min-width: 900px) { .y2k-arbre { grid-template-columns: 1fr 1fr; align-items: start; } }
+.y2k-groupe {
+  background: var(--y2k-clair);
+  box-shadow: var(--bev-haut);
+  padding: 10px 14px 12px;
+}
+.y2k-groupe h3 {
+  margin: 0 0 8px;
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 11.5px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--y2k-encre);
+}
+.y2k-groupe h3::before { content: "▸ "; color: var(--y2k-rose); }
+.y2k-ligne {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 3px 0 3px 14px;
+  border-left: 1px dotted var(--y2k-ombre);
+  font-size: 13px;
+}
+.y2k-ligne .fil {
+  flex: 1;
+  border-bottom: 1px dotted var(--y2k-chrome-2);
+  transform: translateY(-3px);
+}
+.y2k-ligne .classe {
+  font-family: var(--f-mono), monospace;
+  font-size: 11.5px;
+  color: var(--y2k-encre-2);
+}
+
+/* ------------------------------------------------------------------
+   CONTACT.DLL — la boîte de dialogue. Trois boutons, une phrase.
+   ------------------------------------------------------------------ */
+.y2k-dlg { max-width: 640px; margin: 0 auto; width: 100%; }
+.y2k-dlg-corps {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  padding: 26px 28px 8px;
+}
+.y2k-dlg-icone {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  background: var(--y2k-lcd);
+  color: var(--y2k-lcd-txt);
+  box-shadow: var(--bev-creux);
+}
+.y2k-dlg-texte {
+  margin: 4px 0 0;
+  font-family: var(--f-chrome), var(--f-display), sans-serif;
+  font-size: clamp(16px, 2.4vw, 21px);
+  line-height: 1.4;
+  color: var(--y2k-encre);
+}
+.y2k-dlg-boutons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 18px 28px 26px;
+}
+.y2k-dlg-boutons a {
+  flex: 1 1 160px;
+  text-align: center;
+  text-decoration: none;
+  padding: 10px 12px;
+  color: var(--y2k-encre);
+  background: linear-gradient(180deg, var(--y2k-clair), var(--y2k-chrome));
+  box-shadow: var(--bev-haut);
+}
+.y2k-dlg-boutons a:hover { color: var(--y2k-rose); }
+.y2k-dlg-boutons .role {
+  display: block;
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--y2k-encre-2);
+}
+.y2k-dlg-boutons .val { font-size: 13.5px; }
+
+/* — la barre d'état de session, tout en bas — */
+.y2k-pied {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 14px;
+  background: var(--y2k-chrome-2);
+  box-shadow: var(--bev-haut);
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 11px;
+  color: var(--y2k-encre);
+}

@@ -859,6 +859,39 @@ const DICT = {
       ["Publishing window", "2026-07-08 → 2026-07-15", "git log --date=short --pretty=%ad | sort -u"],
     ],
   },
+  /* — le hub TRAVAIL (#36) — le monde 2D passe Y2K Brutalist (décision
+     Hugo du 2026-08-26 sur #34) : la page se présente comme un bureau
+     système an-2000 — fenêtres à biseau, noms de fichiers, readouts LCD.
+     Le CONTENU reste celui des feuilles (xp*, tel*, trace*, spec*, ct* et
+     parcours.ts, repris tels quels) ; ici ne vivent que les chromes de la
+     coquille. Les noms de fichiers ne se traduisent pas tous : .EXE est
+     l'esthétique, seule la racine suit la langue quand elle est un mot. */
+  hubOs: { fr: "HJ·OS", en: "HJ·OS" },
+  hubTravailSys: { fr: "TRAVAIL.SYS", en: "WORK.SYS" },
+  hubBoot: {
+    fr: "session ouverte — partition montée",
+    en: "session open — partition mounted",
+  },
+  hubMarquee: {
+    fr: "★ PARTITION TRAVAIL ··· 4 employeurs ··· 6 voies de routage multi-modèle ··· règle : le palier le plus bas qui tient la tâche ··· contact en fin de session ★",
+    en: "★ WORK PARTITION ··· 4 employers ··· 6 multi-model routing channels ··· rule: the lowest tier that holds the task ··· contact at end of session ★",
+  },
+  hubEjecter: { fr: "⏏ Éjecter — retour à l'expérience", en: "⏏ Eject — back to the experience" },
+  hubFenXp: { fr: "EXPERIENCE.EXE", en: "EXPERIENCE.EXE" },
+  hubFenTel: { fr: "TELEMETRIE.EXE", en: "TELEMETRY.EXE" },
+  hubFenMethode: { fr: "METHODE.EXE", en: "METHOD.EXE" },
+  hubFenSpec: { fr: "SPECS.SYS", en: "SPECS.SYS" },
+  hubFenContact: { fr: "CONTACT.DLL", en: "CONTACT.DLL" },
+  hubObjets: { fr: "objets", en: "items" },
+  /* identique dans les deux langues, mais par le dict — précédent gt86Nom */
+  hubTelSource: { fr: "OpenRouter", en: "OpenRouter" },
+  /* la réserve de parcours.ts (aConfirmer) — la planche la dit par un
+     carré vide, le hub la DIT : une lacune de documentation se signale */
+  hubAConfirmer: { fr: "à confirmer", en: "to be confirmed" },
+  hubStatut: {
+    fr: "© 2026 Hugo Juskowiak — session TRAVAIL",
+    en: "© 2026 Hugo Juskowiak — WORK session",
+  },
 } as const
 
 type Key = keyof typeof DICT
