@@ -893,6 +893,9 @@ const DICT = {
     fr: "© 2026 Hugo Juskowiak — session TRAVAIL",
     en: "© 2026 Hugo Juskowiak — WORK session",
   },
+  /* l'essai C du gate #36 (pub magazine) : la petite URL de coin des
+     pubs imprimées — identique dans les deux langues, par le dict */
+  pubUrl: { fr: "www.hugojuskowiak.com", en: "www.hugojuskowiak.com" },
 } as const
 
 type Key = keyof typeof DICT

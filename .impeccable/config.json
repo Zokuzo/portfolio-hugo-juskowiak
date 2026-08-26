@@ -20,6 +20,15 @@
         ],
         "createdAt": "2026-08-26T10:49:58.948Z",
         "reason": "Titres chrome holographique = direction Y2K validée par Hugo (gate #36, références #neon/DesignMart)"
+      },
+      {
+        "rule": "gradient-text",
+        "value": "*",
+        "files": [
+          "components/y2k/pub.css"
+        ],
+        "createdAt": "2026-08-26T11:09:34.719Z",
+        "reason": "Lettrage chrome du monde Y2K — direction validée par Hugo au gate #36, même exception que y2k.css/affiche.css"
       }
     ]
   }

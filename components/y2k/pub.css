@@ -1,0 +1,368 @@
+/* ==================================================================
+   HUB « PUB » — l'ESSAI C du gate #36, d'après la pub Nokia 7250 de
+   Hugo : une PAGE DE MAGAZINE — papier blanc, visuel glacé géant au
+   bord courbe qui saigne à gauche, colonne publicitaire à droite
+   (marque en cobalt, pile d'accroches, marque-pied), et l'OBJET qui
+   chevauche la couture : un appareil à écran LCD qui montre le
+   produit. Les barres d'étalonnage d'imprimeur vivent dans les coins.
+
+   Scopé .pub-* ; tokens de `.y2k` réutilisés (fontes, biseaux, LCD).
+   Route jetable /prototype/hub-pub — le verdict de Hugo décide.
+   ================================================================== */
+
+/* .pub.y2k, pas .pub : à spécificité égale, le papier ne gagnerait que
+   par l'ordre d'import des chunks — la revue l'a mesuré tenant, mais
+   un réordonnancement Next le casserait en silence */
+.pub.y2k {
+  background: #f2f0f7;
+  color: #16112c;
+  --cobalt: #2b50d8;
+}
+/* le monde PUB est un PAPIER : ni la grille du desktop ni le sol
+   vaporwave de la version A — les pseudos de .y2k se taisent ici */
+.pub.y2k::before,
+.pub.y2k::after { display: none; }
+/* le monde PUB est un papier : la barre système du bureau n'y vit pas,
+   mais l'éjection et la langue restent — la barre passe en blanc */
+.pub .y2k-barre {
+  background: #fbfafd;
+  box-shadow: 0 1px 0 #d5d0e8;
+  color: #16112c;
+}
+.pub .y2k-barre-fichier { color: #16112c; }
+
+/* ------------------------------------------------------------------
+   LA PAGE — une annonce pleine hauteur : visuel | colonne.
+   ------------------------------------------------------------------ */
+.pub-page {
+  position: relative;
+  min-height: 96vh;
+  display: grid;
+  overflow: hidden;
+  background: #f6f4fa;
+  border-bottom: 1px solid #e2ddf0;
+}
+@media (min-width: 900px) {
+  .pub-page { grid-template-columns: 1.55fr 1fr; }
+}
+
+/* le VISUEL : glacé, saturé, bord courbe à droite — la « photo » */
+.pub-visu {
+  position: relative;
+  min-height: 52vh;
+  overflow: hidden;
+  /* PAS un ballon : la découpe de la pub est l'ARC d'un très grand
+     cercle — une ellipse énorme centrée loin à gauche, dont seule la
+     tranche droite se voit ; le visuel reste plein cadre partout
+     ailleurs */
+  clip-path: ellipse(94% 130% at 6% 50%);
+  background:
+    radial-gradient(90% 80% at 28% 24%, rgba(255 255 255 / 0.72), transparent 55%),
+    radial-gradient(70% 60% at 78% 82%, color-mix(in srgb, var(--acc, #ff3ea5) 55%, transparent), transparent 70%),
+    linear-gradient(160deg,
+      color-mix(in srgb, var(--acc, #ff3ea5) 24%, #cfe4fb),
+      color-mix(in srgb, var(--acc, #ff3ea5) 52%, #e6b3ef) 46%,
+      color-mix(in srgb, var(--acc, #ff3ea5) 76%, #6a4fd8) 100%);
+}
+/* les paillettes du maquillage : deux semis de points + un voile */
+.pub-visu::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle, rgba(255 255 255 / 0.9) 1px, transparent 1.8px),
+    radial-gradient(circle, rgba(255 255 255 / 0.55) 1.4px, transparent 2.4px);
+  background-size: 90px 90px, 150px 150px;
+  background-position: 12px 8px, 40px 60px;
+  mask-image: radial-gradient(75% 70% at 30% 35%, #000, transparent 78%);
+  -webkit-mask-image: radial-gradient(75% 70% at 30% 35%, #000, transparent 78%);
+}
+/* le nom géant, RECADRÉ comme un gros plan : il saigne des bords */
+/* le nom joue le VISAGE de la pub : un gros plan — centré verticalement,
+   plus large que le panneau, recadré par les bords */
+.pub-visu .geant {
+  position: absolute;
+  left: -0.08em;
+  top: 50%;
+  transform: translateY(-50%);
+  margin: 0;
+  font-family: var(--f-chrome), var(--f-display), sans-serif;
+  font-size: clamp(96px, 17vw, 260px);
+  line-height: 0.95;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  background: linear-gradient(180deg, #ffffff 4%, #cfd9f4 32%, #241f3d 50%, #f2eaff 60%, #6a5fa8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 20px color-mix(in srgb, var(--acc, #ff3ea5) 50%, transparent));
+}
+
+/* la COLONNE publicitaire : blanc, cobalt, pile d'accroches */
+.pub-col {
+  position: relative;
+  display: grid;
+  align-content: space-between;
+  gap: 26px;
+  padding: clamp(24px, 3vw, 52px);
+  background: #fbfafd;
+}
+.pub-marque {
+  margin: 0;
+  text-align: right;
+  font-family: var(--f-chrome), var(--f-display), sans-serif;
+  font-size: clamp(20px, 2.3vw, 34px);
+  line-height: 1.08;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--cobalt);
+  overflow-wrap: break-word;
+}
+.pub-copy {
+  display: grid;
+  gap: 16px;
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+.pub-copy p { margin: 0; }
+.pub-copy .lignes { font-weight: 600; }
+.pub-copy .fonction { color: #4c4670; font-family: var(--f-mono), monospace; font-size: 12px; }
+.pub-produits { display: grid; gap: 8px; }
+.pub-produits div { font-size: 13px; line-height: 1.5; }
+.pub-produits b { color: var(--cobalt); }
+.pub-produits a {
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  color: var(--cobalt);
+  text-decoration: none;
+  border-bottom: 1px solid currentColor;
+}
+.pub-produits a:hover { color: #16112c; }
+/* le parc, en petite ligne mono — même contenu que les essais A et B */
+.pub-parc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-family: var(--f-mono), monospace;
+  font-size: 11px;
+  color: #4c4670;
+}
+.pub-parc span::after { content: " ·"; }
+.pub-parc span:last-child::after { content: ""; }
+.pub-parc {
+  margin: 0;
+  font-family: var(--f-mono), monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #4c4670;
+}
+.pub-aconf {
+  margin-left: 8px;
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  color: #4c4670;
+  border: 1px dashed #b6b0d8;
+  padding: 1px 6px 0;
+  white-space: nowrap;
+}
+.pub-pied-marque {
+  text-align: right;
+  color: var(--cobalt);
+}
+.pub-pied-marque .nom {
+  font-family: var(--f-chrome), var(--f-display), sans-serif;
+  font-size: clamp(17px, 1.8vw, 24px);
+  text-transform: uppercase;
+}
+.pub-pied-marque .sous { font-size: 12.5px; }
+
+/* la petite URL et les BARRES D'ÉTALONNAGE de l'imprimeur */
+.pub-url {
+  position: absolute;
+  bottom: 10px;
+  left: 14px;
+  font-family: var(--f-mono), monospace;
+  font-size: 11px;
+  color: #3f3963;
+  /* un cartouche papier : posée sur le visuel saturé, l'URL nue
+     tombait à 1,4:1 sur le cobalt (revue) */
+  background: rgba(251 250 253 / 0.92);
+  padding: 2px 7px;
+}
+.pub-cales {
+  position: absolute;
+  right: 0;
+  display: grid;
+  gap: 3px;
+  width: 44px;
+}
+.pub-cales.haut { top: 0; }
+.pub-cales.bas { bottom: 0; }
+.pub-cales i { height: 9px; }
+.pub-cales i:nth-child(1) { background: #1f8a4c; }
+.pub-cales i:nth-child(2) { background: var(--cobalt); }
+
+/* ------------------------------------------------------------------
+   L'APPAREIL — l'objet qui chevauche la couture visuel/colonne :
+   coque bleue arrondie, écran LCD, rangée de touches.
+   ------------------------------------------------------------------ */
+.pub-devise {
+  position: relative;
+  z-index: 2;
+  /* décor pur (aria-hidden) : il ne doit JAMAIS avaler un clic — la
+     revue l'a pris la coque sur le lien « Fiche détaillée » à 1280px */
+  pointer-events: none;
+  width: min(320px, 82vw);
+  margin: -10vh auto 40px;
+  padding: 14px 14px 12px;
+  border-radius: 30px;
+  background: linear-gradient(160deg, #4a63e8, #16205e 78%);
+  box-shadow:
+    inset 1px 1px 0 rgba(255 255 255 / 0.5),
+    inset -2px -2px 0 rgba(0 0 0 / 0.4),
+    0 24px 50px rgba(22 17 44 / 0.35);
+}
+@media (min-width: 900px) {
+  /* ancré à la COUTURE visuel/colonne (1.55fr/2.55 = 60,78 %), le gros
+     de la coque côté visuel : il ne mord la colonne que de ~90px, que
+     le padding-left de .pub-col réserve — la revue l'a mesuré barrant
+     les noms de produits sur les quatre annonces à left:58 % */
+  .pub-devise {
+    position: absolute;
+    left: calc(60.78% - 70px);
+    top: 50%;
+    transform: translate(-50%, -50%) rotate(-3deg);
+    margin: 0;
+  }
+  .pub-page > .pub-col { padding-left: 130px; }
+}
+.pub-devise .ecran {
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--y2k-lcd, #1c1430);
+  box-shadow: inset 0 0 0 2px rgba(0 0 0 / 0.55);
+}
+.pub-devise .ecran img { display: block; width: 100%; height: auto; }
+.pub-devise .ecran .lcd {
+  display: grid;
+  gap: 6px;
+  padding: 14px 12px;
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 11px;
+  color: var(--y2k-lcd-txt, #ffb3dc);
+}
+.pub-devise .touches {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding-top: 10px;
+}
+.pub-devise .touches i {
+  width: 34px;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #c9d2f8, #5a6bd8);
+  box-shadow: inset 1px 1px 0 rgba(255 255 255 / 0.6);
+}
+
+/* ------------------------------------------------------------------
+   LES PAGES « PRINT » : méthode, specs, contact — papier plat,
+   filets fins, cobalt. Aucun biseau : c'est de l'imprimé.
+   ------------------------------------------------------------------ */
+.pub-print {
+  position: relative;
+  padding: clamp(56px, 8vw, 110px) clamp(20px, 6vw, 96px);
+  background: #f8f6fb;
+  border-bottom: 1px solid #e2ddf0;
+}
+.pub-print h2 {
+  margin: 0 0 8px;
+  font-family: var(--f-chrome), var(--f-display), sans-serif;
+  font-size: clamp(22px, 3.4vw, 44px);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--cobalt);
+  overflow-wrap: break-word;
+}
+.pub-print .note { margin: 0 0 30px; max-width: 62ch; font-size: 14px; line-height: 1.55; color: #4c4670; }
+.pub-etapes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px 34px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+@media (max-width: 760px) { .pub-etapes { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 420px) { .pub-etapes { grid-template-columns: 1fr; } }
+.pub-etapes li { border-top: 2px solid var(--cobalt); padding-top: 10px; display: grid; gap: 4px; }
+.pub-etapes .num { font-family: var(--f-mono), monospace; font-size: 12px; color: var(--cobalt); }
+.pub-etapes .nom { font-family: var(--f-chrome), var(--f-display), sans-serif; font-size: 15px; text-transform: uppercase; }
+.pub-etapes .dit { font-size: 13px; color: #4c4670; line-height: 1.5; }
+.pub-banc {
+  margin: 30px 0 0;
+  padding: 12px 16px;
+  background: var(--y2k-lcd, #1c1430);
+  color: var(--y2k-lcd-txt, #ffb3dc);
+  font-family: var(--f-mono), monospace;
+  font-size: 12.5px;
+}
+.pub-banc b {
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-right: 8px;
+}
+.pub-banc .chips { display: inline-flex; flex-wrap: wrap; gap: 4px 10px; }
+.pub-banc .chips span { color: rgba(255 179 220 / 0.7); }
+
+.pub-arbre { display: grid; gap: 26px 40px; }
+@media (min-width: 900px) { .pub-arbre { grid-template-columns: 1fr 1fr 1fr; align-items: start; } }
+.pub-groupe h3 {
+  margin: 0 0 8px;
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 11.5px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--cobalt);
+  border-bottom: 1px solid #d5d0e8;
+  padding-bottom: 6px;
+}
+.pub-ligne { display: flex; align-items: baseline; gap: 8px; padding: 3px 0; font-size: 13px; }
+.pub-ligne .fil { flex: 1; border-bottom: 1px dotted #c4bde4; transform: translateY(-3px); }
+.pub-ligne .classe { font-family: var(--f-mono), monospace; font-size: 11.5px; color: #4c4670; }
+
+.pub-contact { text-align: center; }
+.pub-contact h2 { color: #16112c; }
+.pub-boutons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 26px;
+}
+.pub-boutons a {
+  flex: 1 1 180px;
+  max-width: 300px;
+  text-decoration: none;
+  padding: 12px 14px;
+  color: var(--cobalt);
+  border: 2px solid var(--cobalt);
+}
+.pub-boutons a:hover { color: #16112c; border-color: #16112c; }
+.pub-boutons .role {
+  display: block;
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.pub-boutons .val { font-size: 13.5px; }
+
+.pub .y2k-pied { background: #fbfafd; box-shadow: 0 -1px 0 #d5d0e8; color: #16112c; }
