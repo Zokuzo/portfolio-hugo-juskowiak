@@ -85,7 +85,9 @@
   align-items: center;
   gap: 8px 14px;
   padding: 8px 14px;
-  background: linear-gradient(180deg, var(--y2k-chrome), var(--y2k-chrome-2));
+  background:
+    linear-gradient(180deg, rgba(255 255 255 / 0.55), rgba(255 255 255 / 0.1) 48%, rgba(0 0 0 / 0.06) 56%, transparent),
+    linear-gradient(180deg, var(--y2k-chrome), var(--y2k-chrome-2));
   box-shadow: var(--bev-haut);
   font-family: var(--f-pixel), var(--f-mono), monospace;
   font-size: 12px;
@@ -248,15 +250,17 @@
    ------------------------------------------------------------------ */
 .y2k-colonne {
   position: relative;
-  max-width: 1100px;
+  max-width: 1440px;
   margin: 0 auto;
-  padding: 26px 20px 90px;
+  padding: 30px 24px 90px;
   display: grid;
-  gap: 54px;
+  gap: 64px;
 }
 .y2k-fen {
-  background: var(--y2k-chrome);
-  box-shadow: var(--bev-haut), 0 18px 50px rgba(0 0 0 / 0.5);
+  /* face BROSSÉE + LISERÉ chromé double (« rajoute un peu de chrome »,
+     gate #36) : l'arête claire puis l'ombre, comme un cadre d'alu */
+  background: linear-gradient(180deg, #dad6f2, #c2bde0);
+  box-shadow: var(--bev-haut), 0 0 0 2px #eae6fa, 0 0 0 3px #57517e, 0 18px 50px rgba(0 0 0 / 0.5);
   /* item de grille : sans min-width:0, le min-content de l'égaliseur
      dictait 444px à TOUTES les fenêtres et la page scrollait
      horizontalement sur mobile (revue #36, mesuré à 320/375px) */
@@ -267,7 +271,10 @@
   align-items: center;
   gap: 10px;
   padding: 6px 10px;
-  background: linear-gradient(90deg, var(--acc), color-mix(in srgb, var(--acc) 55%, var(--y2k-chrome)));
+  /* le vernis par-dessus l'accent : la barre bombe comme un skin */
+  background:
+    linear-gradient(180deg, rgba(255 255 255 / 0.5), rgba(255 255 255 / 0.12) 45%, rgba(0 0 0 / 0.08) 55%, transparent),
+    linear-gradient(90deg, var(--acc), color-mix(in srgb, var(--acc) 55%, var(--y2k-chrome)));
   color: var(--acc-txt);
   font-family: var(--f-pixel), var(--f-mono), monospace;
   font-size: 12px;
@@ -311,10 +318,13 @@
   font-family: var(--f-chrome), var(--f-display), sans-serif;
   /* plancher bas : « CARACTÉRISTIQUES » en Michroma doit tenir dans les
      280px utiles d'un écran de 320 */
-  font-size: clamp(17px, 4.2vw, 28px);
+  font-size: clamp(17px, 4.2vw, 30px);
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  /* titres GRAVÉS dans le métal : encre pleine + arête de lumière sous
+     la lettre — l'emboss classique, lisible là où un dégradé délave */
   color: var(--y2k-encre);
+  text-shadow: 0 1px 0 rgba(255 255 255 / 0.55);
 }
 .y2k-note {
   margin: 0 0 22px;
@@ -330,7 +340,7 @@
 .y2k-xp-grille {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 22px;
+  gap: 26px;
 }
 @media (min-width: 900px) {
   .y2k-xp-grille { grid-template-columns: 1fr 1fr; }
@@ -429,171 +439,59 @@
   padding: 1px 6px;
 }
 
-/* ------------------------------------------------------------------
-   TELEMETRIE.EXE — les six voies en ÉGALISEUR. Le palier est la
-   hauteur du curseur ; la voie chère est rose, et c'est la facture.
-   ------------------------------------------------------------------ */
-.y2k-eq {
-  display: flex;
-  align-items: flex-end;
-  gap: clamp(8px, 2.6vw, 26px);
-  justify-content: center;
-  padding: 22px 12px 14px;
-  background: var(--y2k-lcd);
-  box-shadow: var(--bev-creux);
-  /* dans son défileur : max-content pour que, quand ça déborde, le bord
-     gauche reste atteignable (un center qui déborde le perdrait) */
-  width: max-content;
-  min-width: 100%;
-}
-.y2k-eq-voie { text-align: center; }
-.y2k-eq-piste {
-  position: relative;
-  width: clamp(26px, 4vw, 40px);
-  height: 150px;
-  margin: 0 auto;
-  background:
-    repeating-linear-gradient(0deg, rgba(255 179 220 / 0.12) 0 2px, transparent 2px 12px),
-    #241a3e;
-  box-shadow: var(--bev-creux);
-}
-.y2k-eq-niveau {
-  position: absolute;
-  inset: auto 4px 4px;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--tint) 60%, #fff), var(--tint));
-  box-shadow: 0 0 14px color-mix(in srgb, var(--tint) 60%, transparent);
-}
-.y2k-eq-curseur {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 9px;
-  transform: translateY(-50%);
-  background: linear-gradient(180deg, var(--y2k-clair), var(--y2k-chrome-2));
-  box-shadow: var(--bev-haut);
-}
-.y2k-eq-num {
-  margin-top: 8px;
-  font-family: var(--f-pixel), var(--f-mono), monospace;
-  font-size: 11px;
-  color: var(--y2k-lcd-txt);
-}
-.y2k-eq-nom {
-  font-family: var(--f-mono), monospace;
-  font-size: 10.5px;
-  color: rgba(255 179 220 / 0.6);
-}
-.y2k-eq-legende {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px 18px;
-  padding: 10px 0 2px;
-  font-family: var(--f-mono), monospace;
-  font-size: 12px;
-  color: var(--y2k-encre-2);
-}
-.y2k-eq-legende i {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  margin-right: 5px;
-  font-style: normal;
-  background: var(--tint);
-  box-shadow: var(--bev-creux);
-}
-.y2k-tel-lecture {
-  margin: 18px 0 10px;
-  max-width: 62ch;
-  font-size: 14px;
-  line-height: 1.55;
-  color: var(--y2k-encre);
-}
-.y2k-tel-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.y2k-tel-table th {
-  text-align: left;
-  font-family: var(--f-pixel), var(--f-mono), monospace;
-  font-size: 10.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--y2k-encre-2);
-  padding: 6px 10px;
-  border-bottom: 2px solid var(--y2k-ombre);
-}
-.y2k-tel-table td {
-  padding: 7px 10px;
-  border-bottom: 1px solid var(--y2k-chrome-2);
-  color: var(--y2k-encre);
-  vertical-align: top;
-}
-.y2k-tel-table td:first-child { font-family: var(--f-mono), monospace; color: var(--y2k-encre-2); }
-.y2k-palier {
-  font-family: var(--f-mono), monospace;
-  white-space: nowrap;
-}
-.y2k-palier i {
-  display: inline-block;
-  width: 9px;
-  height: 9px;
-  margin-right: 6px;
-  font-style: normal;
-  background: var(--tint);
-}
-/* le tableau déborde en fenêtre étroite : il défile DANS la fenêtre */
+/* un contenu plus large que sa fenêtre défile DANS la fenêtre */
 .y2k-defile-x { overflow-x: auto; }
 
 /* ------------------------------------------------------------------
-   METHODE.EXE — l'assistant d'installation : six étapes, une jauge,
-   et le banc de mesure accroché à l'étape 04.
+   METHODE.EXE — six TOUCHES chromées en pipeline (des touches de
+   façade, comme les boutons du transport d'un player), le banc de
+   mesure en readout LCD pleine largeur dessous.
    ------------------------------------------------------------------ */
-.y2k-jauge {
+.y2k-pipeline {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  gap: 3px;
-  padding: 6px;
-  background: var(--y2k-lcd);
-  box-shadow: var(--bev-creux);
-  margin-bottom: 20px;
-}
-.y2k-jauge i {
-  height: 14px;
-  background: linear-gradient(180deg, #ffa5d2, var(--y2k-rose));
-}
-.y2k-etapes { display: grid; gap: 8px; }
-.y2k-etape {
-  display: grid;
-  grid-template-columns: 44px 150px 1fr;
-  align-items: baseline;
   gap: 12px;
-  padding: 9px 12px;
-  background: var(--y2k-clair);
-  box-shadow: var(--bev-haut);
+  margin: 0 0 18px;
+  padding: 0;
+  list-style: none;
 }
-.y2k-etape .num {
+@media (max-width: 1100px) { .y2k-pipeline { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 560px) { .y2k-pipeline { grid-template-columns: repeat(2, 1fr); } }
+/* « COMPRENDRE » en Michroma ne se coupe pas : sous 380px, une colonne */
+@media (max-width: 380px) { .y2k-pipeline { grid-template-columns: 1fr; } }
+.y2k-touche {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  padding: 14px 12px 16px;
+  background: linear-gradient(180deg, #f4f1fe, #cbc6e7 70%, #b6b0d8);
+  box-shadow: var(--bev-haut), 0 3px 0 #6a6394;
+}
+.y2k-touche .num {
   font-family: var(--f-pixel), var(--f-mono), monospace;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--y2k-rose);
 }
-.y2k-etape .nom {
+.y2k-touche .nom {
   font-family: var(--f-chrome), var(--f-display), sans-serif;
-  font-size: 13.5px;
+  font-size: clamp(12px, 1.15vw, 15px);
   text-transform: uppercase;
   letter-spacing: 0.03em;
+  color: var(--y2k-encre);
 }
-.y2k-etape .dit { font-size: 13px; color: var(--y2k-encre-2); }
-@media (max-width: 640px) {
-  .y2k-etape { grid-template-columns: 34px 1fr; }
-  .y2k-etape .dit { grid-column: 2; }
+.y2k-touche .dit {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--y2k-encre-2);
 }
 .y2k-banc {
-  margin: 8px 0 0 56px;
-  padding: 10px 14px;
+  margin: 0;
+  padding: 12px 16px;
   background: var(--y2k-lcd);
   box-shadow: var(--bev-creux);
   color: var(--y2k-lcd-txt);
   font-family: var(--f-mono), monospace;
   font-size: 12.5px;
-  max-width: 520px;
 }
 .y2k-banc b {
   font-family: var(--f-pixel), var(--f-mono), monospace;
@@ -608,14 +506,15 @@
   gap: 4px 10px;
 }
 .y2k-banc .chips span { color: rgba(255 179 220 / 0.7); }
-@media (max-width: 640px) { .y2k-banc { margin-left: 0; } }
 
 /* ------------------------------------------------------------------
    SPECS.SYS — le gestionnaire de périphériques : groupes en arbre,
    lignes à points de conduite.
    ------------------------------------------------------------------ */
-.y2k-arbre { display: grid; gap: 16px; }
+.y2k-arbre { display: grid; gap: 18px; }
 @media (min-width: 900px) { .y2k-arbre { grid-template-columns: 1fr 1fr; align-items: start; } }
+/* la pleine largeur du gate #36 : trois colonnes dès qu'elle est là */
+@media (min-width: 1240px) { .y2k-arbre { grid-template-columns: 1fr 1fr 1fr; } }
 .y2k-groupe {
   background: var(--y2k-clair);
   box-shadow: var(--bev-haut);

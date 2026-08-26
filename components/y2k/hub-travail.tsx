@@ -32,21 +32,9 @@ const ACCENTS: Record<string, Accent> = {
 }
 const accVars = (a: Accent) => ({ "--acc": a.c, "--acc-txt": a.txt }) as React.CSSProperties
 
-/* Le palier (0|1|2) décide de la hauteur du curseur ET de sa teinte :
-   plus la voie coûte, plus elle chauffe — la seule rose est la facture. */
-const PALIERS = [
-  { h: 30, tint: "#8fd0ff" },
-  { h: 62, tint: "#a06bff" },
-  { h: 94, tint: "#ff3ea5" },
-]
-
 export default function HubTravail() {
   const [lang, setLang] = useState<Lang>("fr")
   const xps = employeurs(lang)
-  const voies = t(lang, "telVoies")
-  const tiers = t(lang, "telTiers")
-  const why = t(lang, "telWhy")
-  const cols = t(lang, "telCols")
   const nodes = t(lang, "nodes")
   const pool = t(lang, "pool")
   const groupes = t(lang, "specGroupes")
@@ -159,89 +147,9 @@ export default function HubTravail() {
         </section>
 
         {/* — TELEMETRIE.EXE : les voies en égaliseur — */}
-        <section className="y2k-fen" aria-labelledby="y2k-tel">
-          <div className="y2k-fen-titre" style={accVars({ c: "#8a4fe8", txt: "#fff" })}>
-            <span className="pastille" aria-hidden="true" />
-            {t(lang, "hubFenTel")}
-            {boutons}
-          </div>
-          <div className="y2k-fen-corps">
-            <h2 id="y2k-tel">{t(lang, "telTitle")}</h2>
-            <p className="y2k-note">{t(lang, "telNote")}</p>
-            {/* l'égaliseur est une ILLUSTRATION du tableau qui suit — il est
-                soustrait aux lecteurs d'écran, le tableau porte tout ; le
-                défileur l'empêche de dicter sa largeur à toute la colonne
-                (revue #36 : min-content 444px → page à 520px sur mobile) */}
-            <div className="y2k-defile-x">
-            <div className="y2k-eq" aria-hidden="true">
-              {voies.map(([num, nom, , palier]) => {
-                const p = PALIERS[Number(palier)]
-                return (
-                  <div key={num} className="y2k-eq-voie">
-                    <div className="y2k-eq-piste">
-                      <i
-                        className="y2k-eq-niveau"
-                        style={{ height: `${p.h}%`, "--tint": p.tint } as React.CSSProperties}
-                      />
-                      <i className="y2k-eq-curseur" style={{ bottom: `${p.h}%` }} />
-                    </div>
-                    <div className="y2k-eq-num">{num}</div>
-                    <div className="y2k-eq-nom">{nom}</div>
-                  </div>
-                )
-              })}
-            </div>
-            </div>
-            <div className="y2k-eq-legende" aria-hidden="true">
-              {tiers.map(([nom, classe], i) => (
-                <span key={nom}>
-                  <i style={{ "--tint": PALIERS[i].tint } as React.CSSProperties} />
-                  {nom} · {classe}
-                </span>
-              ))}
-            </div>
-            <p className="y2k-tel-lecture">{t(lang, "telRead")}</p>
-            <div className="y2k-defile-x">
-              <table className="y2k-tel-table">
-                <thead>
-                  <tr>
-                    {cols.map((c) => (
-                      <th key={c}>{c}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {voies.map(([num, nom, precision, palier], i) => (
-                    <tr key={num}>
-                      <td>{num}</td>
-                      <td>
-                        {nom} — {precision}
-                      </td>
-                      <td>
-                        <span
-                          className="y2k-palier"
-                          style={{ "--tint": PALIERS[Number(palier)].tint } as React.CSSProperties}
-                        >
-                          <i aria-hidden="true" />
-                          {tiers[Number(palier)][0]}
-                        </span>
-                      </td>
-                      <td>{why[i]}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <div className="y2k-fen-etat">
-            <span>
-              {voies.length} {t(lang, "hubObjets")}
-            </span>
-            <span>{t(lang, "hubTelSource")}</span>
-          </div>
-        </section>
-
-        {/* — METHODE.EXE : l'assistant en six étapes — */}
+        {/* — METHODE.EXE : six TOUCHES chromées en pipeline, le banc de
+            mesure en readout LCD dessous (TELEMETRIE.EXE a vécu — gate
+            du 2026-08-26, la feuille 05 de `/` reste seule à la porter) — */}
         <section className="y2k-fen" aria-labelledby="y2k-methode">
           <div className="y2k-fen-titre" style={accVars({ c: "#8fd0ff", txt: ENCRE })}>
             <span className="pastille" aria-hidden="true" />
@@ -251,36 +159,29 @@ export default function HubTravail() {
           <div className="y2k-fen-corps">
             <h2 id="y2k-methode">{t(lang, "traceTitle")}</h2>
             <p className="y2k-note">{t(lang, "traceNote")}</p>
-            <div className="y2k-jauge" aria-hidden="true">
-              {nodes.map(([num]) => (
-                <i key={num} />
-              ))}
-            </div>
-            <ol className="y2k-etapes" style={{ listStyle: "none", margin: 0, padding: 0 }}>
+            <ol className="y2k-pipeline">
               {nodes.map(([num, nom, dit]) => (
-                <li key={num} className="y2k-etape">
+                <li key={num} className="y2k-touche">
                   <span className="num">{num}</span>
                   <span className="nom">{nom}</span>
                   <span className="dit">{dit}</span>
-                  {/* le banc s'accroche à MESURER : c'est l'étape outillée */}
-                  {num === "04" && (
-                    <p className="y2k-banc" style={{ gridColumn: "1 / -1", margin: "6px 0 0" }}>
-                      {/* l'espace texte entre <b> et les chips est une VRAIE
-                          opportunité de césure — sans lui, la ligne entière
-                          est insécable et déborde à 320px (revue #36) */}
-                      <b>{pool[0]}</b>{" "}
-                      <span className="chips">
-                        {t(lang, "poolChips").map((c) => (
-                          <span key={c}>{c}</span>
-                        ))}
-                      </span>
-                      <br />
-                      {pool[1]}
-                    </p>
-                  )}
                 </li>
               ))}
             </ol>
+            {/* le banc s'accroche à MESURER : c'est l'étape outillée.
+                L'espace texte entre <b> et les chips est une VRAIE
+                opportunité de césure — sans lui, la ligne entière est
+                insécable et déborde à 320px (revue #36) */}
+            <p className="y2k-banc">
+              <b>{pool[0]}</b>{" "}
+              <span className="chips">
+                {t(lang, "poolChips").map((c) => (
+                  <span key={c}>{c}</span>
+                ))}
+              </span>
+              <br />
+              {pool[1]}
+            </p>
           </div>
           <div className="y2k-fen-etat">
             <span>

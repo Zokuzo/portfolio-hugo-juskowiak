@@ -873,18 +873,19 @@ const DICT = {
     en: "session open — partition mounted",
   },
   hubMarquee: {
-    fr: "★ PARTITION TRAVAIL ··· 4 employeurs ··· 6 voies de routage multi-modèle ··· règle : le palier le plus bas qui tient la tâche ··· contact en fin de session ★",
-    en: "★ WORK PARTITION ··· 4 employers ··· 6 multi-model routing channels ··· rule: the lowest tier that holds the task ··· contact at end of session ★",
+    fr: "★ PARTITION TRAVAIL ··· 4 employeurs ··· méthode en 6 étapes ··· caractéristiques et classes ··· contact en fin de session ★",
+    en: "★ WORK PARTITION ··· 4 employers ··· 6-step method ··· characteristics and classes ··· contact at end of session ★",
   },
   hubEjecter: { fr: "⏏ Éjecter — retour à l'expérience", en: "⏏ Eject — back to the experience" },
   hubFenXp: { fr: "EXPERIENCE.EXE", en: "EXPERIENCE.EXE" },
-  hubFenTel: { fr: "TELEMETRIE.EXE", en: "TELEMETRY.EXE" },
+  /* TELEMETRIE.EXE a vécu une vague : « enlève le routage multimodèle
+     c'est useless » (gate #36, 2026-08-26) — la décision « Télémétrie en
+     vitrine » du #20 est ENTERRÉE par le propriétaire, la feuille 05 de
+     la planche `/` reste seule à la porter. */
   hubFenMethode: { fr: "METHODE.EXE", en: "METHOD.EXE" },
   hubFenSpec: { fr: "SPECS.SYS", en: "SPECS.SYS" },
   hubFenContact: { fr: "CONTACT.DLL", en: "CONTACT.DLL" },
   hubObjets: { fr: "objets", en: "items" },
-  /* identique dans les deux langues, mais par le dict — précédent gt86Nom */
-  hubTelSource: { fr: "OpenRouter", en: "OpenRouter" },
   /* la réserve de parcours.ts (aConfirmer) — la planche la dit par un
      carré vide, le hub la DIT : une lacune de documentation se signale */
   hubAConfirmer: { fr: "à confirmer", en: "to be confirmed" },

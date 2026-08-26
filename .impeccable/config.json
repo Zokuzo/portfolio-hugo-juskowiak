@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "gradient-text",
+        "value": "*",
+        "files": [
+          "components/y2k/y2k.css"
+        ],
+        "createdAt": "2026-08-26T10:35:48.049Z",
+        "reason": "Lettrage chrome dégradé = la direction Y2K Brutalist demandée et validée à l'œil par Hugo (gate #36, références Evangelion/DesignMart)"
+      }
+    ]
+  }
+}
