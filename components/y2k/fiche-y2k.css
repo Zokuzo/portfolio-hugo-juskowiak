@@ -1,0 +1,305 @@
+/* ==================================================================
+   FICHE Y2K — le gabarit « affiche publicitaire » (#38), d'après la
+   moisson du feed Pinterest de Hugo (.scratch/moisson-pinterest-38/,
+   synthèse au ticket) : la grammaire des PUBS AUTO d'époque (l'objet
+   plein cadre en héros, l'accroche italique, le pavé de texte dense en
+   pied), le lettrage chrome liquide, les panneaux pixel-UI (SYSTEM/
+   FIRMWARE) pour les métadonnées, les étiquettes noires pour le parc.
+
+   LOI DE DIMENSIONNEMENT (leçon du gate #36, l'ultra-large a tué les
+   essais pub) : tout plafond est en PX — les vw ne servent qu'entre
+   deux bornes, le héros plafonne à 860px de haut, le contenu à 1240px
+   de large. Sondé 320 → 2560 avant gate.
+
+   Scopé .fy ; tokens de `.y2k` (y2k.css). L'accent de LA fiche arrive
+   par --acc/--acc-txt posés par fiche-y2k.tsx.
+   ================================================================== */
+
+.fy { --fy-largeur: 1240px; }
+
+/* ------------------------------------------------------------------
+   LE HÉROS — l'affiche : atmosphère à l'accent, rayons, halo,
+   trame halftone qui s'évanouit. Pleine largeur, hauteur PLAFONNÉE.
+   ------------------------------------------------------------------ */
+.fy-hero {
+  position: relative;
+  min-height: min(86vh, 860px);
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 12px;
+  padding: 88px 20px 64px;
+  overflow: hidden;
+  text-align: center;
+  background:
+    repeating-conic-gradient(from 0deg at 50% 116%, rgba(255 255 255 / 0.045) 0 2.6deg, transparent 2.6deg 9deg),
+    radial-gradient(closest-side at 22% 26%, color-mix(in srgb, var(--acc) 30%, transparent), transparent 70%),
+    radial-gradient(130% 95% at 50% 112%, color-mix(in srgb, var(--acc) 40%, #0d0a18), transparent 70%);
+}
+.fy-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, rgba(255 255 255 / 0.13) 1px, transparent 1.6px);
+  background-size: 14px 14px;
+  mask-image: linear-gradient(115deg, #000 10%, transparent 44%);
+  -webkit-mask-image: linear-gradient(115deg, #000 10%, transparent 44%);
+}
+.fy-hero > * { position: relative; }
+/* sans vitrine de captures, l'affiche n'a pas à tenir 860px : le vide
+   mort de l'ultra-large est exactement ce que le gate #36 a payé */
+.fy-hero--court { min-height: min(60vh, 620px); }
+
+/* coins mono — la voix des affiches */
+.fy-coin {
+  position: absolute;
+  /* bornés à 42 % chacun : à 320px les deux coins se chevauchaient en
+     plein glyphe (mesuré en EN par la revue) — bornés, ils replient */
+  max-width: 42%;
+  font-family: var(--f-mono), monospace;
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(239 234 255 / 0.72);
+  white-space: pre-line;
+}
+.fy-coin.hg { top: 16px; left: 20px; text-align: left; }
+.fy-coin.hd { top: 16px; right: 20px; text-align: right; }
+.fy-vertical {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  writing-mode: vertical-rl;
+  font-family: var(--f-jp), var(--f-display), sans-serif;
+  font-size: clamp(16px, 2vw, 26px);
+  letter-spacing: 0.5em;
+  color: color-mix(in srgb, var(--acc) 70%, #fff);
+  opacity: 0.8;
+}
+/* l'étoile ✦ du lettrage chrome des références */
+.fy-etoile {
+  font-family: var(--f-display), sans-serif;
+  font-size: 20px;
+  color: color-mix(in srgb, var(--acc) 70%, #fff);
+  text-shadow: 0 0 14px color-mix(in srgb, var(--acc) 70%, transparent);
+}
+
+.fy-fiche-type {
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(239 234 255 / 0.7);
+}
+/* LE NOM — chrome liquide : clair, horizon sombre, rebond irisé teinté
+   par l'accent ; halo néon. Plafonné 96px. */
+.fy-nom {
+  margin: 0;
+  max-width: min(94vw, 1100px);
+  font-family: var(--f-chrome), var(--f-display), sans-serif;
+  font-size: clamp(34px, 7.5vw, 96px);
+  line-height: 1.04;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  overflow-wrap: break-word;
+  background: linear-gradient(180deg, #ffffff 5%, color-mix(in srgb, var(--acc) 26%, #d8d3f2) 34%, #241f3d 49%, #f4efff 59%, color-mix(in srgb, var(--acc) 55%, #978dc9) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 24px color-mix(in srgb, var(--acc) 55%, transparent));
+}
+/* l'ACCROCHE de pub — l'italique sous l'objet */
+.fy-claim {
+  margin: 4px 0 0;
+  max-width: min(92vw, 720px);
+  font-size: clamp(15px, 1.6vw, 19px);
+  line-height: 1.5;
+  font-style: italic;
+  color: #efeaff;
+}
+
+/* le panneau SYSTEM — les trois méta en pixel-UI de player */
+.fy-system {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
+  margin-top: 18px;
+  padding: 8px 10px;
+  background: var(--y2k-lcd);
+  box-shadow: var(--bev-creux), 0 0 30px color-mix(in srgb, var(--acc) 25%, transparent);
+}
+.fy-system div {
+  display: grid;
+  gap: 2px;
+  padding: 6px 14px;
+  text-align: left;
+}
+.fy-system dt {
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  /* 0,72 et pas 0,55 : mesuré 4,07:1 sur le LCD — sous le seuil AA
+     que la revue #36 a imposé au monde entier */
+  color: rgba(255 179 220 / 0.72);
+}
+.fy-system dd {
+  margin: 0;
+  font-family: var(--f-mono), monospace;
+  font-size: 12.5px;
+  color: var(--y2k-lcd-txt);
+}
+/* les CAPTURES — l'objet de la pub : vitres chromées, la seconde
+   glissée derrière, inclinée. `isolation` : le z-index:-1 de l'arrière
+   plongeait sous le fond du desktop SANS contexte d'empilement propre —
+   le piège du wordmark (88d3daf), payé une seconde fois et attrapé par
+   la revue (diff de captures : 0 pixel rendu). `margin` vit ICI : un
+   style inline sur la figure l'écrasait. */
+.fy-vitrine {
+  position: relative;
+  isolation: isolate;
+  margin: 34px 0 0;
+  width: min(92vw, 760px);
+}
+.fy-vitrine img {
+  display: block;
+  width: 100%;
+  height: auto;
+  box-shadow: var(--bev-haut), 0 0 0 2px #eae6fa, 0 0 0 3px #57517e, 0 30px 70px rgba(0 0 0 / 0.6);
+}
+.fy-vitrine .arriere {
+  position: absolute;
+  inset: 0;
+  transform: rotate(3.2deg) translate(4%, 6%);
+  z-index: -1;
+  opacity: 0.85;
+}
+.fy-legende {
+  margin: 14px 0 0;
+  font-family: var(--f-mono), monospace;
+  font-size: 11.5px;
+  color: rgba(239 234 255 / 0.6);
+}
+
+/* ------------------------------------------------------------------
+   LE PAVÉ — le texte dense au pied de la pub : le contexte.
+   ------------------------------------------------------------------ */
+.fy-colonne {
+  max-width: var(--fy-largeur);
+  margin: 0 auto;
+  padding: 56px 20px 96px;
+  display: grid;
+  gap: 40px;
+}
+.fy-pave {
+  border-top: 2px solid var(--acc);
+  padding-top: 18px;
+}
+.fy-pave p {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: #efeaff;
+  max-width: 74ch;
+}
+.fy-titre-bloc {
+  margin: 0 0 12px;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 11.5px;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--acc) 75%, #fff);
+}
+.fy-titre-bloc::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px dotted rgba(205 201 230 / 0.3);
+}
+
+/* ------------------------------------------------------------------
+   LES PANNEAUX pixel-UI : contraintes, décisions, prévu.
+   ------------------------------------------------------------------ */
+.fy-duo {
+  display: grid;
+  gap: 40px;
+  align-items: start;
+}
+@media (min-width: 980px) { .fy-duo { grid-template-columns: 1fr 1fr; } }
+.fy-liste {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+.fy-liste li {
+  padding: 10px 14px;
+  background: rgba(20 16 42 / 0.85);
+  box-shadow: var(--bev-creux);
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #efeaff;
+}
+.fy-decisions { counter-reset: fy-dec; }
+.fy-decisions li { display: grid; gap: 4px; }
+.fy-decisions li::before {
+  counter-increment: fy-dec;
+  content: counter(fy-dec, decimal-leading-zero);
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 12px;
+  color: var(--acc);
+}
+.fy-decisions b {
+  font-family: var(--f-chrome), var(--f-display), sans-serif;
+  font-weight: 400;
+  font-size: 13.5px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #f4efff;
+}
+
+/* le RÉSULTAT — un readout LCD, la seule ligne qui brille */
+.fy-resultat {
+  padding: 16px 20px;
+  background: var(--y2k-lcd);
+  box-shadow: var(--bev-creux), 0 0 34px color-mix(in srgb, var(--acc) 22%, transparent);
+  font-family: var(--f-mono), monospace;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--y2k-lcd-txt);
+}
+
+/* le PARC — les étiquettes noires du feed */
+.fy-parc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.fy-parc span {
+  font-family: var(--f-mono), monospace;
+  font-size: 11.5px;
+  color: #efeaff;
+  background: #12101f;
+  border: 1px solid rgba(205 201 230 / 0.28);
+  padding: 3px 9px;
+}
+
+/* le retour au hub, en pied de fiche */
+.fy-retour {
+  justify-self: start;
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 12px;
+  text-decoration: none;
+  color: var(--y2k-encre);
+  background: linear-gradient(180deg, var(--y2k-clair), var(--y2k-chrome));
+  box-shadow: var(--bev-haut);
+  padding: 6px 12px 5px;
+}
+.fy-retour:hover { color: var(--y2k-rose); }

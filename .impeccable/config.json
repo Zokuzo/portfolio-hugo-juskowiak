@@ -29,6 +29,15 @@
         ],
         "createdAt": "2026-08-26T11:09:34.719Z",
         "reason": "Lettrage chrome du monde Y2K — direction validée par Hugo au gate #36, même exception que y2k.css/affiche.css"
+      },
+      {
+        "rule": "gradient-text",
+        "value": "*",
+        "files": [
+          "components/y2k/fiche-y2k.css"
+        ],
+        "createdAt": "2026-08-26T12:58:56.394Z",
+        "reason": "Lettrage chrome liquide = la direction Y2K validée par Hugo (gate #36 et moisson Pinterest #38)"
       }
     ]
   }
