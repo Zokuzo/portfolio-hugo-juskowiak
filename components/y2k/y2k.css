@@ -48,20 +48,40 @@
   min-height: 100vh;
 }
 
-/* Le fond du desktop : une grille en perspective à peine visible
-   (l'affiche DesignMart) + une lueur haute. Statique — le mouvement de
-   la page, c'est le filtre CRT global qui le donne. */
+/* Le fond du desktop : grille graphique + lueur haute. Statique — le
+   mouvement de la page, c'est le filtre CRT global qui le donne. */
 .y2k::before {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(120% 55% at 50% -10%, rgba(160 107 255 / 0.16), transparent 60%),
-    repeating-linear-gradient(0deg, rgba(205 201 230 / 0.05) 0 1px, transparent 1px 88px),
-    repeating-linear-gradient(90deg, rgba(205 201 230 / 0.045) 0 1px, transparent 1px 88px);
+    radial-gradient(120% 55% at 50% -10%, rgba(160 107 255 / 0.2), transparent 60%),
+    repeating-linear-gradient(0deg, rgba(205 201 230 / 0.06) 0 1px, transparent 1px 64px),
+    repeating-linear-gradient(90deg, rgba(205 201 230 / 0.055) 0 1px, transparent 1px 64px);
 }
-.y2k { position: relative; }
+/* LE SOL : la grille rose en perspective des références vaporwave,
+   couchée au bas de la page sous un horizon qui rougeoie. `transform`
+   vit sur un pseudo de .y2k, jamais sur .proto-root (règle du layout) —
+   aucun position:fixed ne descend d'ici. */
+.y2k::after {
+  content: "";
+  position: absolute;
+  left: -25%;
+  right: -25%;
+  bottom: 0;
+  height: 42vh;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, transparent, rgba(255 62 165 / 0.06) 30%, transparent),
+    repeating-linear-gradient(90deg, rgba(255 62 165 / 0.28) 0 2px, transparent 2px 72px),
+    repeating-linear-gradient(0deg, rgba(255 62 165 / 0.22) 0 2px, transparent 2px 46px);
+  transform: perspective(520px) rotateX(58deg);
+  transform-origin: 50% 0;
+  mask-image: linear-gradient(180deg, transparent, #000 22%);
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 22%);
+}
+.y2k { position: relative; overflow: hidden; }
 
 .y2k :focus-visible {
   outline: 2px solid var(--y2k-rose);
@@ -159,13 +179,15 @@
   line-height: 1.05;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  /* le chrome : ciel clair en haut, HORIZON sombre franc sous la
-     mi-hauteur, rebond lumineux dessous — la bande doit être LARGE
-     (~10 %) pour survivre à un rendu en 128 px */
-  background: linear-gradient(180deg, #ffffff 4%, #d8d3f2 32%, #6c629e 45%, #221d3e 49%, #16112c 55%, #f6f3ff 63%, #978dc9 100%);
+  /* le chrome HOLOGRAPHIQUE : ciel clair qui glisse vers le bleu,
+     HORIZON sombre franc sous la mi-hauteur, rebond IRISÉ rose-bleu
+     dessous (gate #36 : « plus dans ce style », réf. collage holo) —
+     la bande sombre reste LARGE pour survivre à un rendu en 128 px */
+  background: linear-gradient(180deg, #ffffff 4%, #cfe4fb 30%, #6c629e 45%, #221d3e 49%, #16112c 55%, #ffd9f2 62%, #b9e2ff 76%, #978dc9 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  filter: drop-shadow(0 0 26px rgba(160 107 255 / 0.5));
 }
 .y2k-wordmark::after {
   content: attr(data-texte);
@@ -430,13 +452,14 @@
   gap: 4px;
   padding-top: 4px;
 }
+/* les ÉTIQUETTES NOIRES des références vaporwave : encre pleine,
+   lettre claire, RIEN d'autre — la référence n'a pas de liseré */
 .y2k-xp-parc span {
   font-family: var(--f-mono), monospace;
   font-size: 10.5px;
-  color: var(--y2k-encre-2);
-  background: color-mix(in srgb, var(--acc) 10%, var(--y2k-clair));
-  border: 1px solid color-mix(in srgb, var(--acc) 35%, var(--y2k-chrome-2));
-  padding: 1px 6px;
+  color: #efeaff;
+  background: #12101f;
+  padding: 2px 8px;
 }
 
 /* un contenu plus large que sa fenêtre défile DANS la fenêtre */

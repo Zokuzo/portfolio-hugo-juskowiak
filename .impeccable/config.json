@@ -11,6 +11,15 @@
         ],
         "createdAt": "2026-08-26T10:35:48.049Z",
         "reason": "Lettrage chrome dégradé = la direction Y2K Brutalist demandée et validée à l'œil par Hugo (gate #36, références Evangelion/DesignMart)"
+      },
+      {
+        "rule": "gradient-text",
+        "value": "*",
+        "files": [
+          "components/y2k/affiche.css"
+        ],
+        "createdAt": "2026-08-26T10:49:58.948Z",
+        "reason": "Titres chrome holographique = direction Y2K validée par Hugo (gate #36, références #neon/DesignMart)"
       }
     ]
   }

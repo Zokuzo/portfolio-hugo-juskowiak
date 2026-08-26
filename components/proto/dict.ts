@@ -668,12 +668,12 @@ const DICT = {
     fr: [
       ["E-mail", "hugo.jskpro@outlook.fr", "mailto:hugo.jskpro@outlook.fr"],
       ["LinkedIn", "linkedin.com/in/hugo-juskowiak", "https://www.linkedin.com/in/hugo-juskowiak/"],
-      ["Dossier", "CV — format PDF", "/CV_Hugo_JUSKOWIAK_1.0.pdf"],
+      ["Dossier", "CV — format PDF", "/CV_Hugo_Juskowiak_FR.pdf"],
     ],
     en: [
       ["Email", "hugo.jskpro@outlook.fr", "mailto:hugo.jskpro@outlook.fr"],
       ["LinkedIn", "linkedin.com/in/hugo-juskowiak", "https://www.linkedin.com/in/hugo-juskowiak/"],
-      ["File", "Résumé — PDF", "/CV_Hugo_JUSKOWIAK_1.0.pdf"],
+      ["File", "Résumé — PDF", "/CV_Hugo_Juskowiak_FR.pdf"],
     ],
   },
   ctRail: {
