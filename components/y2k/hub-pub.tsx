@@ -38,7 +38,11 @@ const Cales = ({ ou }: { ou: "haut" | "bas" }) => (
   </span>
 )
 
-export default function HubPub() {
+/* Deux MONDES pour un même squelette (verdict du 3e gate : « combine
+   néon et pub ») : « papier » est la pub magazine blanche d'origine,
+   « neon » la même grammaire posée sur la nuit vaporwave de /work —
+   la peau vit dans pub-neon.css, le markup ne bouge pas. */
+export default function HubPub({ monde = "papier" }: { monde?: "papier" | "neon" }) {
   const [lang, setLang] = useState<Lang>("fr")
   const xps = employeurs(lang)
   const nodes = t(lang, "nodes")
@@ -50,7 +54,7 @@ export default function HubPub() {
   const accroches = [nodes[0][2], nodes[3][2], nodes[4][2]]
 
   return (
-    <main lang={lang} className="y2k pub">
+    <main lang={lang} className={`y2k pub${monde === "neon" ? " pub-neon" : ""}`}>
       <header className="y2k-barre">
         <span className="y2k-barre-fichier">{t(lang, "hubTravailSys")}</span>
         <span className="y2k-barre-espace" />

@@ -1,14 +1,13 @@
 import type { Metadata } from "next"
 import { Michroma, Silkscreen } from "next/font/google"
-import HubAffiche from "@/components/y2k/hub-affiche"
+import HubPub from "@/components/y2k/hub-pub"
 import "@/components/y2k/y2k.css"
-import "@/components/y2k/affiche.css"
+import "@/components/y2k/pub.css"
+import "@/components/y2k/pub-neon.css"
 
-/* ROUTE JETABLE — l'essai B du gate #36 (« fait deux versions pour que
-   je test ») : le hub TRAVAIL en pile d'affiches. Comme les autres
-   /prototype/* : noindex, déclarée mortelle — le verdict de Hugo
-   décide si sa grammaire devient le gabarit fiche (#38) ou si elle
-   meurt ici. Mêmes fontes que /work. */
+/* ROUTE JETABLE — l'essai D du gate #36 (« combine néon et pub ») : le
+   squelette magazine de hub-pub, la peau nuit néon de pub-neon.css.
+   Comme les autres /prototype/* : noindex, mortelle au verdict. */
 
 const chrome = Michroma({
   weight: "400",
@@ -25,14 +24,14 @@ const pixel = Silkscreen({
 })
 
 export const metadata: Metadata = {
-  title: "Essai — hub TRAVAIL en affiches",
+  title: "Essai — hub TRAVAIL néon-pub",
   robots: { index: false },
 }
 
 export default function Page() {
   return (
     <div className={`${chrome.variable} ${pixel.variable}`}>
-      <HubAffiche />
+      <HubPub monde="neon" />
     </div>
   )
 }
