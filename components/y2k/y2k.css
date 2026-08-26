@@ -27,7 +27,7 @@
   --y2k-clair: #f2f0fd;         /* arête éclairée du biseau */
   --y2k-ombre: #575178;         /* arête ombrée du biseau */
   --y2k-encre: #241f3d;         /* l'encre sur chrome */
-  --y2k-encre-2: #4c4670;       /* encre secondaire (notes, légendes) */
+  --y2k-encre-2: #433d68;       /* encre secondaire (notes, légendes) */
   --y2k-rose: #ff3ea5;          /* l'accent chaud — DesignMart */
   --y2k-glace: #8fd0ff;         /* le froid — Lightforce */
   --y2k-violet: #a06bff;        /* le milieu — Evangelion */
@@ -120,7 +120,7 @@
     linear-gradient(180deg, var(--y2k-chrome), var(--y2k-chrome-2));
   box-shadow: var(--bev-haut);
   font-family: var(--f-pixel), var(--f-mono), monospace;
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: 0.04em;
 }
 .y2k-barre-os {
@@ -150,7 +150,7 @@
 .y2k-ejecter {
   color: var(--y2k-encre);
   text-decoration: none;
-  padding: 3px 9px 2px;
+  padding: 4px 10px 3px;
   background: linear-gradient(180deg, var(--y2k-clair), var(--y2k-chrome));
   box-shadow: var(--bev-haut);
 }
@@ -168,7 +168,7 @@
 }
 .y2k-boot {
   font-family: var(--f-pixel), var(--f-mono), monospace;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--y2k-glace);
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -212,7 +212,7 @@
   opacity: 0.8;
 }
 .y2k-identite {
-  font-size: 17px;
+  font-size: 18px;
   color: var(--y2k-chrome);
   letter-spacing: 0.02em;
 }
@@ -221,7 +221,7 @@
   display: inline-block;
   margin-top: 14px;
   font-family: var(--f-pixel), var(--f-mono), monospace;
-  font-size: 11px;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--y2k-nuit);
@@ -238,7 +238,7 @@
   box-shadow: var(--bev-creux), 0 0 34px rgba(160 107 255 / 0.14);
   padding: 14px 18px;
   font-family: var(--f-mono), monospace;
-  font-size: 13px;
+  font-size: 15px;
   color: var(--y2k-lcd-txt);
 }
 .y2k-bios div {
@@ -260,7 +260,7 @@
   background: var(--y2k-lcd);
   box-shadow: var(--bev-creux);
   font-family: var(--f-pixel), var(--f-mono), monospace;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--y2k-lcd-txt);
   padding: 6px 0 5px;
 }
@@ -309,7 +309,7 @@
     linear-gradient(90deg, var(--acc), color-mix(in srgb, var(--acc) 55%, var(--y2k-chrome)));
   color: var(--acc-txt);
   font-family: var(--f-pixel), var(--f-mono), monospace;
-  font-size: 12px;
+  font-size: 13px;
   letter-spacing: 0.06em;
 }
 .y2k-fen-titre .pastille {
@@ -342,7 +342,7 @@
   background: var(--y2k-chrome-2);
   box-shadow: var(--bev-creux);
   font-family: var(--f-pixel), var(--f-mono), monospace;
-  font-size: 11px;
+  font-size: 12.5px;
   color: var(--y2k-encre);
 }
 .y2k-fen h2 {
@@ -360,8 +360,8 @@
 }
 .y2k-note {
   margin: 0 0 22px;
-  max-width: 62ch;
-  font-size: 14.5px;
+  max-width: 68ch;
+  font-size: 16.5px;
   line-height: 1.55;
   color: var(--y2k-encre-2);
 }
@@ -402,12 +402,12 @@
   gap: 4px 14px;
   margin-top: 3px;
   font-family: var(--f-mono), monospace;
-  font-size: 11.5px;
+  font-size: 13px;
   color: var(--y2k-encre-2);
 }
 .y2k-xp-encours {
   font-family: var(--f-pixel), var(--f-mono), monospace;
-  font-size: 10px;
+  font-size: 11px;
   text-transform: uppercase;
   color: var(--acc-txt);
   background: var(--acc);
@@ -418,7 +418,7 @@
 .y2k-xp-corps { padding: 12px 14px 14px; display: grid; gap: 10px; flex: 1; align-content: start; }
 .y2k-xp-resume {
   margin: 0;
-  font-size: 13.5px;
+  font-size: 15.5px;
   line-height: 1.5;
   color: var(--y2k-encre);
 }
@@ -426,7 +426,7 @@
   padding: 8px 10px;
   background: var(--y2k-chrome);
   box-shadow: var(--bev-creux);
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.5;
   color: var(--y2k-encre);
 }
@@ -436,7 +436,7 @@
 .y2k-aconf {
   margin-left: 8px;
   font-family: var(--f-pixel), var(--f-mono), monospace;
-  font-size: 10px;
+  font-size: 11px;
   text-transform: uppercase;
   color: var(--y2k-encre-2);
   border: 1px dashed var(--y2k-ombre);
@@ -447,7 +447,7 @@
   display: inline-block;
   margin-top: 6px;
   font-family: var(--f-pixel), var(--f-mono), monospace;
-  font-size: 10.5px;
+  font-size: 12px;
   text-transform: uppercase;
   text-decoration: none;
   color: var(--y2k-encre);
@@ -466,10 +466,11 @@
    lettre claire, RIEN d'autre — la référence n'a pas de liseré */
 .y2k-xp-parc span {
   font-family: var(--f-mono), monospace;
-  font-size: 10.5px;
-  color: #efeaff;
-  background: #12101f;
-  padding: 2px 8px;
+  font-size: 13px;
+  color: #f4efff;
+  background: #0a0814;
+  border: 1px solid rgba(233 228 255 / 0.55);
+  padding: 3px 9px;
 }
 
 /* un contenu plus large que sa fenêtre défile DANS la fenêtre */
@@ -502,18 +503,18 @@
 }
 .y2k-touche .num {
   font-family: var(--f-pixel), var(--f-mono), monospace;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--y2k-rose);
 }
 .y2k-touche .nom {
   font-family: var(--f-chrome), var(--f-display), sans-serif;
-  font-size: clamp(12px, 1.15vw, 15px);
+  font-size: clamp(13.5px, 1.2vw, 16px);
   text-transform: uppercase;
   letter-spacing: 0.03em;
   color: var(--y2k-encre);
 }
 .y2k-touche .dit {
-  font-size: 12.5px;
+  font-size: 14.5px;
   line-height: 1.45;
   color: var(--y2k-encre-2);
 }
@@ -524,7 +525,7 @@
   box-shadow: var(--bev-creux);
   color: var(--y2k-lcd-txt);
   font-family: var(--f-mono), monospace;
-  font-size: 12.5px;
+  font-size: 14.5px;
 }
 .y2k-banc b {
   font-family: var(--f-pixel), var(--f-mono), monospace;
@@ -556,7 +557,7 @@
 .y2k-groupe h3 {
   margin: 0 0 8px;
   font-family: var(--f-pixel), var(--f-mono), monospace;
-  font-size: 11.5px;
+  font-size: 12.5px;
   font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -569,7 +570,7 @@
   gap: 8px;
   padding: 3px 0 3px 14px;
   border-left: 1px dotted var(--y2k-ombre);
-  font-size: 13px;
+  font-size: 14.5px;
 }
 .y2k-ligne .fil {
   flex: 1;
@@ -578,7 +579,7 @@
 }
 .y2k-ligne .classe {
   font-family: var(--f-mono), monospace;
-  font-size: 11.5px;
+  font-size: 13px;
   color: var(--y2k-encre-2);
 }
 
@@ -606,7 +607,7 @@
 .y2k-dlg-texte {
   margin: 4px 0 0;
   font-family: var(--f-chrome), var(--f-display), sans-serif;
-  font-size: clamp(16px, 2.4vw, 21px);
+  font-size: clamp(18px, 2.6vw, 23px);
   line-height: 1.4;
   color: var(--y2k-encre);
 }
@@ -629,12 +630,12 @@
 .y2k-dlg-boutons .role {
   display: block;
   font-family: var(--f-pixel), var(--f-mono), monospace;
-  font-size: 10.5px;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--y2k-encre-2);
 }
-.y2k-dlg-boutons .val { font-size: 13.5px; }
+.y2k-dlg-boutons .val { font-size: 15px; }
 
 /* — la barre d'état de session, tout en bas — */
 .y2k-pied {
@@ -646,6 +647,6 @@
   background: var(--y2k-chrome-2);
   box-shadow: var(--bev-haut);
   font-family: var(--f-pixel), var(--f-mono), monospace;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--y2k-encre);
 }
