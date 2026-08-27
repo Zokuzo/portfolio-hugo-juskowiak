@@ -36,6 +36,7 @@ export function HeroFenetre({ lang }: { lang: Lang }) {
         {/* LA FENÊTRE et sa lumière : décor pur. */}
         <div className="hf-fond" aria-hidden="true">
           <span className="hf-lampe" />
+          <span className="hf-affiche">{t(lang, "hubMaisonJp")}</span>
           <div className="hf-fen">
             <Pixels grille={FENETRE} className="hf-fenetre" />
             <span className="hf-appui" />

@@ -2,36 +2,43 @@
    MAISON — la peau du hub /home (#37) : la CHAMBRE au crépuscule.
 
    Le miroir du bureau de nuit : /work est une session de travail sur
-   desktop nocturne, /home est l'OS du foyer qui démarre au soir —
-   ciel périwinkle→sakura en haut (le « Cherry Windows 97 » de la
-   moisson), la nuit du monde en bas, sections en PANNEAUX-STICKERS
+   desktop nocturne, /home est la PIÈCE d'où on la regarde — la chambre
+   au soir, le système sur le moniteur du bureau devant la fenêtre
+   ouverte (hero-fenetre.css), et les sections en PANNEAUX-STICKERS
    (liseré découpé, ombre dure) au lieu des fenêtres chrome.
+
+   L'ESSAI « BOOT » A PERDU LE GATE (3e retour, 2026-08-27 : « j'aime
+   beaucoup la deuxième version avec la fenêtre ») : son écran plein
+   cadre, sa branche en surcouche, ses nuages et son ciel en dégradé
+   sont SUPPRIMÉS — l'historique git les garde.
+
+   LA PIÈCE EST ÉCLAIRCIE (même retour : « faut que ce soit un peu plus
+   clair, l'ensemble ») : toutes les surfaces montent d'un cran, du mur
+   aux panneaux, et la lumière vient de la fenêtre. Les valeurs qui
+   suivent sont donc plus hautes qu'un simple noir — chaque montée a été
+   re-mesurée à l'audit AA, l'encre claire garde ses seuils.
 
    Ce fichier ne définit QUE la peau maison (préfixe m-) ; les tokens,
    la barre système, le wordmark, le marquee et le pied viennent de
    y2k.css. Tout est scopé sous `.y2k.maison`.
 
    LA LOI DU DIMENSIONNEMENT (gate #36) : plafonds en px, jamais de vw
-   nu — le ciel s'arrête à 1080px de HAUTEUR déroulée, les colonnes à
-   1240px, le boot à 1100px.
+   nu — les colonnes à 1240px, les meubles de la chambre à 1180px.
    ================================================================== */
 
 .y2k.maison {
-  /* — le ciel du soir : stops en px, l'ultra-large ne l'étire pas — */
-  --m-ciel-1: #a9b8f0;
-  --m-ciel-2: #cfc3ee;
-  --m-ciel-3: #efc4dc;
-  --m-encre-ciel: #241f3d;
-  background: linear-gradient(
-    180deg,
-    var(--m-ciel-1) 0px,
-    var(--m-ciel-2) 300px,
-    var(--m-ciel-3) 520px,
-    #8f6d9a 680px,
-    #46315c 840px,
-    #221a3e 960px,
-    var(--y2k-nuit) 1080px
-  );
+  /* LES SURFACES DE LA PIÈCE, en tokens : elles montent ou descendent
+     ENSEMBLE. Un « plus clair » demandé à l'œil se règle ici, pas dans
+     quinze déclarations éparpillées. */
+  --m-panneau: #241d46; /* la face des panneaux-stickers */
+  --m-panneau-pied: #362c62; /* leur barre d'état */
+  --m-creux: #1b1538; /* les blocs enfoncés (INI, disquette) */
+  --m-lcd: #2a2150; /* le readout de la playlist — le LCD du monde, monté */
+
+  /* le fond de la pièce : la nuit du monde REMONTÉE, et une lueur haute
+     qui descend de la fenêtre du hero — une chambre éclairée par sa
+     fenêtre n'est pas un aplat noir */
+  background: linear-gradient(180deg, #241d48 0px, #1d1740 420px, #191333 900px);
 }
 /* LE SOL MEURT, LA GRILLE RESTE — décision de direction, pas oubli :
    le plancher rose en perspective (.y2k::after) est LA signature du
@@ -41,211 +48,6 @@
    corps sa texture, exactement comme à /work. */
 .y2k.maison::after {
   content: none;
-}
-
-/* ------------------------------------------------------------------
-   LE BOOT — l'écran de démarrage du foyer, sous le ciel.
-   ------------------------------------------------------------------ */
-.m-boot {
-  position: relative;
-  max-width: 1100px;
-  margin: 0 auto;
-  /* le retrait haut RÉSERVE la bande de la branche (voir .m-sakura) :
-     c'est lui qui garantit qu'aucun pétale ne passe derrière une ligne */
-  padding: 144px 20px 110px;
-  text-align: center;
-}
-/* LES TROIS TEXTES DU BOOT SONT POSITIONNÉS — le décor du boot (branche,
-   nuages, kanji) est `position: absolute` en z-index auto : il se peint
-   APRÈS le contenu non positionné, donc par-dessus. Le h1 y échappe
-   seulement parce que y2k.css le pose en relative. Même remède que
-   .y2k-marquee (y2k.css) : le texte se positionne pour rester dessus.
-   Le décor NE prend PAS z-index:-1 — il plongerait sous le ciel au
-   premier moteur qui ne crée pas le contexte attendu (piège 88d3daf). */
-.m-boot-ligne,
-.m-identite,
-.m-charge {
-  position: relative;
-}
-.m-boot-ligne {
-  font-family: var(--f-pixel), var(--f-mono), monospace;
-  font-size: 13px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  /* encre de nuit sur le ciel clair — le miroir du boot glacé de /work */
-  color: var(--m-encre-ciel);
-}
-/* LA BRANCHE DE CERISIER EN PIXEL ART — décor pur, derrière le titre ;
-   pointer-events none, jamais un texte dessus.
-   La largeur est un MULTIPLE de la grille (60 colonnes) : à une taille
-   quelconque, un rect de 1 unité tombe entre deux pixels d'écran et le
-   moteur redonne le bord flou que `crispEdges` venait d'enlever. 300px
-   = 5 px d'écran par pixel d'art, 240 = 4, 180 = 3. */
-/* LA BRANCHE NE DOIT JAMAIS ATTEINDRE LE TEXTE. Elle fait 64×24, donc
-   sa hauteur rendue vaut largeur×0,375 ; à chaque palier, `top` +
-   hauteur reste sous le retrait haut de `.m-boot` (144 / 96 sous
-   640px) — le texte n'a plus jamais un pétale derrière lui, à aucune
-   largeur. C'est une contrainte de LECTURE, pas de goût : à 390px les
-   fleurs passaient derrière « DU FOYER » et cassaient les lettres.
-   Les largeurs sont des multiples de 64 : 320 = 5 px d'écran par pixel
-   d'art, 256 = 4, 192 = 3 — hors multiple, un rect de 1 unité tombe
-   entre deux pixels d'écran et `crispEdges` ne sert plus à rien. */
-.m-sakura {
-  position: absolute;
-  top: 8px;
-  right: 12px;
-  width: 320px; /* → 120px de haut, sous le retrait de 144 */
-  height: auto;
-  pointer-events: none;
-}
-@media (max-width: 1100px) {
-  .m-sakura {
-    width: 256px; /* → 96 */
-  }
-}
-@media (max-width: 720px) {
-  .m-sakura {
-    width: 192px; /* → 72, sous le retrait de 96 */
-    opacity: 0.9;
-  }
-}
-/* le kanji du foyer — décoratif, mort sous 980px (leçon #38 : le
-   vertical mord les titres aux largeurs moyennes) */
-.m-kanji {
-  position: absolute;
-  left: 24px;
-  top: 118px;
-  writing-mode: vertical-rl;
-  /* --f-jp comme ses deux sœurs (planche.css .jp, fiche-y2k.css
-     .fy-vertical) : Archivo et Arial n'ont aucun glyphe CJK — sans
-     cette ligne, 家 part au repli système, voire au tofu. Le layout
-     charge Noto Sans JP exprès pour ces trois ornements. */
-  font-family: var(--f-jp), var(--f-display), sans-serif;
-  font-size: 42px;
-  color: rgba(36 31 61 / 0.42);
-  pointer-events: none;
-}
-@media (max-width: 980px) {
-  .m-kanji {
-    display: none;
-  }
-}
-/* DEUX NUAGES PIXEL — le ciel de la moisson, en art de box-shadow sur
-   une cellule de 10px ; décor pur, sous le contenu */
-.m-nuage {
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  pointer-events: none;
-  background: transparent;
-  box-shadow:
-    30px 0 #f7f4ff, 40px 0 #f7f4ff, 50px 0 #f7f4ff,
-    10px 10px #f7f4ff, 20px 10px #f7f4ff, 30px 10px #f7f4ff, 40px 10px #f7f4ff,
-    50px 10px #f7f4ff, 60px 10px #f7f4ff, 70px 10px #f7f4ff,
-    0 20px #f7f4ff, 10px 20px #f7f4ff, 20px 20px #f7f4ff, 30px 20px #f7f4ff,
-    40px 20px #f7f4ff, 50px 20px #f7f4ff, 60px 20px #f7f4ff, 70px 20px #f7f4ff,
-    80px 20px #f7f4ff, 90px 20px #f7f4ff,
-    0 30px #dfe4fb, 10px 30px #dfe4fb, 20px 30px #f7f4ff, 30px 30px #f7f4ff,
-    40px 30px #f7f4ff, 50px 30px #f7f4ff, 60px 30px #f7f4ff, 70px 30px #dfe4fb,
-    80px 30px #dfe4fb, 90px 30px #dfe4fb;
-}
-.m-nuage-a {
-  left: 6%;
-  top: 46px;
-}
-/* le nuage bas vit dans le ciel VIDE sous la barre de chargement —
-   à 30 % du bord il mordait le O du wordmark (capture 1440). Ancré au
-   BAS du bloc, pas à 440px du haut : la hauteur du boot suit le clamp
-   du wordmark, et l'offset fixe faisait sortir le nuage du cadre entre
-   640 et 860px (il passait sous le marquee, payé et jamais vu). */
-.m-nuage-b {
-  right: 8%;
-  bottom: 40px;
-  transform: scale(0.7);
-}
-@media (max-width: 640px) {
-  .m-nuage-b {
-    display: none;
-  }
-}
-/* à 320, le boot se resserre : le nuage haut frôlait la ligne de boot */
-@media (max-width: 480px) {
-  .m-nuage-a {
-    display: none;
-  }
-}
-
-/* LE WORDMARK MAISON — le chrome S'INVERSE : clair sur nuit à /work,
-   iris d'ENCRE sur le ciel ici. Même loi que là-bas : l'élément clippé
-   reste NU (ni ombre, ni filter, ni isolation — cause racine du « néon
-   noir », 61b57db), le halo vit sur le double ::after plein.
-   AA au pire pixel : tous les stops restent sous L≈0,05 — le plus
-   clair (#5c3168) mesure ≥5,5:1 sur le plus clair du ciel (#cfc3ee). */
-.maison .y2k-wordmark {
-  background: linear-gradient(
-    180deg,
-    #221a44 0%,
-    #443076 26%,
-    #5c3168 46%,
-    #2b2558 62%,
-    #191436 82%,
-    #241d4a 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  /* LE TRAIT S'INVERSE AVEC LE CHROME : à /work des lettres claires sur
-     la nuit veulent un trait blanc — ici des lettres d'encre sur un ciel
-     clair le veulent d'ENCRE. Deux raisons, les mêmes que là-bas dans
-     l'autre sens : il ne doit pas éclaircir le pourtour du glyphe contre
-     un fond clair, et c'est LE filet de sécurité — si un moteur refuse
-     le clip, `color: transparent` ne laisse que ce trait, et un trait
-     blanc sur du lavande ne dessine rien (le double crème non plus). */
-  -webkit-text-stroke: 1px rgba(20 16 44 / 0.35);
-}
-/* le double passe crème : lueur sakura douce derrière l'encre — le
-   rose vif du bureau reste à /work */
-.maison .y2k-wordmark::after {
-  color: #fff3f9;
-  opacity: 0.9;
-  text-shadow: 0 0 26px rgba(255 158 199 / 0.8), 0 0 60px rgba(255 158 199 / 0.45);
-}
-.m-identite {
-  font-size: 18px;
-  color: var(--m-encre-ciel);
-  letter-spacing: 0.02em;
-}
-.m-identite strong {
-  color: #14102c;
-  font-weight: 600;
-}
-
-/* la barre de chargement : les blocs segmentés d'un boot 9x, pleins —
-   le foyer est monté. Statique par construction (reduced-motion : rien
-   à couper). */
-.m-charge {
-  display: grid;
-  gap: 9px;
-  justify-items: center;
-  margin-top: 28px;
-}
-.m-charge-barre {
-  width: min(420px, 82%);
-  height: 16px;
-  padding: 2px;
-  background: #f6f3fe;
-  box-shadow: var(--bev-creux), 0 2px 0 rgba(20 16 44 / 0.25);
-}
-.m-charge-barre i {
-  display: block;
-  height: 100%;
-  background: repeating-linear-gradient(90deg, var(--y2k-rose) 0 12px, #ffd7ea 12px 16px);
-}
-.m-charge-txt {
-  font-family: var(--f-pixel), var(--f-mono), monospace;
-  font-size: 13px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--m-encre-ciel);
 }
 
 /* le marquee de la chambre roule sur le crépuscule : il garde son LCD
@@ -261,7 +63,7 @@
 }
 .m-pan {
   position: relative;
-  background: rgba(12 9 24 / 0.93);
+  background: var(--m-panneau);
   box-shadow:
     0 0 0 2px rgba(246 243 254 / 0.92),
     0 0 0 4px rgba(26 19 44 / 0.9),
@@ -308,7 +110,7 @@
   justify-content: space-between;
   gap: 12px;
   padding: 5px 12px;
-  background: rgba(30 24 52 / 0.9);
+  background: var(--m-panneau-pied);
   box-shadow: inset 0 1px 0 rgba(246 243 254 / 0.18);
   font-family: var(--f-pixel), var(--f-mono), monospace;
   font-size: 12.5px;
@@ -338,7 +140,7 @@
      rouvrirait le gate du débordement (la leçon de .y2k-fen) */
   min-width: 0;
   padding: 14px 14px 16px;
-  background: linear-gradient(180deg, #1e1738, #131026);
+  background: linear-gradient(180deg, #2f2760, var(--m-creux));
   box-shadow:
     inset 1px 1px 0 rgba(242 240 253 / 0.22),
     inset -1px -1px 0 rgba(0 0 0 / 0.5),
@@ -360,7 +162,7 @@
   top: 20%;
   width: 26%;
   height: 60%;
-  background: #131026;
+  background: var(--m-creux);
   box-shadow: var(--bev-creux);
 }
 .m-disq-etiquette {
@@ -425,7 +227,7 @@
    double diplôme marqué en lecture simultanée.
    ------------------------------------------------------------------ */
 .m-amp {
-  background: var(--y2k-lcd);
+  background: var(--m-lcd);
   box-shadow: var(--bev-creux), 0 0 34px rgba(160 107 255 / 0.14);
 }
 .m-amp-tete {
@@ -562,7 +364,7 @@
   display: grid;
   gap: 24px;
   padding: 20px 22px;
-  background: rgba(20 16 40 / 0.6);
+  background: var(--m-creux);
   box-shadow: inset 1px 1px 0 rgba(0 0 0 / 0.5), inset -1px -1px 0 rgba(242 240 253 / 0.14);
   font-family: var(--f-mono), monospace;
 }
@@ -654,7 +456,7 @@
   place-items: center;
   font-family: var(--f-pixel), var(--f-mono), monospace;
   font-size: 17px;
-  background: var(--y2k-lcd);
+  background: var(--m-lcd);
   color: var(--y2k-lcd-txt);
   box-shadow: var(--bev-creux);
 }

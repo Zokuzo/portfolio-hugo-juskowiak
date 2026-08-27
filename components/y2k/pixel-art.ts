@@ -3,12 +3,12 @@
    fenêtres) vit dans l'outil ; ici ne vit que son résultat, figé et
    déterministe. Un caractère = un pixel, '.' = transparent.
 
-   Pièces du monde MAISON (#37) : la branche de cerisier du hero « boot »
-   et la fenêtre du hero « fenêtre ». Références : le feed Pinterest de
-   Hugo (moisson du 2026-08-27). */
+   La fenêtre du hero de /home, châssis compris. Références : le feed
+   Pinterest de Hugo (moisson du 2026-08-27). */
 
-/* la palette : un caractère → une couleur. Les deux pièces la partagent
-   — c'est ce qui fait qu'elles appartiennent au même monde. */
+/* la palette : un caractère → une couleur. La ville et le ciel ont été
+   REMONTÉS d'un cran au 3e gate (« faut que ce soit un peu plus clair,
+   l'ensemble ») — la vue reste une nuit, mais une nuit éclairée. */
 export const PALETTE: Record<string, string> = {
   b: "#2f2740", // branche
   B: "#5a4c74", // arête claire de la branche
@@ -20,44 +20,17 @@ export const PALETTE: Record<string, string> = {
   "1": "#e294be",
   "2": "#c082c0",
   "3": "#946eba",
-  "4": "#64549e",
-  "5": "#383066", // ciel — le zénith
-  n: "#18122e", // la nuit sous l'horizon
+  "4": "#7566b2",
+  "5": "#4a4084", // ciel — le zénith
+  n: "#241c46", // la nuit sous l'horizon
   m: "#fff6d6", // la lune
-  c: "#342a56", // ville, plan lointain
-  C: "#1c1636", // ville, plan proche
+  c: "#463a70", // ville, plan lointain
+  C: "#2a2250", // ville, plan proche
   w: "#ffd68a", // fenêtre allumée
   W: "#fff0c8", // fenêtre allumée, vive
   f: "#f2f0fd", // châssis, arête éclairée
-  F: "#8278b0", // châssis
+  F: "#9c92c8", // châssis
 }
-
-export const SAKURA: readonly string[] = [
-  "...........................................................P.P..",
-  "................................................P.P.......PpppP.",
-  "...............s...................p.......b...PpppP.......pypBB",
-  "..............sss.................pPp......bb...pyp......BPpppPb",
-  "...............s...................p....P.P.bb.PpppP.BBBBbbPbPbb",
-  "...................p.............P.P...PpppP.b..PBPBBbbbbbbbb...",
-  "..................pPp....P.P....PpppP...pyp.BBBBbbbbbbPbP.......",
-  "...................p....PpppP....pyp...PpppPbbbbbbbbbPpppP....p.",
-  "...........p.............pyp....PpppPBBBPbPbbPbP......pyp....pPp",
-  "..........pPp....P.P....PpppP..BBPBPbbbbbbbbPpppP....PpppP....p.",
-  "...........p....PpppP....P.PBBBbbbb..bbb.....pyp......P.P.......",
-  ".....b..P.P......pyp...bBBBbbbb.b....P.P....PpppP..p............",
-  ".....bbPpppP....PpppPbbbbbb..P.Pbb..PpppP....P.P..pPp....s......",
-  "......bbpyp....bbPbPbbP.P...PpppPb...pyp...........p....sss.....",
-  ".......PpppPbbbbbbbbbPpppP...pyp.bb.PpppP..p.............s......",
-  ".......bPbPbbbb.....b.pyp...PpppP.b..P.P..pPp...............Pp..",
-  "....bbbbbbb..P.P....bPpppP...P.P...........p....................",
-  "..bbbbbp....PpppP....bP.P..p....................Pp..............",
-  "..bP.PpPp....pyp.....b....pPp...................................",
-  "..PpppPp....PpppP..........p...s......................Pp........",
-  "...pyp.......P.P..............sss.......Pp......................",
-  "..PpppP..Pp............Pp......s................................",
-  "...P.P.........Pp................Pp.............................",
-  "................................................................",
-]
 
 export const FENETRE: readonly string[] = [
   "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",

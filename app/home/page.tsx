@@ -3,8 +3,12 @@ import { Michroma, Silkscreen } from "next/font/google"
 import HubMaison from "@/components/y2k/hub-maison"
 import "@/components/y2k/y2k.css"
 import "@/components/y2k/hub-maison.css"
+import "@/components/y2k/hero-fenetre.css"
 
 /* LE HUB /home (#37) — le départ GPS « MAISON » cesse de mentir ici.
+   Le hero est LA CHAMBRE (verdict du 3e retour de gate : « j'aime
+   beaucoup la deuxième version avec la fenêtre ») — l'essai « boot »
+   plein cadre et sa route d'essai sont supprimés.
    Même construction que /work : composant client (la langue est un
    état local) mais PRÉRENDU — le serveur sert le hub complet en FR.
 

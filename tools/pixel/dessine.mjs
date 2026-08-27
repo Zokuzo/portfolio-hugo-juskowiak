@@ -1,6 +1,10 @@
-/* Dessine les deux pièces de PIXEL ART du monde MAISON (#37, retour de
-   gate « la fleur de cerisier est ignoble, pixelise-la ») et écrit la
-   source de vérité `components/y2k/pixel-art.ts`.
+/* Dessine LA FENÊTRE du monde MAISON (#37) et écrit la source de
+   vérité `components/y2k/pixel-art.ts`.
+
+   La branche de cerisier autonome a vécu : son hero « boot » a perdu le
+   gate du 2026-08-27 (« j'aime beaucoup la deuxième version avec la
+   fenêtre »). Le cerisier n'a pas disparu pour autant — il est DEHORS,
+   derrière la vitre, dessiné dans la fenêtre elle-même.
 
    Pourquoi un outil et pas un fichier peint à la main : une branche et
    une skyline sont des GESTES (une polyligne épaissie, une suite de
@@ -69,59 +73,8 @@ const BOUTON = [".p.", "pPp", ".p."]
 const ETINCELLE = [".s.", "sss", ".s."]
 
 /* ------------------------------------------------------------------ */
-/* 1. LA BRANCHE DE CERISIER — l'ornement du hero « boot » de /home.   */
-
-function sakura() {
-  /* UNE BANDE PLATE, PAS UNE DIAGONALE PLONGEANTE. Le premier dessin
-     faisait 60×42 et descendait en travers du cadre : à 390px de large,
-     ses fleurs passaient derrière la ligne de démarrage et cassaient la
-     lecture (relevé à l'œil au 2e retour de gate — aucune sonde ne peut
-     l'attraper, l'ornement est muet et n'est pas un bloc texte).
-     En 64×24, la branche tient dans un BANDEAU d'angle : sa hauteur
-     rendue reste sous le retrait haut du bloc à toutes les largeurs,
-     et le texte n'a plus jamais de pétale derrière lui.
-     C'est aussi la proportion des références (~2:1, « Pixel by Number »). */
-  const t = toile(64, 24)
-  /* le tronc entre par le coin haut-droit et court vers la gauche en
-     pente douce, en s'affinant : il doit se lire D'ABORD, les fleurs se
-     posent à côté */
-  t.trait(63, 2, 50, 5, 3, "b")
-  t.trait(50, 5, 37, 8, 3, "b")
-  t.trait(37, 8, 24, 11, 2, "b")
-  t.trait(24, 11, 12, 14, 2, "b")
-  t.trait(12, 14, 2, 17, 2, "b")
-  /* quatre fourches COURTES — des départs, pas des bâtons */
-  t.trait(46, 6, 43, 2, 2, "b")
-  t.trait(31, 9, 34, 14, 2, "b")
-  t.trait(19, 12, 21, 17, 2, "b")
-  t.trait(8, 15, 5, 11, 2, "b")
-  /* l'arête claire sur le dessus du tronc : le volume, en une passe */
-  t.trait(63, 2, 50, 5, 1, "B")
-  t.trait(50, 5, 37, 8, 1, "B")
-  t.trait(37, 8, 24, 11, 1, "B")
-
-  /* les fleurs en grappes le long du tronc, décalées de 2-3px pour ne
-     pas le sectionner ; deux ou trois le chevauchent, comme en vrai */
-  for (const [x, y] of [
-    [58, 0], [53, 6], [47, 1], [44, 8], [39, 4], [36, 11], [32, 5], [28, 12],
-    [24, 6], [21, 13], [16, 9], [12, 16], [7, 11], [2, 18],
-  ])
-    t.sprite(x, y, FLEUR)
-  for (const [x, y] of [[61, 7], [50, 11], [42, 14], [34, 2], [26, 17], [18, 5], [10, 8], [6, 17]])
-    t.sprite(x, y, BOUTON)
-  /* peu d'étincelles, et loin des fleurs : elles ponctuent */
-  for (const [x, y] of [[56, 12], [30, 19], [14, 2]]) t.sprite(x, y, ETINCELLE)
-  /* les pétales qui tombent */
-  for (const [x, y] of [[48, 17], [40, 20], [33, 22], [23, 21], [15, 22], [9, 21], [54, 19], [60, 15]]) {
-    t.pose(x, y, "P")
-    t.pose(x + 1, y, "p")
-  }
-  return t.lignes()
-}
-
-/* ------------------------------------------------------------------ */
-/* 2. LA FENÊTRE — le hero « fenêtre » : un PANNEAU autonome (châssis   */
-/*    et vue). Le mur, l'appui et le bureau sont du CSS.               */
+/* LA FENÊTRE — un PANNEAU autonome (châssis et vue). Le mur, l'appui  */
+/* et le bureau sont du CSS.                                          */
 
 function fenetre() {
   const t = toile(72, 50)
@@ -157,7 +110,9 @@ function fenetre() {
     x += w + 2
   }
 
-  /* la branche DEHORS — même grammaire que le sakura du hero boot */
+  /* LA BRANCHE DE CERISIER, dehors — repixelisée au 2e gate d'après
+     « Pixel by Number » et « PT » : marches franches, fleurs à lobes et
+     cœur clair. C'est elle que Hugo voulait voir en pixels. */
   t.trait(71, 3, 60, 8, 2, "b")
   t.trait(60, 8, 49, 13, 2, "b")
   t.trait(56, 10, 58, 17, 2, "b")
@@ -182,7 +137,6 @@ function fenetre() {
 
 /* ------------------------------------------------------------------ */
 
-const SAKURA = sakura()
 const FENETRE = fenetre()
 
 const src = `/* ENGENDRÉ par \`node tools/pixel/dessine.mjs\` — NE PAS ÉDITER À LA MAIN.
@@ -190,12 +144,12 @@ const src = `/* ENGENDRÉ par \`node tools/pixel/dessine.mjs\` — NE PAS ÉDITE
    fenêtres) vit dans l'outil ; ici ne vit que son résultat, figé et
    déterministe. Un caractère = un pixel, '.' = transparent.
 
-   Pièces du monde MAISON (#37) : la branche de cerisier du hero « boot »
-   et la fenêtre du hero « fenêtre ». Références : le feed Pinterest de
-   Hugo (moisson du 2026-08-27). */
+   La fenêtre du hero de /home, châssis compris. Références : le feed
+   Pinterest de Hugo (moisson du 2026-08-27). */
 
-/* la palette : un caractère → une couleur. Les deux pièces la partagent
-   — c'est ce qui fait qu'elles appartiennent au même monde. */
+/* la palette : un caractère → une couleur. La ville et le ciel ont été
+   REMONTÉS d'un cran au 3e gate (« faut que ce soit un peu plus clair,
+   l'ensemble ») — la vue reste une nuit, mais une nuit éclairée. */
 export const PALETTE: Record<string, string> = {
   b: "#2f2740", // branche
   B: "#5a4c74", // arête claire de la branche
@@ -207,21 +161,17 @@ export const PALETTE: Record<string, string> = {
   "1": "#e294be",
   "2": "#c082c0",
   "3": "#946eba",
-  "4": "#64549e",
-  "5": "#383066", // ciel — le zénith
-  n: "#18122e", // la nuit sous l'horizon
+  "4": "#7566b2",
+  "5": "#4a4084", // ciel — le zénith
+  n: "#241c46", // la nuit sous l'horizon
   m: "#fff6d6", // la lune
-  c: "#342a56", // ville, plan lointain
-  C: "#1c1636", // ville, plan proche
+  c: "#463a70", // ville, plan lointain
+  C: "#2a2250", // ville, plan proche
   w: "#ffd68a", // fenêtre allumée
   W: "#fff0c8", // fenêtre allumée, vive
   f: "#f2f0fd", // châssis, arête éclairée
-  F: "#8278b0", // châssis
+  F: "#9c92c8", // châssis
 }
-
-export const SAKURA: readonly string[] = [
-${SAKURA.map((l) => `  ${JSON.stringify(l)},`).join("\n")}
-]
 
 export const FENETRE: readonly string[] = [
 ${FENETRE.map((l) => `  ${JSON.stringify(l)},`).join("\n")}
@@ -229,16 +179,16 @@ ${FENETRE.map((l) => `  ${JSON.stringify(l)},`).join("\n")}
 `
 const sortie = path.join(RACINE, "components/y2k/pixel-art.ts")
 writeFileSync(sortie, src)
-console.log(`écrit ${path.relative(RACINE, sortie)} — sakura ${SAKURA[0].length}×${SAKURA.length}, fenêtre ${FENETRE[0].length}×${FENETRE.length}`)
+console.log(`écrit ${path.relative(RACINE, sortie)} — fenêtre ${FENETRE[0].length}×${FENETRE.length}`)
 
 if (apercu) {
   const PAL = {
     b: [47, 39, 64], B: [90, 76, 116], p: [245, 138, 184], P: [255, 194, 220],
     y: [255, 226, 122], s: [255, 243, 196],
     "0": [244, 178, 202], "1": [226, 148, 190], "2": [192, 130, 192],
-    "3": [148, 110, 186], "4": [100, 84, 158], "5": [56, 48, 102],
-    n: [24, 18, 46], m: [255, 246, 214], c: [52, 42, 86], C: [28, 22, 54],
-    w: [255, 214, 138], W: [255, 240, 200], f: [242, 240, 253], F: [130, 120, 176],
+    "3": [148, 110, 186], "4": [117, 102, 178], "5": [74, 64, 132],
+    n: [36, 28, 70], m: [255, 246, 214], c: [70, 58, 112], C: [42, 34, 80],
+    w: [255, 214, 138], W: [255, 240, 200], f: [242, 240, 253], F: [156, 146, 200],
   }
   const ppm = (lignes, fond) => {
     const l = lignes[0].length
@@ -260,7 +210,6 @@ if (apercu) {
       }
     return Buffer.concat([Buffer.from(`P6\n${W} ${HH}\n255\n`), buf])
   }
-  writeFileSync(path.join(apercu, "sakura.ppm"), ppm(SAKURA, [190, 178, 230]))
   writeFileSync(path.join(apercu, "fenetre.ppm"), ppm(FENETRE, [20, 16, 40]))
   console.log(`aperçus dans ${apercu}`)
 }

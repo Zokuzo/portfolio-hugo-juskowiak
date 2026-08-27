@@ -4,16 +4,16 @@ import { useState } from "react"
 import Link from "next/link"
 import { t, type Lang } from "@/components/proto/dict"
 import { etudes, perso } from "@/components/proto/parcours"
-import { Pixels } from "./pixels"
-import { SAKURA } from "./pixel-art"
 import { HeroFenetre } from "./hero-fenetre"
 
 /* ==================================================================
    LE HUB /home (#37) — la partition MAISON : la CHAMBRE au crépuscule,
    miroir du bureau de nuit de /work.
 
-   Cinq sections dans l'ordre gravé au ticket : en-tête (le boot sakura
-   « MAISON 97 » de la moisson), atelier en BOÎTE À DISQUETTES,
+   Cinq sections dans l'ordre gravé au ticket : la CHAMBRE en en-tête
+   (verdict du 3e retour de gate : « j'aime beaucoup la deuxième version
+   avec la fenêtre » — l'essai « boot » plein cadre a perdu et est
+   supprimé, l'historique git le garde), atelier en BOÎTE À DISQUETTES,
    qualifications en PLAYLIST HJ·AMP, hors travail en PROFIL.INI,
    contact en MESSAGERIE. Le CONTENU vient des feuilles existantes
    (dict.ts, parcours.ts) repris tels quels — ce fichier ne fait que le
@@ -49,11 +49,7 @@ const rail = (debut: number, fin: number, t0: number, t1: number) =>
     "--w": `${(Math.max(fin - debut, 0.15) / (t1 - t0)) * 100}%`,
   }) as React.CSSProperties
 
-/* DEUX HEROS, UNE SEULE PAGE (retour de gate : « fais une version
-   totalement différente de la hero section »). Le reste de la page est
-   RIGOUREUSEMENT identique d'une version à l'autre — c'est la seule
-   façon de gater un hero à l'œil : ce qui change est ce qu'on juge. */
-export default function HubMaison({ hero = "boot" }: { hero?: "boot" | "fenetre" }) {
+export default function HubMaison() {
   const [lang, setLang] = useState<Lang>("fr")
   const projets = perso(lang)
   const pistes = etudes(lang)
@@ -65,12 +61,7 @@ export default function HubMaison({ hero = "boot" }: { hero?: "boot" | "fenetre"
   const t1 = Math.max(...pistes.map((e) => e.fin))
 
   return (
-    /* `maison-chambre` : sous le hero « fenêtre », la page N'A PLUS de
-       ciel — on est dans la pièce, pas dehors. Le dégradé de crépuscule
-       de `.maison` est calé en px sur la hauteur du hero « boot » ; le
-       laisser sous une chambre ferait reparaître une aube au milieu du
-       mur. Une classe, pas un `:has()` : aucun risque de support. */
-    <main lang={lang} className={`y2k maison${hero === "fenetre" ? " maison-chambre" : ""}`}>
+    <main lang={lang} className="y2k maison">
       <header className="y2k-barre">
         <span className="y2k-barre-os">{t(lang, "hubOs")}</span>
         <span className="y2k-barre-fichier">{t(lang, "hubMaisonSys")}</span>
@@ -87,42 +78,7 @@ export default function HubMaison({ hero = "boot" }: { hero?: "boot" | "fenetre"
         </Link>
       </header>
 
-      {hero === "fenetre" ? (
-        <HeroFenetre lang={lang} />
-      ) : (
-      /* — le BOOT : l'écran de démarrage du foyer, sous le ciel du soir — */
-      <section className="m-boot">
-        {/* LA BRANCHE DE CERISIER, EN PIXEL ART (retour de gate : « je
-            trouve la fleur de cerisier ignoble, améliore-la en la
-            pixelisant »). Le dessin lissé aux courbes de Bézier est
-            mort : la grille vient de `tools/pixel/dessine.mjs`, calée
-            sur les références du feed de Hugo — branche sombre à
-            marches franches, fleurs à lobes et cœur clair. */}
-        <Pixels grille={SAKURA} className="m-sakura" />
-        {/* deux nuages pixel — le ciel de la moisson */}
-        <span className="m-nuage m-nuage-a" aria-hidden="true" />
-        <span className="m-nuage m-nuage-b" aria-hidden="true" />
-        <span className="m-kanji" aria-hidden="true">
-          {t(lang, "hubMaisonJp")}
-        </span>
-
-        <p className="m-boot-ligne">
-          {t(lang, "hubOs")} — {t(lang, "hubMaisonBoot")}
-        </p>
-        <h1 className="y2k-wordmark m-wordmark" data-texte={t(lang, "gt86Maison")}>
-          {t(lang, "gt86Maison")}
-        </h1>
-        <p className="m-identite">
-          <strong>{t(lang, "gt86Nom")}</strong> — {t(lang, "role")}
-        </p>
-        <div className="m-charge">
-          <span className="m-charge-barre" aria-hidden="true">
-            <i />
-          </span>
-          <span className="m-charge-txt">{t(lang, "hubMaisonCharge")}</span>
-        </div>
-      </section>
-      )}
+      <HeroFenetre lang={lang} />
 
       <div className="y2k-marquee m-marquee" aria-hidden="true">
         <span>{t(lang, "hubMaisonMarquee")}</span>

@@ -8,21 +8,20 @@
    plafonnée à 1180px, rien en vw nu.
    ================================================================== */
 
-/* LA PAGE PERD SON CIEL : le dégradé de crépuscule de `.maison` est
-   calé en px sur la hauteur du hero « boot » — sous une chambre, il
-   ferait reparaître une aube au milieu du mur. Ici la page est la nuit
-   du monde, comme /work. */
-.y2k.maison-chambre {
-  background: var(--y2k-nuit);
-}
-
 /* LA SECTION EST LE MUR : elle traverse toute la largeur de la page.
-   Sans ça, le ciel du hero « boot » reparaît de part et d'autre de la
-   chambre et la scène se lit comme une vignette collée sur un ciel. */
+   Sans ça, le fond de page reparaît de part et d'autre de la chambre et
+   la scène se lit comme une vignette collée.
+   LE MUR EST ÉCLAIRCI (3e retour de gate : « faut que ce soit un peu
+   plus clair, l'ensemble ») — et il l'est PAR LA FENÊTRE : la lueur
+   part du coin où elle se trouve et retombe vers le sol. Un mur de
+   chambre au crépuscule n'est pas un aplat noir, il est peint par la
+   lumière qui entre. */
 .hf {
   position: relative;
   isolation: isolate;
-  background: linear-gradient(180deg, #1c1636, #14102a 60%, #100c22);
+  background:
+    radial-gradient(120% 90% at 78% 12%, rgba(196 140 205 / 0.42), transparent 62%),
+    linear-gradient(180deg, #322a63, #272052 55%, #1f1943);
   /* LE BUREAU occupe le bas : le padding réserve sa bande, si bien que
      le bord bas de la boîte de contenu EST le plan du bureau — le
      moniteur s'y pose sans qu'aucune valeur ne soit à accorder à la
@@ -37,8 +36,12 @@
   right: 0;
   bottom: 0;
   height: 92px;
-  background: linear-gradient(180deg, #4b3f6e 0 2px, #33294f 2px 6px, #241d3c 6px);
-  box-shadow: 0 -14px 40px rgba(0, 0, 0, 0.45);
+  /* le plan du bureau reçoit lui aussi la fenêtre : arête claire, face
+     éclairée à droite (côté fenêtre), qui s'assombrit vers la gauche */
+  background:
+    radial-gradient(90% 200% at 78% 0%, rgba(214 160 220 / 0.28), transparent 65%),
+    linear-gradient(180deg, #6d5d99 0 2px, #4a3d72 2px 7px, #362c58 7px);
+  box-shadow: 0 -14px 40px rgba(0, 0, 0, 0.35);
 }
 @media (max-width: 900px) {
   .hf {
@@ -126,14 +129,50 @@
   box-shadow: 0 6px 22px rgba(0, 0, 0, 0.5);
 }
 /* LA LAMPE hors champ : la flaque chaude qui pose la pièce — sans elle
-   le mur est un aplat, et une chambre n'est jamais un aplat */
+   le mur est un aplat, et une chambre n'est jamais un aplat. Montée au
+   3e gate : c'est la seule source CHAUDE de la scène, elle réchauffe le
+   côté opposé à la fenêtre et empêche le mur gauche de tomber au noir. */
 .hf-lampe {
   position: absolute;
   left: -80px;
   bottom: 0;
-  width: 520px;
-  height: 340px;
-  background: radial-gradient(closest-side, rgba(255, 200, 140, 0.16), transparent 70%);
+  width: 620px;
+  height: 420px;
+  background: radial-gradient(closest-side, rgba(255, 198, 138, 0.26), transparent 72%);
+}
+
+/* L'AFFICHE AU MUR : le kanji du foyer, encadré comme un poster — il
+   habite le pan de mur nu à gauche de la fenêtre et lui donne sa
+   deuxième source claire. Décor : le glyphe passe par le dict comme
+   ses frères de la planche, mais il ne dit rien de plus que le titre. */
+.hf-affiche {
+  position: absolute;
+  /* AU-DESSUS du moniteur, pas derrière : posée à 34px, elle se faisait
+     couper net par le capot — un poster à moitié mangé par un écran se
+     lit comme un accident, pas comme de la profondeur */
+  left: 24px;
+  top: 22px;
+  display: grid;
+  place-items: center;
+  width: 104px;
+  height: 132px;
+  /* --f-jp : Archivo et Arial n'ont aucun glyphe CJK — sans cette
+     ligne, 家 part au repli système, voire au tofu */
+  font-family: var(--f-jp), var(--f-display), sans-serif;
+  font-size: 52px;
+  color: #3b2f63;
+  background: linear-gradient(180deg, #efe9fb, #d3c9ee);
+  box-shadow:
+    0 0 0 5px #6b5c9c,
+    0 0 0 7px #241d3f,
+    10px 12px 0 rgba(8, 5, 18, 0.4);
+}
+/* sous 1100px le moniteur occupe le mur : l'affiche s'efface plutôt que
+   de passer derrière lui */
+@media (max-width: 1100px) {
+  .hf-affiche {
+    display: none;
+  }
 }
 
 /* ------------------------------------------------------------------
@@ -173,8 +212,11 @@
    n'existaient pas. Ce qui porte du texte est un élément. */
 .hf-crt-dalle {
   position: relative;
-  background: radial-gradient(120% 130% at 50% 0%, #241c48, #120e26 70%);
-  box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.6), inset -1px -1px 0 rgba(242, 240, 253, 0.16);
+  /* la dalle monte elle aussi d'un cran (3e gate) — mais elle RESTE la
+     surface la plus sombre de la scène : c'est un tube allumé dans une
+     pièce, l'écart avec le capot clair est ce qui le fait exister */
+  background: radial-gradient(120% 130% at 50% 0%, #2e2458, #1a1436 70%);
+  box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.55), inset -1px -1px 0 rgba(242, 240, 253, 0.18);
 }
 /* LES LIGNES DE BALAYAGE : le tube. Statiques — le monde a déjà son
    filtre CRT animé, et reduced-motion n'a rien à couper ici. */
