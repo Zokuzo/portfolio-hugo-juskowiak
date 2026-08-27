@@ -15,7 +15,28 @@
    par --acc/--acc-txt posés par fiche-y2k.tsx.
    ================================================================== */
 
-.fy { --fy-largeur: 1240px; }
+.fy {
+  --fy-largeur: 1240px;
+
+  /* LES SURFACES DU CORPS, en tokens (retour de gate du 2026-08-27 :
+     « le fond derrière les fiches il faut éclaircir également », après
+     l'éclaircissement de /home) : elles montent ou descendent ENSEMBLE,
+     un « plus clair » demandé à l'œil se règle ICI et pas dans cinq
+     déclarations éparpillées. Même famille de valeurs que la chambre
+     de /home — les deux pièces du monde s'éclairent au même cran. */
+  --fy-panneau: #231c46; /* contraintes et décisions */
+  --fy-lcd: #2a2150; /* le readout du résultat */
+}
+
+/* LE FOND DE PAGE quitte le noir : `.y2k` pose la nuit plate du monde,
+   la fiche lui substitue un dégradé violet — le corps sous l'affiche
+   tombait dans un noir mort, et depuis que la chambre de /home est
+   éclaircie, l'écart entre les deux pièces se voyait.
+   SCOPÉ `.y2k.fy` : le hub /work garde sa nuit, il n'était pas dans la
+   demande. */
+.y2k.fy {
+  background: linear-gradient(180deg, #241d48 0px, #1d1740 620px, #191333 1400px);
+}
 
 /* ------------------------------------------------------------------
    LE HÉROS — l'affiche : atmosphère à l'accent, rayons, halo,
@@ -331,9 +352,11 @@
 }
 .fy-liste li {
   padding: 14px 18px;
-  /* NOIR profond, pas bleu-nuit « dashboard » : le contraste dur de la
-     moisson (revue de fidélité) */
-  background: rgba(10 8 20 / 0.94);
+  /* Le noir profond de la moisson (revue de fidélité du #38) monte d'un
+     cran avec le fond : sur un sol violet, un panneau presque noir se
+     lit comme un trou découpé, pas comme une carte. Il reste PLUS
+     SOMBRE que le sol — c'est cet écart qui le fait exister. */
+  background: var(--fy-panneau);
   box-shadow: var(--bev-creux);
   font-size: 15.5px;
   line-height: 1.6;
@@ -360,7 +383,7 @@
 /* le RÉSULTAT — un readout LCD, la seule ligne qui brille */
 .fy-resultat {
   padding: 18px 22px;
-  background: var(--y2k-lcd);
+  background: var(--fy-lcd);
   box-shadow: var(--bev-creux), 0 0 34px color-mix(in srgb, var(--acc) 22%, transparent);
   font-family: var(--f-mono), monospace;
   font-size: 15.5px;
