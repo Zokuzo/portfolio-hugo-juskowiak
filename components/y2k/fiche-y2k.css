@@ -24,8 +24,8 @@
      un « plus clair » demandé à l'œil se règle ICI et pas dans cinq
      déclarations éparpillées. Même famille de valeurs que la chambre
      de /home — les deux pièces du monde s'éclairent au même cran. */
-  --fy-panneau: #231c46; /* contraintes et décisions */
-  --fy-lcd: #2a2150; /* le readout du résultat */
+  --fy-panneau: #211a40; /* contraintes et décisions */
+  --fy-lcd: #281f4c; /* le readout du résultat */
 }
 
 /* LE FOND DE PAGE quitte le noir : `.y2k` pose la nuit plate du monde,
@@ -35,7 +35,12 @@
    SCOPÉ `.y2k.fy` : le hub /work garde sa nuit, il n'était pas dans la
    demande. */
 .y2k.fy {
-  background: linear-gradient(180deg, #241d48 0px, #1d1740 620px, #191333 1400px);
+  /* LES MÊMES VALEURS QUE LA CHAMBRE DE /home, au caractère près : les
+     deux pièces du monde s'éclairent au même cran, sinon la fiche
+     ouverte depuis un hub clair paraît retomber dans la cave. Quand
+     l'une monte, l'autre monte — c'est la seule règle qui tienne sur
+     plusieurs retours de gate. */
+  background: linear-gradient(180deg, #342b66 0px, #2e2659 700px, #292152 1600px);
 }
 
 /* ------------------------------------------------------------------

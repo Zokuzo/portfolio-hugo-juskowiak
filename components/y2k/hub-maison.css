@@ -30,15 +30,19 @@
   /* LES SURFACES DE LA PIÈCE, en tokens : elles montent ou descendent
      ENSEMBLE. Un « plus clair » demandé à l'œil se règle ici, pas dans
      quinze déclarations éparpillées. */
-  --m-panneau: #241d46; /* la face des panneaux-stickers */
-  --m-panneau-pied: #362c62; /* leur barre d'état */
-  --m-creux: #1b1538; /* les blocs enfoncés (INI, disquette) */
-  --m-lcd: #2a2150; /* le readout de la playlist — le LCD du monde, monté */
+  --m-panneau: #211a40; /* la face des panneaux-stickers */
+  --m-panneau-pied: #342a5e; /* leur barre d'état */
+  --m-creux: #1a1436; /* les blocs enfoncés (INI, disquette) */
+  --m-lcd: #281f4c; /* le readout de la playlist — le LCD du monde, monté */
 
-  /* le fond de la pièce : la nuit du monde REMONTÉE, et une lueur haute
-     qui descend de la fenêtre du hero — une chambre éclairée par sa
-     fenêtre n'est pas un aplat noir */
-  background: linear-gradient(180deg, #241d48 0px, #1d1740 420px, #191333 900px);
+  /* LE SOL DE LA PIÈCE, remonté une seconde fois (4e retour de gate :
+     « le fond derrière dans le hub home il faut éclaircir également »).
+     Il passe DEVANT les panneaux en clarté : les cartes se lisent
+     désormais comme des cartes SOMBRES posées sur un sol clair — la
+     même relation que sur les fiches, si bien que les deux pièces du
+     monde se tiennent. Et il ne s'effondre plus vers le noir en 900px :
+     le stop bas reste haut, une page longue ne doit pas finir en cave. */
+  background: linear-gradient(180deg, #342b66 0px, #2e2659 700px, #292152 1600px);
 }
 /* LE SOL MEURT, LA GRILLE RESTE — décision de direction, pas oubli :
    le plancher rose en perspective (.y2k::after) est LA signature du
