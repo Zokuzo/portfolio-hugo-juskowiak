@@ -26,7 +26,13 @@ export type Etat =
   | "SPOTIFY"
   | "DEPART"
 
-export type Dest = "/work" | "/home"
+/* Les destinations sont une VALEUR et pas seulement un type : le harnais
+   asserte que chacune a sa route sur le disque (garde de dépôt du #37 —
+   la fin de la cinématique est un `router.push(dest)` qu'aucune passe
+   navigateur n'exerce, une faute de frappe la rendrait 404 en silence). */
+export const DESTS = ["/work", "/home"] as const
+
+export type Dest = (typeof DESTS)[number]
 
 export type Scene = { etat: Etat; dest: Dest | null }
 

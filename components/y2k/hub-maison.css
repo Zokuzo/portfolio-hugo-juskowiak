@@ -1,0 +1,711 @@
+/* ==================================================================
+   MAISON — la peau du hub /home (#37) : la CHAMBRE au crépuscule.
+
+   Le miroir du bureau de nuit : /work est une session de travail sur
+   desktop nocturne, /home est l'OS du foyer qui démarre au soir —
+   ciel périwinkle→sakura en haut (le « Cherry Windows 97 » de la
+   moisson), la nuit du monde en bas, sections en PANNEAUX-STICKERS
+   (liseré découpé, ombre dure) au lieu des fenêtres chrome.
+
+   Ce fichier ne définit QUE la peau maison (préfixe m-) ; les tokens,
+   la barre système, le wordmark, le marquee et le pied viennent de
+   y2k.css. Tout est scopé sous `.y2k.maison`.
+
+   LA LOI DU DIMENSIONNEMENT (gate #36) : plafonds en px, jamais de vw
+   nu — le ciel s'arrête à 1080px de HAUTEUR déroulée, les colonnes à
+   1240px, le boot à 1100px.
+   ================================================================== */
+
+.y2k.maison {
+  /* — le ciel du soir : stops en px, l'ultra-large ne l'étire pas — */
+  --m-ciel-1: #a9b8f0;
+  --m-ciel-2: #cfc3ee;
+  --m-ciel-3: #efc4dc;
+  --m-encre-ciel: #241f3d;
+  background: linear-gradient(
+    180deg,
+    var(--m-ciel-1) 0px,
+    var(--m-ciel-2) 300px,
+    var(--m-ciel-3) 520px,
+    #8f6d9a 680px,
+    #46315c 840px,
+    #221a3e 960px,
+    var(--y2k-nuit) 1080px
+  );
+}
+/* LE SOL MEURT, LA GRILLE RESTE — décision de direction, pas oubli :
+   le plancher rose en perspective (.y2k::after) est LA signature du
+   bureau /work, la chambre ne l'emprunte pas ; en revanche la grille
+   graphique du desktop (.y2k::before) est le chrome du monde entier et
+   vit sous les deux pièces — sur la nuit du bas de page elle donne au
+   corps sa texture, exactement comme à /work. */
+.y2k.maison::after {
+  content: none;
+}
+
+/* ------------------------------------------------------------------
+   LE BOOT — l'écran de démarrage du foyer, sous le ciel.
+   ------------------------------------------------------------------ */
+.m-boot {
+  position: relative;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 118px 20px 110px;
+  text-align: center;
+}
+/* LES TROIS TEXTES DU BOOT SONT POSITIONNÉS — le décor du boot (branche,
+   nuages, kanji) est `position: absolute` en z-index auto : il se peint
+   APRÈS le contenu non positionné, donc par-dessus. Le h1 y échappe
+   seulement parce que y2k.css le pose en relative. Même remède que
+   .y2k-marquee (y2k.css) : le texte se positionne pour rester dessus.
+   Le décor NE prend PAS z-index:-1 — il plongerait sous le ciel au
+   premier moteur qui ne crée pas le contexte attendu (piège 88d3daf). */
+.m-boot-ligne,
+.m-identite,
+.m-charge {
+  position: relative;
+}
+.m-boot-ligne {
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  /* encre de nuit sur le ciel clair — le miroir du boot glacé de /work */
+  color: var(--m-encre-ciel);
+}
+/* LA BRANCHE DE CERISIER — décor pur, derrière le titre comme sur la
+   référence ; pointer-events none, jamais un texte dessus */
+.m-sakura {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: clamp(150px, 24vw, 320px);
+  height: auto;
+  pointer-events: none;
+}
+@media (max-width: 720px) {
+  .m-sakura {
+    width: 148px;
+    opacity: 0.8;
+  }
+}
+/* le kanji du foyer — décoratif, mort sous 980px (leçon #38 : le
+   vertical mord les titres aux largeurs moyennes) */
+.m-kanji {
+  position: absolute;
+  left: 24px;
+  top: 118px;
+  writing-mode: vertical-rl;
+  /* --f-jp comme ses deux sœurs (planche.css .jp, fiche-y2k.css
+     .fy-vertical) : Archivo et Arial n'ont aucun glyphe CJK — sans
+     cette ligne, 家 part au repli système, voire au tofu. Le layout
+     charge Noto Sans JP exprès pour ces trois ornements. */
+  font-family: var(--f-jp), var(--f-display), sans-serif;
+  font-size: 42px;
+  color: rgba(36 31 61 / 0.42);
+  pointer-events: none;
+}
+@media (max-width: 980px) {
+  .m-kanji {
+    display: none;
+  }
+}
+/* DEUX NUAGES PIXEL — le ciel de la moisson, en art de box-shadow sur
+   une cellule de 10px ; décor pur, sous le contenu */
+.m-nuage {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  pointer-events: none;
+  background: transparent;
+  box-shadow:
+    30px 0 #f7f4ff, 40px 0 #f7f4ff, 50px 0 #f7f4ff,
+    10px 10px #f7f4ff, 20px 10px #f7f4ff, 30px 10px #f7f4ff, 40px 10px #f7f4ff,
+    50px 10px #f7f4ff, 60px 10px #f7f4ff, 70px 10px #f7f4ff,
+    0 20px #f7f4ff, 10px 20px #f7f4ff, 20px 20px #f7f4ff, 30px 20px #f7f4ff,
+    40px 20px #f7f4ff, 50px 20px #f7f4ff, 60px 20px #f7f4ff, 70px 20px #f7f4ff,
+    80px 20px #f7f4ff, 90px 20px #f7f4ff,
+    0 30px #dfe4fb, 10px 30px #dfe4fb, 20px 30px #f7f4ff, 30px 30px #f7f4ff,
+    40px 30px #f7f4ff, 50px 30px #f7f4ff, 60px 30px #f7f4ff, 70px 30px #dfe4fb,
+    80px 30px #dfe4fb, 90px 30px #dfe4fb;
+}
+.m-nuage-a {
+  left: 6%;
+  top: 46px;
+}
+/* le nuage bas vit dans le ciel VIDE sous la barre de chargement —
+   à 30 % du bord il mordait le O du wordmark (capture 1440). Ancré au
+   BAS du bloc, pas à 440px du haut : la hauteur du boot suit le clamp
+   du wordmark, et l'offset fixe faisait sortir le nuage du cadre entre
+   640 et 860px (il passait sous le marquee, payé et jamais vu). */
+.m-nuage-b {
+  right: 8%;
+  bottom: 40px;
+  transform: scale(0.7);
+}
+@media (max-width: 640px) {
+  .m-nuage-b {
+    display: none;
+  }
+}
+/* à 320, le boot se resserre : le nuage haut frôlait la ligne de boot */
+@media (max-width: 480px) {
+  .m-nuage-a {
+    display: none;
+  }
+}
+
+/* LE WORDMARK MAISON — le chrome S'INVERSE : clair sur nuit à /work,
+   iris d'ENCRE sur le ciel ici. Même loi que là-bas : l'élément clippé
+   reste NU (ni ombre, ni filter, ni isolation — cause racine du « néon
+   noir », 61b57db), le halo vit sur le double ::after plein.
+   AA au pire pixel : tous les stops restent sous L≈0,05 — le plus
+   clair (#5c3168) mesure ≥5,5:1 sur le plus clair du ciel (#cfc3ee). */
+.maison .y2k-wordmark {
+  background: linear-gradient(
+    180deg,
+    #221a44 0%,
+    #443076 26%,
+    #5c3168 46%,
+    #2b2558 62%,
+    #191436 82%,
+    #241d4a 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  /* LE TRAIT S'INVERSE AVEC LE CHROME : à /work des lettres claires sur
+     la nuit veulent un trait blanc — ici des lettres d'encre sur un ciel
+     clair le veulent d'ENCRE. Deux raisons, les mêmes que là-bas dans
+     l'autre sens : il ne doit pas éclaircir le pourtour du glyphe contre
+     un fond clair, et c'est LE filet de sécurité — si un moteur refuse
+     le clip, `color: transparent` ne laisse que ce trait, et un trait
+     blanc sur du lavande ne dessine rien (le double crème non plus). */
+  -webkit-text-stroke: 1px rgba(20 16 44 / 0.35);
+}
+/* le double passe crème : lueur sakura douce derrière l'encre — le
+   rose vif du bureau reste à /work */
+.maison .y2k-wordmark::after {
+  color: #fff3f9;
+  opacity: 0.9;
+  text-shadow: 0 0 26px rgba(255 158 199 / 0.8), 0 0 60px rgba(255 158 199 / 0.45);
+}
+.m-identite {
+  font-size: 18px;
+  color: var(--m-encre-ciel);
+  letter-spacing: 0.02em;
+}
+.m-identite strong {
+  color: #14102c;
+  font-weight: 600;
+}
+
+/* la barre de chargement : les blocs segmentés d'un boot 9x, pleins —
+   le foyer est monté. Statique par construction (reduced-motion : rien
+   à couper). */
+.m-charge {
+  display: grid;
+  gap: 9px;
+  justify-items: center;
+  margin-top: 28px;
+}
+.m-charge-barre {
+  width: min(420px, 82%);
+  height: 16px;
+  padding: 2px;
+  background: #f6f3fe;
+  box-shadow: var(--bev-creux), 0 2px 0 rgba(20 16 44 / 0.25);
+}
+.m-charge-barre i {
+  display: block;
+  height: 100%;
+  background: repeating-linear-gradient(90deg, var(--y2k-rose) 0 12px, #ffd7ea 12px 16px);
+}
+.m-charge-txt {
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--m-encre-ciel);
+}
+
+/* le marquee de la chambre roule sur le crépuscule : il garde son LCD
+   (y2k.css) — rien à surcharger, la classe m-marquee reste un ancrage */
+
+/* ------------------------------------------------------------------
+   LES PANNEAUX-STICKERS — le mobilier des sections : liseré découpé
+   crème + ombre dure, un ONGLET d'étiqueteuse en haut à gauche.
+   ------------------------------------------------------------------ */
+.m-colonne {
+  max-width: 1240px;
+  padding-top: 44px;
+}
+.m-pan {
+  position: relative;
+  background: rgba(12 9 24 / 0.93);
+  box-shadow:
+    0 0 0 2px rgba(246 243 254 / 0.92),
+    0 0 0 4px rgba(26 19 44 / 0.9),
+    10px 12px 0 rgba(8 5 18 / 0.5);
+  min-width: 0;
+}
+.m-pan-tab {
+  position: absolute;
+  top: -14px;
+  left: 18px;
+  padding: 4px 12px 3px;
+  background: var(--acc);
+  color: var(--acc-txt);
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  box-shadow: 0 0 0 2px rgba(246 243 254 / 0.92), 3px 3px 0 rgba(8 5 18 / 0.55);
+  max-width: calc(100% - 36px);
+}
+.m-pan-tab i {
+  font-style: normal;
+}
+.m-pan-corps {
+  padding: 36px 30px 30px;
+}
+.m-pan h2 {
+  margin: 0 0 6px;
+  font-family: var(--f-chrome), var(--f-display), sans-serif;
+  font-size: clamp(17px, 4.2vw, 30px);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--y2k-clair);
+  text-shadow: 0 0 20px color-mix(in srgb, var(--acc) 40%, transparent);
+}
+.m-note {
+  margin: 0 0 24px;
+  max-width: 68ch;
+  font-size: 16.5px;
+  line-height: 1.55;
+  color: #cfc9ea;
+}
+.m-pan-etat {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 12px;
+  background: rgba(30 24 52 / 0.9);
+  box-shadow: inset 0 1px 0 rgba(246 243 254 / 0.18);
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 12.5px;
+  color: #cfc9ea;
+}
+
+/* ------------------------------------------------------------------
+   A:\ATELIER — la boîte à disquettes : volet métal, étiquette à
+   bande d'accent, pied d'actions.
+   ------------------------------------------------------------------ */
+.m-disqs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+}
+@media (max-width: 860px) {
+  .m-disqs {
+    grid-template-columns: 1fr;
+  }
+}
+.m-disq {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  /* item de grille : sans min-width:0 son minimum est son min-content —
+     le plus long nom de projet en Michroma dicterait la colonne et
+     rouvrirait le gate du débordement (la leçon de .y2k-fen) */
+  min-width: 0;
+  padding: 14px 14px 16px;
+  background: linear-gradient(180deg, #1e1738, #131026);
+  box-shadow:
+    inset 1px 1px 0 rgba(242 240 253 / 0.22),
+    inset -1px -1px 0 rgba(0 0 0 / 0.5),
+    0 0 22px color-mix(in srgb, var(--acc) 14%, transparent);
+}
+/* le volet coulissant : la pièce qui dit « disquette » d'un coup d'œil */
+.m-disq-volet {
+  position: relative;
+  width: 58%;
+  height: 30px;
+  margin: 0 auto;
+  background: linear-gradient(180deg, #ded9f2, #a9a2cc);
+  box-shadow: var(--bev-haut);
+}
+.m-disq-volet::after {
+  content: "";
+  position: absolute;
+  right: 12%;
+  top: 20%;
+  width: 26%;
+  height: 60%;
+  background: #131026;
+  box-shadow: var(--bev-creux);
+}
+.m-disq-etiquette {
+  background: #f6f3fe;
+  border-top: 8px solid var(--acc);
+  padding: 12px 14px 14px;
+  box-shadow: 0 2px 0 rgba(0 0 0 / 0.35);
+}
+.m-disq-etiquette h3 {
+  margin: 0;
+  font-family: var(--f-chrome), var(--f-display), sans-serif;
+  font-size: 18px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--y2k-encre);
+}
+.m-disq-intitule {
+  margin: 3px 0 8px;
+  font-family: var(--f-mono), monospace;
+  font-size: 13px;
+  color: var(--y2k-encre-2);
+}
+.m-disq-texte {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--y2k-encre);
+}
+.m-disq-pied {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+}
+.m-disq-etat {
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--y2k-nuit);
+  background: var(--acc);
+  padding: 3px 8px 2px;
+}
+.m-disq-pied a {
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 12px;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--y2k-encre);
+  background: linear-gradient(180deg, var(--y2k-clair), var(--y2k-chrome));
+  box-shadow: var(--bev-haut);
+  padding: 3px 8px 2px;
+}
+/* rose ENCRE au survol : la loi des faces claires (audit du re-gate) */
+.m-disq-pied a:hover {
+  color: var(--y2k-rose-encre);
+}
+
+/* ------------------------------------------------------------------
+   QUALIF.M3U — la playlist HJ·AMP : readout LCD, quatre pistes, le
+   double diplôme marqué en lecture simultanée.
+   ------------------------------------------------------------------ */
+.m-amp {
+  background: var(--y2k-lcd);
+  box-shadow: var(--bev-creux), 0 0 34px rgba(160 107 255 / 0.14);
+}
+.m-amp-tete {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  padding: 8px 16px;
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 13px;
+  color: var(--y2k-lcd-txt);
+  border-bottom: 1px solid rgba(255 179 220 / 0.25);
+}
+.m-pistes {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0 8px;
+}
+.m-pistes li {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  gap: 2px 14px;
+  padding: 14px 18px;
+}
+.m-pistes li + li {
+  border-top: 1px dotted rgba(255 179 220 / 0.22);
+}
+.m-pistes .num {
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 13px;
+  color: rgba(255 179 220 / 0.7);
+  padding-top: 3px;
+}
+.m-pistes .corps {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 12px;
+}
+.m-pistes .nom {
+  font-family: var(--f-chrome), var(--f-display), sans-serif;
+  font-size: 16px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #fff;
+  text-decoration: none;
+}
+.m-pistes .nom:hover {
+  color: var(--y2k-lcd-txt);
+  text-decoration: underline;
+}
+.m-pistes .intitule {
+  font-size: 14.5px;
+  color: rgba(255 214 235 / 0.92);
+}
+.m-pistes .lieu {
+  font-family: var(--f-mono), monospace;
+  font-size: 13px;
+  color: rgba(255 179 220 / 0.75);
+}
+.m-pistes .dit {
+  flex-basis: 100%;
+  margin: 4px 0 0;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: #ece2f4;
+  max-width: 74ch;
+}
+.m-pistes .duree {
+  font-family: var(--f-mono), monospace;
+  font-size: 14px;
+  color: var(--y2k-lcd-txt);
+  white-space: nowrap;
+  padding-top: 3px;
+}
+/* LA BARRE DE RAIL — l'axe commun sous chaque piste : les tranches qui
+   se chevauchent SE VOIENT se chevaucher (ESTIA et MBDS de 2024 à
+   2025). C'est la réponse au reproche d'etuNote : « écrit en liste, ça
+   se lit l'un après l'autre et l'information disparaît ». */
+.m-rail {
+  grid-column: 1 / -1;
+  position: relative;
+  height: 6px;
+  margin-top: 10px;
+  background: rgba(255 179 220 / 0.14);
+}
+.m-rail i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--d);
+  width: var(--w);
+  background: var(--y2k-lcd-txt);
+}
+.m-piste-double .m-rail i {
+  background: var(--y2k-violet);
+}
+
+/* la piste du DOUBLE DIPLÔME : liseré violet + chip — deux pistes
+   jouent en même temps, la liste ne doit pas le taire (etuNote).
+   Le liseré est une OMBRE INTERNE, pas une bordure : une bordure
+   s'ajoute à la boîte, décalait la colonne des numéros de 3px et
+   rétrécissait d'autant la barre de rail — dont l'axe doit être
+   EXACTEMENT commun, c'est ce que la section revendique. */
+.m-piste-double {
+  box-shadow: inset 3px 0 0 var(--y2k-violet);
+  background: rgba(160 107 255 / 0.08);
+}
+.m-double-chip {
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--y2k-nuit);
+  background: var(--y2k-violet);
+  padding: 2px 8px 1px;
+}
+@media (max-width: 560px) {
+  .m-pistes li {
+    grid-template-columns: 34px 1fr;
+  }
+  .m-pistes .duree {
+    grid-column: 2;
+    padding-top: 0;
+  }
+}
+
+/* ------------------------------------------------------------------
+   PROFIL.INI — le hors-travail en fichier de config : sections entre
+   crochets, paires clé = valeur.
+   ------------------------------------------------------------------ */
+.m-ini {
+  display: grid;
+  gap: 24px;
+  padding: 20px 22px;
+  background: rgba(20 16 40 / 0.6);
+  box-shadow: inset 1px 1px 0 rgba(0 0 0 / 0.5), inset -1px -1px 0 rgba(242 240 253 / 0.14);
+  font-family: var(--f-mono), monospace;
+}
+/* deux colonnes en large : la moitié droite du fichier restait morte
+   à 1440 (la leçon « vides morts » des gates #36/#38) */
+@media (min-width: 1100px) {
+  .m-ini {
+    grid-template-columns: 3fr 2fr;
+    align-items: start;
+    column-gap: 40px;
+  }
+}
+.m-ini-col {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+.m-ini-sec {
+  margin: 0;
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  color: var(--y2k-glace);
+}
+.m-ini-texte {
+  margin: 0;
+  font-size: 15.5px;
+  line-height: 1.6;
+  color: #e6e1f6;
+  max-width: 74ch;
+}
+.m-ini-lignes {
+  margin: 0;
+  display: grid;
+  gap: 4px;
+}
+.m-ini-lignes div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-size: 14.5px;
+}
+.m-ini-lignes dt {
+  color: #b9c6e6;
+}
+.m-ini-lignes dt::after {
+  content: " =";
+}
+.m-ini-lignes dd {
+  margin: 0;
+  color: #f2f0fd;
+}
+
+/* ------------------------------------------------------------------
+   MSGR.EXE — la messagerie : statut en ligne, bulle, trois réponses.
+   ------------------------------------------------------------------ */
+.m-msgr {
+  max-width: 680px;
+  margin: 0 auto;
+  width: 100%;
+}
+.m-msgr-statut {
+  margin: 0 0 14px;
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 12.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9be05a;
+}
+.m-msgr-statut::before {
+  content: "";
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 8px;
+  background: #9be05a;
+  box-shadow: 0 0 8px rgba(155 224 90 / 0.7);
+}
+.m-msgr-fil {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.m-msgr-avatar {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 17px;
+  background: var(--y2k-lcd);
+  color: var(--y2k-lcd-txt);
+  box-shadow: var(--bev-creux);
+}
+.m-msgr-bulle {
+  position: relative;
+  margin: 0;
+  padding: 14px 16px;
+  background: #f6f3fe;
+  color: var(--y2k-encre);
+  font-family: var(--f-chrome), var(--f-display), sans-serif;
+  font-size: clamp(16px, 2.2vw, 19px);
+  line-height: 1.5;
+  box-shadow: 3px 3px 0 rgba(8 5 18 / 0.5);
+}
+.m-msgr-bulle::before {
+  content: "";
+  position: absolute;
+  left: -8px;
+  top: 16px;
+  border: 8px solid transparent;
+  border-right-color: #f6f3fe;
+  border-left: 0;
+}
+/* les boutons de réponse — PAS la classe dlg de y2k.css : son anneau
+   de focus profond est réglé pour la face brossée claire du dialogue
+   /work ; ici le fond derrière l'anneau est la NUIT du panneau, où le
+   rose vif par défaut tient 5,7:1 et le profond échouerait (2,7:1) */
+.m-msgr-boutons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+.m-msgr-boutons a {
+  flex: 1 1 160px;
+  text-align: center;
+  text-decoration: none;
+  padding: 10px 12px;
+  color: var(--y2k-encre);
+  background: linear-gradient(180deg, var(--y2k-clair), var(--y2k-chrome));
+  box-shadow: var(--bev-haut);
+}
+.m-msgr-boutons a:hover {
+  color: var(--y2k-rose-encre);
+}
+.m-msgr-boutons .role {
+  display: block;
+  font-family: var(--f-pixel), var(--f-mono), monospace;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--y2k-encre-2);
+}
+.m-msgr-boutons .val {
+  font-size: 15px;
+}
+
+/* ------------------------------------------------------------------
+   Mobile — les retraits se resserrent, rien ne se chevauche.
+   ------------------------------------------------------------------ */
+@media (max-width: 640px) {
+  .m-boot {
+    padding: 96px 16px 88px;
+  }
+  .m-pan-corps {
+    padding: 32px 16px 24px;
+  }
+  .m-disqs {
+    gap: 22px;
+  }
+  .m-pistes li {
+    padding: 12px 14px;
+  }
+}

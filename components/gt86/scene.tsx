@@ -403,19 +403,22 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
 
   /* LA SUITE DE LA CASCADE (#28) : chaque état télécharge ce dont le
      SUIVANT aura besoin. Depuis le #31 l'habitacle vit dans la rue déjà
-     chargée — il ne reste à l'habitacle qu'à précharger la route de
-     sortie. `prefetch("/home")` attend que la route existe (#34). */
+     chargée — il ne reste à précharger que la route de sortie, et c'est
+     CHOIX qui la connaît : précharger les DEUX depuis l'habitacle
+     jetterait la moitié de la charge à tous les coups, et le visiteur
+     qui traîne à l'AMP passerait de toute façon le délai de péremption.
+     CHOIX laisse ~3,2 s avant le push (jauge 2,6 s + DEPART_MS). */
   useEffect(() => {
-    if (etat === "HABITACLE") router.prefetch("/work")
-  }, [etat, router])
+    if (etat !== "CHOIX" || !dest) return
+    router.prefetch(dest)
+  }, [etat, dest, router])
 
   /* DÉPART est terminal : la sortie de la machine est une VRAIE navigation
-     Next, pas un état du canvas (spec #25). */
+     Next, pas un état du canvas (spec #25). Le GPS ne ment plus :
+     Maison va à /home (#37). */
   useEffect(() => {
     if (etat !== "DEPART" || !dest) return
-    /* la route /home naît au #34 — d'ici là, Maison plonge sur la home
-       simple (le choix du prototype #26) */
-    const h = setTimeout(() => router.push(dest === "/home" ? "/" : dest), DEPART_MS)
+    const h = setTimeout(() => router.push(dest), DEPART_MS)
     return () => clearTimeout(h)
   }, [etat, dest, router])
 

@@ -893,6 +893,54 @@ const DICT = {
     fr: "© 2026 Hugo Juskowiak — session TRAVAIL",
     en: "© 2026 Hugo Juskowiak — WORK session",
   },
+  /* — le hub MAISON (#37) — la CHAMBRE au crépuscule, le miroir du
+     bureau de nuit : l'OS du foyer qui démarre (boot sakura façon
+     « Cherry Windows 97 » de la moisson), disquettes d'atelier,
+     playlist HJ·AMP, PROFIL.INI, messagerie. Ici ne vivent que les
+     chromes de la coquille — le contenu vient de parcours.ts et des
+     clés at·, etu·, op· et ct·, repris tels quels (doctrine #20). */
+  hubMaisonSys: { fr: "MAISON.SYS", en: "HOME.SYS" },
+  hubMaisonBoot: {
+    fr: "démarrage du foyer — partition personnelle",
+    en: "booting home — personal partition",
+  },
+  hubMaisonCharge: { fr: "foyer monté — 100 %", en: "home mounted — 100%" },
+  /* « cursus », JAMAIS « diplômes » : la playlist rend les quatre
+     entrées de etudes() — CPGE est une classe préparatoire et Hokkaido
+     un semestre d'échange, seuls ESTIA et MBDS sont des diplômes
+     (revue adversariale du #37 ; la loi « rien d'inventé » vaut aussi
+     pour les chromes de la coquille). */
+  hubMaisonMarquee: {
+    fr: "✿ PARTITION MAISON ··· 4 projets d'atelier sur disquettes ··· 4 cursus en lecture ··· hors travail ··· messagerie ouverte ✿",
+    en: "✿ HOME PARTITION ··· 4 workshop projects on floppies ··· 4 courses playing ··· off duty ··· messenger online ✿",
+  },
+  /* le kanji du foyer — décoratif, mais il passe par le dict comme ses
+     frères de la planche (traceJp, atJp, etuJp) */
+  hubMaisonJp: { fr: "家", en: "家" },
+  /* les noms de sections suivent la métaphore de chacune : le lecteur
+     de disquettes, la playlist, le fichier de config, le messager —
+     comme .EXE/.SYS côté travail, l'extension est l'esthétique */
+  hubMaisonAtelier: { fr: "A:\\ATELIER", en: "A:\\WORKSHOP" },
+  hubMaisonAtNote: {
+    fr: "Quatre projets, quatre disquettes : l'étiquette dit l'état, la fiche dit le reste.",
+    en: "Four projects, four floppies: the label says the status, the file says the rest.",
+  },
+  /* la racine suit la langue quand elle est un mot (loi du #36) :
+     « QUALIF » est une troncation française qu'un anglophone ne lit
+     pas — l'anglais reprend le mot de la feuille 03 (etuIndex) */
+  hubMaisonQualif: { fr: "QUALIF.M3U", en: "STUDIES.M3U" },
+  hubMaisonAmp: { fr: "HJ·AMP", en: "HJ·AMP" },
+  hubMaisonPistes: { fr: "pistes", en: "tracks" },
+  hubMaisonPerso: { fr: "PROFIL.INI", en: "PROFILE.INI" },
+  hubMaisonIniForce: { fr: "[FORCE]", en: "[STRENGTH]" },
+  hubMaisonIniReglages: { fr: "[REGLAGES]", en: "[TUNING]" },
+  hubMaisonContact: { fr: "MSGR.EXE", en: "MSGR.EXE" },
+  hubMaisonEnLigne: { fr: "hugo — en ligne", en: "hugo — online" },
+  hubMaisonStatut: {
+    fr: "© 2026 Hugo Juskowiak — session MAISON",
+    en: "© 2026 Hugo Juskowiak — HOME session",
+  },
+
   /* l'essai C du gate #36 (pub magazine) : la petite URL de coin des
      pubs imprimées — identique dans les deux langues, par le dict */
   pubUrl: { fr: "www.hugojuskowiak.com", en: "www.hugojuskowiak.com" },

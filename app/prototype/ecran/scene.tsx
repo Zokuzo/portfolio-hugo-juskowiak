@@ -1441,14 +1441,16 @@ export default function Scene() {
   }, [zoome, modeEcran, eteint, ecran])
 
   /* la jauge pleine du GPS plonge dans le portfolio relié : fondu noir
-     puis navigation réelle — Maison → la home, Travail → /work */
+     puis navigation réelle — Maison → /home, Travail → /work. La route
+     prototype est PRÉRENDUE et servie : son GPS ne peut pas garder le
+     repli d'avant le #37, sinon MAISON y ment encore. */
   useEffect(() => {
     ecran.surDepart((dest) => {
       /* ?nodepart : l'itinéraire reste à l'écran sans partir — pour les
          gates visuels (le départ file trop vite pour être capturé) */
       if (params.get("nodepart") !== null) return
       setPartir(true)
-      setTimeout(() => routeur.push(dest === "maison" ? "/" : "/work"), 650)
+      setTimeout(() => routeur.push(dest === "maison" ? "/home" : "/work"), 650)
     })
   }, [ecran, routeur, params])
 

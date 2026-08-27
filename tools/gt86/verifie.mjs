@@ -16,7 +16,7 @@
  */
 
 import assert from "node:assert/strict"
-import { readFileSync } from "node:fs"
+import { existsSync, readFileSync } from "node:fs"
 import { spawn } from "node:child_process"
 import { createServer } from "node:net"
 import { fileURLToPath } from "node:url"
@@ -27,7 +27,7 @@ const NAV = process.argv.includes("--nav")
 
 /* ─────────────────────────── BLOC A — la machine ─────────────────────── */
 
-const { suivant, depart, marqueVue, CLE, ETATS, INTRO, RAILS, REPOS } = await import(
+const { suivant, depart, marqueVue, CLE, ETATS, INTRO, RAILS, REPOS, DESTS } = await import(
   path.join(RACINE, "components/gt86/machine.ts")
 )
 
@@ -121,6 +121,17 @@ assert.deepEqual(
   [],
   "un état n'est ni en repos, ni un rail, ni terminal",
 )
+
+/* GARDE DE DÉPÔT : chaque destination du GPS a sa route sur le disque.
+   La fin de la cinématique est un `router.push(dest)` (#37) qu'AUCUNE
+   passe navigateur n'exerce — la 4d tourne sous `?nodepart`, qui fige
+   justement le départ. Sans cette garde, une faute de frappe ou le
+   déménagement du #39 rendrait 404 la sortie de toute l'expérience,
+   tous les gates restant verts. Zéro seconde de navigateur. */
+for (const dest of DESTS) {
+  const page = path.join(RACINE, "app", dest.replace(/^\//, ""), "page.tsx")
+  assert.ok(existsSync(page), `le GPS mène à ${dest} mais ${path.relative(RACINE, page)} n'existe pas`)
+}
 
 /* GARDE DE DÉPÔT : le paquet de la home ne doit contenir NI three NI R3F.
    Un import statique enverrait les 139 Ko (mesurés au #17) à tous les
