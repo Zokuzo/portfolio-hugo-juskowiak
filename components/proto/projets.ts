@@ -1,7 +1,11 @@
 import type { Lang } from "./dict"
+import { SLUGS_MAISON } from "./mondes"
 
 /* ==================================================================
-   FICHES D'UNITÉ — le contenu des pages /work/[slug].
+   LES FICHES — le contenu des pages /work/[slug] ET /home/[slug].
+   Depuis le #39, six des neuf fiches (les deux projets d'atelier et
+   les quatre cursus) vivent sous la chambre ; la scission des routes
+   est dans `mondes.ts`.
 
    POURQUOI CE FICHIER ET PAS dict.ts : le dictionnaire porte des
    CHAÎNES traduites, indexées par clé plate. Une fiche projet est un
@@ -393,15 +397,15 @@ const FR: Projet[] = [
       {
         titre: "Deux stages d'ingénierie logicielle",
         texte:
-          "The Guill Corp en 2023 — interface de filtrage de données d'aviation — puis Sophia Genetics en 2025 — machine learning contre la sur-allocation mémoire (U-03). Le second est documenté en fiche d'unité.",
+          "The Guill Corp en 2023 — interface de filtrage de données d'aviation — puis Sophia Genetics en 2025 — machine learning contre la sur-allocation mémoire. Le second a sa fiche : Prédiction d'usage mémoire.",
       },
       {
         titre: "Un semestre au Japon",
-        texte: "Semestre d'échange à l'Imperial University of Hokkaido, en cours de cycle — fiche F-03.",
+        texte: "Semestre d'échange à l'Imperial University of Hokkaido, en cours de cycle — fiche Hokkaido.",
       },
       {
         titre: "Un second master en parallèle",
-        texte: "Le MBDS mené en même temps que la fin du cycle ingénieur, pas après — fiche F-04.",
+        texte: "Le MBDS mené en même temps que la fin du cycle ingénieur, pas après — fiche MBDS.",
       },
     ],
     parc: ["Informatique", "Génie industriel", "FR / EN / ES", "Gestion de projet"],
@@ -418,7 +422,7 @@ const FR: Projet[] = [
     periode: "2024.03 → 2024.07",
     etat: "Validé",
     contexte:
-      "Un semestre à travailler dans une autre norme, une autre langue et un autre rapport au détail. C'est l'excursion du schéma de la feuille 03 : le trait quitte le rail principal et y revient — on ne revient pas identique d'un pays qui documente autrement.",
+      "Un semestre à travailler dans une autre norme, une autre langue et un autre rapport au détail. C'est une excursion : le parcours quitte son rail principal et y revient — on ne revient pas identique d'un pays qui documente autrement.",
     contraintes: [
       "Cours d'information et d'ingénierie, en anglais.",
       "Une autre norme de travail et de documentation, à apprendre sur place.",
@@ -444,7 +448,7 @@ const FR: Projet[] = [
     periode: "2024.09 → 2025.10",
     etat: "Diplômé",
     contexte:
-      "Second diplôme mené EN PARALLÈLE du cycle ingénieur, pas après. De septembre 2024 à octobre 2025, les deux rails avancent ensemble — c'est la cote du schéma de la feuille 03, sa seule affirmation chiffrée.",
+      "Second diplôme mené EN PARALLÈLE du cycle ingénieur, pas après. De septembre 2024 à octobre 2025, les deux rails avancent ensemble — c'est le seul recouvrement du parcours.",
     contraintes: [
       "Data science : statistiques, machine learning, bases de données.",
       "MIAGE : l'informatique appliquée à la gestion, pas la théorie seule.",
@@ -454,7 +458,7 @@ const FR: Projet[] = [
       {
         titre: "Un terrain d'application immédiat",
         texte:
-          "Le stage Sophia Genetics — machine learning contre la sur-allocation mémoire (U-03) — se déroule pendant la même période : ce que le master enseigne, le pipeline le met à l'épreuve.",
+          "Le stage Sophia Genetics — machine learning contre la sur-allocation mémoire — se déroule pendant la même période : ce que le master enseigne, le pipeline le met à l'épreuve.",
       },
       {
         titre: "Deux diplômes, un ordonnancement",
@@ -775,15 +779,15 @@ const EN: Projet[] = [
       {
         titre: "Two software engineering internships",
         texte:
-          "The Guill Corp in 2023 — aviation data filtering interface — then Sophia Genetics in 2025 — machine learning against memory over-allocation (U-03). The second is documented as a unit file.",
+          "The Guill Corp in 2023 — aviation data filtering interface — then Sophia Genetics in 2025 — machine learning against memory over-allocation. The second has its own file: Memory usage prediction.",
       },
       {
         titre: "A semester in Japan",
-        texte: "Exchange semester at the Imperial University of Hokkaido, mid-cycle — file F-03.",
+        texte: "Exchange semester at the Imperial University of Hokkaido, mid-cycle — see the Hokkaido file.",
       },
       {
         titre: "A second master's in parallel",
-        texte: "The MBDS run alongside the end of the engineering cycle, not after it — file F-04.",
+        texte: "The MBDS run alongside the end of the engineering cycle, not after it — see the MBDS file.",
       },
     ],
     parc: ["Computer science", "Industrial engineering", "FR / EN / ES", "Project management"],
@@ -800,7 +804,7 @@ const EN: Projet[] = [
     periode: "2024.03 → 2024.07",
     etat: "Completed",
     contexte:
-      "A semester working to another standard, another language and another relationship with detail. It is the excursion on the sheet 03 diagram: the line leaves the main rail and returns — you do not come back the same from a country that documents differently.",
+      "A semester working to another standard, another language and another relationship with detail. It is an excursion: the path leaves its main rail and comes back — you do not come back the same from a country that documents differently.",
     contraintes: [
       "Information and engineering coursework, in English.",
       "Another standard of work and documentation, learned on site.",
@@ -826,7 +830,7 @@ const EN: Projet[] = [
     periode: "2024.09 → 2025.10",
     etat: "Graduated",
     contexte:
-      "A second degree run IN PARALLEL with the engineering cycle, not after it. From September 2024 to October 2025 both rails advance together — that is the dimension line on the sheet 03 diagram, its only numbered claim.",
+      "A second degree run IN PARALLEL with the engineering cycle, not after it. From September 2024 to October 2025 both rails advance together — it is the only overlap in the path.",
     contraintes: [
       "Data science: statistics, machine learning, databases.",
       "MIAGE: computing applied to management, not theory alone.",
@@ -836,7 +840,7 @@ const EN: Projet[] = [
       {
         titre: "An immediate proving ground",
         texte:
-          "The Sophia Genetics internship — machine learning against memory over-allocation (U-03) — runs over the same period: what the master's teaches, the pipeline puts to the test.",
+          "The Sophia Genetics internship — machine learning against memory over-allocation — runs over the same period: what the master's teaches, the pipeline puts to the test.",
       },
       {
         titre: "Two degrees, one schedule",
@@ -861,4 +865,13 @@ export function projet(lang: Lang, slug: string): Projet | undefined {
   return PAR_LANGUE[lang].find((p) => p.slug === slug)
 }
 
-export const SLUGS = FR.map((p) => p.slug)
+/* Tous les slugs, dans l'ordre du fichier. Plus exporté depuis le
+   #39 : la scission en deux mondes se lit par SLUGS_TRAVAIL /
+   SLUGS_MAISON, et un export sans appelant est une API qui ment. */
+const SLUGS = FR.map((p) => p.slug)
+
+/* La scission des deux mondes vit dans `mondes.ts` — un module SANS
+   données, pour que les hubs client qui n'ont besoin que d'écrire une
+   adresse n'embarquent pas les neuf fiches bilingues avec. Seul
+   SLUGS_TRAVAIL reste ici : il se DÉDUIT du catalogue. */
+export const SLUGS_TRAVAIL = SLUGS.filter((s) => !SLUGS_MAISON.includes(s))

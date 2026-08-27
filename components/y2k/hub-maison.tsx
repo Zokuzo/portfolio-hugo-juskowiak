@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { t, type Lang } from "@/components/proto/dict"
 import { etudes, perso } from "@/components/proto/parcours"
+import { hrefFiche } from "@/components/proto/mondes"
 import { HeroFenetre } from "./hero-fenetre"
 
 /* ==================================================================
@@ -19,8 +20,9 @@ import { HeroFenetre } from "./hero-fenetre"
    (dict.ts, parcours.ts) repris tels quels — ce fichier ne fait que le
    mettre en chambre.
 
-   Les fiches restent sous /work/<slug> tant que #39 ne les a pas
-   déménagées — les liens pointent sur des routes qui existent.
+   Les six fiches liées d'ici vivent sous /home/<slug> depuis le #39 :
+   l'adresse ne s'écrit plus à la main, elle vient de `hrefFiche` —
+   déménager une fiche ne peut plus laisser un lien mort ici.
    ================================================================== */
 
 /* Un accent par disquette, posé en variable CSS sur la carte — le CSS
@@ -107,7 +109,7 @@ export default function HubMaison() {
                   </div>
                   <div className="m-disq-pied">
                     <span className="m-disq-etat">{p.etat}</span>
-                    {p.fiche && <Link href={`/work/${p.fiche}`}>{t(lang, "xpFiche")} ▸</Link>}
+                    {p.fiche && <Link href={hrefFiche(p.fiche)}>{t(lang, "xpFiche")} ▸</Link>}
                     {p.liens?.map((l) => (
                       <a key={l.url} href={l.url} target="_blank" rel="noreferrer">
                         {l.role}
@@ -156,7 +158,7 @@ export default function HubMaison() {
                           une entrée future sans fiche donnerait un lien
                           /work/undefined (même garde que les disquettes) */}
                       {e.fiche ? (
-                        <Link href={`/work/${e.fiche}`} className="nom">
+                        <Link href={hrefFiche(e.fiche)} className="nom">
                           {e.nom}
                         </Link>
                       ) : (

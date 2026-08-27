@@ -2535,213 +2535,15 @@ html.clair body {
   max-width: 1100px;
   margin-inline: auto;
 }
-.fp-rail {
-  position: absolute;
-  left: 0;
-  top: clamp(6rem, 14vh, 10rem);
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  letter-spacing: 0.28em;
-}
-
-.fp-barre {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding-bottom: clamp(2rem, 6vh, 4rem);
-}
-.fp-retour {
-  color: var(--g-500);
-  text-decoration: none;
-  transition: color 0.3s var(--ease);
-}
-.fp-retour:hover,
-.fp-retour:focus-visible {
-  color: var(--paper);
-}
-.fp-lang {
-  display: flex;
-  gap: var(--rule);
-}
-.fp-lang button {
-  padding: 5px 11px;
-  border: var(--rule) solid var(--line-2);
-  background: transparent;
-  color: var(--g-500);
-  cursor: pointer;
-}
-.fp-lang button[aria-pressed="true"] {
-  background: var(--chip);
-  color: var(--paper);
-}
-
-.fp-unite {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  margin: 0 0 0.9rem;
-}
-.fp-mark {
-  padding: 3px 6px;
-  background: var(--chip);
-  color: var(--g-100);
-}
-.fp-nom {
-  margin: 0;
-  font-size: clamp(2rem, 6vw, 4.2rem);
-  font-weight: 700;
-  font-stretch: 84%;
-  letter-spacing: -0.02em;
-  line-height: 0.98;
-  text-transform: uppercase;
-}
-.fp-jp {
-  margin: 0.4rem 0 0;
-  font-size: var(--f-micro);
-}
-.fp-soustitre {
-  margin: clamp(0.8rem, 2vh, 1.2rem) 0 0;
-  max-width: 44ch;
-  font-size: clamp(1.05rem, 2.2vw, 1.4rem);
-  line-height: 1.4;
-  color: var(--g-100);
-}
-.fp-meta {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1rem clamp(1rem, 3vw, 2.4rem);
-  margin: clamp(1.6rem, 4vh, 2.6rem) 0 0;
-  padding-top: clamp(1rem, 2.5vh, 1.6rem);
-  border-top: var(--rule) solid var(--line-2);
-}
-.fp-meta dt {
-  margin-bottom: 0.35rem;
-}
-.fp-meta dd {
-  margin: 0;
-  color: var(--g-100);
-}
 /* L'état de la fiche courante est le seul rouge de la page : il
    désigne ce qui tourne, il ne colore pas un titre. */
-.fp-courante .fp-etat {
-  color: var(--paper);
-  box-shadow: inset 2px 0 0 var(--sig-hot);
-  padding-left: 0.6rem;
-}
-
-.fp-bloc {
-  margin-top: clamp(2.4rem, 7vh, 4.4rem);
-}
-.fp-bloc-titre {
-  margin: 0 0 clamp(0.9rem, 2.4vh, 1.5rem);
-  padding-bottom: 0.6rem;
-  border-bottom: var(--rule) solid var(--line-2);
-  color: var(--paper);
-  font-weight: 400;
-}
-.fp-prose {
-  margin: 0;
-  max-width: 68ch;
-  font-size: 1.0625rem;
-  line-height: 1.72;
-  color: var(--g-100);
-}
-
-.fp-contraintes,
-.fp-decisions {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.fp-contraintes li,
-.fp-decision {
-  display: grid;
-  grid-template-columns: 2.4rem 1fr;
-  gap: 0 clamp(0.6rem, 1.6vw, 1.2rem);
-  padding: clamp(0.8rem, 2vh, 1.2rem) 0;
-  border-bottom: var(--rule) solid var(--line);
-}
-.fp-num {
-  color: var(--g-500);
-}
-.fp-contrainte {
-  text-transform: none;
-  letter-spacing: 0.035em;
-  line-height: 1.7;
-  max-width: 72ch;
-}
-.fp-decision-titre {
-  margin: 0;
-  font-size: 1.0625rem;
-  font-weight: 700;
-  font-stretch: 90%;
-  letter-spacing: 0.005em;
-  color: var(--paper);
-}
-.fp-decision-texte {
-  margin: 0.45rem 0 0;
-  max-width: 74ch;
-  text-transform: none;
-  letter-spacing: 0.035em;
-  line-height: 1.72;
-}
 
 /* Le parc : des pièces, donc des étiquettes de nomenclature — pas des
    « badges ». Un contour et un lit neutre, jamais de teinte. */
-.fp-parc {
-  list-style: none;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin: 0;
-  padding: 0;
-}
-.fp-piece {
-  padding: 5px 10px;
-  border: var(--rule) solid var(--line-2);
-  background: var(--ink-2);
-  color: var(--g-100);
-}
 
 /* Les captures d'interface : le même cadre que le schéma — une pièce
    posée sur un lit d'encre, jamais une « galerie ». Les dimensions
    sont dans le balisage, l'image arrive dans une place déjà réservée. */
-.fp-captures {
-  list-style: none;
-  display: grid;
-  gap: clamp(1.2rem, 3vh, 2rem);
-  margin: 0;
-  padding: 0;
-}
-.fp-captures figure {
-  margin: 0;
-}
-.fp-captures img {
-  display: block;
-  width: 100%;
-  height: auto;
-  border: var(--rule) solid var(--line-2);
-  background: var(--ink-2);
-}
-.fp-captures figcaption {
-  margin-top: 0.5rem;
-}
-
-.fp-pied {
-  margin-top: clamp(3rem, 9vh, 5.5rem);
-  padding-top: clamp(1.2rem, 3vh, 2rem);
-  border-top: var(--rule) solid var(--line-2);
-}
-.fp-retour-bas {
-  color: var(--g-300);
-  text-decoration: none;
-  transition: color 0.3s var(--ease);
-}
-.fp-retour-bas:hover,
-.fp-retour-bas:focus-visible {
-  color: var(--paper);
-}
 
 /* ------------------------------------------------------------
    BLOCS DES FICHES SUR MESURE
@@ -2757,11 +2559,6 @@ html.clair body {
    du ticket 10 ne produit que de la géométrie statique, et sa légende
    est dans le SVG — il n'y a rien à faire défiler à côté. Le lit
    d'encre le décolle de la page sans le cadrer. */
-.fp-schema {
-  padding: clamp(1rem, 3vw, 2rem);
-  border: var(--rule) solid var(--line-2);
-  background: var(--ink-2);
-}
 
 /* Le tableau des cotes. La COMMANDE est une colonne et pas une note
    de bas de page : un chiffre sans son geste de reproduction est une
@@ -2887,20 +2684,8 @@ html.clair body {
 }
 
 @media (max-width: 720px) {
-  .fp-rail {
-    display: none;
-  }
-  .fp-contraintes li,
-  .fp-decision {
-    grid-template-columns: 2rem 1fr;
-  }
   /* Le schéma perd son lit sur petit écran : à cette largeur, un
      cadre autour d'un dessin déjà dense vole de la place au dessin. */
-  .fp-schema {
-    padding: 0;
-    border: 0;
-    background: none;
-  }
 }
 
 /* ------------------------------------------------------------
@@ -3510,8 +3295,9 @@ html.clair body {
 
    Le rail est le canal géométrique de l'état allumé (--rail-w,
    « canal GÉOMÉTRIQUE de l'état allumé ») et l'idiome du fichier :
-   quatre précédents en `inset … var(--sig-hot)` (.fp-courante
-   .fp-etat, .fp-code-m, .tel-tr-lourde td, .xp-courant). Survol et
+   précédents en `inset … var(--sig-hot)` (.fp-code-m,
+   .tel-tr-lourde td, .xp-courant — .fp-courante et .fp-etat sont
+   partis avec la coque de fiche au #39). Survol et
    focus se lisent à la PRÉSENCE de l'anneau, pas à sa couleur.
 
    POURQUOI L'OUTLINE DE SURVOL DE 04 EST PARTI : papier, 1px,

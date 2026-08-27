@@ -681,12 +681,15 @@ const DICT = {
     en: "Unit 09 — Title block — End of document — REF.0043-B / REV.2",
   },
 
-  /* — libellés des fiches d'unité (/work/[slug]) —
+  /* — libellés des fiches, les deux mondes (/work/[slug] et
+     /home/[slug] depuis le #39) —
      Le contenu des fiches vit dans projets.ts : ce sont des
      enregistrements, pas des chaînes. Ici ne restent que les
-     étiquettes du gabarit. */
-  fpRetour: { fr: "Document", en: "Document" },
-  fpRetourDocument: { fr: "Retour au document", en: "Back to the document" },
+     étiquettes du gabarit — et RIEN QUE celles qui sont rendues :
+     `fpRetour`, `fpRetourDocument` et `fpCaptures` sont parties avec la
+     coque planche qui les portait (#39). Une clé sans appelant est une
+     étiquette qu'on retraduira pour rien, exactement le motif qui a
+     fait dé-exporter `SLUGS` au même commit. */
   fpFiche: { fr: "Fiche projet", en: "Project file" },
   fpCadre: { fr: "Cadre", en: "Context" },
   fpPeriode: { fr: "Période", en: "Period" },
@@ -699,7 +702,6 @@ const DICT = {
   /* Le prévu est séparé du parc pour que le futur ne se déguise
      jamais en présent (issue #7). */
   fpPrevu: { fr: "Prévu", en: "Planned" },
-  fpCaptures: { fr: "Captures d'interface", en: "Interface screens" },
 
   /* — blocs des fiches sur mesure —
      Titres du vocabulaire de `fiche-blocs.tsx`. Ils sont ici et non

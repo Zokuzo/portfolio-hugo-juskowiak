@@ -14,6 +14,17 @@ const nextConfig = {
   async redirects() {
     return [
       { source: "/work/prospector", destination: "/work/reach-up", permanent: true },
+      /* #39 — les six fiches maison ont quitté le bureau pour la
+         chambre. Cette liste est un RELEVÉ D'HISTOIRE, pas un miroir
+         de la scission : elle nomme les six URLs qui ont été publiées
+         sous /work et qui doivent continuer d'aboutir. Une fiche
+         maison créée demain n'a pas d'ancienne URL — elle n'a donc
+         rien à faire ici, et cette ligne n'est pas à tenir à jour. */
+      {
+        source: "/work/:slug(eternal|trading-agent|cpge|estia|hokkaido|mbds)",
+        destination: "/home/:slug",
+        permanent: true,
+      },
     ]
   },
 }

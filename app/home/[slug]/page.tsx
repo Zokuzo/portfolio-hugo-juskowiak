@@ -2,27 +2,25 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { Michroma, Silkscreen } from "next/font/google"
 import { FicheY2k } from "@/components/y2k/fiche-y2k"
-import { SLUGS_TRAVAIL, projet } from "@/components/proto/projets"
+import { SLUGS_MAISON } from "@/components/proto/mondes"
+import { projet } from "@/components/proto/projets"
 import "@/components/y2k/y2k.css"
 import "@/components/y2k/fiche-y2k.css"
 
-/* LES FICHES BUREAU — /work/[slug]. Depuis le #39, cette route ne
-   porte plus QUE le travail : les six fiches maison sont parties sous
-   `/home/[slug]`, et leurs anciennes URLs redirigent (next.config.mjs).
-   Plus d'aiguillage ici — les deux mondes sont deux routes.
+/* LES SIX FICHES MAISON (#39) — les deux projets d'atelier et les
+   quatre cursus, sortis de `/work` où ils n'avaient rien à faire : le
+   hub MAISON les liait sous la route du BUREAU, et leur retour
+   renvoyait à la planche. Ici ils rentrent chez eux.
 
-   Toutes les fiches sont connues à la compilation : elles sortent en
-   statique, comme le reste du document. Aucune donnée n'arrive d'un
-   serveur à l'exécution.
-
-   Le slug ne se traduit pas — une URL qui change avec la langue casse
-   tous les liens entrants. La bascule FR/EN vit dans la fiche. */
+   Route jumelle de `app/work/[slug]/page.tsx` — même gabarit, mêmes
+   fontes, même prérendu statique ; seul le monde change, et il change
+   par la propriété `retour` : c'est le SERVEUR qui sait dans quelle
+   partition il rend, pas la fiche qui le devine d'une liste de slugs
+   recopiée côté client. */
 export function generateStaticParams() {
-  return SLUGS_TRAVAIL.map((slug) => ({ slug }))
+  return SLUGS_MAISON.map((slug) => ({ slug }))
 }
 
-/* Les fontes du monde Y2K, chargées ici et pas au layout racine :
-   next/font les auto-héberge au build — zéro requête externe. */
 const chrome = Michroma({
   weight: "400",
   subsets: ["latin"],
@@ -43,22 +41,22 @@ const pixel = Silkscreen({
    héritaient toutes du titre du layout racine — six onglets rigoureusement
    identiques, et rien pour les distinguer (WCAG 2.4.2, niveau A).
 
-   EN FRANÇAIS, comme `app/work/page.tsx` : la bascule FR/EN vit dans le
+   EN FRANÇAIS, comme `app/home/page.tsx` : la bascule FR/EN vit dans le
    composant client, le document servi est en FR — un titre traduit
    mentirait sur ce que le serveur a rendu. */
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
   const p = projet("fr", slug)
   if (!p) return {}
-  return { title: `${p.nom} — Travail — Hugo Juskowiak`, description: p.sousTitre }
+  return { title: `${p.nom} — Maison — Hugo Juskowiak`, description: p.sousTitre }
 }
 
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  if (!SLUGS_TRAVAIL.includes(slug)) notFound()
+  if (!SLUGS_MAISON.includes(slug)) notFound()
   return (
     <div className={`${chrome.variable} ${pixel.variable}`}>
-      <FicheY2k slug={slug} retour="/work" />
+      <FicheY2k slug={slug} retour="/home" />
     </div>
   )
 }

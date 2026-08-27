@@ -5,6 +5,7 @@ import { motion, useReducedMotion } from "motion/react"
 import { ViewTransition } from "react"
 import { t, type Lang } from "./dict"
 import { perso, type ProjetPerso } from "./parcours"
+import { hrefFiche } from "./mondes"
 
 /* ==================================================================
    04 — ATELIER. Les projets personnels.
@@ -171,7 +172,7 @@ export function Atelier({ lang }: { lang: Lang }) {
                 <p className="mono mono-sm dim-2 at-texte">{p.texte}</p>
 
                 {p.fiche && (
-                  <Link href={`/work/${p.fiche}`} className="mono mono-xs fiche-lien at-fiche-lien">
+                  <Link href={hrefFiche(p.fiche)} className="mono mono-xs fiche-lien at-fiche-lien">
                     {t(lang, "xpFiche")} <span aria-hidden="true">→</span>
                   </Link>
                 )}

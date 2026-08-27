@@ -376,7 +376,8 @@
   font-size: 13px;
   color: color-mix(in srgb, var(--acc) 75%, #fff);
 }
-.fy-decisions b {
+.fy-decisions h3 {
+  margin: 0;
   font-family: var(--f-chrome), var(--f-display), sans-serif;
   font-weight: 400;
   font-size: 15.5px;
@@ -425,3 +426,171 @@
   padding: 8px 14px 7px;
 }
 .fy-retour:hover { color: var(--y2k-rose-encre); }
+
+/* ==================================================================
+   LES BLOCS EMPRUNTÉS À LA PLANCHE (#39) — schéma d'architecture,
+   code annoté, tableau de cotes. Seule la fiche Eternal les porte.
+
+   POURQUOI UN REPOINTAGE DE TOKENS ET PAS UNE RÉÉCRITURE. Les règles
+   `.etn-*` et `.fp-cotes*` / `.fp-code*` de `planche.css` ne codent
+   AUCUNE couleur en dur : elles lisent toutes `--ink-2`, `--paper`,
+   `--g-*`, `--line*`. Redéclarer ces variables ici suffit à faire
+   passer 101 nœuds de SVG, un tableau et un extrait de code dans la
+   palette du monde Y2K — sans toucher une seule de leurs règles, donc
+   sans risquer la planche.
+
+   POURQUOI `.y2k.fy .fy-etn` ET PAS `.fy-etn`. `.proto-root` vit au
+   layout RACINE : la fiche Y2K en hérite tous les tokens de la
+   planche, y compris leur bascule de thème `:where(html.clair)
+   .proto-root` (spécificité 0,1,0). Un `.fy-etn` nu (0,1,0) perdrait
+   ou gagnerait selon l'ordre des feuilles dans le bundle — et un
+   visiteur en thème CLAIR verrait le schéma passer en clair sur clair.
+   Le monde Y2K n'a pas de variante jour : ces valeurs sont PINÉES.
+
+   POURQUOI SUR `.fy-etn` ET PAS SUR `.fy`. Le gabarit du #38 est gaté
+   au pixel ; `.fy-resultat` et `.fy-parc` lisent `--f-mono`, et le
+   corps entier lirait `--paper` s'il était repointé plus haut. Le
+   repointage est donc enfermé dans les trois blocs qui l'appellent —
+   aucun pixel validé ne bouge.
+   ================================================================== */
+.y2k.fy .fy-etn {
+  display: grid;
+  gap: 14px;
+
+  /* le LIT — le même panneau que les contraintes et les décisions :
+     sur le sol violet, le presque-noir de la planche se lirait comme un
+     trou découpé, pas comme une carte (leçon du 4e retour du #37) */
+  --ink-2: var(--fy-panneau);
+  /* RATIOS MESURÉS au navigateur contre le panneau #211a40 (et contre
+     le sol #342b66 pour ce qui peut s'y poser), pas estimés — la loi du
+     dépôt vaut aussi pour les chiffres qu'on écrit en commentaire.
+     Chaque token est annoté de ce qu'il PORTE VRAIMENT ici, relevé par
+     extraction des règles de planche.css : les blocs empruntés ne
+     rendent ni .dim-2 ni .jp, les nommer serait un faux repère. */
+  --paper: #f4efff; /* 14,49:1 — .fp-cote-val, .fp-code-m (l'encre du corps, à l'identique) */
+  --g-100: #e9e4ff; /* 13,22:1 — .etn-bus, .etn-t-titre, .fp-code code */
+  --g-300: var(--y2k-chrome); /* 10,18:1 — .etn-t, .etn-t-cote, .fp-cote-nom, .fp-code-note */
+  --g-500: #a49dc9; /* 6,41:1 panneau · 4,90:1 sol — .dim, .etn-boite, les libellés hors boîte, .fp-code-c */
+  --g-700: rgba(205 201 230 / 0.34); /* .etn-puce, .etn-attache, .etn-cote — FILET, jamais un glyphe */
+  --line: rgba(205 201 230 / 0.16);
+  --line-2: rgba(205 201 230 / 0.28);
+  --line-3: rgba(205 201 230 / 0.44);
+  --rule: 1px;
+
+  /* --sig-* : dans la planche, l'accent. Ici c'est celui de LA fiche —
+     `--sig-hot` ne porte jamais de texte (composant non textuel, WCAG
+     1.4.11), `--sig-ember` est un lit de chaleur sans couleur. */
+  --sig-hot: var(--acc);
+  --sig-ember: color-mix(in srgb, var(--acc) 14%, #16112c);
+}
+
+/* CE QU'ON PINE, ON LE DOIT AUSSI EN CONTRASTE FORCÉ ET RENFORCÉ.
+   Piège payé à la revue adversariale du #39 : `.proto-root` porte les
+   parades d'accessibilité de la planche (planche.css:1831 et :1860),
+   mais une déclaration posée SUR l'élément bat toujours une valeur
+   HÉRITÉE d'un ancêtre — la spécificité n'entre même pas en jeu. Nos
+   tokens pinés sur `.fy-etn` masquaient donc les deux parades.
+
+   POURQUOI C'EST GRAVE ET PAS COSMÉTIQUE : `forced-colors` force
+   `color`, `background-color` et `border-color`, mais PAS `stroke` ni
+   `fill` (c'est écrit à planche.css:1872). Le lit du bloc passait donc
+   au Canvas BLANC du système pendant que le bus, les 28 arêtes, leurs
+   pointes, les trois cadres de bande et la cote gardaient leur rgba
+   lavande — mesuré : trait rgba(205,201,230,0.44) sur blanc, 1,22:1.
+   Le schéma devenait huit boîtes sans un seul lien entre elles.
+
+   La règle générale : QUI PINE UN TOKEN HÉRITE DE SES VARIANTES.
+   Ces trois blocs sont le premier contenu du monde Y2K à peindre en
+   stroke/fill — le reste du monde survit au contraste forcé parce
+   qu'il ne peint qu'en color/background-color. */
+@media (forced-colors: active) {
+  .y2k.fy .fy-etn {
+    /* on rend la main au système, palette ENTIÈRE — un demi-repointage
+       laisserait exactement le trou qu'on vient de boucher */
+    --ink-2: Canvas;
+    --paper: CanvasText;
+    --g-100: CanvasText;
+    --g-300: CanvasText;
+    --g-500: CanvasText;
+    --g-700: GrayText; /* FILET, jamais un glyphe — comme la planche */
+    /* les trois filets, aux valeurs EXACTES de planche.css:1878-1880 :
+       --line reste atténué (le non-bâti du tracé est encore du
+       non-bâti), les deux autres deviennent du trait */
+    --line: GrayText;
+    --line-2: CanvasText;
+    --line-3: CanvasText;
+    --sig-hot: Highlight;
+    --sig-ember: Canvas;
+  }
+  /* le lit perd son panneau au profit du Canvas : sans ça, un lit blanc
+     forcé sous des boîtes restées sombres (fill non forcé) ferait deux
+     mondes dans le même bloc */
+  .y2k.fy .fy-etn-lit {
+    box-shadow: none;
+    border: 1px solid CanvasText;
+  }
+}
+
+/* CONTRASTE RENFORCÉ — même masquage, même devoir. La planche épaissit
+   ses neutres (planche.css:1831) ; on épaissit les nôtres, sur NOTRE
+   panneau. Valeurs mesurées au navigateur, pas estimées. */
+@media (prefers-contrast: more) {
+  .y2k.fy .fy-etn {
+    --g-500: #c9c3e8; /* 9,68:1 sur le panneau, mesuré (contre 6,41 au repos) */
+    --line: rgba(205 201 230 / 0.3);
+    --line-2: rgba(205 201 230 / 0.46);
+    --line-3: rgba(205 201 230 / 0.62);
+  }
+}
+
+/* LE LIT — un seul, pour les trois blocs. C'est la correction d'une
+   faute AA attrapée par la sonde : la légende de source du code et la
+   note des cotes sont des enfants DIRECTS du bloc (le composant rend un
+   fragment), elles flottaient donc sur le SOL — que le halo violet de
+   `.y2k::before` éclaircit à #4f3f82 en haut de page, où le texte
+   secondaire ne mesurait plus que 3,49:1. Poser le bloc ENTIER sur son
+   panneau règle la cause et pas le symptôme : chaque bloc de cette
+   fiche a un panneau, ces trois-là n'en avaient pas. */
+.y2k.fy .fy-etn-lit {
+  background: var(--fy-panneau);
+  box-shadow: var(--bev-creux);
+  padding: clamp(14px, 3vw, 26px);
+  display: grid;
+  gap: 12px;
+}
+/* LA SEULE RÈGLE DE LARGEUR DE CE BLOC, et elle est porteuse — les
+   trois autres qu'on avait posées par réflexe sont tombées à la mesure.
+   Ce qui déborde n'est PAS le cadre de défilement : `.fp-code-cadre` et
+   `.fp-cotes-cadre` portent `overflow-x: auto` (planche.css:2770 et
+   :2844), et la taille minimale automatique ne s'applique pas à un
+   conteneur de défilement — ils se contiennent seuls. C'est leur PARENT
+   qui déborde : `figure.fp-code` est un enfant de grille ordinaire, il
+   prend donc la largeur intrinsèque du code (1035px), pousse la colonne,
+   et `.y2k { overflow: hidden }` ROGNE le tout en silence.
+
+   Mesuré par build réel, sonde à l'appui : sans cette ligne, la légende
+   de source part 766px hors cadre à 320px ; avec elle seule, zéro rogné
+   sur neuf largeurs. Le test « rogné » de la sonde existe pour ça — il
+   est né de cette règle, et il la garde. */
+.y2k.fy .fy-etn-lit > * {
+  min-width: 0;
+}
+/* le code et les cotes n'ont plus de lit à eux : ils sont POSÉS sur
+   celui du bloc (le schéma, lui, ne porte plus `.fp-schema` du tout —
+   c'était le lit de la planche, `.fy-etn-lit` le remplace) */
+.y2k.fy .fy-etn .fp-code-cadre,
+.y2k.fy .fy-etn .fp-cotes-cadre {
+  border: none;
+  background: none;
+  padding: 0;
+}
+/* AUCUN `min-width: 0` DANS CE BLOC, ET C'EST MESURÉ. Le réflexe de grille
+   veut le poser sur les pistes qui portent du contenu incompressible ;
+   testé au navigateur (390 et 1440, avec et sans), il ne déplace pas un
+   pixel. La raison est dans la spécification : la taille minimale
+   automatique ne s'applique PAS à un conteneur de défilement, et
+   `.fp-code-cadre` / `.fp-cotes-cadre` en sont — planche.css leur pose
+   `overflow-x: auto` (:2770 et :2844). Le défilement se contient donc
+   tout seul, et la sonde le vérifie par le test « rogné » à neuf
+   largeurs. Une règle qui ne fait rien mais se lit comme une décision
+   coûte plus cher que son absence. */

@@ -4,6 +4,7 @@ import Link from "next/link"
 import { motion, useReducedMotion } from "motion/react"
 import { t, type Lang } from "./dict"
 import { projets } from "./projets"
+import { hrefFiche } from "./mondes"
 
 /* ==================================================================
    00 — INDEX. La nomenclature des feuilles.
@@ -78,7 +79,7 @@ export function IndexFeuilles({ lang }: { lang: Lang }) {
               viewport={{ once: true, amount: 0.6 }}
               transition={reduit ? { duration: 0 } : { duration: 0.45, delay: 0.035 * i, ease: [0.22, 1, 0.36, 1] }}
             >
-              <Link href={`/work/${p.slug}`} className="nomen-lien">
+              <Link href={hrefFiche(p.slug)} className="nomen-lien">
                 <span className="mono mono-xs nomen-num">{p.unite}</span>
                 <span className="nomen-nom">{p.nom}</span>
                 <span className="mono mono-xs dim nomen-objet">{p.sousTitre}</span>

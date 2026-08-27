@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { t, type Lang } from "@/components/proto/dict"
 import { employeurs } from "@/components/proto/parcours"
+import { hrefFiche } from "@/components/proto/mondes"
 
 /* ==================================================================
    LE HUB /work (#36) — la partition TRAVAIL du bureau Y2K.
@@ -128,7 +129,7 @@ export default function HubTravail() {
                         <b>{p.nom}</b> — {p.texte}
                         {p.aConfirmer && <span className="y2k-aconf">{t(lang, "hubAConfirmer")}</span>}
                         {p.fiche && <br />}
-                        {p.fiche && <Link href={`/work/${p.fiche}`}>{t(lang, "xpFiche")} ▸</Link>}
+                        {p.fiche && <Link href={hrefFiche(p.fiche)}>{t(lang, "xpFiche")} ▸</Link>}
                       </div>
                     ))}
                     <div className="y2k-xp-parc">

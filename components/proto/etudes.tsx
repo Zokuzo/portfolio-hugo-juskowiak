@@ -5,6 +5,7 @@ import { motion, useReducedMotion } from "motion/react"
 import { ViewTransition } from "react"
 import { t, type Lang } from "./dict"
 import { etudes } from "./parcours"
+import { hrefFiche } from "./mondes"
 
 /* ==================================================================
    03 — ÉTUDES. Le parcours en rails parallèles.
@@ -175,7 +176,7 @@ export function Etudes({ lang }: { lang: Lang }) {
                       que la feuille 02 : un renvoi vers une page vide est
                       pire qu'une absence. */}
                   {e.fiche && (
-                    <Link href={`/work/${e.fiche}`} className="mono mono-xs fiche-lien etu-fiche-lien">
+                    <Link href={hrefFiche(e.fiche)} className="mono mono-xs fiche-lien etu-fiche-lien">
                       {t(lang, "xpFiche")} <span aria-hidden="true">→</span>
                     </Link>
                   )}

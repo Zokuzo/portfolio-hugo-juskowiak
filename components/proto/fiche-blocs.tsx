@@ -1,81 +1,25 @@
 "use client"
 
-import type { ReactNode } from "react"
-import { motion } from "motion/react"
 import { t, type Lang } from "./dict"
-import type { Projet } from "./projets"
 
 /* ==================================================================
-   VOCABULAIRE DE BLOCS — ce qui reste COMMUN quand la mise en page
-   devient libre.
+   VOCABULAIRE DE BLOCS — les deux blocs qu'une fiche EMPRUNTE.
 
-   LA DÉCISION QUE CE FICHIER APPLIQUE. Chaque fiche projet a sa mise
-   en page propre ; seul l'en-tête est partagé. Une cohérence qui ne
-   tiendrait qu'à la discipline de celui qui écrit la cinquième fiche
-   ne tiendrait pas. Elle tient donc à deux choses mécaniques :
+   CE QUI A CHANGÉ AU #39. Ce fichier servait la coque planche
+   (`fiche-projet.tsx`) et son vocabulaire de mise en page libre. Les
+   neuf fiches sont passées au gabarit « affiche Y2K » — trois au
+   bureau, six à la chambre — et la coque a été supprimée avec son
+   corps sur mesure : leur contenu vit désormais dans
+   `components/y2k/fiche-y2k.tsx`.
 
-     1. la COQUE (`fiche-projet.tsx`) — en-tête porteur du morph, rail,
-        barre de retour, bascule FR/EN, référence U-0n, pied. Aucune
-        fiche ne la réécrit : elle n'y a pas accès.
-     2. ce VOCABULAIRE — les blocs dans lesquels une fiche pioche. Une
-        fiche compose librement, mais elle compose AVEC ça.
+   NE RESTE QUE CE QUI EST ENCORE APPELÉ : les COTES et le CODE
+   ANNOTÉ, les deux blocs de la fiche Eternal. `Bloc` et `monte()`
+   sont partis avec la coque — et avec eux la dépendance à `motion`,
+   qui n'a plus rien à animer ici.
 
-   POURQUOI DES COMPOSANTS ET PAS DES DONNÉES. Déclarer les blocs dans
-   `projets.ts` demanderait une union de variantes et un rendu par
-   branche : un mini-CMS dont la seule instance serait ce site. Et une
-   « mise en page propre » n'est pas une liste de blocs — c'est un
-   ordre, des largeurs, des ruptures de gabarit. Le langage qui dit ça
-   s'appelle JSX. Le contrat de contenu, lui, ne bouge pas : aucune
-   chaîne visible ici, tout vient de `dict.ts` ou de `projets.ts`, en
-   FR et en EN.
-
-   MOUVEMENT. Un seul motif, `monte()`, et il est coupé sous
-   `prefers-reduced-motion: reduce` (ticket 23). Aucun bloc de ce
-   fichier n'anime autre chose.
+   LE CONTRAT DE CONTENU NE BOUGE PAS : aucune chaîne visible dans ce
+   fichier, tout vient de `dict.ts` ou de `projets.ts`, en FR et en EN.
    ================================================================== */
-
-/** Le corps d'une fiche. La coque lui passe l'enregistrement, la
- *  langue et l'état de la préférence de mouvement — rien d'autre.
- *  Une fiche sur mesure est UNE fonction de cette forme. */
-export type Corps = (props: { p: Projet; lang: Lang; reduit: boolean | null }) => ReactNode
-
-/* La révélation à l'entrée en vue. La coupure s'écrit ICI et pas en
-   CSS : le CSS n'atteint pas le moteur d'animation. Seule la
-   TRANSITION est branchée — brancher `initial` ferait diverger le
-   rendu du serveur de celui du client (ticket 23). */
-export function monte(reduit: boolean | null, i: number) {
-  return {
-    initial: { opacity: 0, y: 12 },
-    whileInView: { opacity: 1, y: 0 },
-    viewport: { once: true, amount: 0.3 },
-    transition: reduit ? { duration: 0 } : { duration: 0.5, delay: 0.04 * i, ease: [0.22, 1, 0.36, 1] as const },
-  }
-}
-
-/** Un bloc titré, révélé à l'entrée en vue. C'est la seule unité de
- *  découpage d'une fiche : tout ce qu'une fiche montre est dedans. */
-export function Bloc({
-  id,
-  titre,
-  reduit,
-  i,
-  children,
-}: {
-  id: string
-  titre: string
-  reduit: boolean | null
-  i: number
-  children: ReactNode
-}) {
-  return (
-    <motion.section className="fp-bloc" aria-labelledby={id} {...monte(reduit, i)}>
-      <h2 id={id} className="mono mono-sm fp-bloc-titre">
-        {titre}
-      </h2>
-      {children}
-    </motion.section>
-  )
-}
 
 /* ------------------------------------------------------------------
    COTES RELEVÉES
