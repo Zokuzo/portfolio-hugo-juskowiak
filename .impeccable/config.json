@@ -38,6 +38,15 @@
         ],
         "createdAt": "2026-08-26T12:58:56.394Z",
         "reason": "Lettrage chrome liquide = la direction Y2K validée par Hugo (gate #36 et moisson Pinterest #38)"
+      },
+      {
+        "rule": "gradient-text",
+        "value": "*",
+        "files": [
+          "components/y2k/hero-fenetre.css"
+        ],
+        "createdAt": "2026-08-27T12:20:00.000Z",
+        "reason": "Même wordmark chrome que les quatre exceptions ci-dessus, sur l'essai de hero du #37 — Hugo a confirmé explicitement au 2e retour de gate : « j'adore le design, y compris la hero section avec maison écrit ou home »"
       }
     ]
   }

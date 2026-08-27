@@ -4,6 +4,9 @@ import { useState } from "react"
 import Link from "next/link"
 import { t, type Lang } from "@/components/proto/dict"
 import { etudes, perso } from "@/components/proto/parcours"
+import { Pixels } from "./pixels"
+import { SAKURA } from "./pixel-art"
+import { HeroFenetre } from "./hero-fenetre"
 
 /* ==================================================================
    LE HUB /home (#37) — la partition MAISON : la CHAMBRE au crépuscule,
@@ -46,7 +49,11 @@ const rail = (debut: number, fin: number, t0: number, t1: number) =>
     "--w": `${(Math.max(fin - debut, 0.15) / (t1 - t0)) * 100}%`,
   }) as React.CSSProperties
 
-export default function HubMaison() {
+/* DEUX HEROS, UNE SEULE PAGE (retour de gate : « fais une version
+   totalement différente de la hero section »). Le reste de la page est
+   RIGOUREUSEMENT identique d'une version à l'autre — c'est la seule
+   façon de gater un hero à l'œil : ce qui change est ce qu'on juge. */
+export default function HubMaison({ hero = "boot" }: { hero?: "boot" | "fenetre" }) {
   const [lang, setLang] = useState<Lang>("fr")
   const projets = perso(lang)
   const pistes = etudes(lang)
@@ -58,7 +65,12 @@ export default function HubMaison() {
   const t1 = Math.max(...pistes.map((e) => e.fin))
 
   return (
-    <main lang={lang} className="y2k maison">
+    /* `maison-chambre` : sous le hero « fenêtre », la page N'A PLUS de
+       ciel — on est dans la pièce, pas dehors. Le dégradé de crépuscule
+       de `.maison` est calé en px sur la hauteur du hero « boot » ; le
+       laisser sous une chambre ferait reparaître une aube au milieu du
+       mur. Une classe, pas un `:has()` : aucun risque de support. */
+    <main lang={lang} className={`y2k maison${hero === "fenetre" ? " maison-chambre" : ""}`}>
       <header className="y2k-barre">
         <span className="y2k-barre-os">{t(lang, "hubOs")}</span>
         <span className="y2k-barre-fichier">{t(lang, "hubMaisonSys")}</span>
@@ -75,38 +87,18 @@ export default function HubMaison() {
         </Link>
       </header>
 
-      {/* — le BOOT : l'écran de démarrage du foyer, sous le ciel du soir — */}
+      {hero === "fenetre" ? (
+        <HeroFenetre lang={lang} />
+      ) : (
+      /* — le BOOT : l'écran de démarrage du foyer, sous le ciel du soir — */
       <section className="m-boot">
-        {/* la branche de cerisier de la référence — décor pur */}
-        <svg className="m-sakura" viewBox="0 0 320 230" aria-hidden="true">
-          <g fill="none" stroke="#47283f" strokeLinecap="round">
-            <path d="M318 12 C 250 40, 190 60, 128 118 C 96 148, 72 180, 60 216" strokeWidth="9" />
-            <path d="M212 62 C 196 92, 190 118, 194 148" strokeWidth="6" />
-            <path d="M150 98 C 128 104, 108 104, 88 96" strokeWidth="6" />
-            <path d="M96 150 C 112 162, 130 168, 152 168" strokeWidth="5" />
-          </g>
-          {[
-            [232, 48, 1], [196, 74, 0.85], [258, 34, 0.9], [166, 96, 1],
-            [130, 120, 0.85], [190, 150, 0.95], [92, 96, 0.9], [152, 170, 0.8],
-            [70, 190, 0.95], [110, 154, 0.7],
-          ].map(([x, y, s], i) => (
-            <g key={i} transform={`translate(${x} ${y}) scale(${s})`}>
-              {[0, 72, 144, 216, 288].map((a) => (
-                <circle
-                  key={a}
-                  cx={Math.cos((a * Math.PI) / 180) * 7}
-                  cy={Math.sin((a * Math.PI) / 180) * 7}
-                  r="6.4"
-                  fill={i % 3 ? "#ffb7d5" : "#ff9ec7"}
-                />
-              ))}
-              <circle r="3" fill="#fff1f7" />
-            </g>
-          ))}
-          <circle cx="52" cy="140" r="4.4" fill="#ff6fae" />
-          <circle cx="286" cy="76" r="4.4" fill="#ff6fae" />
-          <circle cx="176" cy="196" r="4.4" fill="#ff6fae" />
-        </svg>
+        {/* LA BRANCHE DE CERISIER, EN PIXEL ART (retour de gate : « je
+            trouve la fleur de cerisier ignoble, améliore-la en la
+            pixelisant »). Le dessin lissé aux courbes de Bézier est
+            mort : la grille vient de `tools/pixel/dessine.mjs`, calée
+            sur les références du feed de Hugo — branche sombre à
+            marches franches, fleurs à lobes et cœur clair. */}
+        <Pixels grille={SAKURA} className="m-sakura" />
         {/* deux nuages pixel — le ciel de la moisson */}
         <span className="m-nuage m-nuage-a" aria-hidden="true" />
         <span className="m-nuage m-nuage-b" aria-hidden="true" />
@@ -130,6 +122,7 @@ export default function HubMaison() {
           <span className="m-charge-txt">{t(lang, "hubMaisonCharge")}</span>
         </div>
       </section>
+      )}
 
       <div className="y2k-marquee m-marquee" aria-hidden="true">
         <span>{t(lang, "hubMaisonMarquee")}</span>

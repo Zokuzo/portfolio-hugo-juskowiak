@@ -50,7 +50,9 @@
   position: relative;
   max-width: 1100px;
   margin: 0 auto;
-  padding: 118px 20px 110px;
+  /* le retrait haut RÉSERVE la bande de la branche (voir .m-sakura) :
+     c'est lui qui garantit qu'aucun pétale ne passe derrière une ligne */
+  padding: 144px 20px 110px;
   text-align: center;
 }
 /* LES TROIS TEXTES DU BOOT SONT POSITIONNÉS — le décor du boot (branche,
@@ -73,20 +75,38 @@
   /* encre de nuit sur le ciel clair — le miroir du boot glacé de /work */
   color: var(--m-encre-ciel);
 }
-/* LA BRANCHE DE CERISIER — décor pur, derrière le titre comme sur la
-   référence ; pointer-events none, jamais un texte dessus */
+/* LA BRANCHE DE CERISIER EN PIXEL ART — décor pur, derrière le titre ;
+   pointer-events none, jamais un texte dessus.
+   La largeur est un MULTIPLE de la grille (60 colonnes) : à une taille
+   quelconque, un rect de 1 unité tombe entre deux pixels d'écran et le
+   moteur redonne le bord flou que `crispEdges` venait d'enlever. 300px
+   = 5 px d'écran par pixel d'art, 240 = 4, 180 = 3. */
+/* LA BRANCHE NE DOIT JAMAIS ATTEINDRE LE TEXTE. Elle fait 64×24, donc
+   sa hauteur rendue vaut largeur×0,375 ; à chaque palier, `top` +
+   hauteur reste sous le retrait haut de `.m-boot` (144 / 96 sous
+   640px) — le texte n'a plus jamais un pétale derrière lui, à aucune
+   largeur. C'est une contrainte de LECTURE, pas de goût : à 390px les
+   fleurs passaient derrière « DU FOYER » et cassaient les lettres.
+   Les largeurs sont des multiples de 64 : 320 = 5 px d'écran par pixel
+   d'art, 256 = 4, 192 = 3 — hors multiple, un rect de 1 unité tombe
+   entre deux pixels d'écran et `crispEdges` ne sert plus à rien. */
 .m-sakura {
   position: absolute;
-  top: 0;
-  right: 0;
-  width: clamp(150px, 24vw, 320px);
+  top: 8px;
+  right: 12px;
+  width: 320px; /* → 120px de haut, sous le retrait de 144 */
   height: auto;
   pointer-events: none;
 }
+@media (max-width: 1100px) {
+  .m-sakura {
+    width: 256px; /* → 96 */
+  }
+}
 @media (max-width: 720px) {
   .m-sakura {
-    width: 148px;
-    opacity: 0.8;
+    width: 192px; /* → 72, sous le retrait de 96 */
+    opacity: 0.9;
   }
 }
 /* le kanji du foyer — décoratif, mort sous 980px (leçon #38 : le
