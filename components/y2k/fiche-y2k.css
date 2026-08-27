@@ -117,6 +117,9 @@
    l'ornement s'efface tant que la marge ne lui revient pas */
 @media (max-width: 980px) { .fy-vertical { display: none; } }
 /* la GRANDE étoile chrome de MAGIA NEGRA — l'ornement de l'affiche */
+/* NI text-shadow NI filter sur un texte-dégradé (cause racine du
+   « néon noir », voir l'exemption sur .y2k dans y2k.css) — l'étoile
+   perd son halo propre, le bloom du héros l'éclaire déjà */
 .fy-etoile {
   font-family: var(--f-display), sans-serif;
   font-size: 40px;
@@ -125,7 +128,6 @@
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 0 18px color-mix(in srgb, var(--acc) 75%, transparent));
 }
 
 .fy-fiche-type {
@@ -140,8 +142,20 @@
    1,0:1 au pire point (audit AA — « accessibilité AA minimum » est la
    commande) ; l'identité chrome tient par l'iris teinté, le skew, le
    trait et l'ombre portée dure. Plafonné 104px. */
+/* le porteur du nom : le SKEW seul — les drop-shadows qui vivaient sur
+   le h1 clippé ne faisaient que masquer, au hasard du rasteriseur, la
+   cause racine du « néon noir » (l'ombre héritée de la planche, voir
+   y2k.css) ; l'ombre dure et le halo vivent sur le ::after plein */
+.fy-nom-halo {
+  transform: skewX(-6deg);
+}
 .fy-nom {
   margin: 0;
+  position: relative;
+  /* PAS d'isolation ici : l'élément clippé reste NU (la bissection du
+     re-gate a montré isolation+::after re-noircissant le remplissage) —
+     le contexte d'empilement du double en z-index -1, c'est le WRAPPER
+     .fy-nom-halo (sa transform le crée), pas le h1 */
   /* 84vw, pas 94 : à 1100 de large, 94vw ne laissait que 33px de marge
      et le kanji vertical mordait le nom long de 33px (sonde du re-gate) */
   max-width: min(84vw, 1100px);
@@ -151,13 +165,28 @@
   letter-spacing: 0.02em;
   text-transform: uppercase;
   overflow-wrap: break-word;
-  transform: skewX(-6deg);
   background: linear-gradient(180deg, #ffffff 8%, color-mix(in srgb, var(--acc) 28%, #e8e3fc) 38%, #b3abdd 50%, #ffffff 62%, color-mix(in srgb, var(--acc) 40%, #d5cff2) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
   -webkit-text-stroke: 1px rgba(255 255 255 / 0.3);
-  filter: drop-shadow(0 0 22px color-mix(in srgb, var(--acc) 40%, transparent)) drop-shadow(0 3px 0 rgba(11 8 23 / 0.95));
+}
+/* l'ombre portée dure + le halo d'accent de l'affiche : un DOUBLE du
+   nom (texte plein → text-shadow sûr), même recette que le wordmark —
+   première déclaration = repli Safari <17.4 (le « / "" » soustrait le
+   double aux lecteurs d'écran) */
+.fy-nom::after {
+  content: attr(data-nom);
+  content: attr(data-nom) / "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  transform: translate(0, 4px);
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  color: rgba(11 8 23 / 0.95);
+  text-shadow: 0 0 22px color-mix(in srgb, var(--acc) 60%, transparent), 0 0 52px color-mix(in srgb, var(--acc) 35%, transparent);
 }
 /* l'ACCROCHE de pub — l'italique sous l'objet, en VRAIE taille */
 .fy-claim {
@@ -187,6 +216,10 @@
   padding: 6px 14px;
   text-align: left;
 }
+/* replié en colonne, chaque paire centrée gardait SA largeur : les
+   bords gauches dansaient (re-gate mobile) — en pleine largeur, tout
+   s'aligne sur le retrait du panneau */
+@media (max-width: 560px) { .fy-system div { width: 100%; } }
 .fy-system dt {
   font-family: var(--f-pixel), var(--f-mono), monospace;
   font-size: 11px;

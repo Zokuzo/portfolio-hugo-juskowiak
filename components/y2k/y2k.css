@@ -53,6 +53,18 @@
   color: var(--y2k-encre);
   font-family: var(--f-display), Arial, sans-serif;
   min-height: 100vh;
+  /* L'EXEMPTION DU MONDE : la planche pose `text-shadow: 0 0 3px
+     var(--ink)` sur .proto-root, HÉRITÉ par tout le document
+     (planche.css). Sur un texte à remplissage clippé
+     (background-clip: text), cette ombre ENCRE se peint par-dessus le
+     remplissage selon le chemin de rasterisation — le wordmark et les
+     noms de fiche viraient au noir, PAR INTERMITTENCE (le « néon
+     noir » du re-gate, reproduit puis bissecté au navigateur : 11
+     rondes, X1/bis11). La planche s'exempte cartouche par cartouche
+     (.chrome, .ref) ; le monde Y2K s'exempte EN BLOC — ses éléments
+     qui veulent une ombre la déclarent eux-mêmes (h2 gravés, doubles
+     du wordmark et des noms). */
+  text-shadow: none;
 }
 
 /* Le fond du desktop : grille graphique + lueur haute. Statique — le
@@ -61,6 +73,12 @@
   content: "";
   position: absolute;
   inset: 0;
+  /* z-index -1 (sous l'isolation de .y2k) : l'ordre d'ARBRE ne suffit
+     pas — un ::after est peint après tous les enfants, et Firefox suit
+     la spec à la lettre : chez Hugo le sol passait PAR-DESSUS les
+     fenêtres (capture du re-gate). L'ordre devient explicite : fonds
+     du desktop SOUS tout le contenu, dans tous les moteurs. */
+  z-index: -1;
   pointer-events: none;
   background:
     radial-gradient(120% 55% at 50% -10%, rgba(160 107 255 / 0.2), transparent 60%),
@@ -78,6 +96,7 @@
   right: -25%;
   bottom: 0;
   height: 42vh;
+  z-index: -1; /* même loi que ::before : le sol vit SOUS les fenêtres */
   pointer-events: none;
   /* le sol prend L'ACCENT DE LA PAGE (revue #38 : un sol rose sous une
      affiche verte lit comme une fuite de gabarit — chaque poster de la
@@ -91,7 +110,10 @@
   mask-image: linear-gradient(180deg, transparent, #000 22%);
   -webkit-mask-image: linear-gradient(180deg, transparent, #000 22%);
 }
-.y2k { position: relative; overflow: hidden; }
+/* isolation : les fonds du desktop (::before/::after) vivent en
+   z-index -1 — sans contexte d'empilement propre ils plongeraient sous
+   le fond de la page (le piège du wordmark, 88d3daf) */
+.y2k { position: relative; overflow: hidden; isolation: isolate; }
 
 .y2k :focus-visible {
   outline: 2px solid var(--y2k-rose);
@@ -192,10 +214,12 @@
    un dégradé clippé au texte rend le text-shadow invisible. */
 .y2k-wordmark {
   position: relative;
-  /* isolate : le double rose du ::after vit en z-index -1 — sans
-     contexte d'empilement propre, il plongerait DERRIÈRE le fond du
-     desktop et disparaîtrait (payé à la première capture) */
-  isolation: isolate;
+  /* PAS d'isolation ici : l'élément clippé reste NU — tout générateur
+     de couche sur lui (ombre, filter, isolation) est une occasion pour
+     le rasteriseur de peindre le remplissage clippé en dessous
+     (bissection du re-gate). Le double en z-index -1 vit dans le
+     contexte de .y2k (isolé), au-dessus de son fond — le piège 88d3daf
+     (plonger sous le desktop) reste paré. */
   margin: 10px 0 4px;
   font-family: var(--f-chrome), var(--f-display), sans-serif;
   font-size: clamp(34px, 12vw, 128px);
@@ -212,7 +236,13 @@
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 0 26px rgba(160 107 255 / 0.5));
+  /* NI text-shadow NI filter sur un texte-dégradé : l'ombre héritée de
+     la planche écrasait le remplissage clippé (cause racine du « néon
+     noir » — voir l'exemption sur .y2k), et le filter qui vivait ici
+     ne faisait que MASQUER le bug par une couche isolée, au hasard du
+     rasteriseur. Le halo vit sur le ::after (texte plein, sûr) ; le
+     trait clair garde la lettre dessinée si un moteur refuse le clip. */
+  -webkit-text-stroke: 1px rgba(255 255 255 / 0.28);
 }
 .y2k-wordmark::after {
   /* le « / "" » : sans texte alternatif vide, le double décoratif est LU
@@ -232,6 +262,10 @@
   background-clip: border-box;
   color: var(--y2k-rose);
   opacity: 0.8;
+  /* le halo violet du wordmark vit ICI : le double est un texte PLEIN
+     (pas de clip), son text-shadow est sûr — sur le h1 clippé, toute
+     ombre rejouerait la cause racine du « néon noir » */
+  text-shadow: 0 0 26px rgba(160 107 255 / 0.62), 0 0 60px rgba(160 107 255 / 0.35);
 }
 .y2k-identite {
   font-size: 18px;

@@ -74,7 +74,15 @@ export function FicheY2k({ slug }: { slug: string }) {
             ✦
           </span>
           <p className="fy-fiche-type">{t(lang, p.genre === "formation" ? "fpFicheFormation" : "fpFiche")}</p>
-          <h1 className="fy-nom">{p.nom}</h1>
+          {/* le porteur .fy-nom-halo tient le SKEW ; l'ombre dure et le
+              halo sont le ::after du h1 (data-nom) — ni ombre ni filter
+              sur le texte clippé lui-même (cause racine du « néon
+              noir », voir y2k.css) */}
+          <div className="fy-nom-halo">
+            <h1 className="fy-nom" data-nom={p.nom}>
+              {p.nom}
+            </h1>
+          </div>
           <p className="fy-claim">{p.sousTitre}</p>
           <dl className="fy-system">
             <div>
