@@ -1,11 +1,10 @@
 "use client"
 
-import Link from "next/link"
 import { motion, useReducedMotion } from "motion/react"
 import { ViewTransition } from "react"
 import { t, type Lang } from "./dict"
 import { perso, type ProjetPerso } from "./parcours"
-import { hrefFiche } from "./mondes"
+import { LienFiche } from "./lien-fiche"
 
 /* ==================================================================
    04 — ATELIER. Les projets personnels.
@@ -151,8 +150,8 @@ export function Atelier({ lang }: { lang: Lang }) {
           const carte = (
             <motion.article
               key={p.code}
-              /* L'ancre du retour de fiche (ticket 31) : le lien « Document »
-                 de /work/<slug> vise /#carte-<slug>. */
+              /* L'ancre du retour de fiche (ticket 31, rebranchée au #40) :
+                 une fiche ouverte D'ICI vise /#carte-<slug> au retour. */
               id={p.fiche ? `carte-${p.fiche}` : undefined}
               className={`at-projet${p.fiche ? " a-fiche at-a-fiche" : ""}`}
               initial={p.fiche ? false : { opacity: 0, y: 12 }}
@@ -172,9 +171,9 @@ export function Atelier({ lang }: { lang: Lang }) {
                 <p className="mono mono-sm dim-2 at-texte">{p.texte}</p>
 
                 {p.fiche && (
-                  <Link href={hrefFiche(p.fiche)} className="mono mono-xs fiche-lien at-fiche-lien">
+                  <LienFiche slug={p.fiche} className="mono mono-xs fiche-lien at-fiche-lien">
                     {t(lang, "xpFiche")} <span aria-hidden="true">→</span>
-                  </Link>
+                  </LienFiche>
                 )}
 
                 {p.liens && (

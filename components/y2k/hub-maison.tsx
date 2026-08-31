@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { t, type Lang } from "@/components/proto/dict"
 import { etudes, perso } from "@/components/proto/parcours"
-import { hrefFiche } from "@/components/proto/mondes"
+import { LienFiche } from "@/components/proto/lien-fiche"
 import { HeroFenetre } from "./hero-fenetre"
 
 /* ==================================================================
@@ -21,8 +21,10 @@ import { HeroFenetre } from "./hero-fenetre"
    mettre en chambre.
 
    Les six fiches liées d'ici vivent sous /home/<slug> depuis le #39 :
-   l'adresse ne s'écrit plus à la main, elle vient de `hrefFiche` —
-   déménager une fiche ne peut plus laisser un lien mort ici.
+   l'adresse ne s'écrit plus à la main, elle vient de `LienFiche` —
+   déménager une fiche ne peut plus laisser un lien mort ici. Et depuis
+   le #40 ce même lien dit à la fiche d'où on part, pour qu'elle sache
+   où ramener.
    ================================================================== */
 
 /* Un accent par disquette, posé en variable CSS sur la carte — le CSS
@@ -109,7 +111,7 @@ export default function HubMaison() {
                   </div>
                   <div className="m-disq-pied">
                     <span className="m-disq-etat">{p.etat}</span>
-                    {p.fiche && <Link href={hrefFiche(p.fiche)}>{t(lang, "xpFiche")} ▸</Link>}
+                    {p.fiche && <LienFiche slug={p.fiche}>{t(lang, "xpFiche")} ▸</LienFiche>}
                     {p.liens?.map((l) => (
                       <a key={l.url} href={l.url} target="_blank" rel="noreferrer">
                         {l.role}
@@ -158,9 +160,9 @@ export default function HubMaison() {
                           une entrée future sans fiche donnerait un lien
                           /work/undefined (même garde que les disquettes) */}
                       {e.fiche ? (
-                        <Link href={hrefFiche(e.fiche)} className="nom">
+                        <LienFiche slug={e.fiche} className="nom">
                           {e.nom}
-                        </Link>
+                        </LienFiche>
                       ) : (
                         <span className="nom">{e.nom}</span>
                       )}

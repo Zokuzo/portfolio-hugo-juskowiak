@@ -28,9 +28,15 @@
    ================================================================== */
 export const SLUGS_MAISON = ["eternal", "trading-agent", "cpge", "estia", "hokkaido", "mbds"]
 
-/* L'adresse d'une fiche, depuis n'importe où. Six appelants (la
-   planche : index des annexes, expérience, atelier, études ; les deux
-   hubs Y2K) — sans ce point unique, déménager une fiche demanderait de
-   retrouver six gabarits d'URL, et celui qu'on oublie devient un lien
-   mort. */
+/* L'adresse d'une fiche, depuis n'importe où. Sans ce point unique,
+   déménager une fiche demanderait de retrouver sept gabarits d'URL, et
+   celui qu'on oublie devient un lien mort.
+
+   UN SEUL APPELANT DEPUIS LE #40 : `lien-fiche.tsx`, qui est le
+   composant par lequel s'ouvre TOUTE fiche (les sept points d'entrée
+   passent par lui). Il fait deux choses d'un coup — écrire l'adresse
+   et retenir d'où l'on part. Cette fonction reste ici et n'y déménage
+   pas : `lien-fiche.tsx` est un module « use client », et la liste des
+   slugs se lit aussi au `generateStaticParams` des deux routes, donc
+   côté SERVEUR. */
 export const hrefFiche = (slug: string) => (SLUGS_MAISON.includes(slug) ? `/home/${slug}` : `/work/${slug}`)

@@ -6,6 +6,7 @@ import { t, type Lang } from "@/components/proto/dict"
 import { projet } from "@/components/proto/projets"
 import { Cotes, CodeAnnote } from "@/components/proto/fiche-blocs"
 import { SchemaEternal } from "@/components/proto/schema-eternal"
+import { venuDeLaPlanche } from "@/components/proto/lien-fiche"
 
 /* ==================================================================
    FICHE Y2K — le gabarit « affiche publicitaire » (#38). La grammaire
@@ -67,7 +68,15 @@ const ACCENTS: Record<string, string> = {
    « session TRAVAIL » sous une fiche de la chambre (attrapé à l'œil sur
    la capture d'ESTIA) — même faute que le retour, même cause, donc même
    table. Tout ce qui nomme le monde passe par ICI ; un troisième
-   libellé oublié se verrait comme les deux premiers. */
+   libellé oublié se verrait comme les deux premiers.
+
+   ET LE #40 LES SÉPARE — pas la table, les deux colonnes. Le RETOUR
+   suit le VISITEUR : venu de la planche, il y ramène. Le PIED suit la
+   FICHE : ESTIA reste un cursus de la chambre, quelle que soit la
+   porte par laquelle on est entré. Une seule des deux colonnes
+   bascule, et `statut` n'a donc pas de troisième entrée à recevoir —
+   la planche n'est pas un monde de la fiche, c'est un point de
+   départ. */
 const MONDE = {
   "/work": { sys: "hubTravailSys", statut: "hubStatut" },
   "/home": { sys: "hubMaisonSys", statut: "hubMaisonStatut" },
@@ -75,11 +84,21 @@ const MONDE = {
 
 export function FicheY2k({ slug, retour = "/work" }: { slug: string; retour?: keyof typeof MONDE }) {
   const [lang, setLang] = useState<Lang>("fr")
+  /* FIGÉ AU MONTAGE (#40). La mémoire de `lien-fiche.tsx` est vide sur
+     tout rendu serveur — donc l'hydratation ne peut pas diverger — mais
+     un initialisateur paresseux vaut mieux qu'une lecture à chaque
+     rendu : la réponse ne concerne QUE cette ouverture-ci, elle ne doit
+     pas bouger quand la bascule FR/EN redessine la fiche. */
+  const [dePlanche] = useState(() => venuDeLaPlanche(slug))
   const p = projet(lang, slug)
   if (!p) return null
   const acc = ACCENTS[slug] ?? "#ff3ea5"
   const monde = MONDE[retour]
-  const sys = t(lang, monde.sys)
+  /* L'ancre `carte-<slug>` existe sur les NEUF cards de la planche
+     (experience.tsx, etudes.tsx, atelier.tsx) : c'est elle qui rend le
+     défilement, et `app/page.tsx` rend le focus au lien de la card. */
+  const cible = dePlanche ? `/#carte-${slug}` : retour
+  const sys = t(lang, dePlanche ? "fpDocumentSys" : monde.sys)
   /* Un cursus garde le mobilier de l'affiche mais change de grille de
      lecture : un diplôme n'a ni contraintes ni décisions techniques, il
      a un programme et des travaux. Même bascule que la coque planche —
@@ -102,7 +121,7 @@ export function FicheY2k({ slug, retour = "/work" }: { slug: string; retour?: ke
             </button>
           ))}
         </span>
-        <Link href={retour} className="y2k-ejecter">
+        <Link href={cible} className="y2k-ejecter">
           ‹ {sys}
         </Link>
       </header>
@@ -298,7 +317,7 @@ export function FicheY2k({ slug, retour = "/work" }: { slug: string; retour?: ke
           </div>
         </section>
 
-        <Link href={retour} className="fy-retour">
+        <Link href={cible} className="fy-retour">
           ‹ {sys}
         </Link>
       </div>

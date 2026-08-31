@@ -1,11 +1,10 @@
 "use client"
 
-import Link from "next/link"
 import { motion, useReducedMotion } from "motion/react"
 import { ViewTransition } from "react"
 import { t, type Lang } from "./dict"
 import { employeurs, type Employeur } from "./parcours"
-import { hrefFiche } from "./mondes"
+import { LienFiche } from "./lien-fiche"
 
 /* ==================================================================
    02 — EXPÉRIENCE. Les projets, groupés par employeur.
@@ -138,9 +137,9 @@ export function Experience({ lang }: { lang: Lang }) {
                         {/* Le lien n apparait que si la fiche existe : un
                             renvoi vers une page vide est pire qu absence. */}
                         {p.fiche && (
-                          <Link href={hrefFiche(p.fiche)} className="mono mono-xs fiche-lien xp-fiche-lien">
+                          <LienFiche slug={p.fiche} className="mono mono-xs fiche-lien xp-fiche-lien">
                             {t(lang, "xpFiche")} <span aria-hidden="true">→</span>
-                          </Link>
+                          </LienFiche>
                         )}
                       </div>
                     </li>

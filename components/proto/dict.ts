@@ -689,8 +689,18 @@ const DICT = {
      `fpRetour`, `fpRetourDocument` et `fpCaptures` sont parties avec la
      coque planche qui les portait (#39). Une clé sans appelant est une
      étiquette qu'on retraduira pour rien, exactement le motif qui a
-     fait dé-exporter `SLUGS` au même commit. */
+     fait dé-exporter `SLUGS` au même commit. (Le #40 rend le RETOUR
+     vers la planche, donc son mot : il revient en une seule clé,
+     `fpDocumentSys`, et avec un appelant — pas deux comme avant.) */
   fpFiche: { fr: "Fiche projet", en: "Project file" },
+  /* LE TROISIÈME NOM DE MONDE (#40). `hubTravailSys` et `hubMaisonSys`
+     nomment les deux hubs ; celui-ci nomme la planche `/`, et il ne
+     sert QU'AU RETOUR d'une fiche ouverte depuis elle. Il reprend le
+     mot de l'ancienne coque — elle disait « Document » / « Back to the
+     document » — habillé en nom de fichier comme ses deux frères.
+     Identique en FR et EN, comme les deux clés qu'il remplace : le mot
+     est le même dans les deux langues. */
+  fpDocumentSys: { fr: "DOCUMENT.SYS", en: "DOCUMENT.SYS" },
   fpCadre: { fr: "Cadre", en: "Context" },
   fpPeriode: { fr: "Période", en: "Period" },
   fpEtat: { fr: "État", en: "Status" },
