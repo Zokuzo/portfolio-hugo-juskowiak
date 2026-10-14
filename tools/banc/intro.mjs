@@ -387,8 +387,13 @@ const passes = []
 const rejets = []
 try {
   for (let n = 1; n <= RUNS; n++) {
-    const brut = await passe(base)
+    /* depuis le #44 le voile attend une image (la chauffe vit dans la
+       boucle de rendu) : une fenêtre atterrie sur un écran qui ne présente
+       plus rien ne lève jamais data-pret, la passe est rejetée comme les
+       autres au lieu d'arrêter le banc */
+    let brut
     try {
+      brut = await passe(base)
       const a = analyse(brut)
       rapportPasse(n, a)
       passes.push({ analyse: a, brut })
