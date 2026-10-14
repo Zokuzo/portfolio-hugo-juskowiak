@@ -612,24 +612,6 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
           </button>
         )}
 
-        {/* le seul texte d'état restant : « en route… » pendant le vol —
-            les cases DOM provisoires (#27) sont mortes, le POSTE 3D est
-            l'interface (retour de gate #32) */}
-        {etat === "ATTERRISSAGE" && (
-          <span
-            style={{
-              ...discret,
-              position: "absolute",
-              bottom: 64,
-              left: "50%",
-              transform: "translateX(-50%)",
-              pointerEvents: "none",
-            }}
-          >
-            {t(lang, "gt86EnRoute")}
-          </span>
-        )}
-
         {/* Le skip, discret, présent de CIEL à SEUIL — et lui seul mène à
             l'habitacle-hub, qui EST le menu du site (spec #25). */}
         {passer && (
