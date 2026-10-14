@@ -8,7 +8,11 @@ import { CAM_FINALE, CHUTE_ALTITUDE, CIBLE_FINALE } from "./rue"
 /* LE VOL D'ATTERRISSAGE — ticket #30, sur la recette du #26 : une course à
    DURÉE FIXE en courbe douce (jamais de lerp par image, qui hache dès que
    la cadence tombe), delta plafonné à 1/12 s (une image lente ne téléporte
-   pas), pixelRatio à 1 pendant le vol et restauré à l'arrivée.
+   pas). Le pixelRatio à 1 pendant le vol de la recette est PARTI au #44 :
+   sur un écran dense chaque bascule réallouait le framebuffer MSAA en
+   pleine vue, et le retour à 1,5 claquait un saut de netteté à l'arrivée
+   (le seuil s'était déjà interdit toute bascule en pleine vue). Le vol
+   rend au dpr de la coquille, [1, 1.5], comme tout le reste.
 
    Le chorégraphe écrit des CANAUX dans une ref partagée — `plonge` (la
    voiture du ciel s'enfonce dans le banc) et `chute` (celle de la rue tombe
@@ -78,7 +82,6 @@ export default function Vol({
   fini: () => void
 }) {
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
-  const gl = useThree((s) => s.gl)
   const interne = useRef({
     enVol: false,
     bascule: false,
@@ -87,8 +90,8 @@ export default function Vol({
     vise: new THREE.Vector3(),
   })
 
-  /* le RANGEMENT seulement — skip en plein vol compris : résolution, voile,
-     et la voiture de la rue retombe posée. L'INITIALISATION du vol n'est
+  /* le RANGEMENT seulement, skip en plein vol compris : voile, et la
+     voiture de la rue retombe posée. L'INITIALISATION du vol n'est
      PAS ici : React diffère les effets passifs, et une frame rAF peut
      courir entre le commit ATTERRISSAGE et l'effet — elle lirait un
      `depuis` encore vierge (0,0,0) et téléporterait la caméra dans
@@ -99,12 +102,11 @@ export default function Vol({
     const i = interne.current
     return () => {
       i.enVol = false
-      gl.setPixelRatio(Math.min(window.devicePixelRatio, 1.5))
       if (voile.current) voile.current.style.opacity = "0"
       v.plonge = 0
       v.chute = 1
     }
-  }, [etat, gl, vol, voile])
+  }, [etat, vol, voile])
 
   useFrame((_, delta) => {
     if (etat !== "ATTERRISSAGE") return
@@ -120,7 +122,6 @@ export default function Vol({
       v.t = 0
       v.plonge = 0
       v.chute = 0
-      gl.setPixelRatio(1)
     }
     v.t = Math.min(1, v.t + Math.min(delta, 1 / 12) / DUREE)
 
@@ -180,7 +181,6 @@ export default function Vol({
 
     if (v.t >= 1 && !i.fini) {
       i.fini = true
-      gl.setPixelRatio(Math.min(window.devicePixelRatio, 1.5))
       fini()
     }
   })
