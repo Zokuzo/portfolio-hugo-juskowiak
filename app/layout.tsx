@@ -76,6 +76,24 @@ export default function RootLayout({
             __html: `var t=null;try{t=localStorage.getItem("theme")}catch(e){}try{if(t?t==="clair":matchMedia("(prefers-color-scheme: light)").matches)document.documentElement.classList.add("clair")}catch(e){}`,
           }}
         />
+        {/* LE MASQUE D'ATTENTE (#54) : la planche est dans le HTML serveur
+            (indexation, repli) mais `useGt86` ne répond oui qu'APRÈS
+            l'hydratation ; sans ce masque, un desktop capable voyait la
+            planche ~300 ms avant le voile CHARGEMENT. Ce script refait les
+            critères de `components/gt86/capable.ts` SAUF WebGL (une sonde
+            GPU ici bloquerait la première peinture de tout le monde) et pose
+            `data-gt86` sur <html> ; la règle peint alors la nuit du voile par-
+            dessus tout. Qui retire le masque : la surcouche à son montage, ou
+            `useGt86` dès que la capacité réelle dit non (WebGL absent,
+            abandon). Le délai est le garde-fou : un chunk qui n'arrive jamais
+            ne laisse personne devant un écran vide plus de 5 s. Sans JS, rien
+            ne tourne et la planche reste visible. Seule `/` porte la 3D. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var h=document.documentElement,m=function(q){return matchMedia(q).matches};if(location.pathname==="/"&&new URLSearchParams(location.search).get("gt86")!=="off"&&(m("(pointer: fine)")||m("(pointer: coarse)"))&&m("(min-width: 768px)")&&!m("(prefers-reduced-motion: reduce)")){h.setAttribute("data-gt86","attente");setTimeout(function(){h.removeAttribute("data-gt86")},5000)}}catch(e){}`,
+          }}
+        />
+        <style>{`html[data-gt86] body::after{content:"";position:fixed;inset:0;z-index:2147483647;background:#08070f}`}</style>
       </head>
       <body className="antialiased">
         <div className={`${display.variable} ${mono.variable} ${jp.variable} proto-root`}>{children}</div>

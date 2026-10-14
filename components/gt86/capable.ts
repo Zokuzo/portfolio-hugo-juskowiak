@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useState, useSyncExternalStore } from "react"
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react"
 
 /* LA CAPACITÉ — la condition d'entrée dans l'expérience 3D. La spec #25
    l'arrêtait « desktop » (pointeur fin ET ≥ 1024) ; le 15e retour de gate
@@ -122,5 +122,17 @@ export function useGt86(): { actif: boolean; abandonne: () => void } {
   const capable = useDesktopCapable()
   const [perdu, setPerdu] = useState(false)
   const abandonne = useCallback(() => setPerdu(true), [])
+  /* La planche revient dès que la réponse est NON. On interroge `instantane()`
+     et pas `capable` : l'effet de la passe d'hydratation voit encore le
+     `false` du serveur, et lever le masque sur cette valeur rouvrirait le
+     flash chez tous les visiteurs capables. */
+  useEffect(() => {
+    if (perdu || !instantane()) leveMasque()
+  }, [capable, perdu])
   return { actif: capable && !perdu, abandonne }
+}
+
+/** Retire le masque d'attente posé par le script de `app/layout.tsx` (#54). */
+export function leveMasque(): void {
+  document.documentElement.removeAttribute("data-gt86")
 }

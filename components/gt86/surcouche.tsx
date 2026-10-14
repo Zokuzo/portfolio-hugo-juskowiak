@@ -3,6 +3,7 @@
 import { Component, useEffect, type ReactNode } from "react"
 import dynamic from "next/dynamic"
 import type { Lang } from "@/components/proto/dict"
+import { leveMasque } from "./capable"
 
 /* LA SURCOUCHE — ticket #27 de la carte #15.
 
@@ -66,6 +67,9 @@ export default function Surcouche({ lang, surRepli }: { lang: Lang; surRepli: ()
     const html = document.documentElement
     const avant = html.style.overflow
     html.style.overflow = "hidden"
+    /* le voile de chargement est commité : il prend le relais du masque
+       d'attente (#54), même nuit, donc aucune image de planche entre eux */
+    leveMasque()
     return () => {
       html.style.overflow = avant
     }
