@@ -81,15 +81,21 @@ const ENREGISTREUR = `(() => {
   }
   let derniere = ""
   const boucle = (ts) => {
+    requestAnimationFrame(boucle)
+    try { enregistre(ts) } catch (e) { R.erreurs = (R.erreurs || []).concat(ts + " " + e) }
+  }
+  const enregistre = (ts) => {
     R.frames.push(ts)
     ouverte = ts
     canal.port2.postMessage(0)
     const el = document.querySelector("[data-etat]")
     if (el) {
-      const cle = el.dataset.etat + "|" + el.dataset.pret + "|" + el.dataset.rue
+      /* l'écran aussi : sous Wayland la fenêtre peut CHANGER d'écran en
+         cours de passe (eDP 120 Hz ↔ HDMI 100 Hz), le plancher avec */
+      const cle = el.dataset.etat + "|" + el.dataset.pret + "|" + el.dataset.rue + "|" + screen.height
       if (cle !== derniere) {
         derniere = cle
-        R.phases.push({ t: ts, etat: el.dataset.etat, pret: el.dataset.pret === "1", rue: el.dataset.rue === "1" })
+        R.phases.push({ t: ts, etat: el.dataset.etat, pret: el.dataset.pret === "1", rue: el.dataset.rue === "1", ecran: screen.height })
       }
     }
     const info = window.__gt86 && window.__gt86.gl && window.__gt86.gl.info
@@ -99,7 +105,6 @@ const ENREGISTREUR = `(() => {
       const p = R.gpu[R.gpu.length - 1]
       if (!p || p.programmes !== g.programmes || p.geometries !== g.geometries || p.textures !== g.textures) R.gpu.push(g)
     }
-    requestAnimationFrame(boucle)
   }
   requestAnimationFrame(boucle)
   const observe = (type, ranger) => {
@@ -248,6 +253,12 @@ function plancherDe(deltas) {
 function analyse(run) {
   const t0 = run.phases.find((p) => p.pret)?.t
   const habitacle = run.phases.find((p) => p.etat === "HABITACLE")?.t
+  const bascule = run.phases.find((p) => p.rue)?.t
+  /* un relevé tronqué (rAF arrêté, page remplacée) donnait un tableau de
+     NaN lu comme un résultat : la passe est REJETÉE, pas moyennée */
+  if (t0 === undefined || habitacle === undefined || bascule === undefined)
+    throw new Error(`relevé incomplet : t0 ${t0}, bascule ${bascule}, habitacle ${habitacle} ; ` +
+      `${run.frames.length} images, la dernière à ${r1(run.frames.at(-1) ?? 0)} ms ; erreurs ${run.erreurs ?? "aucune"}`)
   const images = []
   for (let i = 1; i < run.frames.length; i++) {
     /* l'image qui LÈVE le voile commence derrière lui : elle appartient
@@ -255,9 +266,26 @@ function analyse(run) {
     const debut = run.frames[i - 1]
     if (debut < t0) continue
     const t = run.frames[i]
-    images.push({ t, delta: t - debut, phase: phaseA(run.phases, t), debut })
+    /* la phase de l'image est celle de son DÉBUT : le travail qui
+       l'allonge tourne dans le rAF de debut, comme le coût et les LoAF
+       qu'on lui range (à la fin, l'image de la bascule passait côté rue
+       et son LoAF côté ciel) */
+    images.push({ t, delta: t - debut, phase: phaseA(run.phases, debut), debut })
   }
   const couts = new Map(run.couts)
+  /* une fenêtre que le compositeur ne montre pas (atterrie sur l'eDP, vu
+     le 2026-10-14) voit ses rAF étranglés à ~1 Hz : des images d'une
+     seconde SANS travail. Ce n'est pas l'intro qui rame, c'est la passe
+     qui ne vaut rien : rejetée. Le gel réel, lui, a son coût. */
+  const etranglees = images.filter((im) => im.delta > 500 && (couts.get(im.debut) ?? 0) < im.delta / 2)
+  if (etranglees.length)
+    throw new Error(`rAF étranglé (fenêtre non affichée ?) : ${etranglees.length} images de plus de 500 ms sans travail, ` +
+      `la première à t+${r1(etranglees[0].debut - t0)} ms (${r1(etranglees[0].delta)} ms)`)
+  /* un LoAF est rangé à l'image dont il contient le rendu (renderStart),
+     là où tournent les rAF ; sans rendu, à son début */
+  const fin = images.at(-1)?.t ?? t0
+  const phaseDe = (instant) => (instant >= t0 && instant < fin ? phaseA(run.phases, instant) : null)
+  const instantDuLoaf = (e) => (e.rendu ? e.debut + e.duree - e.rendu : e.debut)
   const ordre = ["CIEL", "VOL ciel", "VOL rue", "SEUIL", "HABITACLE"]
   const parPhase = {}
   for (const nom of ordre) {
@@ -265,19 +293,18 @@ function analyse(run) {
     if (!ims.length) continue
     const ds = ims.map((im) => im.delta)
     const debut = ims[0].debut
-    const fin = ims[ims.length - 1].t
-    const dedans = (e) => e.debut >= debut && e.debut < fin
+    const loafs = run.loaf.filter((e) => phaseDe(instantDuLoaf(e)) === nom)
     parPhase[nom] = {
       images: ims.length,
-      dureeMs: r1(fin - debut),
+      dureeMs: r1(ims.at(-1).t - debut),
       max: r1(Math.max(...ds)),
       p95: r1(pct(ds, 95)),
       p50: r1(pct(ds, 50)),
       ...Object.fromEntries(SEUILS_MS.map((s) => [`sup${s}`, ds.filter((d) => d > s).length])),
       coutMax: r1(Math.max(0, ...ims.map((im) => couts.get(im.debut) ?? 0))),
-      loaf: run.loaf.filter(dedans).length,
-      loafBloquantMs: r1(run.loaf.filter(dedans).reduce((s, e) => s + e.bloquant, 0)),
-      longtasks: run.longtasks.filter(dedans).length,
+      loaf: loafs.length,
+      loafBloquantMs: r1(loafs.reduce((s, e) => s + e.bloquant, 0)),
+      longtasks: run.longtasks.filter((e) => phaseDe(e.debut) === nom).length,
       plancherMs: plancherDe(ds).plancherMs,
     }
   }
@@ -292,11 +319,12 @@ function analyse(run) {
       scripts: scripts.map((s) => `${s.invocateur} ${s.fonction || "?"}@${s.url}:${s.position} ${r1(s.duree)}ms`),
     }
   })
-  const bascule = run.phases.find((p) => p.rue)?.t
   const seuil = run.phases.find((p) => p.etat === "SEUIL")?.t
   const gpuA = (t) => [...run.gpu].reverse().find((g) => g.t <= t) ?? null
   return {
     env: run.env,
+    ecrans: run.phases.filter((p, i, ps) => !i || p.ecran !== ps[i - 1].ecran).map((p) => ({ tMs: r1(p.t - t0), hauteur: p.ecran })),
+    erreurs: run.erreurs ?? [],
     chargementMs: r1(t0),
     introMs: r1(habitacle - t0),
     cadence: plancherDe(images.map((im) => im.delta)),
@@ -324,9 +352,12 @@ function tableau(parPhase) {
   for (const [nom, s] of Object.entries(parPhase)) console.log(ligne([nom, ...COLONNES.map((c) => s[c])]))
 }
 
+const nomEcran = (hauteur) => (hauteur === 1200 ? "eDP 120 Hz" : hauteur === 1080 ? "HDMI 100 Hz" : `écran ${hauteur} ?`)
+
 function rapportPasse(n, a) {
-  const ecran = a.env.ecran.hauteur === 1200 ? "eDP 120 Hz" : a.env.ecran.hauteur === 1080 ? "HDMI 100 Hz" : "écran ?"
-  console.log(`\n── passe ${n} · ${a.env.ecran.largeur}×${a.env.ecran.hauteur} CSS (${ecran}) · fenêtre ${a.env.fenetre.largeur}×${a.env.fenetre.hauteur} · ${a.env.gpu}`)
+  console.log(`\n── passe ${n} · ${a.env.ecran.largeur}×${a.env.ecran.hauteur} CSS en fin (${nomEcran(a.env.ecran.hauteur)}) · fenêtre ${a.env.fenetre.largeur}×${a.env.fenetre.hauteur} · ${a.env.gpu}`)
+  console.log(`   écrans : ${a.ecrans.map((e) => `t${e.tMs < 0 ? "" : "+"}${e.tMs} ms ${nomEcran(e.hauteur)}`).join(" → ")}`)
+  if (a.erreurs.length) console.log(`   ⚠ ${a.erreurs.length} erreurs dans l'enregistreur : ${a.erreurs[0]}`)
   console.log(`   chargement ${a.chargementMs} ms · intro t0 → habitacle ${a.introMs} ms · plancher ${a.cadence.plancherMs} ms (~${a.cadence.hzEstime} Hz)`)
   console.log(`   histogramme : ${a.cadence.histo.map(([k, v]) => `${k}ms×${v}`).join("  ")}`)
   if (a.sansLoaf) console.log(`   ⚠ LoAF indisponible : ${a.sansLoaf}`)
@@ -353,22 +384,30 @@ function agrege(analyses) {
 const { base, arrete } = await demarreServeur()
 process.on("exit", arrete)
 const passes = []
+const rejets = []
 try {
   for (let n = 1; n <= RUNS; n++) {
     const brut = await passe(base)
-    const a = analyse(brut)
-    rapportPasse(n, a)
-    passes.push({ analyse: a, brut })
+    try {
+      const a = analyse(brut)
+      rapportPasse(n, a)
+      passes.push({ analyse: a, brut })
+    } catch (e) {
+      console.log(`\n── passe ${n} REJETÉE : ${e.message}`)
+      rejets.push({ passe: n, raison: e.message, brut })
+    }
   }
 } finally {
   arrete()
 }
 
+if (rejets.length) process.exitCode = 1
+if (!passes.length) throw new Error(`aucune passe exploitable sur ${RUNS}`)
 const synthese = agrege(passes.map((p) => p.analyse))
-console.log(`\n══ synthèse ${RUNS} passes (max = pire des passes, le reste = médiane des passes) ══`)
+console.log(`\n══ synthèse ${passes.length}/${RUNS} passes (max = pire des passes, le reste = médiane des passes) ══`)
 tableau(synthese)
 
 mkdirSync(SORTIE, { recursive: true })
 const fichier = path.join(SORTIE, `${new Date().toISOString().slice(0, 10)}-${LABEL}.json`)
-writeFileSync(fichier, JSON.stringify({ label: LABEL, runs: RUNS, attenteCielMs: ATTENTE_CIEL_MS, synthese, passes }, null, 1))
+writeFileSync(fichier, JSON.stringify({ label: LABEL, runs: RUNS, attenteCielMs: ATTENTE_CIEL_MS, synthese, passes, rejets }, null, 1))
 console.log(`\nJSON : ${path.relative(RACINE, fichier)}`)
