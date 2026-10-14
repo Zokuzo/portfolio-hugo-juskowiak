@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { t, type Lang } from "@/components/proto/dict"
+import { CreditsModeles } from "@/components/y2k/credits-modeles"
 import { employeurs } from "@/components/proto/parcours"
 import { LienFiche } from "@/components/proto/lien-fiche"
 
@@ -259,6 +260,7 @@ export default function HubTravail() {
 
       <footer className="y2k-pied">
         <span>{t(lang, "hubStatut")}</span>
+        <CreditsModeles lang={lang} />
         <span>{t(lang, "hubOs")}</span>
       </footer>
     </main>

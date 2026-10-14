@@ -134,6 +134,12 @@ These are enforced in code review, not by a linter.
   behind it are in `tools/banc/SEUIL.md`.
 - Code comments are in French and explain *why*, not *what*.
 
+### Credits
+
+- 3D car: ["Fox's Rocketbunny GT86"](https://sketchfab.com/3d-models/foxs-rocketbunny-gt86-815691bbc8cd459fb0fafea2d7a02df7) by [Swiss_Fox](https://sketchfab.com/Swiss_Fox), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Compressed and re-materialled for the web.
+- 3D city: ["Procedural City 5"](https://sketchfab.com/3d-models/procedural-city-5-c2a33cf0165b497cabd5e4a22599277b) by [abhayexe](https://sketchfab.com/abhayexe), Sketchfab Standard licence.
+- Sky: `qwantani_dusk_2_puresky` from [Poly Haven](https://polyhaven.com/), CC0.
+
 ### Contact
 
 - Email: <mailto:hugo.jskpro@outlook.fr>

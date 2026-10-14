@@ -879,6 +879,9 @@ const DICT = {
      coquille. Les noms de fichiers ne se traduisent pas tous : .EXE est
      l'esthétique, seule la racine suit la langue quand elle est un mot. */
   hubOs: { fr: "HJ·OS", en: "HJ·OS" },
+  creditModeles: { fr: "Modèles 3D :", en: "3D models:" },
+  creditGt86: { fr: "« Fox's Rocketbunny GT86 » par Swiss_Fox", en: "“Fox's Rocketbunny GT86” by Swiss_Fox" },
+  creditVille: { fr: "« Procedural City 5 » par abhayexe", en: "“Procedural City 5” by abhayexe" },
   hubTravailSys: { fr: "TRAVAIL.SYS", en: "WORK.SYS" },
   hubBoot: {
     fr: "session ouverte — partition montée",

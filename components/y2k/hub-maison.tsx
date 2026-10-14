@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { t, type Lang } from "@/components/proto/dict"
+import { CreditsModeles } from "@/components/y2k/credits-modeles"
 import { etudes, perso } from "@/components/proto/parcours"
 import { LienFiche } from "@/components/proto/lien-fiche"
 import { HeroFenetre } from "./hero-fenetre"
@@ -257,6 +258,7 @@ export default function HubMaison() {
 
       <footer className="y2k-pied">
         <span>{t(lang, "hubMaisonStatut")}</span>
+        <CreditsModeles lang={lang} />
         <span>{t(lang, "hubOs")}</span>
       </footer>
     </main>
