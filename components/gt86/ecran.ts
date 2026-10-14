@@ -2,7 +2,7 @@ import * as THREE from "three"
 import { t, type Lang } from "@/components/proto/dict"
 
 /* L'ÉCRAN MÉDIA — ticket #32 : la fabrique gatée aux #23/#26, portée du
-   prototype `app/prototype/ecran/` dans la coquille, BILINGUE par le
+   prototype écran (route jetable, supprimée au #35) dans la coquille, BILINGUE par le
    dictionnaire (doctrine #25 — les libellés passent par `t(langue, …)`,
    les éléments décoratifs gatés — heure 23:42, ETA, stats — restent tels
    quels). La dalle 512×256 (ratio 2:1 gravé) peint sept états :

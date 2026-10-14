@@ -169,15 +169,6 @@ const ASSETS = {
     meshes: 38,
     noms: ["CityGen_LR_Facades", "CityGenGlass.001"],
   },
-  /* la ville coupée ne sert plus qu'à la route prototype (#31 a mis
-     l'habitacle dans la rue entière) — gardée au budget tant que le
-     prototype vit, #35 tranchera son sort */
-  "public/prototype/decor-habitacle.glb": {
-    max: 5_000_000,
-    mats: 42,
-    meshes: 44,
-    noms: ["CityGen_LR_Facades", "CityGenGlass.001"],
-  },
   "public/prototype/crepuscule.hdr": { max: 1_200_000 },
   /* l'habillage habitacle (#31) : textures gatées aux #23/#26 */
   "public/prototype/compteur-violet.jpg": { max: 168_000 },
@@ -596,9 +587,7 @@ const externes = ressources.filter((u) => !u.startsWith(base))
 assert.deepEqual(externes, [], `des requêtes partent chez un tiers : ${externes}`)
 /* …et la cascade tire RÉELLEMENT ses octets — sans ça, une cascade débranchée
    passerait la sonde d'externes haut la main. Voiture, ciel et textures
-   d'habitacle partent au chargement du module, la rue au montage. La ville
-   coupée du prototype n'est PLUS de la cascade (#31 : l'habitacle vit dans
-   la rue entière). */
+   d'habitacle partent au chargement du module, la rue au montage. */
 for (const asset of [
   "/prototype/gt86.glb",
   "/prototype/crepuscule.hdr",

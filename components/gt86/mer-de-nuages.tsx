@@ -5,7 +5,7 @@ import { useFrame } from "@react-three/fiber"
 import * as THREE from "three"
 
 /* La nappe de nuages raymarchée (FBM 2D + tranche verticale, 20 pas), portée
-   telle quelle du prototype #21 (`app/prototype/ciel`, route jetable). Elle
+   telle quelle du prototype #21 (route jetable, supprimée au #35). Elle
    sert de sol OU de plafond (sens), et la couverture seuille le FBM pour
    tailler des masses distinctes avec du ciel entre elles, au lieu d'un tapis.
    Pas de garde prefers-reduced-motion ici : `capable.ts` interdit le montage

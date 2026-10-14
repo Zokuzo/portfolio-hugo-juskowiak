@@ -9,7 +9,7 @@ import MerDeNuages from "./mer-de-nuages"
 import type { Trajectoire } from "./vol"
 
 /* LE CIEL — ticket #29 : le verdict « Pellicule » du gate #21, porté du
-   prototype (`app/prototype/ciel`, route jetable) dans la coquille.
+   prototype (route jetable, supprimée au #35) dans la coquille.
 
    HDRI qwantani_dusk_2_puresky (Poly Haven, CC0, 1k) auto-hébergée — un
    crépuscule lavande au soleil bas, monté sur dôme et teinté chaud

@@ -2,7 +2,6 @@
 /* LE RÉGIME DES DÉCORS — ticket #28 de la carte #15.
  *
  *   node tools/monde/regime.mjs public/prototype/decor-procedural.glb -4.4 -19
- *   node tools/monde/regime.mjs public/prototype/decor-habitacle.glb    0    0
  *
  * Les deux arguments qui suivent le fichier sont le POINT DE VUE (x, z) dans
  * le repère du GLB : la pose de la voiture. C'est de là que tout se décide.
@@ -48,7 +47,7 @@ import { ALL_EXTENSIONS } from "@gltf-transform/extensions"
 import { MeshoptDecoder, MeshoptEncoder } from "meshoptimizer"
 import sharp from "sharp"
 
-/* LES INTOUCHABLES. Le shader des façades (`app/prototype/rue/decor-glb.tsx`)
+/* LES INTOUCHABLES. Le shader des façades (`Decor` dans `components/gt86/rue.tsx`)
    allume les fenêtres en lisant la LUMINANCE des pixels de la texture — les
    murs n'ont aucune géométrie de fenêtre, tout est peint. Redimensionner ou
    ré-encoder ce baseColor DÉPLACE ces valeurs autour du seuil de 0,055 : des

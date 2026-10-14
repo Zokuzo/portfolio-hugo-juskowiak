@@ -34,8 +34,7 @@ import { MoteurSpotify, RythmeAmp, type CommandesSpotify } from "./spotify"
    les chaînes viennent de `ciel.tsx`, le préchargement d'ici sert donc son
    dôme et sa voiture sans un octet de plus. Les textures de l'habitacle
    (#31) partent au même rang, depuis habitacle.tsx : elles habillent la
-   voiture. La ville coupée du prototype (`decor-habitacle.glb`) ne sert
-   plus — l'habitacle vit dans la rue entière, déjà montée. */
+   voiture. */
 
 useGLTF.setDecoderPath("/voiture/draco/")
 useGLTF.preload(VOITURE)

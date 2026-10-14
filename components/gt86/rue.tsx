@@ -17,7 +17,7 @@ import {
 import { ECRAN_NATIF, VUE_ECRAN, zoneDuClic, type Ecran, type Zone } from "./ecran"
 
 /* LA RUE NOCTURNE — ticket #30 : le décor gaté au #22, porté du prototype
-   (`app/prototype/rue`, route jetable) dans la coquille. City procédurale
+   (route jetable, supprimée au #35) dans la coquille. City procédurale
    à l'échelle métrique native, GT86 rangée au bas-côté ouest de la rue
    N-S, ~90 luminaires ancrés à la géométrie, feux tricolores, fenêtres
    allumées AU PIXEL dans les façades, fond ciel/skyline/lune.

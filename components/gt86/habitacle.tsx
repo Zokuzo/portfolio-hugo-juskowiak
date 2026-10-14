@@ -9,12 +9,12 @@ import { envNuit, halo } from "./rue"
 
 /* L'HABITACLE — ticket #31 : l'habillage gaté aux #23/#26 (combiné violet,
    rétroéclairage par glyphe, planche Haunter, alcantara, moquette, néons),
-   porté du prototype `app/prototype/ecran/` sur LA voiture de la rue.
+   porté du prototype écran (route jetable, supprimée au #35) sur LA voiture de la rue.
 
    UNE SEULE VOITURE : le clone de rue.tsx reçoit l'intérieur en plus de sa
    robe — quand la caméra plonge dans le verre fumé (#24), l'habitacle qui
    « luisait à travers » est littéralement le même objet. Le prototype
-   montait pour ça une ville coupée à 50 m (`decor-habitacle.glb`) : la
+   montait pour ça une ville coupée à 50 m : la
    coquille n'en a plus besoin, la rue entière est déjà montée et payée.
 
    TOUT NAÎT ÉTEINT. La voiture est morte depuis l'atterrissage (#30) ;
