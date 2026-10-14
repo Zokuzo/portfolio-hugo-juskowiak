@@ -17,6 +17,7 @@ import Seuil, { SEUIL_MS } from "./seuil"
 import { Pouls, cockpitVide } from "./habitacle"
 import { PLAYLISTS, PROFIL_SPOTIFY, creeEcran, type Ecran, type ModeEcran, type Zone } from "./ecran"
 import { MoteurSpotify, RythmeAmp, type CommandesSpotify } from "./spotify"
+import { policeVoulue } from "./prototype-polices"
 
 /* LES ASSETS ET LEUR CASCADE — ticket #28.
 
@@ -137,6 +138,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
      ?nodepart fige l'itinéraire à l'écran (gates visuels, recette #26) */
   const [fpsVoulu] = useState(() => new URLSearchParams(window.location.search).has("fps"))
   const [nodepart] = useState(() => new URLSearchParams(window.location.search).has("nodepart"))
+  const [police] = useState(policeVoulue)
   /* le ZOOM sur la dalle (hub/horloge/stats, machine à l'habitacle) et
      les feux de détresse — des états d'ÉCRAN, pas de navigation : la
      machine garde GPS/CHOIX/MUSIQUES/DÉPART, l'écran garde son poste */
@@ -532,6 +534,15 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
         }}
       />
 
+      {/* la police du seuil, chauffée dès le montage : un texte invisible
+          force le décodage de la fonte bien avant SEUIL, le nom n'apparaît
+          jamais dans la police de repli */}
+      <span aria-hidden style={{ position: "absolute", opacity: 0, pointerEvents: "none" }}>
+        <span style={{ ...police.nom, textShadow: "none" }}>Hg</span>
+        <span style={{ ...police.titre, background: "none" }}>Hg</span>
+        <span style={police.bouton}>Hg</span>
+      </span>
+
       {/* le nom du seuil (#24) : posé sur le claquement des phares, dans le
           tiers haut pour laisser la voiture au centre — opacité pilotée
           image par image par seuil.tsx */}
@@ -548,26 +559,8 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
           }}
         >
           <div style={{ textAlign: "center", transform: "translateY(-15vh)" }}>
-            <div
-              style={{
-                font: "500 clamp(22px, 3vw, 34px)/1.25 var(--f-mono)",
-                letterSpacing: "0.1em",
-                color: ENCRE,
-                textShadow: "0 0 26px rgba(138, 92, 255, 0.4)",
-              }}
-            >
-              {t(lang, "gt86Nom")}
-            </div>
-            <div
-              style={{
-                marginTop: 12,
-                font: "500 12px/1 var(--f-mono)",
-                letterSpacing: "0.34em",
-                color: `${ENCRE}b3`,
-              }}
-            >
-              {t(lang, "gt86Titre").toUpperCase()}
-            </div>
+            <div style={police.nom}>{t(lang, "gt86Nom")}</div>
+            <div style={police.titre}>{t(lang, "gt86Titre")}</div>
           </div>
         </div>
       )}
@@ -605,6 +598,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
               border: "none",
               cursor: "pointer",
               pointerEvents: "auto",
+              ...police.bouton,
             }}
             data-gt86="demarrer" onClick={() => envoie({ t: "clic" })}
           >
@@ -627,7 +621,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
         {etat !== "HABITACLE" && !passer && etat !== "DEPART" && (
           <button
             type="button"
-            style={{ ...discret, position: "absolute", left: 20, bottom: 18, pointerEvents: "auto" }}
+            style={{ ...discret, ...police.bouton, position: "absolute", left: 20, bottom: 18, pointerEvents: "auto" }}
             data-gt86="retour" onClick={() => envoie({ t: "retour" })}
           >
             ‹ {t(lang, "gt86Retour")}

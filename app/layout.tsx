@@ -1,6 +1,14 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Archivo, JetBrains_Mono, Noto_Sans_JP } from "next/font/google"
+import {
+  Archivo,
+  Chakra_Petch,
+  Dela_Gothic_One,
+  JetBrains_Mono,
+  Noto_Sans_JP,
+  Racing_Sans_One,
+  Silkscreen,
+} from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import FiltreCrt from "@/components/filtre-crt"
 import "./globals.css"
@@ -30,6 +38,22 @@ const jp = Noto_Sans_JP({
   display: "swap",
   preload: false,
 })
+
+/* PROTOTYPE #60 : les polices du nom au seuil, une famille par variante
+   (components/gt86/prototype-polices.ts). Préchargées : la fonte est en
+   cache bien avant que le nom n'apparaisse. Les perdantes partent au
+   verdict de Hugo. */
+const brut = Dela_Gothic_One({ weight: "400", subsets: ["latin"], variable: "--f-brut", display: "swap" })
+const pixel = Silkscreen({ weight: "700", subsets: ["latin"], variable: "--f-pixel", display: "swap" })
+const hud = Chakra_Petch({
+  weight: "600",
+  style: "italic",
+  subsets: ["latin"],
+  variable: "--f-hud",
+  display: "swap",
+})
+const course = Racing_Sans_One({ weight: "400", subsets: ["latin"], variable: "--f-course", display: "swap" })
+const policesSeuil = [brut, pixel, hud, course].map((police) => police.variable).join(" ")
 
 export const metadata: Metadata = {
   title: "Hugo Juskowiak | Ingénieur Full Stack & IA",
@@ -99,7 +123,7 @@ export default function RootLayout({
         <style>{`html[data-gt86]{overflow:hidden}html[data-gt86] body::after{content:"";position:fixed;inset:0;z-index:2147483647;background:#08070f}`}</style>
       </head>
       <body className="antialiased">
-        <div className={`${display.variable} ${mono.variable} ${jp.variable} proto-root`}>{children}</div>
+        <div className={`${display.variable} ${mono.variable} ${jp.variable} ${policesSeuil} proto-root`}>{children}</div>
         {/* la version CRT (#33) : surcouche globale, toutes routes et 3D */}
         <FiltreCrt />
         <Analytics />
