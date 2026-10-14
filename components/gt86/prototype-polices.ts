@@ -1,8 +1,9 @@
 import type { CSSProperties } from "react"
 
 /* PROTOTYPE JETABLE (#60) : trois polices pour le nom et le titre du
-   seuil, reprises par « Cliquez pour démarrer » et « retour », commutables par ?police=a|b|c sur / (a par défaut). Verdict à
-   l'œil de Hugo, puis seule la variante gagnante rejoint scene.tsx et ce
+   seuil, reprises par « Cliquez pour démarrer » et « retour »,
+   commutables par ?police=a|b|c sur / (a par défaut). Verdict à l'œil
+   de Hugo, puis seule la variante gagnante rejoint scene.tsx et ce
    fichier disparaît avec les polices perdantes du layout.
 
    Les familles viennent de app/layout.tsx (next/font, préchargées) ; la

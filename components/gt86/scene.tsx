@@ -144,7 +144,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
      machine garde GPS/CHOIX/MUSIQUES/DÉPART, l'écran garde son poste */
   /* LA VERSION CRT (12e retour : « une version du site avec un filtre
      année 2000 ») : sous-pixels RVB + balayage + vignette en simple
-     surcouche composée — opt-in (?crt ou le bouton peint du bandeau AMP),
+     surcouche composée : opt-in (?crt ou le bouton peint du bandeau AMP),
      mémorisée */
   const [crt, setCrt] = useState(() => {
     try {
