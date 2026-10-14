@@ -155,11 +155,22 @@ export type Ecran = {
   clicSpotify: (u: number, v: number) => ClicSpotify | null
 }
 
+/* LES TOILES DU PEINTRE EN MÉMOIRE CPU (#44) : la dalle est téléversée à
+   chaque peinture (le battement de veille toutes les 650 ms, en plein
+   seuil). Une toile 2D accélérée oblige alors Chrome à synchroniser le GPU
+   du canvas avec celui de WebGL : une image de 30 à 45 ms à chaque
+   battement au banc. En mémoire CPU, le téléversement de 512 × 256 est une
+   simple copie et les battements disparaissent du relevé. Les calques
+   suivent : un drawImage d'une toile GPU vers une toile CPU relirait le GPU
+   à chaque peinture. Rendu identique à l'œil (écart ≤ 4/255 sur la veille,
+   quelques pixels de bord sur les icônes pixel-art). */
+const PEINTRE_CPU: CanvasRenderingContext2DSettings = { willReadFrequently: true }
+
 export function creeEcran(lang: Lang): Ecran {
   const c = document.createElement("canvas")
   c.width = 512
   c.height = 256
-  const g = c.getContext("2d")!
+  const g = c.getContext("2d", PEINTRE_CPU)!
   /* TOUTES les cotes du peintre sont calées baseline "middle" (revue :
      seul peintAmp la posait — le premier écran d'une session rendait
      décalé jusqu'au premier passage AMP) */
@@ -190,17 +201,17 @@ export function creeEcran(lang: Lang): Ecran {
   const fondCalque = document.createElement("canvas")
   fondCalque.width = l
   fondCalque.height = h
-  const fg = fondCalque.getContext("2d")!
+  const fg = fondCalque.getContext("2d", PEINTRE_CPU)!
   let fondSale = true
   const gpsCalque = document.createElement("canvas")
   gpsCalque.width = l
   gpsCalque.height = h
-  const gg = gpsCalque.getContext("2d")!
+  const gg = gpsCalque.getContext("2d", PEINTRE_CPU)!
   let gpsSale = true
   const ampCalque = document.createElement("canvas")
   ampCalque.width = l
   ampCalque.height = h
-  const ag = ampCalque.getContext("2d")!
+  const ag = ampCalque.getContext("2d", PEINTRE_CPU)!
   let ampSale = true
   /* l'état du player HJ·AMP (mode "spotify") — nourri par l'hôte de
      l'iframe invisible via majSpotify */
@@ -237,7 +248,7 @@ export function creeEcran(lang: Lang): Ecran {
     const cnv = document.createElement("canvas")
     cnv.width = cote
     cnv.height = Math.round((img.height / img.width) * cote)
-    const cg = cnv.getContext("2d")!
+    const cg = cnv.getContext("2d", PEINTRE_CPU)!
     cg.drawImage(img, 0, 0, cnv.width, cnv.height)
     const donnees = cg.getImageData(0, 0, cnv.width, cnv.height)
     const d = donnees.data
@@ -253,7 +264,7 @@ export function creeEcran(lang: Lang): Ecran {
   let iconeGps: HTMLCanvasElement | null = null
   let iconeMusiques: HTMLCanvasElement | null = null
   const adaptePalette = (cnv: HTMLCanvasElement, eclaircit: boolean) => {
-    const cg = cnv.getContext("2d")!
+    const cg = cnv.getContext("2d", PEINTRE_CPU)!
     const donnees = cg.getImageData(0, 0, cnv.width, cnv.height)
     const d = donnees.data
     for (let i = 0; i < d.length; i += 4) {
