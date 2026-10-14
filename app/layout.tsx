@@ -87,13 +87,16 @@ export default function RootLayout({
             `useGt86` dès que la capacité réelle dit non (WebGL absent,
             abandon). Le délai est le garde-fou : un chunk qui n'arrive jamais
             ne laisse personne devant un écran vide plus de 5 s. Sans JS, rien
-            ne tourne et la planche reste visible. Seule `/` porte la 3D. */}
+            ne tourne et la planche reste visible. Seule `/` porte la 3D.
+            `overflow: hidden` dès le masque : sinon la barre de défilement
+            de la planche reste peinte en blanc au bord du noir, puis saute
+            quand la surcouche gèle le défilement. */}
         <script
           dangerouslySetInnerHTML={{
             __html: `try{var h=document.documentElement,m=function(q){return matchMedia(q).matches};if(location.pathname==="/"&&new URLSearchParams(location.search).get("gt86")!=="off"&&(m("(pointer: fine)")||m("(pointer: coarse)"))&&m("(min-width: 768px)")&&!m("(prefers-reduced-motion: reduce)")){h.setAttribute("data-gt86","attente");setTimeout(function(){h.removeAttribute("data-gt86")},5000)}}catch(e){}`,
           }}
         />
-        <style>{`html[data-gt86] body::after{content:"";position:fixed;inset:0;z-index:2147483647;background:#08070f}`}</style>
+        <style>{`html[data-gt86]{overflow:hidden}html[data-gt86] body::after{content:"";position:fixed;inset:0;z-index:2147483647;background:#08070f}`}</style>
       </head>
       <body className="antialiased">
         <div className={`${display.variable} ${mono.variable} ${jp.variable} proto-root`}>{children}</div>
