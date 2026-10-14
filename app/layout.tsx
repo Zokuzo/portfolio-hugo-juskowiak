@@ -1,13 +1,14 @@
 import type React from "react"
 import type { Metadata } from "next"
 import {
+  Anton,
   Archivo,
-  Chakra_Petch,
+  Big_Shoulders_Stencil,
   Dela_Gothic_One,
   JetBrains_Mono,
   Noto_Sans_JP,
-  Racing_Sans_One,
-  Silkscreen,
+  Space_Mono,
+  Unbounded,
 } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import FiltreCrt from "@/components/filtre-crt"
@@ -44,16 +45,11 @@ const jp = Noto_Sans_JP({
    cache bien avant que le nom n'apparaisse. Les perdantes partent au
    verdict de Hugo. */
 const brut = Dela_Gothic_One({ weight: "400", subsets: ["latin"], variable: "--f-brut", display: "swap" })
-const pixel = Silkscreen({ weight: "700", subsets: ["latin"], variable: "--f-pixel", display: "swap" })
-const hud = Chakra_Petch({
-  weight: "600",
-  style: "italic",
-  subsets: ["latin"],
-  variable: "--f-hud",
-  display: "swap",
-})
-const course = Racing_Sans_One({ weight: "400", subsets: ["latin"], variable: "--f-course", display: "swap" })
-const policesSeuil = [brut, pixel, hud, course].map((police) => police.variable).join(" ")
+const affiche = Anton({ weight: "400", subsets: ["latin"], variable: "--f-affiche", display: "swap" })
+const large = Unbounded({ subsets: ["latin"], variable: "--f-large", display: "swap" })
+const terminal = Space_Mono({ weight: ["400", "700"], subsets: ["latin"], variable: "--f-terminal", display: "swap" })
+const pochoir = Big_Shoulders_Stencil({ subsets: ["latin"], variable: "--f-pochoir", display: "swap" })
+const policesSeuil = [brut, affiche, large, terminal, pochoir].map((police) => police.variable).join(" ")
 
 export const metadata: Metadata = {
   title: "Hugo Juskowiak | Ingénieur Full Stack & IA",

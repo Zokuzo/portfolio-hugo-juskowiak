@@ -538,9 +538,10 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
           force le décodage de la fonte bien avant SEUIL, le nom n'apparaît
           jamais dans la police de repli */}
       <span aria-hidden style={{ position: "absolute", opacity: 0, pointerEvents: "none" }}>
-        <span style={{ ...police.nom, textShadow: "none" }}>Hg</span>
-        <span style={{ ...police.titre, background: "none" }}>Hg</span>
+        <span style={police.nom}>Hg</span>
+        <span style={police.titre}>Hg</span>
         <span style={police.bouton}>Hg</span>
+        {police.etiquette && <span style={police.etiquette.style}>{police.etiquette.texte}</span>}
       </span>
 
       {/* le nom du seuil (#24) : posé sur le claquement des phares, dans le
@@ -559,8 +560,15 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
           }}
         >
           <div style={{ textAlign: "center", transform: "translateY(-15vh)" }}>
-            <div style={police.nom}>{t(lang, "gt86Nom")}</div>
-            <div style={police.titre}>{t(lang, "gt86Titre")}</div>
+            <div style={police.cadre}>
+              {police.etiquette && (
+                <div aria-hidden style={police.etiquette.style}>
+                  {police.etiquette.texte}
+                </div>
+              )}
+              <div style={police.nom}>{t(lang, "gt86Nom")}</div>
+              <div style={police.titre}>{t(lang, "gt86Titre")}</div>
+            </div>
           </div>
         </div>
       )}
