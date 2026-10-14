@@ -447,6 +447,8 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
     <div
       data-etat={etat}
       data-pret={chargePret ? "1" : "0"}
+      /* la bascule ciel → rue, lue par le banc de l'intro (#43) */
+      data-rue={enRue ? "1" : "0"}
       style={{ position: "fixed", inset: 0, zIndex: 50, background: NUIT }}
     >
       <Canvas
