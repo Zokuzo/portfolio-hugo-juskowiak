@@ -8,8 +8,8 @@ import { useEffect, useState } from "react"
    routes et le canvas 3D (position fixed, zIndex au plafond). Gradients
    statiques composés par le GPU : zéro animation, le 100 fps tient.
 
-   L'état vit dans localStorage (`gt86-crt`) ; la scène (badge global +
-   bouton CRT peint du bandeau AMP) le bascule par l'événement `gt86-crt`.
+   L'état vit dans localStorage (`gt86-crt`) ; la scène (le bouton CRT
+   peint du bandeau AMP, ou ?crt) le bascule par l'événement `gt86-crt`.
    Rendu initial null : SSR-sûr, l'hydratation lit le stockage. */
 export default function FiltreCrt() {
   const [actif, setActif] = useState(false)

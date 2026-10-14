@@ -142,7 +142,8 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
      machine garde GPS/CHOIX/MUSIQUES/DÉPART, l'écran garde son poste */
   /* LA VERSION CRT (12e retour : « une version du site avec un filtre
      année 2000 ») : sous-pixels RVB + balayage + vignette en simple
-     surcouche composée — opt-in (?crt ou le bouton), mémorisée */
+     surcouche composée — opt-in (?crt ou le bouton peint du bandeau AMP),
+     mémorisée */
   const [crt, setCrt] = useState(() => {
     try {
       if (new URLSearchParams(window.location.search).has("crt")) return true
@@ -585,38 +586,6 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
           pointerEvents: "none",
         }}
       >
-        <span
-          style={{
-            position: "absolute",
-            top: 20,
-            left: 22,
-            font: "500 11px/1 var(--f-mono)",
-            letterSpacing: "0.18em",
-            color: `${ENCRE}59`,
-          }}
-        >
-          {t(lang, "gt86Chantier")} · {etat}
-        </span>
-
-        <button
-          type="button"
-          aria-pressed={crt}
-          style={{
-            ...discret,
-            position: "absolute",
-            top: 12,
-            right: 20,
-            pointerEvents: "auto",
-            color: crt ? ENCRE : `${ENCRE}8c`,
-            border: `1px solid ${crt ? ENCRE : `${ENCRE}47`}`,
-            borderRadius: 2,
-            padding: "6px 10px",
-          }}
-          data-gt86="crt" onClick={() => setCrt((v) => !v)}
-        >
-          CRT
-        </button>
-
         {/* La consigne du gate #21 : sous la mer de nuages, encre sombre sur
             les crêtes claires — un bouton, pas un décor : même signal que le
             clic sur la carrosserie, et accessible au clavier. Elle quitte le
