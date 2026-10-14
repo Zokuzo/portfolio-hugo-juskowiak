@@ -5,6 +5,7 @@ import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber"
 import { useGLTF, useTexture } from "@react-three/drei"
 import * as THREE from "three"
 import type { Trajectoire } from "./vol"
+import { compileEnSolo, rendEnSolo } from "./chauffe"
 import {
   ASSISE,
   TEXTURES_HABITACLE,
@@ -42,8 +43,15 @@ export const CAP_VOITURE = Math.PI
 /* la vue d'arrivée du vol — la caméra gatée du prototype */
 export const CAM_FINALE: [number, number, number] = [-1.2, 2.0, -12.5]
 export const CIBLE_FINALE: [number, number, number] = [-4.4, 1, -19]
-/* la brume de la variante e — sa couleur EST le NUIT de la coquille */
+/* La brume de la variante e : sa couleur EST le NUIT de la coquille.
+   Pendant la descente elle voile la ville, et couvre les toits que le
+   régime #28 a servis en 512. La coquille la pose DÈS LA CRÉATION du
+   canvas (#44) : la brume entre dans la clé des programmes, et posée au
+   montage de la rue elle recompilait le ciel en plein CIEL. Rien du ciel
+   n'y est sensible (dôme fog=false, nuages sans chunk fog, la voiture
+   flottante à ~9 m d'une brume qui n'ouvre qu'à 25). */
 const BRUME: [string, number, number] = ["#08070f", 25, 180]
+export const brume = () => new THREE.Fog(BRUME[0], BRUME[1], BRUME[2])
 
 /* altitude d'où la voiture tombe vers son garage pendant la phase rue du
    vol, et assiette cabrée tenue jusqu'au toucher — montée à 45 m au 3e
@@ -688,6 +696,7 @@ export default function Rue({
   warning,
   surZone,
   surMolette,
+  surChaude,
 }: {
   visible: boolean
   vol: MutableRefObject<Trajectoire>
@@ -702,29 +711,43 @@ export default function Rue({
   warning: boolean
   surZone?: (zone: Zone) => void
   surMolette?: (deltaY: number) => void
+  /* GPU chaud (chauffe ci-dessous) : le voile CHARGEMENT peut se lever */
+  surChaude: () => void
 }) {
   const scene3 = useThree((s) => s.scene)
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
   const invalide = useThree((s) => s.invalidate)
 
-  /* la brume de la rue, posée pour de bon au premier montage : sa couleur
-     est le fond de la coquille, et rien du ciel n'y est sensible (dôme
-     fog=false, nuages sans chunk fog, la voiture flottante à ~9 m d'une
-     brume qui n'ouvre qu'à 25). Pendant la descente, elle voile la ville —
-     et couvre les toits que le régime #28 a servis en 512. */
-  useEffect(() => {
-    scene3.fog = new THREE.Fog(BRUME[0], BRUME[1], BRUME[2])
-  }, [scene3])
-
-  /* LA CHAUFFE (5e retour de gate : « trop de saccades ») : tous les
-     programmes de la scène se compilent EN PARALLÈLE dès le montage de la
-     rue (compileAsync, KHR_parallel_shader_compile) — sans elle, chaque
-     première apparition (cônes au claquement, néons, éclats) compilait
-     son shader en pleine mise en scène, une saccade par première fois. */
+  /* LA CHAUFFE (5e retour de gate : « trop de saccades », refaite au
+     #44) : tous les programmes de la rue se compilent EN PARALLÈLE dès
+     son montage, avec SA topologie de lumières (chauffe.ts), puis un rendu
+     en solo téléverse textures et géométries. Le voile CHARGEMENT attend
+     `surChaude` : quand il se lève, plus rien ne compile ni ne téléverse
+     à la bascule ciel → rue, ni aux premières apparitions du seuil. */
   const gl = useThree((s) => s.gl)
+  const groupe = useRef<THREE.Group>(null)
+  const chauffe = useRef<"froide" | "compilee" | "rendue" | "chaude">("froide")
   useEffect(() => {
-    gl.compileAsync(scene3, camera).catch(() => {})
+    if (!groupe.current) return
+    let annule = false
+    compileEnSolo(gl, scene3, camera, groupe.current).then(() => {
+      if (!annule && chauffe.current === "froide") chauffe.current = "compilee"
+    })
+    return () => {
+      annule = true
+    }
   }, [gl, scene3, camera])
+  useFrame(() => {
+    if (chauffe.current === "compilee" && groupe.current) {
+      chauffe.current = "rendue"
+      rendEnSolo(gl, scene3, camera, groupe.current)
+    } else if (chauffe.current === "rendue") {
+      /* une image plus tard : le GPU a digéré le rendu en solo, sinon la
+         première image découverte attendait derrière lui (70 ms au banc) */
+      chauffe.current = "chaude"
+      surChaude()
+    }
+  })
 
   /* LE RAIL (recette #26, portée au #32) : les poses se posent NET —
      sauf assis ⇄ ecran, le seul trajet volé (1,1 s, courbe douce, delta
@@ -792,7 +815,7 @@ export default function Rue({
   })
 
   return (
-    <group visible={visible}>
+    <group ref={groupe} visible={visible}>
       <hemisphereLight args={["#232038", "#0a080e", 0.22]} />
       {/* ambiante de nuit froide (clair de lune) — assez pour lire les
           volumes, plus assez pour ressembler à un crépuscule (gate #22) */}

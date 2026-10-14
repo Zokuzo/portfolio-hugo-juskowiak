@@ -11,7 +11,7 @@ import { t, type Lang } from "@/components/proto/dict"
 import { parametre } from "./capable"
 import { INTRO, RAILS, depart, marqueVue, suivant } from "./machine"
 import Ciel, { CIEL_HDR, VOITURE } from "./ciel"
-import Rue from "./rue"
+import Rue, { brume } from "./rue"
 import Vol, { VOL_MS, type Trajectoire } from "./vol"
 import Seuil, { SEUIL_MS } from "./seuil"
 import { Pouls, cockpitVide } from "./habitacle"
@@ -61,14 +61,6 @@ const ENCRE = "#e8dff5"
 const DEPART_MS = 650
 /* le verre fumé gaté (#21/#24) : la couleur du voile de la plongée */
 const VERRE = "#161b21"
-
-/* la sentinelle du chargement : montée DANS le Suspense de la rue, elle
-   ne commit que quand tous les chargeurs du même bord ont résolu — c'est
-   le « rue décodée » de l'écran de chargement */
-function Sentinelle({ surPret }: { surPret: () => void }) {
-  useEffect(() => surPret(), [surPret])
-  return null
-}
 
 /* Le contexte peut être perdu à chaud (onglet en arrière-plan longtemps,
    pilote qui se réinitialise). three AVALE l'événement — `preventDefault`,
@@ -339,7 +331,9 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
   const surPret = useCallback(() => setCielPret(true), [])
   /* L'ÉCRAN DE CHARGEMENT (7e retour #33) : tant que ciel ET rue ne sont
      pas décodés, un voile CHARGEMENT couvre le dôme — l'animation ne se
-     découvre que prête (compilations lancées, plus d'accroc en vol). Il
+     découvre que prête. Depuis le #44 « prête » veut dire GPU CHAUD : la
+     rue ne le signale qu'une fois ses programmes compilés et ses
+     textures et géométries téléversées (chauffe de rue.tsx). Il
      n'apparaît qu'après 250 ms (« si nécessaire » : cache plein = rien),
      ne mange AUCUN clic, et ne concerne que le chemin d'intro. */
   const [ruePrete, setRuePrete] = useState(false)
@@ -467,6 +461,9 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
         camera={{ position: [0, 0, 6], fov: 45 }}
         onCreated={(st) => {
           st.scene.background = new THREE.Color(NUIT)
+          /* la brume de la rue, posée avant la première image du ciel :
+             elle entre dans la clé des programmes (voir rue.tsx) */
+          st.scene.fog = brume()
           /* poignée des outils de capture CDP (télémétrie, gates visuels) —
            même rôle que window.__scene des prototypes ; expose caméra,
            scène et invalidate() pour poser des vues à la main */
@@ -512,8 +509,8 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
               warning={warning}
               surZone={surZone}
               surMolette={surMolette}
+              surChaude={surRuePrete}
             />
-            <Sentinelle surPret={surRuePrete} />
           </Suspense>
         )}
         {fpsVoulu && <Stats />}
