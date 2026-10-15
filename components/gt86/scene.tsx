@@ -18,7 +18,7 @@ import { Pouls, cockpitVide } from "./habitacle"
 import { PLAYLISTS, PROFIL_SPOTIFY, creeEcran, type Ecran, type ModeEcran, type Zone } from "./ecran"
 import { MoteurSpotify, RythmeAmp, type CommandesSpotify } from "./spotify"
 import { policeVoulue } from "./prototype-polices"
-import { TransitionVoile, VOILE_FORCE_MS, transitionVoulue } from "./prototype-transitions"
+import { TransitionVoile } from "./transition-voile"
 
 /* LES ASSETS ET LEUR CASCADE — ticket #28.
 
@@ -361,16 +361,9 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
     const t0 = setTimeout(() => setChargeVisible(true), 250)
     return () => clearTimeout(t0)
   }, [etat, chargePret])
-  /* la transition shader de la levée (prototype #45) : avec ?transition,
-     le voile tient au moins VOILE_FORCE_MS au premier CIEL. Le voile DOM
-     reste affiché tant que le quad n'a pas pris le relais (surLevee). */
-  const [transition] = useState(transitionVoulue)
-  const [voileForce, setVoileForce] = useState(transition.forcee)
-  useEffect(() => {
-    const t0 = setTimeout(() => setVoileForce(false), VOILE_FORCE_MS)
-    return () => clearTimeout(t0)
-  }, [])
-  const couvert = etat === "CIEL" && ((chargeVisible && !chargePret) || rideauRejeu || voileForce)
+  /* la levée en transition shader (#45) : le voile DOM reste affiché
+     tant que le quad n'a pas pris le relais (surLevee) */
+  const couvert = etat === "CIEL" && ((chargeVisible && !chargePret) || rideauRejeu)
   const [relaisAttendu, setRelaisAttendu] = useState(false)
   if (couvert && !relaisAttendu) setRelaisAttendu(true)
   const surLevee = useCallback(() => setRelaisAttendu(false), [])
@@ -489,7 +482,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
         }}
       >
         <Perte surRepli={surRepli} />
-        <TransitionVoile variante={transition.variante} couvert={couvert} relaisAttendu={relaisAttendu} surLevee={surLevee} />
+        <TransitionVoile couvert={couvert} relaisAttendu={relaisAttendu} surLevee={surLevee} />
         {/* #29 a posé le ciel, #30 la rue et le vol — #31 l'habitacle, #32
             l'écran. Le ciel reste monté à vie (piège <Environment>, voir
             ciel.tsx), seul `visible` bascule ; la rue attend que le ciel
