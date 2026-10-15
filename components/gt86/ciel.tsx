@@ -3,17 +3,16 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MutableRefObject } from "react"
 import { useFrame, useLoader, useThree } from "@react-three/fiber"
 import { Environment, Lightformer, useCursor, useGLTF } from "@react-three/drei"
-import { RGBELoader } from "three-stdlib"
 import * as THREE from "three"
 import MerDeNuages from "./mer-de-nuages"
-import { MateriauDome } from "./prototype-rendu"
 import type { Trajectoire } from "./vol"
 
 /* LE CIEL — ticket #29 : le verdict « Pellicule » du gate #21, porté du
    prototype (route jetable, supprimée au #35) dans la coquille.
 
    HDRI qwantani_dusk_2_puresky (Poly Haven, CC0, 1k) auto-hébergée — un
-   crépuscule lavande au soleil bas, monté sur dôme et teinté chaud
+   crépuscule lavande au soleil bas, monté sur dôme (en 4k depuis les #46
+   et #59, voir CIEL_4K) et teinté chaud
    (multiply) : aucun puresky n'est rosé-orangé une fois tone-mappé, la
    teinte EST le concept. L'IBL reste la photo brute (reflets vrais).
    L'aura divine est SUPPRIMÉE au gate (l'additif `depthTest:false`
@@ -25,6 +24,21 @@ import type { Trajectoire } from "./vol"
    sans un octet de plus. */
 export const VOITURE = "/prototype/gt86.glb"
 export const CIEL_HDR = "/prototype/crepuscule.hdr"
+
+/* LE FOND 4K (#46, #59). Même HDRI que CIEL_HDR (Poly Haven
+   qwantani_dusk_2_puresky, CC0 : le fichier 1k du dépôt a le md5 exact
+   de leur crepuscule 1k), mais tiré de leur HDR 4k et non de leur JPG
+   tonemappé : ce JPG porte déjà une courbe, l'AgX du composer (rendu.tsx)
+   l'aurait écrasée une seconde fois. On encode donc la radiance LINÉAIRE
+   divisée par ECHELLE_4K (le maximum de la HDR 4k vaut 10,56 : rien
+   n'est écrêté), en sRVB 8 bits tramé, puis AVIF 4096 × 2048 (33 Ko : un
+   pur ciel est un dégradé). Le matériau remultiplie par ECHELLE_4K : le
+   dôme rend la même radiance que la HDR, seulement plus nette. Même
+   sphère, même rotation, mêmes UV équirectangulaires : orientation
+   identique. L'IBL garde la HDR 1k, l'éclairage ne bouge pas. */
+export const CIEL_4K = "/prototype/ciel-4k.avif"
+const ECHELLE_4K = 11
+const TEINTE_DOME = new THREE.Color("#d8927a").multiplyScalar(ECHELLE_4K)
 
 /* le soleil de la pellicule — il sculpte les crêtes des nuages par le dessus */
 const SOLEIL = new THREE.Vector3(0.25, 0.6, -1.0)
@@ -171,7 +185,8 @@ export default function Ciel({
   surPret: () => void
   vol: MutableRefObject<Trajectoire>
 }) {
-  const hdr = useLoader(RGBELoader, CIEL_HDR)
+  const fond = useLoader(THREE.TextureLoader, CIEL_4K)
+  fond.colorSpace = THREE.SRGBColorSpace
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
 
   /* ce rendu n'existe qu'une fois les loaders résolus — le signal est là */
@@ -214,9 +229,13 @@ export default function Ciel({
       <group visible={visible}>
         <mesh rotation-y={ROT} frustumCulled={false}>
           <sphereGeometry args={[350, 48, 32]} />
-          {/* PROTOTYPE (#46, #59) : le fond 4k en ?rendu=b|c, sinon ce même
-              matériau HDR 1k teinté */}
-          <MateriauDome hdr={hdr} teinte="#d8927a" />
+          <meshBasicMaterial
+            map={fond}
+            color={TEINTE_DOME}
+            side={THREE.BackSide}
+            depthWrite={false}
+            fog={false}
+          />
         </mesh>
         {/* 12e retour (« la lumière n'est pas dirigée vers la voiture ») :
             la directionnelle vivait DERRIÈRE la voiture — le flanc que la

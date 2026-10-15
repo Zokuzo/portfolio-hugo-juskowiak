@@ -29,17 +29,16 @@ export function compileEnSolo(
   const cibleAvant = gl.getRenderTarget()
   const horsEcran = new THREE.WebGLRenderTarget(1, 1)
   try {
-    /* en b|c (prototype #46, #59), rien de la rue ne se peint à l'écran :
-       la variante écran serait compilée pour rien */
-    const versEcran = cibleDeChauffe ? null : gl.compileAsync(sujet, camera, scene)
-    /* le verre du décor (KHR_materials_transmission) déclenche la passe de
-       transmission : les opaques y sont redessinés dans une cible hors
-       écran, sortie linéaire sans tone mapping, donc une DEUXIÈME variante
-       de chaque programme. Une cible posée pendant la compilation la
-       produit aussi. */
+    /* Seule la variante hors écran se compile ici : rien de la rue ne se
+       peint à l'écran, la scène passe par la cible du composer (#46,
+       #59), dont la variante vient de rendEnSolo. Le verre du décor
+       (KHR_materials_transmission) déclenche la passe de transmission :
+       les opaques y sont redessinés dans une cible hors écran, sortie
+       linéaire sans tone mapping. Une cible posée pendant la compilation
+       produit cette variante. */
     gl.setRenderTarget(horsEcran)
     const versTransmission = gl.compileAsync(sujet, camera, scene)
-    return Promise.all([versEcran, versTransmission]).finally(() => horsEcran.dispose())
+    return versTransmission.finally(() => horsEcran.dispose())
   } finally {
     gl.setRenderTarget(cibleAvant)
     scene.visible = sceneVisible
@@ -47,12 +46,13 @@ export function compileEnSolo(
   }
 }
 
-/* PROTOTYPE (#46, #59) : sous ?rendu=b|c, la scène se peint dans la
-   cible flottante multiéchantillonnée du composer, plus à l'écran. Le
-   rendu en solo s'y fait donc aussi : sans ça, la bascule ciel vers rue
-   gelait 220 ms (banc headless) alors qu'aucun programme ne s'ajoutait,
-   le temps que le pilote prépare ses variantes pour ce format de cible.
-   Nulle par défaut : la variante a peint à l'écran, comme avant. */
+/* LA CIBLE DE CHAUFFE (#46, #59) : la scène se peint dans la cible
+   flottante multiéchantillonnée du composer (rendu.tsx), pas à l'écran.
+   Le rendu en solo s'y fait donc aussi : sans ça, la bascule ciel vers
+   rue gelait 220 ms (banc headless) alors qu'aucun programme ne
+   s'ajoutait, le temps que le pilote prépare ses variantes pour ce
+   format de cible. Nulle tant que le composer n'a pas signalé sa
+   chauffe, et après son démontage. */
 let cibleDeChauffe: THREE.WebGLRenderTarget | null = null
 export function chauffeDans(cible: THREE.WebGLRenderTarget | null) {
   cibleDeChauffe = cible

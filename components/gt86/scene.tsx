@@ -10,7 +10,7 @@ import type { CSSProperties } from "react"
 import { t, type Lang } from "@/components/proto/dict"
 import { parametre } from "./capable"
 import { INTRO, RAILS, depart, marqueVue, suivant } from "./machine"
-import Ciel, { CIEL_HDR, VOITURE } from "./ciel"
+import Ciel, { CIEL_4K, CIEL_HDR, VOITURE } from "./ciel"
 import Rue, { RUE_GLB, brume } from "./rue"
 import Vol, { VOL_MS, type Trajectoire } from "./vol"
 import Seuil, { SEUIL_MS } from "./seuil"
@@ -19,7 +19,7 @@ import { PLAYLISTS, PROFIL_SPOTIFY, creeEcran, type Ecran, type ModeEcran, type 
 import { MoteurSpotify, RythmeAmp, type CommandesSpotify } from "./spotify"
 import { policeVoulue } from "./prototype-polices"
 import { TransitionVoile } from "./transition-voile"
-import { EffetsDuRendu, renduVoulu } from "./prototype-rendu"
+import { Effets } from "./rendu"
 
 /* LES ASSETS ET LEUR CASCADE — ticket #28.
 
@@ -35,13 +35,14 @@ import { EffetsDuRendu, renduVoulu } from "./prototype-rendu"
    demandera — la voiture et le ciel. `RGBELoader` vient de three-stdlib comme
    dans `<Environment>` de drei : même constructeur, donc MÊME clé de cache —
    les chaînes viennent de `ciel.tsx`, le préchargement d'ici sert donc son
-   dôme et sa voiture sans un octet de plus. Les textures de l'habitacle
+   IBL, son dôme 4k (#46, #59) et sa voiture sans un octet de plus. Les textures de l'habitacle
    (#31) partent au même rang, depuis habitacle.tsx : elles habillent la
    voiture. */
 
 useGLTF.setDecoderPath("/voiture/draco/")
 useGLTF.preload(VOITURE)
 useLoader.preload(RGBELoader, CIEL_HDR)
+useLoader.preload(THREE.TextureLoader, CIEL_4K)
 
 /* LA COQUILLE MONTÉE — ticket #27 de la carte #15.
 
@@ -141,15 +142,14 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
   const [fpsVoulu] = useState(() => new URLSearchParams(window.location.search).has("fps"))
   const [nodepart] = useState(() => new URLSearchParams(window.location.search).has("nodepart"))
   const [police] = useState(policeVoulue)
-  /* PROTOTYPE (#46, #59) : ?rendu=b|c pose le composer, dont la chauffe
-     retient le rideau comme celle de la rue */
-  const [rendu] = useState(renduVoulu)
-  const [effetsPrets, setEffetsPrets] = useState(rendu === "a")
+  /* le composer du rendu (#46, #59), dont la chauffe retient le rideau
+     comme celle de la rue */
+  const [effetsPrets, setEffetsPrets] = useState(false)
   const surEffetsPrets = useCallback(() => setEffetsPrets(true), [])
   /* la rue ne se monte qu'après le composer : son GLB part dès maintenant */
   useEffect(() => {
-    if (rendu !== "a") useGLTF.preload(RUE_GLB)
-  }, [rendu])
+    useGLTF.preload(RUE_GLB)
+  }, [])
   /* le ZOOM sur la dalle (hub/horloge/stats, machine à l'habitacle) et
      les feux de détresse — des états d'ÉCRAN, pas de navigation : la
      machine garde GPS/CHOIX/MUSIQUES/DÉPART, l'écran garde son poste */
@@ -478,8 +478,8 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
         /* alpha:false : la toile est OPAQUE (scene.background est posé) —
            le compositeur n'a plus à la fondre sur le DOM, c'est une frame
            moins chère sur beaucoup de GPU */
-        /* le composer (prototype #46, #59) porte son propre MSAA */
-        gl={{ powerPreference: "high-performance", antialias: rendu === "a", alpha: false }}
+        /* antialias:false : le composer (#46, #59) porte son propre MSAA */
+        gl={{ powerPreference: "high-performance", antialias: false, alpha: false }}
         camera={{ position: [0, 0, 6], fov: 45 }}
         onCreated={(st) => {
           st.scene.background = new THREE.Color(NUIT)
@@ -510,7 +510,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
             vol={vol}
           />
         </Suspense>
-        {/* prototype (#46, #59) : en b|c, la rue attend aussi le composer */}
+        {/* la rue attend aussi le composer (#46, #59) */}
         {((cielPret && effetsPrets) || etat !== "CIEL") && (
           <Suspense fallback={null}>
             <Rue
@@ -537,7 +537,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
             />
           </Suspense>
         )}
-        {rendu !== "a" && <EffetsDuRendu rendu={rendu} surPret={surEffetsPrets} />}
+        <Effets surPret={surEffetsPrets} />
         {fpsVoulu && <Stats />}
         <RythmeAmp actif={etat === "SPOTIFY"} ecran={ecran} />
       </Canvas>

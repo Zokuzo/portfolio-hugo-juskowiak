@@ -25,7 +25,7 @@ const IMAGES_AVANT_DEPART = 2
 /* comme le vol : une image lente ne téléporte pas la course */
 const DELTA_MAX = 1 / 12
 
-/* le nom du quad : le prototype de rendu (#46, #59) le sort du composer */
+/* le nom du quad : rendu.tsx (#46, #59) le sort du composer */
 export const NOM_VOILE = "voile-levee"
 
 const REDUIT =

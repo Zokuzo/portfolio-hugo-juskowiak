@@ -170,6 +170,8 @@ const ASSETS = {
     noms: ["CityGen_LR_Facades", "CityGenGlass.001"],
   },
   "public/prototype/crepuscule.hdr": { max: 1_200_000 },
+  /* le dôme 4k du rendu de la référence (#46, #59) */
+  "public/prototype/ciel-4k.avif": { max: 35_500 },
   /* l'habillage habitacle (#31) : textures gatées aux #23/#26 */
   "public/prototype/compteur-violet.jpg": { max: 168_000 },
   "public/prototype/haunter-dash.jpg": { max: 98_000 },
@@ -591,6 +593,7 @@ assert.deepEqual(externes, [], `des requêtes partent chez un tiers : ${externes
 for (const asset of [
   "/prototype/gt86.glb",
   "/prototype/crepuscule.hdr",
+  "/prototype/ciel-4k.avif",
   "/prototype/decor-procedural.glb",
   "/prototype/compteur-violet.jpg",
   "/prototype/haunter-dash.jpg",
