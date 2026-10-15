@@ -15,8 +15,9 @@ import * as THREE from "three"
    cuit une seule fois au montage, sous le voile : des Lightformer dans
    la cubemap du ciel (aucune lumière de scène, la topologie ne bouge
    pas), une équirect de nuit plus riche pour la voiture de la rue
-   (lampadaires, vitrines, néons). Les jantes partagent la robe : elles
-   restent le repère du silver. */
+   (lampadaires, vitrines, néons). Les jantes partagent la robe (un clone
+   sans paillettes pour b, voir robePour) : elles restent le repère du
+   silver. */
 
 type Cle = "a" | "b" | "c"
 
@@ -38,18 +39,16 @@ type Robe = {
    (rendu.tsx) multiplie les hautes lumières par (1,07 ; 0,95 ; 0,92),
    un gris neutre y ressortait taupe rosé. */
 const ROBES: Record<Cle, Robe> = {
-  /* a « chrome miroir » : métal pur, rugosité au plancher utile. Il ne
-     vit que de son environnement de reflet. Sous 0,1 la PMREM de la
-     cubemap du ciel rend ses mips nets presque noirs (mesuré au balayage
-     0,02 / 0,12 / 0,2 : la caisse passe du charbon au miroir), d'où 0,12
-     et non 0,05. */
-  a: { couleur: "#e4e9ef", metal: 1, rugosite: 0.12, vernis: 0, vernisRugosite: 0, refletCiel: 4, refletNuit: 2.6, paillettes: false },
-  /* b « argent métallisé » : peinture claire pailletée sous un vernis
-     brillant aux reflets doux */
-  b: { couleur: "#cdd3da", metal: 0.8, rugosite: 0.34, vernis: 1, vernisRugosite: 0.03, refletCiel: 3.2, refletNuit: 1.4, paillettes: true },
-  /* c « argent clair anodisé » : plus clair et plus satiné que l'ARGENT
-     d'origine, lecture douce, la plus proche des jantes */
-  c: { couleur: "#d9dee4", metal: 0.6, rugosite: 0.4, vernis: 0.35, vernisRugosite: 0.25, refletCiel: 2.6, refletNuit: 1.2, paillettes: false },
+  /* a « chrome miroir » : métal pur, poli. Il ne vit que de son
+     environnement de reflet, d'où le reflet du ciel bas : le crépuscule
+     est clair partout, un miroir plus fort y devenait blanc plat. */
+  a: { couleur: "#e4e9ef", metal: 1, rugosite: 0.05, vernis: 0, vernisRugosite: 0, refletCiel: 0.28, refletNuit: 2.6, paillettes: false },
+  /* b « argent métallisé » : un gris argent plus soutenu, pailleté, sous
+     un vernis net qui porte les lames du ciel en traits francs */
+  b: { couleur: "#b9c0c8", metal: 0.75, rugosite: 0.3, vernis: 1, vernisRugosite: 0.03, refletCiel: 0.55, refletNuit: 1.4, paillettes: true },
+  /* c « argent clair anodisé » : le plus clair, satiné sans vernis,
+     lecture douce, la plus proche des jantes */
+  c: { couleur: "#dde2e8", metal: 0.55, rugosite: 0.45, vernis: 0, vernisRugosite: 0, refletCiel: 0.35, refletNuit: 0.8, paillettes: false },
 }
 
 const CLES = Object.keys(ROBES) as Cle[]
@@ -65,14 +64,34 @@ export function peintureDuCiel(cle: Cle) {
 }
 
 /* Face à scene.environment, three r169 impose l'environmentIntensity de
-   la scène (0,6) et ignore l'envMapIntensity du matériau. La robe prend
-   donc la cubemap du ciel EN PROPRE (la même texture, la même PMREM en
-   cache) : son intensité redevient la sienne. À appeler une fois
-   l'<Environment> monté (il pose scene.environment en layout). */
-export function mireLeCiel(robe: THREE.MeshPhysicalMaterial, scene: THREE.Scene) {
+   la scène (0,6) et ignore l'envMapIntensity du matériau : la robe
+   prend donc la cubemap du ciel EN PROPRE. Et pas la PMREM que le
+   renderer en tire, qui est FAUSSE dès la deuxième cuisson : drei
+   recuit la cubemap à chaque rendu de <Ciel> (ses enfants JSX sont
+   neufs), et three r169 régénère alors la PMREM dans l'ancienne cible
+   SANS réallouer ses plans de LOD, laissés à la taille de la dernière
+   PMREM tirée (les équirects de nuit, 64 ou 256 de face contre 512).
+   Les niveaux nets sortent vides : une boule miroir n'y montrait que le
+   spéculaire des lumières directes, la même boule en MeshBasicMaterial
+   sur la même cubemap tout le ciel. C'était la vraie cause du chrome
+   charbon (et du verre du ciel, à trancher hors #53). La robe tire donc
+   SA PMREM, une seule fois, d'un générateur neuf : la cubemap est déjà
+   cuite (l'<Environment> la cuit en layout, cet appel vient d'un effet
+   passif) et son contenu ne change plus. */
+let cielPropre: THREE.Texture | null = null
+export function mireLeCiel(robe: THREE.MeshPhysicalMaterial, scene: THREE.Scene, gl: THREE.WebGLRenderer) {
   const cle = carrosserieVoulue()
-  if (!cle || !scene.environment) return
-  robe.envMap = scene.environment
+  if (!cle) return
+  if (!scene.environment) {
+    console.warn("prototype-carrosserie : pas de scene.environment au montage, la robe garde le reflet de la scène")
+    return
+  }
+  if (!cielPropre) {
+    const generateur = new THREE.PMREMGenerator(gl)
+    cielPropre = generateur.fromCubemap(scene.environment as THREE.CubeTexture).texture
+    generateur.dispose()
+  }
+  robe.envMap = cielPropre
   robe.envMapRotation.copy(scene.environmentRotation)
   robe.envMapIntensity = ROBES[cle].refletCiel
 }
@@ -121,7 +140,7 @@ export function robePour(mesh: THREE.Mesh, robe: THREE.MeshPhysicalMaterial) {
    par texel, générée une fois. Le vernis garde la normale géométrique
    (pas de clearcoatNormalMap) : les éclats scintillent SOUS un reflet
    lisse, comme une vraie peinture métallisée. */
-const PAILLETTES = { taille: 256, inclinaison: 0.55, repetition: 48, relief: 0.6 }
+const PAILLETTES = { taille: 256, inclinaison: 0.6, repetition: 24, relief: 0.5 }
 let paillettesPartagees: THREE.DataTexture | null = null
 function paillettes() {
   if (paillettesPartagees) return paillettesPartagees
@@ -151,18 +170,19 @@ function paillettes() {
 
 /* À poser DANS l'<Environment> du ciel : cuit dans la cubemap au montage
    (une image de CubeCamera), jamais une lumière de scène. Le plancher
-   est la mer de nuages lumineuse que l'œil voit sous la voiture et que
-   la HDR n'a pas : sans lui, le bas de caisse mire un dessous sombre et
-   vire au charbon. Les bandes sont des softbox de studio, blanc neutre :
+   est la mer de nuages sous la voiture, gris neutre et tenu bas : la
+   PMREM réparée (voir mireLeCiel), un plancher clair noyait le chrome
+   dans un blanc plat, et c'est ce contraste haut clair, bas sombre qui
+   le fait lire miroir. Les bandes sont des softbox de studio, blanc neutre :
    elles dessinent les lignes de la caisse et rendent au silver sa
    lecture froide contre le rose. */
 export function LamesDuCiel() {
   return (
     <>
-      <Lightformer form="rect" intensity={0.55} color="#f4eee8" position={[0, -8, 0]} target={[0, 0, 0]} scale={[60, 60, 1]} />
-      <Lightformer form="rect" intensity={4} color="#ffffff" position={[0, 3, 8]} target={[0, 0, 0]} scale={[18, 0.7, 1]} />
-      <Lightformer form="rect" intensity={3} color="#f2f6ff" position={[-8, 0.5, 2]} target={[0, 0, 0]} scale={[14, 0.5, 1]} />
-      <Lightformer form="rect" intensity={3} color="#f2f6ff" position={[8, 1.5, -2]} target={[0, 0, 0]} scale={[14, 0.5, 1]} />
+      <Lightformer form="rect" intensity={0.08} color="#dfe3e8" position={[0, -8, 0]} target={[0, 0, 0]} scale={[60, 60, 1]} />
+      <Lightformer form="rect" intensity={4} color="#ffffff" position={[0, 3, 8]} target={[0, 0, 0]} scale={[18, 1.4, 1]} />
+      <Lightformer form="rect" intensity={3} color="#f2f6ff" position={[-8, 0.5, 2]} target={[0, 0, 0]} scale={[14, 1, 1]} />
+      <Lightformer form="rect" intensity={3} color="#f2f6ff" position={[8, 1.5, -2]} target={[0, 0, 0]} scale={[14, 1, 1]} />
       <Lightformer form="ring" intensity={2.5} color="#ffffff" position={[3, 6, 5]} target={[0, 0, 0]} scale={4} />
     </>
   )
@@ -242,10 +262,13 @@ function peinsVitrines(ctx: CanvasRenderingContext2D) {
   }
 }
 
-/* les néons : des traits fins saturés au-dessus des vitrines */
+/* les néons : des traits fins au-dessus des vitrines. Un seul rose sur
+   quatre : avec le rose et le violet à parts égales, le capot du seuil
+   portait une large bande magenta et le silver lisait « chrome sous
+   néons ». */
 function peinsNeons(ctx: CanvasRenderingContext2D) {
   const tire = hasard(86)
-  const teintes = ["#ff4fa8", "#4fe3ff", "#ff7a3d", "#b46bff"]
+  const teintes = ["#4fe3ff", "#ff7a3d", "#eef3ff", "#ff4fa8"]
   ctx.lineWidth = 3
   ctx.lineCap = "round"
   for (let i = 0; i < 22; i++) {

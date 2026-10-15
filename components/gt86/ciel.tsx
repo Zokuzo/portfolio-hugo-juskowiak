@@ -73,6 +73,7 @@ function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<
   const { scene } = useGLTF(VOITURE)
   const groupe = useRef<THREE.Group>(null)
   const scene3 = useThree((s) => s.scene)
+  const gl3 = useThree((s) => s.gl)
   const [survol, setSurvol] = useState(false)
   useCursor(survol)
 
@@ -133,7 +134,7 @@ function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<
     /* la robe couvre la carrosserie ET la jante (étoile + lit extérieur) —
        pneus, freins et visserie restent d'origine */
     const PEINTS = ["Paint", "Stern", "Aussenbeet"]
-    mireLeCiel(peinture, scene3)
+    mireLeCiel(peinture, scene3, gl3)
     modele.traverse((o) => {
       const mesh = o as THREE.Mesh
       if (!mesh.isMesh) return
@@ -142,7 +143,7 @@ function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<
         mesh.material = robePour(mesh, peinture)
       }
     })
-  }, [modele, peinture, scene3])
+  }, [modele, peinture, scene3, gl3])
 
   /* la respiration — amplitude couplée au sommet du banc (-2,6) : le nez
      piqué descend à ~-2,1 au creux de la houle, plus bas le banc mange la
