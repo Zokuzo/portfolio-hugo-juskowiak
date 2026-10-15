@@ -11,7 +11,7 @@ import { t, type Lang } from "@/components/proto/dict"
 import { parametre } from "./capable"
 import { INTRO, RAILS, depart, marqueVue, suivant } from "./machine"
 import Ciel, { CIEL_HDR, VOITURE } from "./ciel"
-import Rue, { brume } from "./rue"
+import Rue, { RUE_GLB, brume } from "./rue"
 import Vol, { VOL_MS, type Trajectoire } from "./vol"
 import Seuil, { SEUIL_MS } from "./seuil"
 import { Pouls, cockpitVide } from "./habitacle"
@@ -146,6 +146,10 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
   const [rendu] = useState(renduVoulu)
   const [effetsPrets, setEffetsPrets] = useState(rendu === "a")
   const surEffetsPrets = useCallback(() => setEffetsPrets(true), [])
+  /* la rue ne se monte qu'après le composer : son GLB part dès maintenant */
+  useEffect(() => {
+    if (rendu !== "a") useGLTF.preload(RUE_GLB)
+  }, [rendu])
   /* le ZOOM sur la dalle (hub/horloge/stats, machine à l'habitacle) et
      les feux de détresse — des états d'ÉCRAN, pas de navigation : la
      machine garde GPS/CHOIX/MUSIQUES/DÉPART, l'écran garde son poste */

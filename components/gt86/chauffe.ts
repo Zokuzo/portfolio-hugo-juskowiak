@@ -29,7 +29,9 @@ export function compileEnSolo(
   const cibleAvant = gl.getRenderTarget()
   const horsEcran = new THREE.WebGLRenderTarget(1, 1)
   try {
-    const versEcran = gl.compileAsync(sujet, camera, scene)
+    /* en b|c (prototype #46, #59), rien de la rue ne se peint à l'écran :
+       la variante écran serait compilée pour rien */
+    const versEcran = cibleDeChauffe ? null : gl.compileAsync(sujet, camera, scene)
     /* le verre du décor (KHR_materials_transmission) déclenche la passe de
        transmission : les opaques y sont redessinés dans une cible hors
        écran, sortie linéaire sans tone mapping, donc une DEUXIÈME variante

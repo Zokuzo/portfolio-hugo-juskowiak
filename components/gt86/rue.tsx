@@ -6,6 +6,7 @@ import { useGLTF, useTexture } from "@react-three/drei"
 import * as THREE from "three"
 import type { Trajectoire } from "./vol"
 import { compileEnSolo, rendEnSolo } from "./chauffe"
+import { fondPourLeRendu } from "./prototype-rendu"
 import {
   ASSISE,
   TEXTURES_HABITACLE,
@@ -642,8 +643,14 @@ const SKYLINE = {
 function Fond() {
   const [ciel, ligne] = useMemo(
     () => [
-      new THREE.ShaderMaterial({ ...CIEL_NUIT, side: THREE.BackSide, depthWrite: false }),
-      new THREE.ShaderMaterial({ ...SKYLINE, side: THREE.BackSide }),
+      /* prototype (#46, #59) : en b|c, sortie linéaire pour le composer */
+      new THREE.ShaderMaterial({
+        ...CIEL_NUIT,
+        fragmentShader: fondPourLeRendu(CIEL_NUIT.fragmentShader),
+        side: THREE.BackSide,
+        depthWrite: false,
+      }),
+      new THREE.ShaderMaterial({ ...SKYLINE, fragmentShader: fondPourLeRendu(SKYLINE.fragmentShader), side: THREE.BackSide }),
     ],
     [],
   )

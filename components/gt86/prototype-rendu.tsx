@@ -70,6 +70,29 @@ function MateriauBasique({ carte, couleur }: { carte: THREE.Texture; couleur: TH
   return <meshBasicMaterial map={carte} color={couleur} side={THREE.BackSide} depthWrite={false} fog={false} />
 }
 
+/* LE FOND DE LA RUE (ciel nocturne, skyline) écrit ses couleurs en sRVB
+   brut, sans conversion, comme le voile : à l'écran (a) elles sortent
+   telles quelles. Dans la cible LINÉAIRE du composer, l'encodage final
+   les relevait d'un cran (0,022 devient 0,16) : le ciel noir entre les
+   tours passait au lavande, et le pare-brise de l'habitacle montrait une
+   rue grise. En b et c, on les ramène donc en linéaire avant d'écrire.
+   En a, le shader reste celui d'avant, à l'octet près. */
+const SRVB_VERS_LINEAIRE = `
+vec3 srvbVersLineaire(vec3 c) {
+  return mix(pow((c + 0.055) / 1.055, vec3(2.4)), c / 12.92, vec3(lessThanEqual(c, vec3(0.04045))));
+}
+`
+export function fondPourLeRendu(fragment: string): string {
+  if (renduVoulu() === "a") return fragment
+  const fin = fragment.lastIndexOf("}")
+  return (
+    SRVB_VERS_LINEAIRE +
+    fragment.slice(0, fin) +
+    "  gl_FragColor.rgb = srvbVersLineaire(gl_FragColor.rgb);\n" +
+    fragment.slice(fin)
+  )
+}
+
 /* ---------------------------------------------------------------------
    LA PASSE D'EFFETS. Les deux paquets ne partent qu'en b et c : import
    dynamique derrière React.lazy, la variante a ne télécharge pas un
@@ -97,7 +120,6 @@ const COUCHE_VOILE = 31
    programmes des effets, la seconde prouve qu'ils sont prêts (même
    règle que le quad du voile) */
 const IMAGES_AVANT_PRET = 2
-const TAILLE_CHAUFFE = 64
 
 const TAILLE_LUT = 32
 /* le rose du couchant, en sRVB : ombres vers le lavande, hautes
@@ -208,13 +230,16 @@ function useVoileHorsComposer() {
    dans la cible du composer (chauffeDans) */
 function useSignalePret(composer: RefObject<Composer | null>, surPret: () => void) {
   const images = useRef(0)
-  /* le pilote prépare ses variantes par FORMAT de cible, pas par taille :
-     une petite cible au format du composer (flottante, MSAA, profondeur)
-     les chauffe sans payer le rendu de la rue en plein écran */
+  /* une cible au format du composer (flottante, MSAA, profondeur), et à
+     la taille de l'écran : three r169 cale sa cible de transmission (le
+     verre du décor) sur la vue courante. Une petite cible la laissait
+     petite pendant tout le ciel, et la première image de la rue la
+     réallouait en plein écran, en pleine bascule */
   const cibleDeChauffe = useMemo(
-    () => new THREE.WebGLRenderTarget(TAILLE_CHAUFFE, TAILLE_CHAUFFE, { type: THREE.HalfFloatType, samples: MSAA }),
+    () => new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: MSAA }),
     [],
   )
+  const gl = useThree((s) => s.gl)
   useEffect(
     () => () => {
       chauffeDans(null)
@@ -229,6 +254,8 @@ function useSignalePret(composer: RefObject<Composer | null>, surPret: () => voi
     if (!c || c.passes.length < 2) return
     images.current++
     if (images.current < IMAGES_AVANT_PRET) return
+    const taille = gl.getDrawingBufferSize(new THREE.Vector2())
+    cibleDeChauffe.setSize(taille.x, taille.y)
     chauffeDans(cibleDeChauffe)
     surPret()
   }, 2)
