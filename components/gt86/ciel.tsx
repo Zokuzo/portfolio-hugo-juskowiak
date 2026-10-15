@@ -208,9 +208,9 @@ export default function Ciel({
   return (
     <>
       {/* L'IBL vit HORS du groupe masquable et reste montée À VIE : au
-          démontage, `<Environment>` de drei dispose la texture partagée que
-          le cache suspend-react continuerait de servir — un remontage
-          rendrait le dôme noir. Le sous-arbre ne se démonte donc jamais,
+          démontage, `<Environment>` de drei dispose sa texture HDR que le
+          cache suspend-react continuerait de servir : un remontage rendrait
+          l'IBL noire (reflets éteints). Le sous-arbre ne se démonte donc jamais,
           seul `visible` bascule. Les Lightformer sont cuits dans la cubemap
           (résolution 512), ce ne sont pas des lumières de scène : le ciel
           brumeux n'a rien de net à mirer, ces lames découpent des éclats

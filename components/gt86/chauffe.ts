@@ -30,8 +30,11 @@ export function compileEnSolo(
   const horsEcran = new THREE.WebGLRenderTarget(1, 1)
   try {
     /* Seule la variante hors écran se compile ici : rien de la rue ne se
-       peint à l'écran, la scène passe par la cible du composer (#46,
-       #59), dont la variante vient de rendEnSolo. Le verre du décor
+       peint à l'écran. Toute cible hors écran (transmission du verre,
+       cible du composer) donne la même variante, sortie linéaire sans
+       tone mapping : cette compilation couvre donc aussi le composer
+       (#46, #59). rendEnSolo n'y ajoute que la préparation du pilote
+       pour le format de la cible. Le verre du décor
        (KHR_materials_transmission) déclenche la passe de transmission :
        les opaques y sont redessinés dans une cible hors écran, sortie
        linéaire sans tone mapping. Une cible posée pendant la compilation
