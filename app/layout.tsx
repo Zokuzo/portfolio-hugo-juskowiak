@@ -1,15 +1,6 @@
 import type React from "react"
 import type { Metadata } from "next"
-import {
-  Anton,
-  Archivo,
-  Big_Shoulders_Stencil,
-  Dela_Gothic_One,
-  JetBrains_Mono,
-  Noto_Sans_JP,
-  Space_Mono,
-  Unbounded,
-} from "next/font/google"
+import { Archivo, JetBrains_Mono, Michroma, Noto_Sans_JP, Saira } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import FiltreCrt from "@/components/filtre-crt"
 import "./globals.css"
@@ -40,16 +31,14 @@ const jp = Noto_Sans_JP({
   preload: false,
 })
 
-/* PROTOTYPE #60 : les polices du nom au seuil, une famille par variante
-   (components/gt86/prototype-polices.ts). Préchargées : la fonte est en
-   cache bien avant que le nom n'apparaisse. Les perdantes partent au
-   verdict de Hugo. */
-const brut = Dela_Gothic_One({ weight: "400", subsets: ["latin"], variable: "--f-brut", display: "swap" })
-const affiche = Anton({ weight: "400", subsets: ["latin"], variable: "--f-affiche", display: "swap" })
-const large = Unbounded({ subsets: ["latin"], variable: "--f-large", display: "swap" })
-const terminal = Space_Mono({ weight: ["400", "700"], subsets: ["latin"], variable: "--f-terminal", display: "swap" })
-const pochoir = Big_Shoulders_Stencil({ subsets: ["latin"], variable: "--f-pochoir", display: "swap" })
-const policesSeuil = [brut, affiche, large, terminal, pochoir].map((police) => police.variable).join(" ")
+/* PROTOTYPE #60 : les deux familles des cartes titre du seuil qui ne
+   sont pas déjà là (components/gt86/prototype-polices.tsx). Saira avec
+   son axe `wdth` et son italique : l'italique de vitesse étirée à 125 %.
+   Préchargées : la fonte est en cache bien avant que le nom
+   n'apparaisse. Les perdantes partent au verdict de Hugo. */
+const vitesse = Saira({ subsets: ["latin"], axes: ["wdth"], style: ["normal", "italic"], variable: "--f-vitesse", display: "swap" })
+const etendue = Michroma({ weight: "400", subsets: ["latin"], variable: "--f-etendue", display: "swap" })
+const policesSeuil = [vitesse, etendue].map((police) => police.variable).join(" ")
 
 export const metadata: Metadata = {
   title: "Hugo Juskowiak | Ingénieur Full Stack & IA",

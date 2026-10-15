@@ -534,15 +534,14 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
         }}
       />
 
-      {/* la police du seuil, chauffée dès le montage : un texte invisible
-          force le décodage de la fonte bien avant SEUIL, le nom n'apparaît
-          jamais dans la police de repli */}
-      <span aria-hidden style={{ position: "absolute", opacity: 0, pointerEvents: "none" }}>
-        <span style={police.nom}>Hg</span>
-        <span style={police.titre}>Hg</span>
-        <span style={police.bouton}>Hg</span>
-        {police.etiquette && <span style={police.etiquette.style}>{police.etiquette.texte}</span>}
-      </span>
+      {/* la carte du seuil, chauffée dès le montage : une copie invisible
+          force le décodage de ses fontes (kana compris, servis par
+          unicode-range) bien avant SEUIL, le nom n'apparaît jamais dans
+          la police de repli */}
+      <div aria-hidden style={{ position: "absolute", opacity: 0, pointerEvents: "none" }}>
+        <police.Carte nom={t(lang, "gt86Nom")} titre={t(lang, "gt86Titre")} />
+        <span style={police.bouton}>{t(lang, "gt86Demarrer")}</span>
+      </div>
 
       {/* le nom du seuil (#24) : posé sur le claquement des phares, dans le
           tiers haut pour laisser la voiture au centre — opacité pilotée
@@ -560,15 +559,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
           }}
         >
           <div style={{ textAlign: "center", transform: "translateY(-15vh)" }}>
-            <div style={police.cadre}>
-              {police.etiquette && (
-                <div aria-hidden style={police.etiquette.style}>
-                  {police.etiquette.texte}
-                </div>
-              )}
-              <div style={police.nom}>{t(lang, "gt86Nom")}</div>
-              <div style={police.titre}>{t(lang, "gt86Titre")}</div>
-            </div>
+            <police.Carte nom={t(lang, "gt86Nom")} titre={t(lang, "gt86Titre")} />
           </div>
         </div>
       )}
