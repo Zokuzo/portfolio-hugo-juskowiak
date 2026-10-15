@@ -592,6 +592,10 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
           display: "grid",
           placeItems: "center",
           pointerEvents: "none",
+          /* le voile levé d'un coup (#45), les boutons attendent que la
+             transition shader ait découvert la scène avant d'apparaître */
+          opacity: voileDom ? 0 : 1,
+          transition: voileDom ? "none" : "opacity 500ms ease 450ms",
         }}
       >
         {/* La consigne du gate #21 : sous la mer de nuages, encre sombre sur
@@ -680,8 +684,8 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
             background: NUIT,
             opacity: voileDom ? 1 : 0,
             /* opaque = il MANGE les clics (un DÉMARRER invisible cliquable
-               lançait le vol sur une rue non décodée — revue) ; levé, il
-               redevient transparent aux gestes pendant son fondu */
+               lançait le vol sur une rue non décodée, vu en revue) ; levé, il
+               redevient transparent aux gestes */
             pointerEvents: voileDom ? "auto" : "none",
           }}
         >

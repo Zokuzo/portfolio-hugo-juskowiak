@@ -115,28 +115,31 @@ const float TORSION = 0.5;
 void main() {
   vec2 uv = centre();
   float coin = length(0.5 * uResolution / uResolution.y);
-  float p = adoucit(uProgres);
+  /* ease-out : la trouée s'ouvre dès le départ, sans palier où le voile
+     ne ferait que changer de teinte */
+  float p = 1.0 - pow(1.0 - uProgres, 2.0);
   vec2 q = uv * 2.6 / (1.0 + 0.9 * p);
   float volute = fbm(q + vec2(uTemps * 0.06, -uTemps * 0.04));
   float r = length(uv) / coin + (volute - 0.5) * TORSION;
-  float rayon = mix(-0.5 * TORSION - DOUX, 1.0 + 0.5 * TORSION, p);
+  float rayon = mix(-0.25 * TORSION - DOUX, 1.0 + 0.5 * TORSION, p);
   float voile = smoothstep(rayon, rayon + DOUX, r);
-  vec3 nuage = NUIT * (1.0 + 2.2 * volute) + vec3(0.02, 0.012, 0.035) * volute;
+  vec3 nuage = NUIT * (1.0 + 0.9 * volute) + vec3(0.008, 0.005, 0.014) * volute;
   /* la texture n'apparaît qu'en partant : à 0, le quad égale le voile DOM */
   vec3 couleur = mix(NUIT, nuage, smoothstep(0.0, 0.12, uProgres));
   gl_FragColor = vec4(couleur, voile);
 }
 `
 
-/* C : de gros blocs carrés tombent dans l'ordre d'une matrice de Bayer
-   8x8, de plus en plus fins ; juste avant de partir, quelques-uns
-   clignent en cyan ou en rose (la touche Y2K) */
+/* C : le voile tombe par blocs carrés dans un ordre tramé (Bayer), sur
+   NIVEAUX tailles emboîtées (chacune moitié de la précédente) ; un bloc parti ne revient jamais, ses sous-blocs partent avec lui. Juste
+   avant de partir, quelques-uns clignent en cyan ou en rose (touche Y2K) */
 const RESOLUTION = /* glsl */ `
 ${COMMUN}
-const float BLOC_MAX = 120.0;
-const float BLOC_MIN = 10.0;
-const float PAS = 10.0;
-const float FRANGE = 0.07;
+const float BLOC_MAX = 128.0;
+const int NIVEAUX = 5;
+/* part des blocs restants qu'emporte chaque niveau, le dernier vide tout */
+const float PART = 0.5;
+const float FRANGE = 0.08;
 float bayer2(vec2 a) {
   a = floor(a);
   return fract(dot(a, vec2(0.5, a.y * 0.75)));
@@ -144,18 +147,29 @@ float bayer2(vec2 a) {
 float bayer4(vec2 a) { return bayer2(0.5 * a) * 0.25 + bayer2(a); }
 float bayer8(vec2 a) { return bayer4(0.5 * a) * 0.25 + bayer2(a); }
 void main() {
-  float echelle = uResolution.y / 900.0;
-  float taille = max(BLOC_MIN, floor(mix(BLOC_MAX, BLOC_MIN, uProgres) / PAS) * PAS) * echelle;
-  vec2 bloc = floor(gl_FragCoord.xy / taille);
-  float ordre = bayer8(mod(bloc, 8.0));
-  float reste = step(uProgres, ordre);
-  float frange = (1.0 - smoothstep(0.0, FRANGE, ordre - uProgres)) * smoothstep(0.0, 0.05, uProgres);
-  float tirage = hache(bloc + floor(uProgres * 12.0));
-  vec3 cyan = vec3(0.3, 0.95, 1.0);
-  vec3 rose = vec3(1.0, 0.35, 0.75);
-  vec3 eclat = tirage < 0.5 ? cyan : rose;
-  float clignote = step(0.72, tirage) * frange;
-  gl_FragColor = vec4(mix(NUIT, eclat, clignote), reste);
+  float taille = BLOC_MAX * uResolution.y / 900.0;
+  float reste = 1.0;
+  vec3 couleur = NUIT;
+  for (int k = 0; k < NIVEAUX; k++) {
+    vec2 bloc = floor(gl_FragCoord.xy / taille);
+    /* les gros blocs suivent la trame 8x8 ; ensuite, les 4 enfants d'un
+       bloc partent en ordre Bayer 2x2 avec une phase tirée par parent :
+       une trame 8x8 à chaque niveau aligne les survivants en diagonales */
+    float ordre = k == 0
+      ? bayer8(mod(bloc, 8.0))
+      : fract(bayer2(bloc) + floor(4.0 * hache(floor(0.5 * bloc) + float(k) * 7.1)) * 0.25);
+    float local = clamp(uProgres * float(NIVEAUX) - float(k), 0.0, 1.0);
+    float seuil = local * (k == NIVEAUX - 1 ? 1.0 : PART);
+    bool actif = local > 0.0 && local < 1.0;
+    if (actif && reste > 0.0 && ordre >= seuil && ordre < seuil + FRANGE) {
+      float elu = hache(bloc + float(k) * 31.7);
+      float teinte = hache(bloc.yx + float(k) * 13.3);
+      if (elu > 0.7) couleur = teinte < 0.5 ? vec3(0.3, 0.95, 1.0) : vec3(1.0, 0.35, 0.75);
+    }
+    reste *= step(seuil, ordre);
+    taille *= 0.5;
+  }
+  gl_FragColor = vec4(couleur, reste);
 }
 `
 
@@ -206,25 +220,31 @@ export function TransitionVoile({
       }),
     [fragment],
   )
-  const interne = useRef({ phase: "repos" as Phase, imagesPeintes: 0 })
+  /* temps relatif au début du voile : clock.elapsedTime croît sans borne
+     et, au bout d'une heure, le bruit perd sa précision en float 32 bits */
+  const interne = useRef({ phase: "repos" as Phase, imagesPeintes: 0, temps: 0 })
   const couvertRef = useRef(couvert)
   couvertRef.current = couvert
   const attenduRef = useRef(relaisAttendu)
   attenduRef.current = relaisAttendu
 
-  useFrame(({ gl, clock }, delta) => {
+  useFrame(({ gl }, delta) => {
     const mesh = quad.current
     if (!mesh) return
     const i = interne.current
     const u = materiau.uniforms
     if (couvertRef.current) {
-      if (i.phase !== "couvre") i.imagesPeintes = 0
-      else if (mesh.visible) i.imagesPeintes++
+      if (i.phase !== "couvre") {
+        i.imagesPeintes = 0
+        i.temps = 0
+      } else if (mesh.visible) i.imagesPeintes++
       i.phase = "couvre"
       u.uProgres.value = 0
     } else if (i.phase === "couvre" || (i.phase === "repos" && attenduRef.current)) {
-      if (i.phase === "repos") i.imagesPeintes = 0
-      else if (mesh.visible) i.imagesPeintes++
+      if (i.phase === "repos") {
+        i.imagesPeintes = 0
+        i.temps = 0
+      } else if (mesh.visible) i.imagesPeintes++
       i.phase = "couvre"
       if (i.imagesPeintes >= IMAGES_AVANT_DEPART) {
         i.phase = "joue"
@@ -238,7 +258,8 @@ export function TransitionVoile({
     /* ponytail: caché plutôt que démonté à 1, le programme reste en cache
        pour le rideau du rejeu ; un mesh invisible ne coûte rien */
     mesh.visible = i.phase !== "repos"
-    u.uTemps.value = clock.elapsedTime
+    i.temps += delta
+    u.uTemps.value = i.temps
     u.uResolution.value.set(gl.domElement.width, gl.domElement.height)
   })
 
