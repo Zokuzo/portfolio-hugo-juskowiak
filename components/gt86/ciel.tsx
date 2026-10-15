@@ -6,6 +6,7 @@ import { Environment, Lightformer, useCursor, useGLTF } from "@react-three/drei"
 import * as THREE from "three"
 import MerDeNuages from "./mer-de-nuages"
 import type { Trajectoire } from "./vol"
+import { LamesDuCiel, carrosserieVoulue, mireLeCiel, peintureDuCiel, robePour } from "./prototype-carrosserie"
 
 /* LE CIEL — ticket #29 : le verdict « Pellicule » du gate #21, porté du
    prototype (route jetable, supprimée au #35) dans la coquille.
@@ -71,6 +72,7 @@ const PLONGEE = 9
 function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<Trajectoire> }) {
   const { scene } = useGLTF(VOITURE)
   const groupe = useRef<THREE.Group>(null)
+  const scene3 = useThree((s) => s.scene)
   const [survol, setSurvol] = useState(false)
   useCursor(survol)
 
@@ -113,6 +115,8 @@ function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<
      depuis ce même GLB déjà mué — son rhabillage retrouve la peinture
      par ce nom. */
   const peinture = useMemo(() => {
+    const variante = carrosserieVoulue()
+    if (variante) return peintureDuCiel(variante)
     const p = new THREE.MeshPhysicalMaterial({
       color: ARGENT,
       metalness: 0.6,
@@ -129,15 +133,16 @@ function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<
     /* la robe couvre la carrosserie ET la jante (étoile + lit extérieur) —
        pneus, freins et visserie restent d'origine */
     const PEINTS = ["Paint", "Stern", "Aussenbeet"]
+    mireLeCiel(peinture, scene3)
     modele.traverse((o) => {
       const mesh = o as THREE.Mesh
       if (!mesh.isMesh) return
       const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
       if (mats.some((m) => PEINTS.includes(m?.name ?? ""))) {
-        mesh.material = peinture
+        mesh.material = robePour(mesh, peinture)
       }
     })
-  }, [modele, peinture])
+  }, [modele, peinture, scene3])
 
   /* la respiration — amplitude couplée au sommet du banc (-2,6) : le nez
      piqué descend à ~-2,1 au creux de la houle, plus bas le banc mange la
@@ -224,6 +229,7 @@ export default function Ciel({
         <Lightformer form="rect" intensity={12} color="#fff4e2" position={[0, 7, -3]} target={[0, 0, 0]} scale={[20, 2, 1]} />
         <Lightformer form="rect" intensity={8} color="#ffd9b0" position={[-7, 2, -7]} target={[0, 0, 0]} scale={[12, 1.5, 1]} />
         <Lightformer form="rect" intensity={4} color="#cdbce8" position={[7, -2.5, 6]} target={[0, 0, 0]} scale={[12, 1.2, 1]} />
+        {carrosserieVoulue() && <LamesDuCiel />}
       </Environment>
 
       <group visible={visible}>
