@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react"
+import { useId, type CSSProperties, type ReactNode } from "react"
 
 /* PROTOTYPE JETABLE (#60), 2e tour : trois cartes titre du seuil tirées
    du Pinterest de Hugo (la typographie de marque japonaise 1998-2006),
@@ -132,16 +132,19 @@ function CarteEcranTitre({ nom, titre }: Textes) {
 /* le trait de vitesse : un fil qui part fin à gauche, s'épaissit sous le
    nom et s'effile à droite, en chrome lui aussi */
 function TraitDeVitesse() {
+  /* id unique : la copie chauffée de scene.tsx monte la même carte, deux
+     `#vitesse` dans la page et l'url() viserait la copie invisible */
+  const degrade = useId()
   return (
     <svg aria-hidden viewBox="0 0 1000 20" preserveAspectRatio="none" style={{ width: "100%", height: 16, marginTop: 6, display: "block" }}>
       <defs>
-        <linearGradient id="vitesse" x1="0" x2="1">
+        <linearGradient id={degrade} x1="0" x2="1">
           <stop offset="0" stopColor={ACIER_BLEU} stopOpacity="0" />
           <stop offset="0.35" stopColor={ACIER_CLAIR} />
           <stop offset="1" stopColor={ACIER_BLEU} stopOpacity="0.2" />
         </linearGradient>
       </defs>
-      <polygon points="0,10 300,2 1000,6 330,14" fill="url(#vitesse)" />
+      <polygon points="0,10 300,2 1000,6 330,14" fill={`url(#${degrade})`} />
       <polygon points="420,17 760,15 1000,16 780,19" fill={ACIER_BLEU} opacity="0.6" />
     </svg>
   )
@@ -264,7 +267,7 @@ function CarteCassette({ nom, titre }: Textes) {
   return (
     <div style={{ position: "relative", display: "inline-flex", alignItems: "stretch", textAlign: "left", ...MAJUSCULES }}>
       <CasesACocher />
-      <div style={{ position: "relative", display: "flex", gap: 40, padding: "28px 26px 22px 34px", border: `1px solid ${ROSE}`, background: "rgba(18, 5, 28, 0.5)" }}>
+      <div style={{ position: "relative", display: "flex", gap: 40, padding: "28px 26px 22px 34px", border: `1px solid ${ROSE}` }}>
         <SoleilRaye />
         <div style={{ position: "relative", display: "grid", alignContent: "space-between" }}>
           <div>
@@ -275,7 +278,7 @@ function CarteCassette({ nom, titre }: Textes) {
               {titre}
             </div>
           </div>
-          <div aria-hidden style={{ marginTop: 26, display: "flex", alignItems: "baseline", gap: 14, color: ROSE }}>
+          <div aria-hidden style={{ marginTop: 26, display: "flex", alignItems: "baseline", gap: 14, color: ROSE, textShadow: `0 0 8px ${PRUNE}, 0 0 2px ${PRUNE}` }}>
             <span style={{ font: "800 clamp(16px, 1.5vw, 22px)/1 var(--f-display)", fontStretch: "125%", padding: "3px 8px 2px", border: `2px solid ${ROSE}` }}>
               HI-FI
             </span>
@@ -287,8 +290,8 @@ function CarteCassette({ nom, titre }: Textes) {
           style={{
             position: "relative",
             writingMode: "vertical-rl",
-            font: "500 clamp(13px, 1.2vw, 18px)/1 var(--f-jp)",
-            letterSpacing: "0.14em",
+            font: "500 clamp(12px, 1vw, 15px)/1 var(--f-jp)",
+            letterSpacing: "0.08em",
             color: CREME,
           }}
         >
@@ -301,23 +304,31 @@ function CarteCassette({ nom, titre }: Textes) {
 }
 
 /* le soleil couchant des pochettes vaporwave : un disque rose dont la
-   moitié basse est tranchée de bandes de plus en plus larges */
+   moitié basse est tranchée de bandes de plus en plus larges. Comme sur
+   la planche sakura, il déborde du filet par le coin haut droit, derrière
+   le katakana et jamais sous le nom : le cadre n'enferme pas tout */
 function SoleilRaye() {
+  const degrade = useId()
+  const tranches = useId()
   return (
-    <svg aria-hidden viewBox="0 0 100 100" style={{ position: "absolute", right: 70, bottom: 18, width: "min(7vw, 100px)", opacity: 0.9 }}>
+    <svg
+      aria-hidden
+      viewBox="0 0 100 100"
+      style={{ position: "absolute", right: "clamp(-80px, -5vw, -40px)", top: "-62%", width: "clamp(120px, 11vw, 180px)", opacity: 0.85 }}
+    >
       <defs>
-        <linearGradient id="soleil" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={degrade} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#ff8fd0" />
           <stop offset="1" stopColor="#d1127e" />
         </linearGradient>
-        <mask id="tranches">
+        <mask id={tranches}>
           <rect width="100" height="100" fill="white" />
           {[56, 64, 71, 77, 82, 87, 91].map((y, rang) => (
             <rect key={y} y={y} width="100" height={1 + rang * 0.6} fill="black" />
           ))}
         </mask>
       </defs>
-      <circle cx="50" cy="50" r="46" fill="url(#soleil)" mask="url(#tranches)" />
+      <circle cx="50" cy="50" r="46" fill={`url(#${degrade})`} mask={`url(#${tranches})`} />
     </svg>
   )
 }
