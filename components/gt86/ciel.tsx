@@ -6,6 +6,7 @@ import { Environment, Lightformer, useCursor, useGLTF } from "@react-three/drei"
 import { RGBELoader } from "three-stdlib"
 import * as THREE from "three"
 import MerDeNuages from "./mer-de-nuages"
+import { MateriauDome } from "./prototype-rendu"
 import type { Trajectoire } from "./vol"
 
 /* LE CIEL — ticket #29 : le verdict « Pellicule » du gate #21, porté du
@@ -213,13 +214,9 @@ export default function Ciel({
       <group visible={visible}>
         <mesh rotation-y={ROT} frustumCulled={false}>
           <sphereGeometry args={[350, 48, 32]} />
-          <meshBasicMaterial
-            map={hdr}
-            color="#d8927a"
-            side={THREE.BackSide}
-            depthWrite={false}
-            fog={false}
-          />
+          {/* PROTOTYPE (#46, #59) : le fond 4k en ?rendu=b|c, sinon ce même
+              matériau HDR 1k teinté */}
+          <MateriauDome hdr={hdr} teinte="#d8927a" />
         </mesh>
         {/* 12e retour (« la lumière n'est pas dirigée vers la voiture ») :
             la directionnelle vivait DERRIÈRE la voiture — le flanc que la

@@ -45,6 +45,17 @@ export function compileEnSolo(
   }
 }
 
+/* PROTOTYPE (#46, #59) : sous ?rendu=b|c, la scène se peint dans la
+   cible flottante multiéchantillonnée du composer, plus à l'écran. Le
+   rendu en solo s'y fait donc aussi : sans ça, la bascule ciel vers rue
+   gelait 220 ms (banc headless) alors qu'aucun programme ne s'ajoutait,
+   le temps que le pilote prépare ses variantes pour ce format de cible.
+   Nulle par défaut : la variante a peint à l'écran, comme avant. */
+let cibleDeChauffe: THREE.WebGLRenderTarget | null = null
+export function chauffeDans(cible: THREE.WebGLRenderTarget | null) {
+  cibleDeChauffe = cible
+}
+
 /* Un rendu de `sujet` seul, TOUT montré et sans culling : textures et
    tampons de géométrie partent au GPU maintenant, plus au premier passage
    dans le champ ni au premier allumage (cônes des phares, néons, poussière
@@ -74,9 +85,12 @@ export function rendEnSolo(
     pose(o, "visible", true)
     pose(o, "frustumCulled", false)
   })
+  const cibleAvant = gl.getRenderTarget()
+  if (cibleDeChauffe) gl.setRenderTarget(cibleDeChauffe)
   try {
     gl.render(scene, camera)
   } finally {
+    if (cibleDeChauffe) gl.setRenderTarget(cibleAvant)
     restaure.forEach((r) => r())
   }
 }

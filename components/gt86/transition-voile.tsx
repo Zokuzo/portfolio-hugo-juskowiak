@@ -25,6 +25,9 @@ const IMAGES_AVANT_DEPART = 2
 /* comme le vol : une image lente ne téléporte pas la course */
 const DELTA_MAX = 1 / 12
 
+/* le nom du quad : le prototype de rendu (#46, #59) le sort du composer */
+export const NOM_VOILE = "voile-levee"
+
 const REDUIT =
   typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
 
@@ -170,7 +173,7 @@ export function TransitionVoile({
   })
 
   return (
-    <mesh ref={quad} visible={false} frustumCulled={false} renderOrder={1e6} material={materiau}>
+    <mesh ref={quad} name={NOM_VOILE} visible={false} frustumCulled={false} renderOrder={1e6} material={materiau}>
       <planeGeometry args={[2, 2]} />
     </mesh>
   )

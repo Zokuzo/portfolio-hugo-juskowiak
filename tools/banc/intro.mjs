@@ -5,6 +5,9 @@
      npm run banc:intro -- --runs 5 --label avant-fix
      options : --build (force le build)  --attente <ms> (CIEL avant le clic,
                défaut 1500)  --repos <ms> (habitacle observé, défaut 3000)
+               --rendu b|c (prototype #46, #59 : ?rendu= sur /)
+               --sans-tete (headless gl-egl : ordre de grandeur RELATIF
+               entre variantes, jamais une mesure de cadence)
 
    La question : de « chargement fini » (le voile CHARGEMENT se lève,
    data-pret=1, c'est t0) jusqu'à l'habitacle posé, combien durent les
@@ -48,6 +51,9 @@ const LABEL = opt.label ?? "baseline"
 const ATTENTE_CIEL_MS = +(opt.attente ?? 1500)
 const REPOS_HABITACLE_MS = +(opt.repos ?? 3000)
 const FENETRE = { largeur: 1600, hauteur: 900 }
+const RENDU = opt.rendu ? `?rendu=${opt.rendu}` : ""
+const SANS_TETE = Boolean(opt["sans-tete"])
+const GPU_HEADLESS = ["--use-angle=gl-egl", "--enable-gpu", "--ignore-gpu-blocklist"]
 const SEUILS_MS = [33, 50]
 /* sans ces réglages un Chrome piloté en CDP se dit sans pointeur et la
    garde de capacité (pointeur + ≥ 768 px + WebGL2) refuse la 3D */
@@ -173,13 +179,13 @@ function portLibre() {
 async function passe(base) {
   const { cdp, ferme } = await lanceChrome({
     nom: "banc-intro",
-    tete: true,
-    args: [`--window-size=${FENETRE.largeur},${FENETRE.hauteur}`, POINTEUR_DECLARE],
+    tete: !SANS_TETE,
+    args: [`--window-size=${FENETRE.largeur},${FENETRE.hauteur}`, POINTEUR_DECLARE, ...(SANS_TETE ? GPU_HEADLESS : [])],
   })
   try {
     await cdp.envoie("Page.enable")
     await cdp.envoie("Page.addScriptToEvaluateOnNewDocument", { source: ENREGISTREUR })
-    await cdp.envoie("Page.navigate", { url: base + "/" })
+    await cdp.envoie("Page.navigate", { url: base + "/" + RENDU })
     const etat = () => cdp.evalue(`document.querySelector("[data-etat]")?.dataset.etat ?? null`)
 
     await attends(async () => (await cdp.evalue(`document.querySelector("[data-etat]")?.dataset.pret`)) === "1",

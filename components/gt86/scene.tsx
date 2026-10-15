@@ -19,6 +19,7 @@ import { PLAYLISTS, PROFIL_SPOTIFY, creeEcran, type Ecran, type ModeEcran, type 
 import { MoteurSpotify, RythmeAmp, type CommandesSpotify } from "./spotify"
 import { policeVoulue } from "./prototype-polices"
 import { TransitionVoile } from "./transition-voile"
+import { EffetsDuRendu, renduVoulu } from "./prototype-rendu"
 
 /* LES ASSETS ET LEUR CASCADE — ticket #28.
 
@@ -140,6 +141,11 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
   const [fpsVoulu] = useState(() => new URLSearchParams(window.location.search).has("fps"))
   const [nodepart] = useState(() => new URLSearchParams(window.location.search).has("nodepart"))
   const [police] = useState(policeVoulue)
+  /* PROTOTYPE (#46, #59) : ?rendu=b|c pose le composer, dont la chauffe
+     retient le rideau comme celle de la rue */
+  const [rendu] = useState(renduVoulu)
+  const [effetsPrets, setEffetsPrets] = useState(rendu === "a")
+  const surEffetsPrets = useCallback(() => setEffetsPrets(true), [])
   /* le ZOOM sur la dalle (hub/horloge/stats, machine à l'habitacle) et
      les feux de détresse — des états d'ÉCRAN, pas de navigation : la
      machine garde GPS/CHOIX/MUSIQUES/DÉPART, l'écran garde son poste */
@@ -342,7 +348,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
      ne mange AUCUN clic, et ne concerne que le chemin d'intro. */
   const [ruePrete, setRuePrete] = useState(false)
   const surRuePrete = useCallback(() => setRuePrete(true), [])
-  const chargePret = cielPret && ruePrete
+  const chargePret = cielPret && ruePrete && effetsPrets
   const [chargeVisible, setChargeVisible] = useState(false)
   /* le RIDEAU du rejeu (11e retour : « revoir la scène doit avoir un
      chargement ») : tout est déjà décodé au ↺, mais le ciel reprenait
@@ -468,7 +474,8 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
         /* alpha:false : la toile est OPAQUE (scene.background est posé) —
            le compositeur n'a plus à la fondre sur le DOM, c'est une frame
            moins chère sur beaucoup de GPU */
-        gl={{ powerPreference: "high-performance", antialias: true, alpha: false }}
+        /* le composer (prototype #46, #59) porte son propre MSAA */
+        gl={{ powerPreference: "high-performance", antialias: rendu === "a", alpha: false }}
         camera={{ position: [0, 0, 6], fov: 45 }}
         onCreated={(st) => {
           st.scene.background = new THREE.Color(NUIT)
@@ -499,7 +506,8 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
             vol={vol}
           />
         </Suspense>
-        {(cielPret || etat !== "CIEL") && (
+        {/* prototype (#46, #59) : en b|c, la rue attend aussi le composer */}
+        {((cielPret && effetsPrets) || etat !== "CIEL") && (
           <Suspense fallback={null}>
             <Rue
               visible={enRue || (etat !== "CIEL" && etat !== "ATTERRISSAGE")}
@@ -525,6 +533,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
             />
           </Suspense>
         )}
+        {rendu !== "a" && <EffetsDuRendu rendu={rendu} surPret={surEffetsPrets} />}
         {fpsVoulu && <Stats />}
         <RythmeAmp actif={etat === "SPOTIFY"} ecran={ecran} />
       </Canvas>
