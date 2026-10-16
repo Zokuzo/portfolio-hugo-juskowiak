@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MutableRefObject } from "react"
+import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState, type MutableRefObject } from "react"
 import { useFrame, useLoader, useThree } from "@react-three/fiber"
 import { Environment, Lightformer, useCursor, useGLTF } from "@react-three/drei"
 import * as THREE from "three"
@@ -159,7 +159,9 @@ function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<
   )
 }
 
-export default function Ciel({
+export default memo(Ciel)
+
+function Ciel({
   visible,
   surClic,
   surPret,
@@ -176,6 +178,25 @@ export default function Ciel({
   const fond = useLoader(THREE.TextureLoader, CIEL_4K)
   fond.colorSpace = THREE.SRGBColorSpace
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
+
+  /* LES ÉCLATS CUITS UNE FOIS (#42, #62). drei recuit la cubemap dès que
+     ses enfants changent d'identité : neufs à chaque rendu de Ciel (la
+     bascule de `visible`, par exemple), ils redessinaient 6 faces de 512²
+     et three r169 régénérait la PMREM dans l'ancienne cible sans réallouer
+     ses plans de LOD, laissés à la taille d'une équirect de nuit : les
+     reflets nets du verre et du vernis sortaient vides. Mémoïsés, ils ne
+     sont cuits qu'au montage. */
+  const eclats = useMemo(
+    () => (
+      <>
+        <Lightformer form="rect" intensity={12} color="#fff4e2" position={[0, 7, -3]} target={[0, 0, 0]} scale={[20, 2, 1]} />
+        <Lightformer form="rect" intensity={8} color="#ffd9b0" position={[-7, 2, -7]} target={[0, 0, 0]} scale={[12, 1.5, 1]} />
+        <Lightformer form="rect" intensity={4} color="#cdbce8" position={[7, -2.5, 6]} target={[0, 0, 0]} scale={[12, 1.2, 1]} />
+        <LamesDuCiel />
+      </>
+    ),
+    [],
+  )
 
   /* ce rendu n'existe qu'une fois les loaders résolus — le signal est là */
   useEffect(() => surPret(), [surPret])
@@ -209,10 +230,7 @@ export default function Ciel({
         environmentRotation={[0, ROT, 0]}
         resolution={512}
       >
-        <Lightformer form="rect" intensity={12} color="#fff4e2" position={[0, 7, -3]} target={[0, 0, 0]} scale={[20, 2, 1]} />
-        <Lightformer form="rect" intensity={8} color="#ffd9b0" position={[-7, 2, -7]} target={[0, 0, 0]} scale={[12, 1.5, 1]} />
-        <Lightformer form="rect" intensity={4} color="#cdbce8" position={[7, -2.5, 6]} target={[0, 0, 0]} scale={[12, 1.2, 1]} />
-        <LamesDuCiel />
+        {eclats}
       </Environment>
 
       <group visible={visible}>

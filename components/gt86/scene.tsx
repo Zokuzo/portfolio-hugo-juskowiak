@@ -345,6 +345,12 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
      (décodage meshopt synchrone : jamais pendant le rail) */
   const [cielPret, setCielPret] = useState(false)
   const surPret = useCallback(() => setCielPret(true), [])
+  /* stable : le ciel est mémoïsé, il ne se rend plus qu'à la bascule de
+     `visible` (#42) */
+  const surClic = useCallback(() => {
+    lanceMusique()
+    envoie({ t: "clic" })
+  }, [])
   /* L'ÉCRAN DE CHARGEMENT (7e retour #33) : tant que ciel ET rue ne sont
      pas décodés, un voile CHARGEMENT couvre le dôme — l'animation ne se
      découvre que prête. Depuis le #44 « prête » veut dire GPU CHAUD : la
@@ -508,7 +514,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
         <Suspense fallback={null}>
           <Ciel
             visible={etat === "CIEL" || (etat === "ATTERRISSAGE" && !enRue)}
-            surClic={() => (lanceMusique(), envoie({ t: "clic" }))}
+            surClic={surClic}
             surPret={surPret}
             vol={vol}
           />
