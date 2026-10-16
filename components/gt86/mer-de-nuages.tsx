@@ -3,14 +3,28 @@
 import { useMemo, useRef } from "react"
 import { useFrame } from "@react-three/fiber"
 import * as THREE from "three"
-import { ventSurNuages } from "./prototype-effets"
 
-/* La nappe de nuages raymarchée (FBM 2D + tranche verticale, 20 pas), portée
+/* La nappe de nuages raymarchée (FBM 2D + tranche verticale, 14 pas), portée
    telle quelle du prototype #21 (route jetable, supprimée au #35). Elle
    sert de sol OU de plafond (sens), et la couverture seuille le FBM pour
    tailler des masses distinctes avec du ciel entre elles, au lieu d'un tapis.
    Pas de garde prefers-reduced-motion ici : `capable.ts` interdit le montage
-   de l'expérience entière sous reduce. */
+   de l'expérience entière sous reduce.
+
+   LE VENT (#47) : la nappe dérive et sa houle la déforme. Pour le payer,
+   elle a maigri : 14 pas au lieu de 20, chacun plus opaque (même épaisseur
+   optique totale), et la sonde solaire lit un FBM à 2 octaves au lieu de 4. */
+
+/* la dérive (unités de bruit par seconde) : ~2,7 m/s sur le banc du bas,
+   le vent d'ouest pousse vers la caméra ; la houle tourne lentement */
+const DERIVE = "vec2(0.09, 0.035)"
+const HOULE_VITESSE = 0.06
+const HOULE_AMPLEUR = 0.55
+/* le raymarch du #21 marchait en 20 pas ; l'opacité par pas est
+   recomposée pour garder la même épaisseur optique totale en 14 */
+const PAS_ORIGINE = 20
+const PAS = 14
+
 export default function MerDeNuages({
   soleil,
   crete = "#ffce8f",
@@ -88,34 +102,53 @@ export default function MerDeNuages({
             }
             return v;
           }
-          /* densité : FBM horizontal seuillé par la couverture (des masses,
-             pas un tapis), niveau interpolé entre fond et sommet */
-          float densite(vec3 p) {
-            float n = fbm(p.xz * uEchelle + vec2(uTemps * 0.012, uTemps * 0.004));
+          float fbmGrossier(vec2 p) {
+            return 0.5 * bruit(p) + 0.25 * bruit(p * 2.03 + vec2(17.0, 31.0)) + 0.094;
+          }
+          /* le vent : calculé UNE fois par fragment, au point d'entrée sur
+             la nappe, puis appliqué à tous les pas. La tranche traversée
+             par un rayon est courte devant une masse, l'erreur ne se voit
+             pas et le vent ne coûte que 2 bruits par pixel. */
+          vec2 gVent;
+          /* l'épaisseur pour un FBM donné : seuillée par la couverture (des
+             masses, pas un tapis), niveau interpolé entre fond et sommet */
+          float epaisseur(float n, vec3 p) {
             n = smoothstep(uCouverture, 1.0, n);
             float niveau = mix(uFond, uSommet, n);
             return uSens > 0.0
               ? smoothstep(p.y, p.y + 1.2, niveau)
               : smoothstep(niveau - 1.2, niveau, p.y);
           }
+          float densite(vec3 p) {
+            return epaisseur(fbm(p.xz * uEchelle + gVent), p);
+          }
+          /* la sonde solaire n'a pas besoin du détail fin */
+          float densiteGrossiere(vec3 p) {
+            return epaisseur(fbmGrossier(p.xz * uEchelle + gVent), p);
+          }
           void main() {
+            vec2 q = vMonde.xz * uEchelle * 0.6;
+            gVent = uTemps * ${DERIVE} + ${HOULE_AMPLEUR.toFixed(2)} * (vec2(
+              bruit(q + uTemps * ${HOULE_VITESSE.toFixed(3)}),
+              bruit(q + vec2(5.2, 1.3) - uTemps * ${HOULE_VITESSE.toFixed(3)})
+            ) - 0.5);
             vec3 dir = normalize(vMonde - cameraPosition);
             if (dir.y * uSens > -0.005) discard;
             vec3 p = vMonde;
-            float pas = abs(uSommet - uFond) / 20.0 / max(abs(dir.y), 0.12);
+            float pas = abs(uSommet - uFond) / ${PAS}.0 / max(abs(dir.y), 0.12);
             pas = min(pas, 6.0);
             /* départ dithéré : casse les stries en escalier du raymarch */
             p += dir * pas * hash(gl_FragCoord.xy);
             vec3 soleil = normalize(uSoleil);
             float transmis = 1.0;
             vec3 acc = vec3(0.0);
-            for (int k = 0; k < 20; k++) {
+            for (int k = 0; k < ${PAS}; k++) {
               float d = densite(p);
               if (d > 0.01) {
-                float versSoleil = densite(p + soleil * 1.6);
+                float versSoleil = densiteGrossiere(p + soleil * 1.6);
                 float eclat = clamp(d - versSoleil, 0.0, 1.0);
                 vec3 c = mix(uOmbre, uCrete, eclat * 2.2 + 0.12);
-                float a = d * 0.38;
+                float a = 1.0 - pow(1.0 - d * 0.38, ${(PAS_ORIGINE / PAS).toFixed(3)});
                 acc += c * a * transmis;
                 transmis *= 1.0 - a;
                 if (transmis < 0.03) break;
@@ -138,7 +171,6 @@ export default function MerDeNuages({
       }),
     [soleil, crete, ombre, loin, sommet, fond, sens, couverture, echelle],
   )
-  ventSurNuages(materiau)
   const ref = useRef(materiau)
   ref.current = materiau
   useFrame((etat) => {
