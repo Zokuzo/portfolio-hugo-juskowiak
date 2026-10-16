@@ -116,7 +116,7 @@ export default function HubMaison() {
                     {p.liens?.map((l) => (
                       <a key={l.url} href={l.url} target="_blank" rel="noreferrer">
                         {l.role}
-                        {l.note ? ` — ${l.note}` : ""}
+                        {l.note ? ` (${l.note})` : ""}
                         {/* la flèche est un INDICE, pas un mot : dans le nom
                             accessible elle s'annonce « flèche nord-est » */}
                         <span aria-hidden="true"> ↗</span>
@@ -147,7 +147,7 @@ export default function HubMaison() {
               <div className="m-amp-tete">
                 <span>{t(lang, "hubMaisonAmp")}</span>
                 <span>
-                  {pistes.length} {t(lang, "hubMaisonPistes")} — {duree(t0, t1)}
+                  {pistes.length} {t(lang, "hubMaisonPistes")} · {duree(t0, t1)}
                 </span>
               </div>
               <ol className="m-pistes">

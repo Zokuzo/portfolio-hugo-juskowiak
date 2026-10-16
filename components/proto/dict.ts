@@ -71,8 +71,8 @@ const DICT = {
   gt86ChargerSpotify: { fr: "cliquer pour écouter via Spotify", en: "click to listen via Spotify" },
   gt86OuvrirSpotify: { fr: "ouvrir dans Spotify ↗", en: "open in Spotify ↗" },
   gt86SpotifyBloque: {
-    fr: "l'embed n'a pas répondu — écouter directement :",
-    en: "the embed didn't respond — listen directly:",
+    fr: "l'embed n'a pas répondu, écouter directement :",
+    en: "the embed didn't respond, listen directly:",
   },
   gt86Date: { fr: "mar. 19 août", en: "Tue, Aug 19" },
   status: {
@@ -80,8 +80,8 @@ const DICT = {
     en: "Employed · France",
   },
   plateLabel: {
-    fr: "Unité 001 — Plaque d'identification",
-    en: "Unit 001 — Identification plate",
+    fr: "Unité 001 · Plaque d'identification",
+    en: "Unit 001 · Identification plate",
   },
   scroll: {
     fr: "Défiler",
@@ -134,18 +134,18 @@ const DICT = {
     ],
   },
   timelineLabel: {
-    fr: "Parcours — 2022 / 2026",
-    en: "Track record — 2022 / 2026",
+    fr: "Parcours · 2022 / 2026",
+    en: "Track record · 2022 / 2026",
   },
 
   /* — rails de gouttière (texte vertical) — */
   railL: {
-    fr: "Hugo Juskowiak — Ingénieur Full Stack & IA — France — En service depuis 2022",
-    en: "Hugo Juskowiak — Full Stack & AI Engineer — France — In service since 2022",
+    fr: "Hugo Juskowiak | Ingénieur Full Stack & IA | France | En service depuis 2022",
+    en: "Hugo Juskowiak | Full Stack & AI Engineer | France | In service since 2022",
   },
   railR: {
-    fr: "FR · EN · ES · JP — ML · Data · Systèmes distribués — REF.0043-B",
-    en: "FR · EN · ES · JP — ML · Data · Distributed systems — REF.0043-B",
+    fr: "FR · EN · ES · JP | ML · Data · Systèmes distribués | REF.0043-B",
+    en: "FR · EN · ES · JP | ML · Data · Distributed systems | REF.0043-B",
   },
 
   /* — tampon d'en-service — */
@@ -181,8 +181,8 @@ const DICT = {
     en: "Powerlifting · Multilingual",
   },
   offdutyDesc: {
-    fr: "Disponibilité — sur demande.",
-    en: "Availability — on request.",
+    fr: "Disponibilité : sur demande.",
+    en: "Availability: on request.",
   },
 
   /* — mention légale de pied —
@@ -192,8 +192,8 @@ const DICT = {
      liens, vit dans public/voiture/CREDIT.txt — une ligne de pied ne
      peut pas porter trois URL sans se saborder. */
   legal: {
-    fr: "Planche technique — document de présentation · Hugo Juskowiak · Ingénieur Full Stack & IA · France · FR/EN/ES/JP · REF.0043-B · REV.2 · 2026 · Modèle 3D McLaren P1 : bohmerang — CC BY-NC-SA 4.0",
-    en: "Technical plate — presentation document · Hugo Juskowiak · Full Stack & AI Engineer · France · FR/EN/ES/JP · REF.0043-B · REV.2 · 2026 · McLaren P1 3D model: bohmerang — CC BY-NC-SA 4.0",
+    fr: "Planche technique, document de présentation · Hugo Juskowiak · Ingénieur Full Stack & IA · France · FR/EN/ES/JP · REF.0043-B · REV.2 · 2026 · Modèle 3D McLaren P1 : bohmerang (CC BY-NC-SA 4.0)",
+    en: "Technical plate, presentation document · Hugo Juskowiak · Full Stack & AI Engineer · France · FR/EN/ES/JP · REF.0043-B · REV.2 · 2026 · McLaren P1 3D model: bohmerang (CC BY-NC-SA 4.0)",
   },
   ref: { fr: "REF.0043-B / REV.2 / 2026", en: "REF.0043-B / REV.2 / 2026" },
 
@@ -213,15 +213,15 @@ const DICT = {
      convertir le code généré par IA en leçons (on refuse de livrer ce
      qu'on ne comprend pas). Si la formulation ne lui ressemble pas,
      c'est ici qu'on la corrige — un seul endroit. */
-  traceIndex: { fr: "01 — Méthode", en: "01 — Method" },
+  traceIndex: { fr: "01 · Méthode", en: "01 · Method" },
   traceNum: { fr: "01", en: "01" },
   traceTitle: {
     fr: "Manière de travailler",
     en: "How I work",
   },
   traceNote: {
-    fr: "Six étapes, dans cet ordre. Celle du milieu est la seule qui coûte du temps sans produire de code — c'est aussi la seule qui empêche d'en écrire pour rien.",
-    en: "Six steps, in this order. The middle one is the only one that costs time without producing code — and the only one that stops you writing code for nothing.",
+    fr: "Six étapes, dans cet ordre. Celle du milieu est la seule qui coûte du temps sans produire de code, et c'est aussi la seule qui empêche d'en écrire pour rien.",
+    en: "Six steps, in this order. The middle one is the only one that costs time without producing code, and the only one that stops you writing code for nothing.",
   },
   traceUnit: { fr: "Unité 01", en: "Unit 01" },
   /* Le compteur d'étapes doit être NOMMÉ : sans libellé il s'affichait
@@ -230,8 +230,8 @@ const DICT = {
      la même grandeur. */
   traceEtape: { fr: "Étape", en: "Step" },
   traceRail: {
-    fr: "Unité 01 — Méthode — Manière de travailler — REF.0043-B / REV.2",
-    en: "Unit 01 — Method — How I work — REF.0043-B / REV.2",
+    fr: "Unité 01 | Méthode | Manière de travailler | REF.0043-B / REV.2",
+    en: "Unit 01 | Method | How I work | REF.0043-B / REV.2",
   },
   traceJp: { fr: "仕事の進め方", en: "仕事の進め方" },
   /* Il n'y a PAS de légende d'états ici, et c'est délibéré : elle
@@ -278,20 +278,20 @@ const DICT = {
   ovJp: { fr: "正投影図", en: "正投影図" },
   ovIndex: { fr: "06", en: "06" },
   ovNum: { fr: "06", en: "06" },
-  ovLigne: { fr: "06 — Vues", en: "06 — Views" },
+  ovLigne: { fr: "06 · Vues", en: "06 · Views" },
   /* [repère, nom de la vue, angle de prise] */
   ovViews: {
     fr: [
       ["A", "Dessus", "Projection horizontale"],
       ["B", "Face", "Projection frontale"],
       ["C", "Profil", "Projection latérale"],
-      ["D", "Matière", "Rendu — surface polie"],
+      ["D", "Matière", "Rendu : surface polie"],
     ],
     en: [
       ["A", "Top", "Horizontal projection"],
       ["B", "Front", "Frontal projection"],
       ["C", "Side", "Lateral projection"],
-      ["D", "Material", "Render — polished surface"],
+      ["D", "Material", "Render: polished surface"],
     ],
   },
   ovScale: { fr: "Éch. 1:1", en: "Scale 1:1" },
@@ -301,8 +301,8 @@ const DICT = {
     en: "Three standard projections and one material render. Continuous line carries the visible edge, dashed the hidden edge, chain-dotted the centre. The dimension is the plate's only assertion.",
   },
   ovRail: {
-    fr: "Unité 06 — Planche de vues — REF.0043-B / REV.2 — Éch. 1:1",
-    en: "Unit 06 — View plate — REF.0043-B / REV.2 — Scale 1:1",
+    fr: "Unité 06 | Planche de vues | REF.0043-B / REV.2 | Éch. 1:1",
+    en: "Unit 06 | View plate | REF.0043-B / REV.2 | Scale 1:1",
   },
 
   /* — 05 TÉLÉMÉTRIE : le routeur multi-modèle —
@@ -321,7 +321,7 @@ const DICT = {
      ajouter de chiffres ici sans les tenir de lui.
 
      [repère, nom, précision, palier 0|1|2] */
-  telIndex: { fr: "05 — Télémétrie", en: "05 — Telemetry" },
+  telIndex: { fr: "05 · Télémétrie", en: "05 · Telemetry" },
   telNum: { fr: "05", en: "05" },
   telTitle: { fr: "Routage multi-modèle", en: "Multi-model routing" },
   telJp: { fr: "テレメトリ", en: "テレメトリ" },
@@ -333,8 +333,8 @@ const DICT = {
     en: "Six channels, one model pool, one rule: the lowest tier that holds the task. The tier is not a comfort setting, it is the invoice.",
   },
   telRead: {
-    fr: "Chaque voie monte jusqu'au palier qu'elle exige. Une seule atteint le palier lourd — c'est là que passe le coût, et c'est la seule qui mérite de le coûter.",
-    en: "Each channel rises to the tier it demands. Only one reaches the heavy tier — that is where the cost goes, and the only one worth it.",
+    fr: "Chaque voie monte jusqu'au palier qu'elle exige. Une seule atteint le palier lourd : c'est là que passe le coût, et c'est la seule qui mérite de le coûter.",
+    en: "Each channel rises to the tier it demands. Only one reaches the heavy tier: that is where the cost goes, and the only one worth it.",
   },
   telTiers: {
     fr: [
@@ -389,14 +389,14 @@ const DICT = {
     ],
   },
   telRail: {
-    fr: "Unité 05 — Télémétrie — Routage multi-modèle — OpenRouter — REF.0043-B / REV.2",
-    en: "Unit 05 — Telemetry — Multi-model routing — OpenRouter — REF.0043-B / REV.2",
+    fr: "Unité 05 | Télémétrie | Routage multi-modèle | OpenRouter | REF.0043-B / REV.2",
+    en: "Unit 05 | Telemetry | Multi-model routing | OpenRouter | REF.0043-B / REV.2",
   },
 
   /* — 02 EXPÉRIENCE : les projets, groupés par employeur —
      Le contenu vit dans parcours.ts : ce sont des enregistrements
      imbriqués, pas des chaînes. Ici, les étiquettes du gabarit. */
-  xpIndex: { fr: "02 — Expérience", en: "02 — Experience" },
+  xpIndex: { fr: "02 · Expérience", en: "02 · Experience" },
   xpNum: { fr: "02", en: "02" },
   xpTitle: { fr: "Là où j'ai travaillé", en: "Where I have worked" },
   xpJp: { fr: "職務経歴", en: "職務経歴" },
@@ -405,19 +405,19 @@ const DICT = {
      comparés. Ce qui est vrai, et plus intéressant : une manière de
      faire commune, et la contrainte que les produits se parlent. */
   xpNote: {
-    fr: "Groupés par employeur et non par projet : quatre produits d'une même maison ne partagent pas un socle de code, ils partagent une manière de faire — et une contrainte d'architecture réelle, se parler entre eux.",
-    en: "Grouped by employer rather than by project: four products from one house share no common codebase — they share a way of building, and one real architectural constraint: talking to each other.",
+    fr: "Groupés par employeur et non par projet : quatre produits d'une même maison ne partagent pas un socle de code, ils partagent une manière de faire, et une contrainte d'architecture réelle : se parler entre eux.",
+    en: "Grouped by employer rather than by project: four products from one house share no common codebase; they share a way of building, and one real architectural constraint: talking to each other.",
   },
   xpEnCours: { fr: "En poste", en: "Current" },
   xpSchema: { fr: "Arborescence", en: "Tree" },
   xpFiche: { fr: "Fiche détaillée", en: "Detailed file" },
   xpRail: {
-    fr: "Unité 02 — Expérience — Projets par employeur — REF.0043-B / REV.2",
-    en: "Unit 02 — Experience — Projects by employer — REF.0043-B / REV.2",
+    fr: "Unité 02 | Expérience | Projets par employeur | REF.0043-B / REV.2",
+    en: "Unit 02 | Experience | Projects by employer | REF.0043-B / REV.2",
   },
 
   /* — 03 ÉTUDES : le parcours en rails parallèles — */
-  etuIndex: { fr: "03 — Études", en: "03 — Studies" },
+  etuIndex: { fr: "03 · Études", en: "03 · Studies" },
   etuNum: { fr: "03", en: "03" },
   etuTitle: { fr: "Deux rails en parallèle", en: "Two rails in parallel" },
   etuJp: { fr: "学歴", en: "学歴" },
@@ -425,25 +425,25 @@ const DICT = {
     fr: "Un double diplôme n'est pas deux diplômes : ce sont deux cursus menés en même temps. Écrit en liste, ça se lit l'un après l'autre et l'information disparaît.",
     en: "A double degree is not two degrees: it is two courses run at the same time. Written as a list, they read one after the other and the information is lost.",
   },
-  etuDouble: { fr: "Double diplôme — 13 mois", en: "Double degree — 13 months" },
+  etuDouble: { fr: "Double diplôme · 13 mois", en: "Double degree · 13 months" },
   etuRail: {
-    fr: "Unité 03 — Études — ESTIA · MBDS · Hokkaido — REF.0043-B / REV.2",
-    en: "Unit 03 — Studies — ESTIA · MBDS · Hokkaido — REF.0043-B / REV.2",
+    fr: "Unité 03 | Études | ESTIA · MBDS · Hokkaido | REF.0043-B / REV.2",
+    en: "Unit 03 | Studies | ESTIA · MBDS · Hokkaido | REF.0043-B / REV.2",
   },
 
   /* — 04 ATELIER : les projets personnels — */
-  atIndex: { fr: "04 — Atelier", en: "04 — Workshop" },
+  atIndex: { fr: "04 · Atelier", en: "04 · Workshop" },
   atNum: { fr: "04", en: "04" },
   atTitle: { fr: "Ce que je construis à côté", en: "What I build on the side" },
   atJp: { fr: "個人制作", en: "個人制作" },
   atNote: {
-    fr: "Quatre projets, quatre formes différentes. Un cycle, une convergence avec vanne, un empilement, un tuyau — c'est la forme qui dit ce que le projet est.",
-    en: "Four projects, four different shapes. A cycle, a convergence with a valve, a stack, a pipe — the shape says what the project is.",
+    fr: "Quatre projets, quatre formes différentes. Un cycle, une convergence avec vanne, un empilement, un tuyau : c'est la forme qui dit ce que le projet est.",
+    en: "Four projects, four different shapes. A cycle, a convergence with a valve, a stack, a pipe: the shape says what the project is.",
   },
   atPrive: { fr: "Dépôt privé", en: "Private repository" },
   atRail: {
-    fr: "Unité 04 — Atelier — Projets personnels — REF.0043-B / REV.2",
-    en: "Unit 04 — Workshop — Personal projects — REF.0043-B / REV.2",
+    fr: "Unité 04 | Atelier | Projets personnels | REF.0043-B / REV.2",
+    en: "Unit 04 | Workshop | Personal projects | REF.0043-B / REV.2",
   },
 
   /* ================================================================
@@ -455,33 +455,33 @@ const DICT = {
      ensuite (03, la respiration), puis l'histoire, les capacités,
      l'humain, et le cartouche qui ferme le document.
      ================================================================ */
-  idxIndex: { fr: "00 — Index", en: "00 — Index" },
+  idxIndex: { fr: "00 · Index", en: "00 · Index" },
   idxNum: { fr: "00", en: "00" },
   idxTitle: { fr: "Nomenclature des feuilles", en: "Sheet index" },
   idxJp: { fr: "図面目録", en: "図面目録" },
   idxNote: {
-    fr: "Dix feuilles. Le document se lit dans l'ordre, mais chaque feuille se tient seule — c'est la différence entre un plan et un récit.",
-    en: "Ten sheets. The document reads in order, but each sheet stands alone — that is the difference between a drawing and a story.",
+    fr: "Dix feuilles. Le document se lit dans l'ordre, mais chaque feuille se tient seule : c'est la différence entre un plan et un récit.",
+    en: "Ten sheets. The document reads in order, but each sheet stands alone: that is the difference between a drawing and a story.",
   },
   /* [numéro, ancre, titre, objet de la feuille] */
   idxFeuilles: {
     fr: [
-      ["01", "trace", "Méthode", "Manière de travailler — six étapes"],
+      ["01", "trace", "Méthode", "Manière de travailler, six étapes"],
       ["02", "experience", "Expérience", "UpYourBizz · Sophia Genetics · Guill Corp · Legrand"],
       ["03", "etudes", "Études", "ESTIA · double diplôme MBDS · Hokkaido"],
       ["04", "atelier", "Atelier", "Eternal · Trading Agent · La Provence · bot"],
-      ["05", "telemetrie", "Télémétrie", "Routage multi-modèle — l'arbitrage du coût"],
+      ["05", "telemetrie", "Télémétrie", "Routage multi-modèle : l'arbitrage du coût"],
       ["06", "vues", "Vues", "Projections orthographiques et rendu de matière"],
       ["07", "specifications", "Spécifications", "Caractéristiques et classes"],
       ["08", "profil", "Profil", "Hors travail"],
       ["09", "contact", "Contact", "Références et prise de contact"],
     ],
     en: [
-      ["01", "trace", "Method", "How I work — six steps"],
+      ["01", "trace", "Method", "How I work, six steps"],
       ["02", "experience", "Experience", "UpYourBizz · Sophia Genetics · Guill Corp · Legrand"],
       ["03", "etudes", "Studies", "ESTIA · MBDS double degree · Hokkaido"],
       ["04", "atelier", "Workshop", "Eternal · Trading Agent · La Provence · bot"],
-      ["05", "telemetrie", "Telemetry", "Multi-model routing — the cost arbitrage"],
+      ["05", "telemetrie", "Telemetry", "Multi-model routing: the cost arbitrage"],
       ["06", "vues", "Views", "Orthographic projections and material render"],
       ["07", "specifications", "Specifications", "Characteristics and classes"],
       ["08", "profil", "Profile", "Off duty"],
@@ -503,7 +503,7 @@ const DICT = {
      à une échelle de 100 % qui n'existe pas ; une classe écrite est ce
      qu'un dessin technique utilise, et c'est plus juste.
      [groupe, [[désignation, classe]]] */
-  specIndex: { fr: "07 — Spécifications", en: "07 — Specifications" },
+  specIndex: { fr: "07 · Spécifications", en: "07 · Specifications" },
   specNum: { fr: "07", en: "07" },
   specTitle: { fr: "Caractéristiques", en: "Characteristics" },
   specJp: { fr: "仕様", en: "仕様" },
@@ -574,8 +574,8 @@ const DICT = {
     ],
   },
   specRail: {
-    fr: "Unité 07 — Spécifications — Caractéristiques et classes — REF.0043-B / REV.2",
-    en: "Unit 07 — Specifications — Characteristics and classes — REF.0043-B / REV.2",
+    fr: "Unité 07 | Spécifications | Caractéristiques et classes | REF.0043-B / REV.2",
+    en: "Unit 07 | Specifications | Characteristics and classes | REF.0043-B / REV.2",
   },
 
   /* — 06 OPÉRATEUR —
@@ -584,7 +584,7 @@ const DICT = {
      machine ne se raconte pas dans un tableau. Une respiration avant
      le cartouche.
      Tout vient du CV, y compris l'encadrement. Rien n'est enjolivé. */
-  opIndex: { fr: "08 — Profil", en: "08 — Profile" },
+  opIndex: { fr: "08 · Profil", en: "08 · Profile" },
   opNum: { fr: "08", en: "08" },
   opTitle: { fr: "Hors travail", en: "Off duty" },
   opJp: { fr: "余暇", en: "余暇" },
@@ -593,33 +593,33 @@ const DICT = {
     en: "Away from the code, I lift. Strength training and powerlifting, coached by a 2023 powerlifting world champion and a professional bodybuilder.",
   },
   opChute: {
-    fr: "Trois programmes de force conçus pour des pratiquants intermédiaires. Un programme d'entraînement est une spécification : une charge, une progression, une tolérance — et quelqu'un qui doit pouvoir l'exécuter sans vous.",
-    en: "Three strength programmes written for intermediate lifters. A training programme is a specification: a load, a progression, a tolerance — and someone who has to run it without you.",
+    fr: "Trois programmes de force conçus pour des pratiquants intermédiaires. Un programme d'entraînement est une spécification : une charge, une progression, une tolérance, et quelqu'un qui doit pouvoir l'exécuter sans vous.",
+    en: "Three strength programmes written for intermediate lifters. A training programme is a specification: a load, a progression, a tolerance, and someone who has to run it without you.",
   },
   /* Le second goût déclaré (issue #3) : le réglage de l'environnement.
      Sans chute vers le métier — celle du bloc force existe déjà, la
      répéter ferait une redite de procédé. */
   opDesign: {
-    fr: "L'autre goût est celui du réglage : un environnement de travail se choisit, puis s'ajuste — couleurs, typographie, chaque outil à sa place, jusqu'à ce que l'ensemble soit cohérent.",
-    en: "The other taste is tuning: a working environment is chosen, then adjusted — colors, typography, every tool in its place, until the whole is coherent.",
+    fr: "L'autre goût est celui du réglage : un environnement de travail se choisit, puis s'ajuste (couleurs, typographie, chaque outil à sa place, jusqu'à ce que l'ensemble soit cohérent).",
+    en: "The other taste is tuning: a working environment is chosen, then adjusted (colors, typography, every tool in its place) until the whole is coherent.",
   },
   opChamps: {
     fr: [
       ["Qualification", "Musculation & force athlétique"],
       ["Encadrement", "Champion du monde de powerlifting 2023 · Bodybuilder professionnel"],
-      ["Production", "3 programmes de force — pratiquants intermédiaires"],
+      ["Production", "3 programmes de force, pratiquants intermédiaires"],
       ["Langues de travail", "FR · EN · ES · JP"],
     ],
     en: [
       ["Qualification", "Strength training & powerlifting"],
       ["Coaching", "2023 powerlifting world champion · Professional bodybuilder"],
-      ["Output", "3 strength programmes — intermediate lifters"],
+      ["Output", "3 strength programmes, intermediate lifters"],
       ["Working languages", "FR · EN · ES · JP"],
     ],
   },
   opRail: {
-    fr: "Unité 08 — Profil — Hors travail — REF.0043-B / REV.2",
-    en: "Unit 08 — Profile — Off duty — REF.0043-B / REV.2",
+    fr: "Unité 08 | Profil | Hors travail | REF.0043-B / REV.2",
+    en: "Unit 08 | Profile | Off duty | REF.0043-B / REV.2",
   },
 
   /* — 07 CONTACT : LE CARTOUCHE —
@@ -632,7 +632,7 @@ const DICT = {
      e-mail et LinkedIn. Le CV porte aussi un numéro de téléphone ;
      il n'est PAS repris — publier un numéro sur une page ouverte est
      une décision qui appartient au propriétaire, pas au document. */
-  ctIndex: { fr: "09 — Contact", en: "09 — Contact" },
+  ctIndex: { fr: "09 · Contact", en: "09 · Contact" },
   ctNum: { fr: "09", en: "09" },
   ctTitle: { fr: "Prise de contact", en: "Get in touch" },
   ctJp: { fr: "表題欄", en: "表題欄" },
@@ -642,7 +642,7 @@ const DICT = {
   },
   ctChamps: {
     fr: [
-      ["Titre", "Portfolio — planche technique"],
+      ["Titre", "Portfolio, planche technique"],
       ["Dessiné par", "Hugo Juskowiak"],
       ["Fonction", "Ingénieur Full Stack & IA"],
       ["Base", "France"],
@@ -652,7 +652,7 @@ const DICT = {
       ["Feuilles", "00 à 09"],
     ],
     en: [
-      ["Title", "Portfolio — technical plate"],
+      ["Title", "Portfolio, technical plate"],
       ["Drawn by", "Hugo Juskowiak"],
       ["Function", "Full Stack & AI Engineer"],
       ["Base", "France"],
@@ -666,17 +666,17 @@ const DICT = {
     fr: [
       ["E-mail", "hugo.jskpro@outlook.fr", "mailto:hugo.jskpro@outlook.fr"],
       ["LinkedIn", "linkedin.com/in/hugo-juskowiak", "https://www.linkedin.com/in/hugo-juskowiak/"],
-      ["Dossier", "CV — format PDF", "/CV_Hugo_Juskowiak_FR.pdf"],
+      ["Dossier", "CV au format PDF", "/CV_Hugo_Juskowiak_FR.pdf"],
     ],
     en: [
       ["Email", "hugo.jskpro@outlook.fr", "mailto:hugo.jskpro@outlook.fr"],
       ["LinkedIn", "linkedin.com/in/hugo-juskowiak", "https://www.linkedin.com/in/hugo-juskowiak/"],
-      ["File", "Résumé — PDF", "/CV_Hugo_Juskowiak_FR.pdf"],
+      ["File", "Résumé (PDF)", "/CV_Hugo_Juskowiak_FR.pdf"],
     ],
   },
   ctRail: {
-    fr: "Unité 09 — Cartouche — Fin du document — REF.0043-B / REV.2",
-    en: "Unit 09 — Title block — End of document — REF.0043-B / REV.2",
+    fr: "Unité 09 | Cartouche | Fin du document | REF.0043-B / REV.2",
+    en: "Unit 09 | Title block | End of document | REF.0043-B / REV.2",
   },
 
   /* — libellés des fiches, les deux mondes (/work/[slug] et
@@ -745,10 +745,10 @@ const DICT = {
   /* Annexes de l'index : les fiches d'unité ne sont pas des feuilles du
      jeu, ce sont des pièces détachées — d'où un bloc distinct et une
      référence en U-0n. */
-  idxAnnexes: { fr: "Annexes — fiches détaillées", en: "Annexes — detailed files" },
+  idxAnnexes: { fr: "Annexes : fiches détaillées", en: "Annexes: detailed files" },
   idxAnnexesNote: {
-    fr: "Neuf pièces documentées séparément — cinq projets, quatre cursus.",
-    en: "Nine pieces documented separately — five projects, four programmes.",
+    fr: "Neuf pièces documentées séparément : cinq projets, quatre cursus.",
+    en: "Nine pieces documented separately: five projects, four programmes.",
   },
 
   /* — schéma d'architecture d'Eternal —
@@ -764,29 +764,29 @@ const DICT = {
        ce dictionnaire ne porte que des mots. */
   etnNoeuds: {
     fr: [
-      ["etat", "state.json", "interrupteur — actif : false"],
+      ["etat", "state.json", "interrupteur, actif : false"],
       ["projet", "un projet quelconque", "git diff · git log"],
-      ["contrat", "FORMAT.md", "le contrat — 8 thèmes fermés"],
+      ["contrat", "FORMAT.md", "le contrat, 8 thèmes fermés"],
       ["agent", "agent professeur", "lit le diff, écrit, pousse"],
-      ["fragment", "lecon-N.html", "le fragment — 11 fichiers"],
-      ["manifeste", "index.json", "le manifeste — 5 784 o"],
-      ["moteur", "index.html", "le moteur — 0 dépendance", "3 763 lignes · 116 fonctions"],
-      ["vue", "monde.html", "la vue — three.js r160", "aucune règle : 0 setItem"],
+      ["fragment", "lecon-N.html", "le fragment, 11 fichiers"],
+      ["manifeste", "index.json", "le manifeste, 5 784 o"],
+      ["moteur", "index.html", "le moteur, 0 dépendance", "3 763 lignes · 116 fonctions"],
+      ["vue", "monde.html", "la vue, three.js r160", "aucune règle : 0 setItem"],
     ],
     en: [
-      ["etat", "state.json", "the switch — actif: false"],
+      ["etat", "state.json", "the switch, actif: false"],
       ["projet", "any project", "git diff · git log"],
-      ["contrat", "FORMAT.md", "the contract — 8 closed themes"],
+      ["contrat", "FORMAT.md", "the contract, 8 closed themes"],
       ["agent", "professeur agent", "reads the diff, writes, pushes"],
-      ["fragment", "lecon-N.html", "the fragment — 11 files"],
-      ["manifeste", "index.json", "the manifest — 5,784 B"],
-      ["moteur", "index.html", "the engine — 0 dependency", "3,763 lines · 116 functions"],
-      ["vue", "monde.html", "the view — three.js r160", "no rule: 0 setItem"],
+      ["fragment", "lecon-N.html", "the fragment, 11 files"],
+      ["manifeste", "index.json", "the manifest, 5,784 B"],
+      ["moteur", "index.html", "the engine, 0 dependency", "3,763 lines · 116 functions"],
+      ["vue", "monde.html", "the view, three.js r160", "no rule: 0 setItem"],
     ],
   },
   etnBus: {
-    fr: ["dépôt git — Zokuzo/eternal", "base · canal multi-machine · hébergement"],
-    en: ["git repository — Zokuzo/eternal", "database · cross-machine channel · hosting"],
+    fr: ["dépôt git : Zokuzo/eternal", "base · canal multi-machine · hébergement"],
+    en: ["git repository: Zokuzo/eternal", "database · cross-machine channel · hosting"],
   },
   etnGroupes: {
     fr: [
@@ -802,26 +802,26 @@ const DICT = {
   },
   etnLegende: {
     fr: [
-      ["1", "un interrupteur, un contrat, un rédacteur — et deux fichiers déposés"],
+      ["1", "un interrupteur, un contrat, un rédacteur, et deux fichiers déposés"],
       ["2", "le dépôt est à la fois la base, le canal entre machines et l'hébergement"],
-      ["3", "deux vues, un seul moteur — le pont ne rend que des dérivés, en lecture seule"],
+      ["3", "deux vues, un seul moteur : le pont ne rend que des dérivés, en lecture seule"],
     ],
     en: [
-      ["1", "a switch, a contract, a writer — and two files dropped"],
+      ["1", "a switch, a contract, a writer, and two files dropped"],
       ["2", "the repository is the database, the cross-machine channel and the host"],
-      ["3", "two views, one engine — the bridge only returns derived values, read-only"],
+      ["3", "two views, one engine: the bridge only returns derived values, read-only"],
     ],
   },
   etnPont: {
-    fr: "iframe cachée — pont en lecture seule",
-    en: "hidden iframe — read-only bridge",
+    fr: "iframe cachée, pont en lecture seule",
+    en: "hidden iframe, read-only bridge",
   },
   /* La cote mesure l'ÉCART entre les deux vues, et cet écart vaut zéro
      règle : c'est la seule affirmation chiffrée du schéma. */
   etnCote: { fr: "1 moteur · 0 règle dupliquée", en: "1 engine · 0 duplicated rule" },
   etnTitre: {
-    fr: "Architecture d'Eternal : une chaîne d'écriture dépose deux fichiers dans un dépôt git, que deux vues du navigateur relisent — index.html porte toutes les règles, monde.html n'en porte aucune.",
-    en: "Eternal architecture: a writing chain drops two files into a git repository, which two browser views read back — index.html holds every rule, monde.html holds none.",
+    fr: "Architecture d'Eternal : une chaîne d'écriture dépose deux fichiers dans un dépôt git, que deux vues du navigateur relisent : index.html porte toutes les règles, monde.html n'en porte aucune.",
+    en: "Eternal architecture: a writing chain drops two files into a git repository, which two browser views read back: index.html holds every rule, monde.html holds none.",
   },
 
   /* — l'extrait de code de la fiche U-04 —
@@ -831,13 +831,13 @@ const DICT = {
        → 15. La recherche 02 §2 en annonçait 14 : c'est elle qui se
        trompe, et le chiffre publié ici est celui de la commande. */
   etnPontSource: {
-    fr: "index.html:3729-3758 — extrait, 3 des 15 méthodes",
-    en: "index.html:3729-3758 — excerpt, 3 of 15 methods",
+    fr: "index.html:3729-3758 : extrait, 3 des 15 méthodes",
+    en: "index.html:3729-3758: excerpt, 3 of 15 methods",
   },
   etnPontCode: { fr: CODE_PONT, en: CODE_PONT },
   etnPontNote: {
-    fr: "Tout ce que le monde 3D peut toucher tient entre ces deux accolades : des lectures et des appels au moteur, jamais l'état brut, jamais une mutation. De l'autre côté du pont, `grep -c setItem monde.html` rend 0 — la vue n'écrit rien.",
-    en: "Everything the 3D world can touch fits between those two braces: reads and calls into the engine, never the raw state, never a mutation. On the other side of the bridge, `grep -c setItem monde.html` returns 0 — the view writes nothing.",
+    fr: "Tout ce que le monde 3D peut toucher tient entre ces deux accolades : des lectures et des appels au moteur, jamais l'état brut, jamais une mutation. De l'autre côté du pont, `grep -c setItem monde.html` rend 0 : la vue n'écrit rien.",
+    en: "Everything the 3D world can touch fits between those two braces: reads and calls into the engine, never the raw state, never a mutation. On the other side of the bridge, `grep -c setItem monde.html` returns 0: the view writes nothing.",
   },
 
   /* — les cotes de la fiche U-04 —
@@ -882,14 +882,14 @@ const DICT = {
   creditVille: { fr: "« Procedural City 5 » par abhayexe", en: "“Procedural City 5” by abhayexe" },
   hubTravailSys: { fr: "TRAVAIL.SYS", en: "WORK.SYS" },
   hubBoot: {
-    fr: "session ouverte — partition montée",
-    en: "session open — partition mounted",
+    fr: "session ouverte, partition montée",
+    en: "session open, partition mounted",
   },
   hubMarquee: {
     fr: "★ PARTITION TRAVAIL ··· 4 employeurs ··· méthode en 6 étapes ··· caractéristiques et classes ··· contact en fin de session ★",
     en: "★ WORK PARTITION ··· 4 employers ··· 6-step method ··· characteristics and classes ··· contact at end of session ★",
   },
-  hubEjecter: { fr: "⏏ Éjecter — retour à l'expérience", en: "⏏ Eject — back to the experience" },
+  hubEjecter: { fr: "⏏ Éjecter : retour à l'expérience", en: "⏏ Eject: back to the experience" },
   hubFenXp: { fr: "EXPERIENCE.EXE", en: "EXPERIENCE.EXE" },
   /* TELEMETRIE.EXE a vécu une vague : « enlève le routage multimodèle
      c'est useless » (gate #36, 2026-08-26) — la décision « Télémétrie en
@@ -903,8 +903,8 @@ const DICT = {
      carré vide, le hub la DIT : une lacune de documentation se signale */
   hubAConfirmer: { fr: "à confirmer", en: "to be confirmed" },
   hubStatut: {
-    fr: "© 2026 Hugo Juskowiak — session TRAVAIL",
-    en: "© 2026 Hugo Juskowiak — WORK session",
+    fr: "© 2026 Hugo Juskowiak · session TRAVAIL",
+    en: "© 2026 Hugo Juskowiak · WORK session",
   },
   /* — le hub MAISON (#37) — la CHAMBRE au crépuscule, le miroir du
      bureau de nuit : l'OS du foyer qui démarre (boot sakura façon
@@ -914,10 +914,10 @@ const DICT = {
      clés at·, etu·, op· et ct·, repris tels quels (doctrine #20). */
   hubMaisonSys: { fr: "MAISON.SYS", en: "HOME.SYS" },
   hubMaisonBoot: {
-    fr: "démarrage du foyer — partition personnelle",
-    en: "booting home — personal partition",
+    fr: "démarrage du foyer, partition personnelle",
+    en: "booting home, personal partition",
   },
-  hubMaisonCharge: { fr: "foyer monté — 100 %", en: "home mounted — 100%" },
+  hubMaisonCharge: { fr: "foyer monté : 100 %", en: "home mounted: 100%" },
   /* « cursus », JAMAIS « diplômes » : la playlist rend les quatre
      entrées de etudes() — CPGE est une classe préparatoire et Hokkaido
      un semestre d'échange, seuls ESTIA et MBDS sont des diplômes
@@ -948,10 +948,10 @@ const DICT = {
   hubMaisonIniForce: { fr: "[FORCE]", en: "[STRENGTH]" },
   hubMaisonIniReglages: { fr: "[REGLAGES]", en: "[TUNING]" },
   hubMaisonContact: { fr: "MSGR.EXE", en: "MSGR.EXE" },
-  hubMaisonEnLigne: { fr: "hugo — en ligne", en: "hugo — online" },
+  hubMaisonEnLigne: { fr: "hugo · en ligne", en: "hugo · online" },
   hubMaisonStatut: {
-    fr: "© 2026 Hugo Juskowiak — session MAISON",
-    en: "© 2026 Hugo Juskowiak — HOME session",
+    fr: "© 2026 Hugo Juskowiak · session MAISON",
+    en: "© 2026 Hugo Juskowiak · HOME session",
   },
 
   /* l'essai C du gate #36 (pub magazine) : la petite URL de coin des

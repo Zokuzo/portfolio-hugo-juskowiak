@@ -131,8 +131,8 @@ export function FicheY2k({ slug, retour = "/work" }: { slug: string; retour?: ke
         <header className={`fy-hero${p.captures?.length ? "" : " fy-hero--court"}`}>
           {/* les coins RÉPÈTENT les méta du panneau SYSTEM dessous —
               décor de pub, soustrait aux lecteurs d'écran */}
-          <span className="fy-coin hg" aria-hidden="true">{`${t(lang, "fpCadre")} — ${p.cadre}\n${t(lang, "fpPeriode")} — ${p.periode}`}</span>
-          <span className="fy-coin hd" aria-hidden="true">{`${t(lang, "fpEtat")} — ${p.etat}`}</span>
+          <span className="fy-coin hg" aria-hidden="true">{`${t(lang, "fpCadre")} · ${p.cadre}\n${t(lang, "fpPeriode")} · ${p.periode}`}</span>
+          <span className="fy-coin hd" aria-hidden="true">{`${t(lang, "fpEtat")} · ${p.etat}`}</span>
           <span className="fy-vertical" aria-hidden="true">
             {p.jp}
           </span>

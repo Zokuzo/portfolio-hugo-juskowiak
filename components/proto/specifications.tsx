@@ -79,7 +79,7 @@ export function Specifications({ lang }: { lang: Lang }) {
                       blanc se lirait comme un défaut de rendu ; un
                       tiret se lit comme « non renseigné », ce qui est
                       exactement l'information. */}
-                  <dd className={`mono mono-xs fiche-classe${classe ? "" : " fiche-vide"}`}>{classe || "—"}</dd>
+                  <dd className={`mono mono-xs fiche-classe${classe ? "" : " fiche-vide"}`}>{classe || "-"}</dd>
                 </div>
               ))}
             </dl>

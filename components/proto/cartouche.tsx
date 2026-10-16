@@ -94,7 +94,7 @@ export function Cartouche({ lang }: { lang: Lang }) {
       {/* Marque de fin de document : la seule chose qui vient après le
           cartouche sur un plan est le bord de la feuille. */}
       <p className="mono mono-xs dim ct-fin" aria-hidden="true">
-        — fin —
+        · fin ·
       </p>
     </section>
   )

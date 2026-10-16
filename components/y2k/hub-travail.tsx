@@ -75,13 +75,13 @@ export default function HubTravail() {
       {/* — le POST : identité système — */}
       <section className="y2k-tete">
         <p className="y2k-boot">
-          {t(lang, "hubOs")} — {t(lang, "hubBoot")}
+          {t(lang, "hubOs")} &gt; {t(lang, "hubBoot")}
         </p>
         <h1 className="y2k-wordmark" data-texte={t(lang, "gt86Travail")}>
           {t(lang, "gt86Travail")}
         </h1>
         <p className="y2k-identite">
-          <strong>{t(lang, "gt86Nom")}</strong> — {t(lang, "role")}
+          <strong>{t(lang, "gt86Nom")}</strong> · {t(lang, "role")}
         </p>
         <span className="y2k-statut-chip">{t(lang, "status")}</span>
         <dl className="y2k-bios">
@@ -127,7 +127,7 @@ export default function HubTravail() {
                     <p className="y2k-xp-resume">{e.resume}</p>
                     {e.produits.map((p) => (
                       <div key={p.code} className="y2k-produit">
-                        <b>{p.nom}</b> — {p.texte}
+                        <b>{p.nom}</b> · {p.texte}
                         {p.aConfirmer && <span className="y2k-aconf">{t(lang, "hubAConfirmer")}</span>}
                         {p.fiche && <br />}
                         {p.fiche && <LienFiche slug={p.fiche}>{t(lang, "xpFiche")} ▸</LienFiche>}

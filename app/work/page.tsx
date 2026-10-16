@@ -33,7 +33,7 @@ const pixel = Silkscreen({
 })
 
 export const metadata: Metadata = {
-  title: "Travail — Hugo Juskowiak",
+  title: "Travail | Hugo Juskowiak",
   description:
     "La partition TRAVAIL : quatre employeurs, la méthode en six étapes, les caractéristiques et le contact.",
 }

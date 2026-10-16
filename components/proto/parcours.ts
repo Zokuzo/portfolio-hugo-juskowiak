@@ -94,7 +94,7 @@ const EMPLOYEURS_FR: Employeur[] = [
        contrainte réelle : ils doivent se parler. C'est ce que dit le
        résumé, plus rien d'autre. */
     resume:
-      "Quatre produits d'une même maison : pas un socle de code partagé, une même manière de faire — et une contrainte réelle, ils doivent se parler.",
+      "Quatre produits d'une même maison : pas un socle de code partagé, une même manière de faire, et une contrainte réelle : ils doivent se parler.",
     produits: [
       {
         code: "P1",
@@ -108,7 +108,7 @@ const EMPLOYEURS_FR: Employeur[] = [
         nom: "Octo",
         fiche: "octo",
         texte:
-          "Segmentation d'exports DMS pour concessionnaires automobiles. Trois populations lues séparément — clients, leads, après-vente — et une sortie en rapport plutôt qu'en tableau de bord.",
+          "Segmentation d'exports DMS pour concessionnaires automobiles. Trois populations lues séparément (clients, leads, après-vente) et une sortie en rapport plutôt qu'en tableau de bord.",
       },
       {
         code: "P3",
@@ -139,7 +139,7 @@ const EMPLOYEURS_FR: Employeur[] = [
         nom: "Prédiction d'usage mémoire",
         fiche: "prediction-memoire",
         texte:
-          "Modèle prédisant la RAM consommée par tâche — l'ancien système sur-allouait ~1200 To en trois mois. XGBoost, CatBoost et LightGBM comparés sous une perte asymétrique qui pénalise la sous-prédiction ; features reconstruites depuis les journaux d'exécution en Python et Pandas.",
+          "Modèle prédisant la RAM consommée par tâche : l'ancien système sur-allouait ~1200 To en trois mois. XGBoost, CatBoost et LightGBM comparés sous une perte asymétrique qui pénalise la sous-prédiction ; features reconstruites depuis les journaux d'exécution en Python et Pandas.",
       },
     ],
     parc: ["Python", "Pandas", "scikit-learn", "XGBoost", "LightGBM", "CatBoost", "SHAP", "Azure", "GitLab CI/CD"],
@@ -192,7 +192,7 @@ const EMPLOYEURS_EN: Employeur[] = [
        contre le code, le résumé dit la manière de faire et la
        frontière d'appelants. */
     resume:
-      "Four products from one house: no shared codebase — one way of building, and one real constraint: they have to talk to each other.",
+      "Four products from one house: no shared codebase, one way of building, and one real constraint: they have to talk to each other.",
     produits: [
       {
         code: "P1",
@@ -206,7 +206,7 @@ const EMPLOYEURS_EN: Employeur[] = [
         nom: "Octo",
         fiche: "octo",
         texte:
-          "DMS export segmentation for car dealerships. Three populations read separately — customers, leads, after-sales — and a report as output rather than a dashboard.",
+          "DMS export segmentation for car dealerships. Three populations read separately (customers, leads, after-sales) and a report as output rather than a dashboard.",
       },
       { code: "P3", nom: "UYB360", texte: "Product in the UpYourBizz suite.", aConfirmer: true },
       { code: "P4", nom: "UpYourAds", texte: "Advertising side of the UpYourBizz suite.", aConfirmer: true },
@@ -227,7 +227,7 @@ const EMPLOYEURS_EN: Employeur[] = [
         nom: "Memory usage prediction",
         fiche: "prediction-memoire",
         texte:
-          "Model predicting RAM consumed per task — the incumbent system over-allocated ~1200 TB in three months. XGBoost, CatBoost and LightGBM compared under an asymmetric loss penalising under-prediction; features rebuilt from execution logs in Python and Pandas.",
+          "Model predicting RAM consumed per task: the incumbent system over-allocated ~1200 TB in three months. XGBoost, CatBoost and LightGBM compared under an asymmetric loss penalising under-prediction; features rebuilt from execution logs in Python and Pandas.",
       },
     ],
     parc: ["Python", "Pandas", "scikit-learn", "XGBoost", "LightGBM", "CatBoost", "SHAP", "Azure", "GitLab CI/CD"],
@@ -282,19 +282,19 @@ const ETUDES_FR: Etude[] = [
   {
     code: "E2", nom: "ESTIA", intitule: "Master d'ingénieur trilingue",
     debut: 2022.7, fin: 2025.8, rail: 0, fiche: "estia",
-    texte: "Cycle ingénieur mené en trois langues de travail. C'est le rail principal — il porte tout le reste.",
+    texte: "Cycle ingénieur mené en trois langues de travail. C'est le rail principal : il porte tout le reste.",
   },
   {
-    code: "E3", nom: "Hokkaido", intitule: "Semestre d'échange — Information & Ingénierie",
+    code: "E3", nom: "Hokkaido", intitule: "Semestre d'échange : Information & Ingénierie",
     lieu: "Imperial University of Hokkaido, Japon", debut: 2024.2, fin: 2024.6, rail: 0, excursion: true, fiche: "hokkaido",
     texte:
       "Un semestre à travailler dans une autre norme, une autre langue et un autre rapport au détail. On ne revient pas identique d'un pays qui documente autrement.",
   },
   {
-    code: "E4", nom: "MBDS", intitule: "Master en Data Science — MBDS MIAGE",
+    code: "E4", nom: "MBDS", intitule: "Master en Data Science (MBDS MIAGE)",
     lieu: "Université Côte d'Azur", debut: 2024.7, fin: 2025.8, rail: 1, fiche: "mbds",
     texte:
-      "Second diplôme mené EN PARALLÈLE du cycle ingénieur, pas après. Les deux rails avancent ensemble de septembre 2024 à octobre 2025 — c'est ce que le schéma montre et ce qu'une liste ne dit pas.",
+      "Second diplôme mené EN PARALLÈLE du cycle ingénieur, pas après. Les deux rails avancent ensemble de septembre 2024 à octobre 2025 : c'est ce que le schéma montre et ce qu'une liste ne dit pas.",
   },
 ]
 
@@ -307,19 +307,19 @@ const ETUDES_EN: Etude[] = [
   {
     code: "E2", nom: "ESTIA", intitule: "Trilingual engineering master's",
     debut: 2022.7, fin: 2025.8, rail: 0, fiche: "estia",
-    texte: "Engineering cycle run in three working languages. This is the main rail — it carries everything else.",
+    texte: "Engineering cycle run in three working languages. This is the main rail: it carries everything else.",
   },
   {
-    code: "E3", nom: "Hokkaido", intitule: "Exchange semester — Information & Engineering",
+    code: "E3", nom: "Hokkaido", intitule: "Exchange semester: Information & Engineering",
     lieu: "Imperial University of Hokkaido, Japan", debut: 2024.2, fin: 2024.6, rail: 0, excursion: true, fiche: "hokkaido",
     texte:
       "A semester working to another standard, another language and another relationship with detail. You do not come back the same from a country that documents differently.",
   },
   {
-    code: "E4", nom: "MBDS", intitule: "MSc Data Science — MBDS MIAGE",
+    code: "E4", nom: "MBDS", intitule: "MSc Data Science (MBDS MIAGE)",
     lieu: "Université Côte d'Azur", debut: 2024.7, fin: 2025.8, rail: 1, fiche: "mbds",
     texte:
-      "A second degree run IN PARALLEL with the engineering cycle, not after it. Both rails advance together from September 2024 to October 2025 — that is what the diagram shows and what a list cannot say.",
+      "A second degree run IN PARALLEL with the engineering cycle, not after it. Both rails advance together from September 2024 to October 2025: that is what the diagram shows and what a list cannot say.",
   },
 ]
 
@@ -343,10 +343,10 @@ const PERSO_FR: ProjetPerso[] = [
     code: "A2", nom: "Trading Agent", fiche: "trading-agent", intitule: "Bot de trading multi-stratégie",
     etat: "Paper trading",
     texte:
-      "Plusieurs stratégies exécutées en parallèle sur de l'argent fictif via Alpaca — TradingView choisit l'univers de titres, les barres de marché décident. Un cockpit de reporting dit ce que chacune a fait, et le backtest rejoue le même code que le live. Le passage à l'argent réel est prévu, par une bascule volontaire et séparée.",
+      "Plusieurs stratégies exécutées en parallèle sur de l'argent fictif via Alpaca : TradingView choisit l'univers de titres, les barres de marché décident. Un cockpit de reporting dit ce que chacune a fait, et le backtest rejoue le même code que le live. Le passage à l'argent réel est prévu, par une bascule volontaire et séparée.",
   },
   {
-    code: "A3", nom: "La Provence", intitule: "Site vitrine — savonnerie artisanale, Montpellier",
+    code: "A3", nom: "La Provence", intitule: "Site vitrine : savonnerie artisanale, Montpellier",
     etat: "Livré",
     texte: "Site vitrine pour une savonnerie artisanale. Commande réelle, contraintes réelles, dépôt public.",
     liens: [{ role: "Dépôt", url: "https://github.com/Zokuzo/la-provence-montpellier" }],
@@ -376,10 +376,10 @@ const PERSO_EN: ProjetPerso[] = [
     code: "A2", nom: "Trading Agent", fiche: "trading-agent", intitule: "Multi-strategy trading bot",
     etat: "Paper trading",
     texte:
-      "Several strategies running in parallel on fake money through Alpaca — TradingView picks the universe of symbols, market bars decide. A reporting cockpit says what each one did, and the backtest replays the same code as live. The move to real money is planned, through a deliberate, separate switch.",
+      "Several strategies running in parallel on fake money through Alpaca: TradingView picks the universe of symbols, market bars decide. A reporting cockpit says what each one did, and the backtest replays the same code as live. The move to real money is planned, through a deliberate, separate switch.",
   },
   {
-    code: "A3", nom: "La Provence", intitule: "Storefront site — artisan soap maker, Montpellier",
+    code: "A3", nom: "La Provence", intitule: "Storefront site: artisan soap maker, Montpellier",
     etat: "Delivered",
     texte: "Storefront site for an artisan soap maker. A real commission, real constraints, public repository.",
     liens: [{ role: "Repository", url: "https://github.com/Zokuzo/la-provence-montpellier" }],
