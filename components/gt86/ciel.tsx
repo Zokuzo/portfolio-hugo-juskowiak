@@ -4,7 +4,9 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MutableRefO
 import { useFrame, useLoader, useThree } from "@react-three/fiber"
 import { Environment, Lightformer, useCursor, useGLTF } from "@react-three/drei"
 import * as THREE from "three"
-import MerDeNuages from "./mer-de-nuages"
+import MerDeNuagesBrute from "./mer-de-nuages"
+import { coupe } from "./audit"
+const MerDeNuages = (p: Parameters<typeof MerDeNuagesBrute>[0]) => (coupe("nuages") ? null : <MerDeNuagesBrute {...p} />)
 import type { Trajectoire } from "./vol"
 import { LamesDuCiel, mireLeCiel, peintureDuCiel } from "./carrosserie"
 
@@ -96,6 +98,7 @@ function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<
           verre.envMapIntensity = 3.5
           verre.transparent = true
           verre.opacity = 0.8
+          if (coupe("transmission")) verre.transmission = 0
           verre.needsUpdate = true
         }
       }

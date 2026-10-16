@@ -21,6 +21,7 @@ import { policeVoulue } from "./prototype-polices"
 import { MusiqueIntro, lanceMusique, musiqueVoulue } from "./prototype-musique"
 import { TransitionVoile } from "./transition-voile"
 import { Effets } from "./rendu"
+import { coupe } from "./audit"
 import { ZoomCamera, zoomVoulu } from "./prototype-zoom"
 import { CompteurIps, ipsVoulu } from "./compteur-ips"
 
@@ -479,7 +480,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
            veille, néons) et chaque interaction répond à la cadence de
            l'écran ; les invalidate() semés restent, inoffensifs. */
         frameloop="always"
-        dpr={[1, 1.5]}
+        dpr={coupe("dpr1") ? 1 : [1, 1.5]}
         /* alpha:false : la toile est OPAQUE (scene.background est posé) —
            le compositeur n'a plus à la fondre sur le DOM, c'est une frame
            moins chère sur beaucoup de GPU */

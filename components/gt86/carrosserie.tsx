@@ -2,6 +2,7 @@
 
 import { Lightformer } from "@react-three/drei"
 import * as THREE from "three"
+import { coupe } from "./audit"
 
 /* LA CARROSSERIE DE LA GT86, ticket #53 : la robe chrome miroir que
    portent toutes les scènes (ciel, vol, rue, seuil), jantes comprises.
@@ -35,7 +36,7 @@ const ROBE = {
 }
 
 export function peintureDuCiel() {
-  const p = new THREE.MeshPhysicalMaterial({
+  const p = new (coupe("chrome") ? THREE.MeshStandardMaterial : THREE.MeshPhysicalMaterial)({
     color: ROBE.couleur,
     metalness: ROBE.metal,
     roughness: ROBE.rugosite,
@@ -70,7 +71,8 @@ export function peintureDeNuit() {
    module : un retour client sur / remonte un <Canvas> neuf, et la cible
    de l'ancien contexte, perdu, ne se ré-uploade pas (chrome charbon). */
 const cielPropre = new WeakMap<THREE.WebGLRenderer, THREE.Texture>()
-export function mireLeCiel(robe: THREE.MeshPhysicalMaterial, scene: THREE.Scene, gl: THREE.WebGLRenderer) {
+export function mireLeCiel(robe: THREE.MeshStandardMaterial, scene: THREE.Scene, gl: THREE.WebGLRenderer) {
+  if (coupe("chrome")) return
   if (!scene.environment) {
     console.warn("carrosserie : pas de scene.environment au montage, la robe garde le reflet de la scène")
     return

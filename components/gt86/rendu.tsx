@@ -3,11 +3,12 @@
 import { useEffect, useMemo, useRef, type RefObject } from "react"
 import { useFrame, useThree } from "@react-three/fiber"
 import * as THREE from "three"
-import { EffectComposer, Bloom, ToneMapping, LUT, Noise, Vignette, ChromaticAberration } from "@react-three/postprocessing"
+import { SMAA, EffectComposer, Bloom, ToneMapping, LUT, Noise, Vignette, ChromaticAberration } from "@react-three/postprocessing"
 import { ToneMappingMode, BlendFunction, LookupTexture, type EffectComposer as Composer } from "postprocessing"
 import { NOM_VOILE } from "./transition-voile"
 import { chauffeDans } from "./chauffe"
 import { FlouZoom, flouVoulu } from "./prototype-zoom"
+import { coupe } from "./audit"
 
 /* LE RENDU DE LA RÉFÉRENCE : tickets #46 et #59. La passe d'effets de
    « BMW Falling from Sky », posée sur toute l'expérience 3D : ciel, vol,
@@ -67,19 +68,27 @@ const OMBRE = new THREE.Vector3(1.03, 0.93, 1.07)
 const LUMIERE = new THREE.Vector3(1.07, 0.95, 0.92)
 const NOIR_RELEVE = new THREE.Vector3(0.018, 0.006, 0.028)
 
-export function Effets({ surPret }: { surPret: () => void }) {
+export function Effets(p: { surPret: () => void }) {
+  return coupe("postfx") ? <SansEffets {...p} /> : <AvecEffets {...p} />
+}
+function SansEffets({ surPret }: { surPret: () => void }) {
+  useEffect(() => surPret(), [surPret])
+  return null
+}
+function AvecEffets({ surPret }: { surPret: () => void }) {
   const lut = useMemo(lutRose, [])
   const composer = useRef<Composer>(null)
   useVoileHorsComposer()
   useSignalePret(composer, surPret)
   return (
-    <EffectComposer ref={composer} multisampling={MSAA}>
+    <EffectComposer ref={composer} multisampling={coupe("msaa") || coupe("smaa") ? 0 : MSAA}>
       {flouVoulu() && <FlouZoom />}
-      <ChromaticAberration offset={ABERRATION} radialModulation modulationOffset={0.2} />
-      <Bloom mipmapBlur intensity={BLOOM.intensite} luminanceThreshold={BLOOM.seuil} luminanceSmoothing={0.2} />
+      {!coupe("aberration") && <ChromaticAberration offset={ABERRATION} radialModulation modulationOffset={0.2} />}
+      {!coupe("bloom") && <Bloom mipmapBlur intensity={BLOOM.intensite} luminanceThreshold={BLOOM.seuil} luminanceSmoothing={0.2} />}
       <ToneMapping mode={ToneMappingMode.AGX} />
       <LUT lut={lut} />
       <Noise premultiply blendFunction={BlendFunction.SOFT_LIGHT} opacity={GRAIN} />
+      {coupe("smaa") && <SMAA />}
       <Vignette offset={VIGNETTE.decalage} darkness={VIGNETTE.obscurite} />
     </EffectComposer>
   )
@@ -158,7 +167,7 @@ function useSignalePret(composer: RefObject<Composer | null>, surPret: () => voi
      petite pendant tout le ciel, et la première image de la rue la
      réallouait en plein écran, en pleine bascule */
   const cibleDeChauffe = useMemo(
-    () => new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: MSAA }),
+    () => new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: coupe("msaa") || coupe("smaa") ? 0 : MSAA }),
     [],
   )
   const gl = useThree((s) => s.gl)

@@ -19,6 +19,7 @@ import {
 } from "./habitacle"
 import { ECRAN_NATIF, VUE_ECRAN, zoneDuClic, type Ecran, type Zone } from "./ecran"
 import { mouilleLaChaussee } from "./prototype-effets"
+import { coupe } from "./audit"
 
 /* LA RUE NOCTURNE — ticket #30 : le décor gaté au #22, porté du prototype
    (route jetable, supprimée au #35) dans la coquille. City procédurale
@@ -158,6 +159,7 @@ function Decor() {
            scene.environment (le crépuscule du ciel) repeindrait la ville
            en fin d'après-midi (84 % de la lumière au sol, mesuré) */
         mat.envMap = env
+        if (coupe("transmission") && "transmission" in mat) (mat as THREE.MeshPhysicalMaterial).transmission = 0
         mat.envMapIntensity = (mat.metalness ?? 0) > 0.5 ? 0.35 : 0.15
         mat.needsUpdate = true
         mouilleLaChaussee(mat, LAMPES)
@@ -284,6 +286,7 @@ function VoitureGaree({
           verre.envMapIntensity = 1.2
           verre.transparent = true
           verre.opacity = 0.8
+          if (coupe("transmission")) verre.transmission = 0
         }
         /* la livrée d'usine rougeoie magenta la nuit — neutralisée,
            verdict robe unique du #21 */
@@ -503,7 +506,7 @@ function Lampe({ x, z, y, vrai }: { x: number; z: number; y: number; vrai?: bool
   })
   return (
     <group>
-      <group ref={halos} position={[x, y, z]}>
+      <group ref={halos} position={[x, y, z]} visible={!coupe("halos")}>
         <sprite scale={[1.15, 1.15, 1]}>
           <spriteMaterial map={halo()} color="#ffe6bb" transparent opacity={0.9} blending={THREE.AdditiveBlending} depthWrite={false} />
         </sprite>
