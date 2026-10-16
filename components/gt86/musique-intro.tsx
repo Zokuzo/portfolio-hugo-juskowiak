@@ -55,9 +55,11 @@ export function lanceMusique() {
 
 /* secondes depuis le début de l'extrait, null hors lecture ; pour caler
    des coupes sur la musique (#56). L'extrait boucle : le temps repart à 0
-   après 24 s. */
+   après 24 s. paused reste faux pendant le chargement et après un échec
+   réseau : seul readyState dit que le son avance vraiment. */
 export function tempsMusique(): number | null {
-  return lecture && !lecture.audio.paused ? lecture.audio.currentTime : null
+  const audio = lecture?.audio
+  return audio && !audio.paused && audio.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA ? audio.currentTime : null
 }
 
 function arrete(duree: number) {
