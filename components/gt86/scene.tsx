@@ -18,6 +18,7 @@ import { Pouls, cockpitVide } from "./habitacle"
 import { PLAYLISTS, PROFIL_SPOTIFY, creeEcran, type Ecran, type ModeEcran, type Zone } from "./ecran"
 import { MoteurSpotify, RythmeAmp, type CommandesSpotify } from "./spotify"
 import { policeVoulue } from "./prototype-polices"
+import { MusiqueIntro, lanceMusique, musiqueVoulue } from "./prototype-musique"
 import { TransitionVoile } from "./transition-voile"
 import { Effets } from "./rendu"
 
@@ -142,6 +143,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
   const [fpsVoulu] = useState(() => new URLSearchParams(window.location.search).has("fps"))
   const [nodepart] = useState(() => new URLSearchParams(window.location.search).has("nodepart"))
   const [police] = useState(policeVoulue)
+  const [musique] = useState(musiqueVoulue)
   /* le composer du rendu (#46, #59), dont la chauffe retient le rideau
      comme celle de la rue */
   const [effetsPrets, setEffetsPrets] = useState(false)
@@ -505,7 +507,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
         <Suspense fallback={null}>
           <Ciel
             visible={etat === "CIEL" || (etat === "ATTERRISSAGE" && !enRue)}
-            surClic={() => envoie({ t: "clic" })}
+            surClic={() => (lanceMusique(), envoie({ t: "clic" }))}
             surPret={surPret}
             vol={vol}
           />
@@ -625,7 +627,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
               pointerEvents: "auto",
               ...police.bouton,
             }}
-            data-gt86="demarrer" onClick={() => envoie({ t: "clic" })}
+            data-gt86="demarrer" onClick={() => (lanceMusique(), envoie({ t: "clic" }))}
           >
             {t(lang, "gt86Demarrer")}
           </button>
@@ -675,6 +677,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
           un <audio> maison sur les préversions du CDN, gain (molette) et
           analyseur (spectre) ; il ne rend rien, il nourrit le peintre */}
       {ampVivant && <MoteurSpotify ecran={ecran} commandes={commandesSpotify} mix={mixCourant} />}
+      {musique && <MusiqueIntro variante={musique} etat={etat} ampVivant={ampVivant} lang={lang} />}
 
       {/* le voile CHARGEMENT (7e retour #33) : couvre le ciel tant que
           les ressources décodent — transparent aux clics (le harnais et
