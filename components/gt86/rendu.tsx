@@ -7,6 +7,7 @@ import { EffectComposer, Bloom, ToneMapping, LUT, Noise, Vignette, ChromaticAber
 import { ToneMappingMode, BlendFunction, LookupTexture, type EffectComposer as Composer } from "postprocessing"
 import { NOM_VOILE } from "./transition-voile"
 import { chauffeDans } from "./chauffe"
+import { FlouZoom, flouVoulu } from "./prototype-zoom"
 
 /* LE RENDU DE LA RÉFÉRENCE : tickets #46 et #59. La passe d'effets de
    « BMW Falling from Sky », posée sur toute l'expérience 3D : ciel, vol,
@@ -73,6 +74,7 @@ export function Effets({ surPret }: { surPret: () => void }) {
   useSignalePret(composer, surPret)
   return (
     <EffectComposer ref={composer} multisampling={MSAA}>
+      {flouVoulu() && <FlouZoom />}
       <ChromaticAberration offset={ABERRATION} radialModulation modulationOffset={0.2} />
       <Bloom mipmapBlur intensity={BLOOM.intensite} luminanceThreshold={BLOOM.seuil} luminanceSmoothing={0.2} />
       <ToneMapping mode={ToneMappingMode.AGX} />

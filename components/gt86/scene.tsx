@@ -20,6 +20,7 @@ import { MoteurSpotify, RythmeAmp, type CommandesSpotify } from "./spotify"
 import { policeVoulue } from "./prototype-polices"
 import { TransitionVoile } from "./transition-voile"
 import { Effets } from "./rendu"
+import { ZoomCamera, zoomVoulu } from "./prototype-zoom"
 
 /* LES ASSETS ET LEUR CASCADE — ticket #28.
 
@@ -500,6 +501,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
             soit décodé (ou qu'on l'ait déjà quitté) pour se monter, et
             devient le fond de TOUS les états d'après. */}
         <Vol etat={etat} vol={vol} voile={voile} surBascule={surBascule} fini={() => envoie({ t: "fini" })} />
+        {zoomVoulu() && <ZoomCamera etat={etat} vol={vol} />}
         <Seuil etat={etat} cockpit={cockpit} voile={voileVerre} nom={nom} fini={() => envoie({ t: "fini" })} />
         <Pouls actif={etat === "SEUIL" || apres} ecran={ecran} />
         <Suspense fallback={null}>
