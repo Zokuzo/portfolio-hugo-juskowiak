@@ -346,7 +346,7 @@ const FR: Projet[] = [
         texte: "Le domaine est plein de jargon : l'outil l'explique au lieu de supposer qu'il est connu.",
       },
     ],
-    parc: ["Python, stdlib pur", "Alpaca (paper, données IEX)", "TradingView", "Vercel", "bash / systemd"],
+    parc: ["Python (stdlib pur)", "Alpaca (paper, données IEX)", "TradingView", "Vercel", "bash / systemd"],
     prevu: ["IBKR : le passage à l'argent réel, par une bascule volontaire et séparée"],
   },
   {
@@ -362,7 +362,7 @@ const FR: Projet[] = [
     contexte:
       "Deux ans de mathématiques, de physique et de sciences de l'ingénieur avant toute ligne de code. La filière TSI mène aux concours d'écoles d'ingénieurs par le volume de travail et la méthode. C'est là que la discipline de travail a pris sa forme.",
     contraintes: [
-      "Mathématiques : analyse, algèbre, probabilités, le socle formel.",
+      "Mathématiques : analyse, algèbre, probabilités : le socle formel.",
       "Physique et sciences de l'ingénieur : mécanique, électricité, automatique.",
       "Rythme de concours : colles hebdomadaires, devoirs surveillés, correction publique.",
     ],
@@ -728,7 +728,7 @@ const EN: Projet[] = [
         texte: "The domain is dense with jargon: the tool explains it instead of assuming it is known.",
       },
     ],
-    parc: ["Python, pure stdlib", "Alpaca (paper, IEX data)", "TradingView", "Vercel", "bash / systemd"],
+    parc: ["Python (pure stdlib)", "Alpaca (paper, IEX data)", "TradingView", "Vercel", "bash / systemd"],
     prevu: ["IBKR: the move to real money, through a deliberate, separate switch"],
   },
   {
@@ -744,7 +744,7 @@ const EN: Projet[] = [
     contexte:
       "Two years of mathematics, physics and engineering science before a single line of code. The TSI track leads to engineering school entrance exams through sheer volume of work and method. This is where the working discipline took its shape.",
     contraintes: [
-      "Mathematics: analysis, algebra, probability, the formal base.",
+      "Mathematics: analysis, algebra, probability: the formal base.",
       "Physics and engineering science: mechanics, electricity, control.",
       "Exam rhythm: weekly oral examinations, supervised tests, public correction.",
     ],

@@ -120,14 +120,12 @@ export function MusiqueIntro({ variante, etat, ampVivant, lang }: { variante: Va
   }, [muet, enCours])
 
   if (!enCours) return null
-  /* bouton bascule : libellé fixe, l'état passe par aria-pressed */
-  const libelle = lang === "fr" ? "Couper la musique" : "Mute music"
+  /* bouton bascule : le libellé visible est le nom accessible (WCAG
+     2.5.3), l'état passe par aria-pressed, enfoncé quand le son joue */
   return (
     <button
       type="button"
-      aria-label={libelle}
-      aria-pressed={muet}
-      title={libelle}
+      aria-pressed={!muet}
       onClick={() => setMuet((m) => !m)}
       style={{
         position: "absolute",
@@ -135,14 +133,16 @@ export function MusiqueIntro({ variante, etat, ampVivant, lang }: { variante: Va
         right: 18,
         font: "500 11px/1 var(--f-mono)",
         letterSpacing: "0.14em",
-        color: "#e8dff58c",
+        /* encre pleine et halo sombre : lisible sur le voile crème */
+        color: "#e8dff5",
+        textShadow: "0 0 3px rgba(40, 20, 40, 0.8), 0 0 10px rgba(40, 20, 40, 0.45)",
         background: "transparent",
         border: "none",
         padding: "8px 10px",
         cursor: "pointer",
       }}
     >
-      {muet ? "♪ OFF" : "♪ ON"}
+      {lang === "fr" ? "♪ MUSIQUE" : "♪ MUSIC"}
     </button>
   )
 }

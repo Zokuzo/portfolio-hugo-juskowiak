@@ -94,7 +94,7 @@ const EMPLOYEURS_FR: Employeur[] = [
        contrainte réelle : ils doivent se parler. C'est ce que dit le
        résumé, plus rien d'autre. */
     resume:
-      "Quatre produits d'une même maison : pas un socle de code partagé, une même manière de faire, et une contrainte réelle : ils doivent se parler.",
+      "Quatre produits d'une même maison : pas un socle de code partagé mais une même manière de faire, et une contrainte réelle : ils doivent se parler.",
     produits: [
       {
         code: "P1",
@@ -192,7 +192,7 @@ const EMPLOYEURS_EN: Employeur[] = [
        contre le code, le résumé dit la manière de faire et la
        frontière d'appelants. */
     resume:
-      "Four products from one house: no shared codebase, one way of building, and one real constraint: they have to talk to each other.",
+      "Four products from one house: no shared codebase but one way of building, and one real constraint: they have to talk to each other.",
     produits: [
       {
         code: "P1",

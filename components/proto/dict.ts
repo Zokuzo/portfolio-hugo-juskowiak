@@ -600,7 +600,7 @@ const DICT = {
      Sans chute vers le métier — celle du bloc force existe déjà, la
      répéter ferait une redite de procédé. */
   opDesign: {
-    fr: "L'autre goût est celui du réglage : un environnement de travail se choisit, puis s'ajuste (couleurs, typographie, chaque outil à sa place, jusqu'à ce que l'ensemble soit cohérent).",
+    fr: "L'autre goût est celui du réglage : un environnement de travail se choisit, puis s'ajuste (couleurs, typographie, chaque outil à sa place) jusqu'à ce que l'ensemble soit cohérent.",
     en: "The other taste is tuning: a working environment is chosen, then adjusted (colors, typography, every tool in its place) until the whole is coherent.",
   },
   opChamps: {
