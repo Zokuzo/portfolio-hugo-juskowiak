@@ -3,64 +3,53 @@
 import { Lightformer } from "@react-three/drei"
 import * as THREE from "three"
 
-/* PROTOTYPE JETABLE (#53) : trois robes silver métallique brillant pour
-   la GT86, commutables par ?carrosserie=a|b|c sur / et portées par TOUTES
-   les scènes (ciel, vol, rue, seuil). Sans paramètre, rien ne change :
-   ciel.tsx et rue.tsx gardent leur robe ARGENT. Verdict à l'œil de Hugo
-   (référence « BMW Falling from Sky »), puis seule la gagnante rejoint
-   ciel.tsx et rue.tsx et ce fichier disparaît.
+/* LA CARROSSERIE DE LA GT86, ticket #53 : la robe chrome miroir que
+   portent toutes les scènes (ciel, vol, rue, seuil), jantes comprises.
+   Verdict de Hugo le 2026-10-16 sur trois prototypes (« la version a est
+   bcp mieux ») : le chrome poli l'emporte sur l'argent métallisé pailleté
+   et sur l'anodisé satiné. Le prototype complet, avec ses trois robes
+   commutables, reste sur la branche prototype/carrosserie-53.
 
    Le piège du #21 tient toujours : un métal ne montre que ce qu'il
-   reflète. Chaque variante vient donc avec son ENVIRONNEMENT DE REFLET,
-   cuit une seule fois au montage, sous le voile : des Lightformer dans
-   la cubemap du ciel (aucune lumière de scène, la topologie ne bouge
-   pas), une équirect de nuit plus riche pour la voiture de la rue
-   (lampadaires, vitrines, néons). Les jantes partagent la robe (un clone
-   sans paillettes pour b, voir robePour) : elles restent le repère du
-   silver. */
+   reflète. La robe vient donc avec son ENVIRONNEMENT DE REFLET, cuit une
+   seule fois au montage, sous le voile : des Lightformer dans la cubemap
+   du ciel (aucune lumière de scène, la topologie ne bouge pas), une
+   équirect de nuit plus riche pour la voiture de la rue (lampadaires,
+   vitrines, néons). Les jantes partagent la robe : elles restent le
+   repère du silver. */
 
-type Cle = "a" | "b" | "c"
-
-type Robe = {
-  couleur: string
-  metal: number
-  rugosite: number
-  vernis: number
-  vernisRugosite: number
-  /* l'intensité du reflet du crépuscule (l'<Environment> du ciel en
-     donne 0,6 à tout le reste) et de la nuit, seul environnement de la
-     voiture en rue */
-  refletCiel: number
-  refletNuit: number
-  paillettes: boolean
-}
-
-/* Les couleurs tirent un souffle vers le bleu : la LUT rose du rendu
+/* Chrome miroir : métal pur, poli, sans vernis. Il ne vit que de son
+   environnement de reflet, d'où le reflet du ciel bas : le crépuscule
+   est clair partout, un miroir plus fort y devenait blanc plat. La nuit
+   est le seul environnement de la voiture en rue, elle porte l'éclat.
+   La couleur tire un souffle vers le bleu : la LUT rose du rendu
    (rendu.tsx) multiplie les hautes lumières par (1,07 ; 0,95 ; 0,92),
    un gris neutre y ressortait taupe rosé. */
-const ROBES: Record<Cle, Robe> = {
-  /* a « chrome miroir » : métal pur, poli. Il ne vit que de son
-     environnement de reflet, d'où le reflet du ciel bas : le crépuscule
-     est clair partout, un miroir plus fort y devenait blanc plat. */
-  a: { couleur: "#e4e9ef", metal: 1, rugosite: 0.05, vernis: 0, vernisRugosite: 0, refletCiel: 0.28, refletNuit: 2.6, paillettes: false },
-  /* b « argent métallisé » : un gris argent plus soutenu, pailleté, sous
-     un vernis net qui porte les lames du ciel en traits francs */
-  b: { couleur: "#b9c0c8", metal: 0.75, rugosite: 0.3, vernis: 1, vernisRugosite: 0.03, refletCiel: 0.55, refletNuit: 1.4, paillettes: true },
-  /* c « argent clair anodisé » : le plus clair, satiné sans vernis,
-     lecture douce, la plus proche des jantes */
-  c: { couleur: "#dde2e8", metal: 0.55, rugosite: 0.45, vernis: 0, vernisRugosite: 0, refletCiel: 0.35, refletNuit: 0.8, paillettes: false },
+const ROBE = {
+  couleur: "#e4e9ef",
+  metal: 1,
+  rugosite: 0.05,
+  /* l'<Environment> du ciel donne 0,6 à tout le reste */
+  refletCiel: 0.28,
+  refletNuit: 2.6,
 }
 
-const CLES = Object.keys(ROBES) as Cle[]
-
-export function carrosserieVoulue(): Cle | null {
-  if (typeof window === "undefined") return null
-  const cle = new URLSearchParams(window.location.search).get("carrosserie")
-  return CLES.includes(cle as Cle) ? (cle as Cle) : null
+export function peintureDuCiel() {
+  const p = new THREE.MeshPhysicalMaterial({
+    color: ROBE.couleur,
+    metalness: ROBE.metal,
+    roughness: ROBE.rugosite,
+  })
+  /* nom porteur : la rue retrouve la peinture par ce nom (ciel.tsx) */
+  p.name = "Paint"
+  return p
 }
 
-export function peintureDuCiel(cle: Cle) {
-  return peinture(ROBES[cle])
+export function peintureDeNuit() {
+  const p = peintureDuCiel()
+  p.envMap = envNuitCarrosserie()
+  p.envMapIntensity = ROBE.refletNuit
+  return p
 }
 
 /* Face à scene.environment, three r169 impose l'environmentIntensity de
@@ -80,10 +69,8 @@ export function peintureDuCiel(cle: Cle) {
    passif) et son contenu ne change plus. */
 let cielPropre: THREE.Texture | null = null
 export function mireLeCiel(robe: THREE.MeshPhysicalMaterial, scene: THREE.Scene, gl: THREE.WebGLRenderer) {
-  const cle = carrosserieVoulue()
-  if (!cle) return
   if (!scene.environment) {
-    console.warn("prototype-carrosserie : pas de scene.environment au montage, la robe garde le reflet de la scène")
+    console.warn("carrosserie : pas de scene.environment au montage, la robe garde le reflet de la scène")
     return
   }
   if (!cielPropre) {
@@ -93,77 +80,7 @@ export function mireLeCiel(robe: THREE.MeshPhysicalMaterial, scene: THREE.Scene,
   }
   robe.envMap = cielPropre
   robe.envMapRotation.copy(scene.environmentRotation)
-  robe.envMapIntensity = ROBES[cle].refletCiel
-}
-
-export function peintureDeNuit(cle: Cle, env: THREE.Texture) {
-  const robe = ROBES[cle]
-  const p = peinture(robe)
-  p.envMap = env
-  p.envMapIntensity = robe.refletNuit
-  return p
-}
-
-function peinture(robe: Robe) {
-  const p = new THREE.MeshPhysicalMaterial({
-    color: robe.couleur,
-    metalness: robe.metal,
-    roughness: robe.rugosite,
-    clearcoat: robe.vernis,
-    clearcoatRoughness: robe.vernisRugosite,
-  })
-  if (robe.paillettes) {
-    p.normalMap = paillettes()
-    p.normalScale.setScalar(PAILLETTES.relief)
-  }
-  /* nom porteur : la rue retrouve la peinture par ce nom (ciel.tsx) */
-  p.name = "Paint"
-  return p
-}
-
-/* Les jantes n'ont pas d'UV (le corps en a) : une normal map y
-   lirait un repère tangent dégénéré. Elles prennent la même robe sans
-   paillettes, un programme de plus compilé au montage avec le reste. */
-const sansPaillettes = new WeakMap<THREE.MeshPhysicalMaterial, THREE.MeshPhysicalMaterial>()
-export function robePour(mesh: THREE.Mesh, robe: THREE.MeshPhysicalMaterial) {
-  if (!robe.normalMap || mesh.geometry.attributes.uv) return robe
-  let jante = sansPaillettes.get(robe)
-  if (!jante) {
-    jante = robe.clone()
-    jante.normalMap = null
-    sansPaillettes.set(robe, jante)
-  }
-  return jante
-}
-
-/* LES PAILLETTES : une normal map de bruit, une normale tirée au hasard
-   par texel, générée une fois. Le vernis garde la normale géométrique
-   (pas de clearcoatNormalMap) : les éclats scintillent SOUS un reflet
-   lisse, comme une vraie peinture métallisée. */
-const PAILLETTES = { taille: 256, inclinaison: 0.6, repetition: 24, relief: 0.5 }
-let paillettesPartagees: THREE.DataTexture | null = null
-function paillettes() {
-  if (paillettesPartagees) return paillettesPartagees
-  const { taille, inclinaison, repetition } = PAILLETTES
-  const donnees = new Uint8Array(taille * taille * 4)
-  for (let i = 0; i < donnees.length; i += 4) {
-    const x = (Math.random() * 2 - 1) * inclinaison
-    const y = (Math.random() * 2 - 1) * inclinaison
-    const z = Math.sqrt(Math.max(0, 1 - x * x - y * y))
-    donnees[i] = (x * 0.5 + 0.5) * 255
-    donnees[i + 1] = (y * 0.5 + 0.5) * 255
-    donnees[i + 2] = (z * 0.5 + 0.5) * 255
-    donnees[i + 3] = 255
-  }
-  const t = new THREE.DataTexture(donnees, taille, taille)
-  t.wrapS = t.wrapT = THREE.RepeatWrapping
-  t.repeat.set(repetition, repetition)
-  t.magFilter = THREE.NearestFilter
-  t.minFilter = THREE.LinearMipmapLinearFilter
-  t.generateMipmaps = true
-  t.needsUpdate = true
-  paillettesPartagees = t
-  return t
+  robe.envMapIntensity = ROBE.refletCiel
 }
 
 /* ---- l'environnement de reflet du ciel --------------------------------- */
@@ -194,12 +111,12 @@ export function LamesDuCiel() {
    même fond que rue.tsx, mais de quoi mirer. Peinte une fois au canvas,
    PMREM-isée par le renderer à la chauffe de la rue, sous le voile.
    Haut de l'image = zénith, milieu = horizon. Le canvas plafonne à 1 :
-   l'éclat vient de l'envMapIntensity de chaque robe. */
+   l'éclat vient de l'envMapIntensity de la robe. */
 const L = 1024
 const H = 512
 const HORIZON = H / 2
 let nuitCarrosserie: THREE.CanvasTexture | null = null
-export function envNuitCarrosserie() {
+function envNuitCarrosserie() {
   if (nuitCarrosserie) return nuitCarrosserie
   const c = document.createElement("canvas")
   c.width = L

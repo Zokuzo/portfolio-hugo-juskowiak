@@ -6,7 +6,7 @@ import { Environment, Lightformer, useCursor, useGLTF } from "@react-three/drei"
 import * as THREE from "three"
 import MerDeNuages from "./mer-de-nuages"
 import type { Trajectoire } from "./vol"
-import { LamesDuCiel, carrosserieVoulue, mireLeCiel, peintureDuCiel, robePour } from "./prototype-carrosserie"
+import { LamesDuCiel, mireLeCiel, peintureDuCiel } from "./carrosserie"
 
 /* LE CIEL — ticket #29 : le verdict « Pellicule » du gate #21, porté du
    prototype (route jetable, supprimée au #35) dans la coquille.
@@ -45,19 +45,14 @@ const TEINTE_DOME = new THREE.Color("#d8927a").multiplyScalar(ECHELLE_4K)
 const SOLEIL = new THREE.Vector3(0.25, 0.6, -1.0)
 /* rotation du ciel : 0,25π retenu après balayage en captures (gate #21) */
 const ROT = Math.PI * 0.25
-/* LA robe — Argent anodisé poli, seul survivant du testeur de couleurs.
-   9e retour de gate : les nuages REVIENNENT aux teintes crème/rosé du
-   gate #21 (l'essai argent du 8e ne prend pas) — c'est la VOITURE qui
-   doit lire « gris métallisé », jantes comprises : le miroir pur
-   (metalness 1, roughness 0,03) reflétait surtout le dessous SOMBRE du
-   banc — elle rendait noire. 11e retour (« la voiture reste sombre ») :
-   même brossée, la robe restait charbon — la mer de nuages LUMINEUSE que
-   l'œil voit n'existe PAS dans la sonde d'éclairage (l'IBL du gate #21,
-   c'est trois Lightformer + le dôme : sombre en moyenne). Le métal ne
-   peut refléter que ça — la DIFFUSE porte donc l'argent : metalness
-   descendu, les lumières directes (directionnelle, hémisphère, ambiante)
-   éclairent le #b4b9bf. Même recette sur la voiture de la rue. */
-const ARGENT = "#b4b9bf"
+/* LA robe : chrome miroir (#53, carrosserie.tsx), jantes comprises.
+   L'histoire du piège du #21 : le miroir pur des premiers gates
+   reflétait surtout le dessous SOMBRE du banc et rendait noire, puis une
+   robe argent brossée (metalness 0,6, la diffuse portant l'argent sous
+   les lumières directes) restait charbon. La mer de nuages LUMINEUSE que
+   l'œil voit n'existe pas dans la sonde d'éclairage. Le chrome tient
+   aujourd'hui parce qu'il mire SON environnement : les LamesDuCiel cuites
+   dans la cubemap, et une PMREM tirée en propre (voir mireLeCiel). */
 /* la pose du gate : caméra au flanc, fov 38, la voiture au centre du cadre */
 const POSE = new THREE.Vector3(-4.2, -0.4, 7.8)
 
@@ -111,24 +106,11 @@ function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<
     return scene
   }, [scene])
 
-  /* anodisé poli : miroir métallique, le ciel se découpe dans la robe.
+  /* chrome miroir : le ciel et ses lames se découpent dans la robe.
      Le nom "Paint" est porteur : la voiture de la RUE (#30) se clone
      depuis ce même GLB déjà mué — son rhabillage retrouve la peinture
      par ce nom. */
-  const peinture = useMemo(() => {
-    const variante = carrosserieVoulue()
-    if (variante) return peintureDuCiel(variante)
-    const p = new THREE.MeshPhysicalMaterial({
-      color: ARGENT,
-      metalness: 0.6,
-      roughness: 0.22,
-      clearcoat: 1,
-      clearcoatRoughness: 0.08,
-      envMapIntensity: 2.4,
-    })
-    p.name = "Paint"
-    return p
-  }, [])
+  const peinture = useMemo(peintureDuCiel, [])
 
   useEffect(() => {
     /* la robe couvre la carrosserie ET la jante (étoile + lit extérieur) —
@@ -140,7 +122,7 @@ function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<
       if (!mesh.isMesh) return
       const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
       if (mats.some((m) => PEINTS.includes(m?.name ?? ""))) {
-        mesh.material = robePour(mesh, peinture)
+        mesh.material = peinture
       }
     })
   }, [modele, peinture, scene3, gl3])
@@ -230,7 +212,7 @@ export default function Ciel({
         <Lightformer form="rect" intensity={12} color="#fff4e2" position={[0, 7, -3]} target={[0, 0, 0]} scale={[20, 2, 1]} />
         <Lightformer form="rect" intensity={8} color="#ffd9b0" position={[-7, 2, -7]} target={[0, 0, 0]} scale={[12, 1.5, 1]} />
         <Lightformer form="rect" intensity={4} color="#cdbce8" position={[7, -2.5, 6]} target={[0, 0, 0]} scale={[12, 1.2, 1]} />
-        {carrosserieVoulue() && <LamesDuCiel />}
+        <LamesDuCiel />
       </Environment>
 
       <group visible={visible}>

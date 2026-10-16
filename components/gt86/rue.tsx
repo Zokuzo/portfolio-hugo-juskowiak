@@ -6,7 +6,7 @@ import { useGLTF, useTexture } from "@react-three/drei"
 import * as THREE from "three"
 import type { Trajectoire } from "./vol"
 import { compileEnSolo, rendEnSolo } from "./chauffe"
-import { carrosserieVoulue, envNuitCarrosserie, peintureDeNuit, robePour } from "./prototype-carrosserie"
+import { peintureDeNuit } from "./carrosserie"
 import { fondPourLeRendu } from "./rendu"
 import {
   ASSISE,
@@ -250,20 +250,10 @@ function VoitureGaree({
        (payé : la voiture garée flottait d'un demi-mètre en capture) */
     clone.position.set(0, 0, 0)
     const env = envNuit()
-    /* MÊME recette d'argent brossé que la voiture du ciel (9e retour :
-       « unifie les couleurs des deux voitures ») — seule la nuit de
-       l'equirect les distingue */
-    const variante = carrosserieVoulue()
-    const peinture = variante ? peintureDeNuit(variante, envNuitCarrosserie()) : new THREE.MeshPhysicalMaterial({
-      color: "#b4b9bf",
-      metalness: 0.45,
-      roughness: 0.32,
-      clearcoat: 1,
-      clearcoatRoughness: 0.08,
-      envMap: env,
-      envMapIntensity: 1.6,
-    })
-    peinture.name = "Paint"
+    /* MÊME chrome miroir que la voiture du ciel (9e retour : « unifie les
+       couleurs des deux voitures », #53) : seule son équirect de nuit,
+       plus riche que celle du décor, la distingue */
+    const peinture = peintureDeNuit()
     clone.traverse((o) => {
       const mesh = o as THREE.Mesh
       if (!mesh.isMesh) return
@@ -275,7 +265,7 @@ function VoitureGaree({
       const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
       if (mats.some((m) => m?.name === "Floor")) mesh.visible = false
       if (mats.some((m) => ["Paint", "Stern", "Aussenbeet"].includes(m?.name ?? ""))) {
-        mesh.material = robePour(mesh, peinture)
+        mesh.material = peinture
       }
       for (const m of mats) {
         const mat = m as THREE.MeshStandardMaterial
