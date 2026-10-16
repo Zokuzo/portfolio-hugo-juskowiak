@@ -552,9 +552,11 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
           </Suspense>
         )}
         <Effets surPret={surEffetsPrets} />
-        {/* seulement sous le rideau du CIEL : une session qui rouvre à
-            l'habitacle n'a pas de voile, elle garde la densité de départ */}
-        <ChoixDpr mesure={effetsPrets && etat === "CIEL"} surChoix={setDpr} surPret={surDprPret} />
+        {/* mesurée sous le voile du CIEL, une fois la rue chaude : ses
+            décodages et compilations fausseraient la cadence. Une session
+            qui rouvre à l'habitacle garde la densité de départ jusqu'au
+            premier rejeu, qui repasse par le CIEL sous le voile */}
+        <ChoixDpr mesure={effetsPrets && ruePrete && etat === "CIEL"} surChoix={setDpr} surPret={surDprPret} />
         {fpsVoulu && <Stats />}
         <RythmeAmp actif={etat === "SPOTIFY"} ecran={ecran} />
       </Canvas>
