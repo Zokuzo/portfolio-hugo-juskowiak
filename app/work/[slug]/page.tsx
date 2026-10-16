@@ -50,7 +50,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params
   const p = projet("fr", slug)
   if (!p) return {}
-  return { title: `${p.nom} — Travail — Hugo Juskowiak`, description: p.sousTitre }
+  return { title: `${p.nom} | Travail | Hugo Juskowiak`, description: p.sousTitre }
 }
 
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {

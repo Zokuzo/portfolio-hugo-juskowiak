@@ -32,7 +32,7 @@ const pixel = Silkscreen({
 })
 
 export const metadata: Metadata = {
-  title: "Maison — Hugo Juskowiak",
+  title: "Maison | Hugo Juskowiak",
   description:
     "La partition MAISON : l'atelier sur disquettes, quatre cursus en lecture, le hors-travail et la messagerie.",
 }

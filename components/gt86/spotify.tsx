@@ -119,7 +119,7 @@ export function MoteurSpotify({
         duree: (Number.isFinite(audio.duration) ? audio.duration : 30) * 1000,
         piste: m.indice + 1,
         pistes: m.pistes.length,
-        titre: p ? `${p.titre} — ${p.artiste}` : "",
+        titre: p ? `${p.titre} · ${p.artiste}` : "",
         indice: m.mix,
       })
     }

@@ -49,13 +49,13 @@ export function HeroFenetre({ lang }: { lang: Lang }) {
         <div className="hf-crt-dalle">
           <span className="hf-scan" aria-hidden="true" />
           <p className="hf-boot">
-            {t(lang, "hubOs")} — {t(lang, "hubMaisonBoot")}
+            {t(lang, "hubOs")} &gt; {t(lang, "hubMaisonBoot")}
           </p>
           <h1 className="y2k-wordmark hf-wordmark" data-texte={t(lang, "gt86Maison")}>
             {t(lang, "gt86Maison")}
           </h1>
           <p className="hf-identite">
-            <strong>{t(lang, "gt86Nom")}</strong> — {t(lang, "role")}
+            <strong>{t(lang, "gt86Nom")}</strong> · {t(lang, "role")}
           </p>
           <div className="hf-charge">
             <span className="hf-charge-barre" aria-hidden="true">
