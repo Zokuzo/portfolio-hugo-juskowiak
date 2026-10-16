@@ -57,6 +57,8 @@ const ABERRATION = new THREE.Vector2(0.0016, 0.0011)
 const GRAIN = 0.18
 const VIGNETTE = { decalage: 0.32, obscurite: 0.42 }
 const MSAA = 4
+/* ?msaa=2, pour l'œil de Hugo (#42) : moitié moins d'échantillons */
+const MSAA_LEGER = 2
 /* la couche réservée au voile (#45), hors de la passe de rendu */
 const COUCHE_VOILE = 31
 /* images composées avant de lever le rideau : la première compile les
@@ -77,17 +79,18 @@ function reglages() {
   const url = new URLSearchParams(location.search)
   return {
     bloom: url.get("bloom") === "leger" ? BLOOM_LEGER : BLOOM,
+    msaa: url.get("msaa") === String(MSAA_LEGER) ? MSAA_LEGER : MSAA,
   }
 }
 
 export function Effets({ surPret }: { surPret: () => void }) {
   const lut = useMemo(lutRose, [])
-  const [{ bloom }] = useState(reglages)
+  const [{ bloom, msaa }] = useState(reglages)
   const composer = useRef<Composer>(null)
   useVoileHorsComposer()
-  useSignalePret(composer, surPret)
+  useSignalePret(composer, msaa, surPret)
   return (
-    <EffectComposer ref={composer} multisampling={MSAA}>
+    <EffectComposer ref={composer} multisampling={msaa}>
       {flouVoulu() && <FlouZoom />}
       <ChromaticAberration offset={ABERRATION} radialModulation modulationOffset={0.2} />
       <Bloom
@@ -170,15 +173,15 @@ function useVoileHorsComposer() {
    composer ait peint IMAGES_AVANT_PRET images avec sa passe d'effets.
    scene.tsx ne monte la rue qu'après ce signal : sa chauffe peint alors
    dans la cible du composer (chauffeDans) */
-function useSignalePret(composer: RefObject<Composer | null>, surPret: () => void) {
+function useSignalePret(composer: RefObject<Composer | null>, msaa: number, surPret: () => void) {
   const images = useRef(0)
   /* une cible au FORMAT du composer (flottante, MSAA, profondeur) : c'est
      le format que le pilote prépare, pas la taille. Elle reste à 1 × 1
      depuis que le verre de la ville a perdu sa transmission (#42) : plus
      aucune cible de three ne se cale sur la vue courante */
   const cibleDeChauffe = useMemo(
-    () => new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: MSAA }),
-    [],
+    () => new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: msaa }),
+    [msaa],
   )
   useEffect(
     () => () => {
