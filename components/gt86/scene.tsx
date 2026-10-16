@@ -24,6 +24,7 @@ import { Effets } from "./rendu"
 import { ChoixDpr, DPR_DEPART } from "./dpr"
 import { montageVoulu, ZoomCamera, zoomVoulu } from "./prototype-zoom"
 import { MontageCamera } from "./prototype-montage"
+import { CompteurIps, ipsVoulu } from "./compteur-ips"
 
 /* LES ASSETS ET LEUR CASCADE — ticket #28.
 
@@ -146,6 +147,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
   const [fpsVoulu] = useState(() => new URLSearchParams(window.location.search).has("fps"))
   const [nodepart] = useState(() => new URLSearchParams(window.location.search).has("nodepart"))
   const [police] = useState(policeVoulue)
+  const [ips] = useState(ipsVoulu)
   /* le composer du rendu (#46, #59), dont la chauffe retient le rideau
      comme celle de la rue */
   const [effetsPrets, setEffetsPrets] = useState(false)
@@ -697,6 +699,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
           analyseur (spectre) ; il ne rend rien, il nourrit le peintre */}
       {ampVivant && <MoteurSpotify ecran={ecran} commandes={commandesSpotify} mix={mixCourant} />}
       <MusiqueIntro etat={etat} ampVivant={ampVivant} lang={lang} />
+      {ips && <CompteurIps etat={etat} pret={chargePret} />}
 
       {/* le voile CHARGEMENT (7e retour #33) : couvre le ciel tant que
           les ressources décodent — transparent aux clics (le harnais et

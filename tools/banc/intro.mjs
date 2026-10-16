@@ -158,7 +158,14 @@ async function demarreServeur() {
   await attends(async () => {
     try { return (await fetch(base + "/")).ok } catch { return false }
   }, 40000, "démarrage de next start")
+  /* next start laisse un next-server enfant que tuer le parent ne tue pas.
+     Sous Linux on libère le port (fuser) ; Windows n'a pas fuser, mais
+     taskkill /T abat tout l'arbre, à lancer AVANT que le parent meure. */
   const arrete = () => {
+    if (process.platform === "win32") {
+      try { execFileSync("taskkill", ["/pid", String(proc.pid), "/T", "/F"], { stdio: "ignore" }) } catch { /* déjà mort */ }
+      return
+    }
     proc.kill("SIGTERM")
     try { execFileSync("fuser", ["-k", `${port}/tcp`], { stdio: "ignore" }) } catch { /* déjà libre */ }
   }
