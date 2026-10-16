@@ -12,6 +12,8 @@
    un contrat) : toute défaillance rend { pistes: [] } et le client
    affiche le repli « écran custom qui linke » — jamais une erreur. */
 
+import { entiteEmbed, estPreversion } from "../../embed-spotify"
+
 /* les QUATRE mixes du poste, et rien d'autre (revue : un id libre fait
    du serveur un proxy de scraping Spotify — cache non borné, IP à
    bannir) — à garder en phase avec PLAYLISTS de components/gt86/ecran.ts */
@@ -26,30 +28,19 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const { id } = await params
   if (!MIXES.has(id)) return Response.json({ pistes: [] }, { status: 400 })
   try {
-    const page = await fetch(`https://open.spotify.com/embed/playlist/${id}`, {
-      headers: { "user-agent": "Mozilla/5.0 (portfolio hugojuskowiak.com)" },
-      next: { revalidate: 3600 },
-      /* un réseau qui BLOQUE (DROP silencieux) suspendait la route ~300 s
-         (revue) : au-delà de 8 s on rend le repli */
-      signal: AbortSignal.timeout(8000),
-    })
-    if (!page.ok) throw new Error(String(page.status))
-    const html = await page.text()
-    const brut = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/)
-    if (!brut) throw new Error("pas de __NEXT_DATA__")
     type Entree = {
       title?: string
       subtitle?: string
       isPlayable?: boolean
       audioPreview?: { url?: string } | null
     }
-    const liste: Entree[] =
-      JSON.parse(brut[1])?.props?.pageProps?.state?.data?.entity?.trackList ?? []
+    const liste = (await entiteEmbed<{ trackList?: Entree[] }>(`playlist/${id}`)).trackList ?? []
     const pistes = liste
-      .filter((p) => p.isPlayable && p.audioPreview?.url?.startsWith("https://p.scdn.co/"))
+      .filter((p) => p.isPlayable && estPreversion(p.audioPreview?.url))
       .map((p) => ({ titre: p.title ?? "", artiste: p.subtitle ?? "", apercu: p.audioPreview!.url! }))
     return Response.json({ pistes })
-  } catch {
+  } catch (e) {
+    console.warn("[gt86] mix illisible", e)
     return Response.json({ pistes: [] }, { status: 502 })
   }
 }

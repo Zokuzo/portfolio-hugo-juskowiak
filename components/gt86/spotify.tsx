@@ -44,7 +44,7 @@ let volumeMemorise = 0.8
    Safari plafonne les contextes simultanés). Les nœuds, eux, vivent par
    montage et se déconnectent au démontage. */
 let ctxAudio: AudioContext | null = null
-/* le même contexte, prêté à la musique de l'intro (prototype #58) */
+/* le même contexte, prêté à la musique de l'intro (#58) */
 export const contexteAudio = () => (ctxAudio ??= new AudioContext())
 
 export function MoteurSpotify({
