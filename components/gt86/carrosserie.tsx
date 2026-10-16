@@ -66,19 +66,23 @@ export function peintureDeNuit() {
    charbon (et du verre du ciel, à trancher hors #53). La robe tire donc
    SA PMREM, une seule fois, d'un générateur neuf : la cubemap est déjà
    cuite (l'<Environment> la cuit en layout, cet appel vient d'un effet
-   passif) et son contenu ne change plus. */
-let cielPropre: THREE.Texture | null = null
+   passif) et son contenu ne change plus. Une PMREM par renderer, pas par
+   module : un retour client sur / remonte un <Canvas> neuf, et la cible
+   de l'ancien contexte, perdu, ne se ré-uploade pas (chrome charbon). */
+const cielPropre = new WeakMap<THREE.WebGLRenderer, THREE.Texture>()
 export function mireLeCiel(robe: THREE.MeshPhysicalMaterial, scene: THREE.Scene, gl: THREE.WebGLRenderer) {
   if (!scene.environment) {
     console.warn("carrosserie : pas de scene.environment au montage, la robe garde le reflet de la scène")
     return
   }
-  if (!cielPropre) {
+  let propre = cielPropre.get(gl)
+  if (!propre) {
     const generateur = new THREE.PMREMGenerator(gl)
-    cielPropre = generateur.fromCubemap(scene.environment as THREE.CubeTexture).texture
+    propre = generateur.fromCubemap(scene.environment as THREE.CubeTexture).texture
     generateur.dispose()
+    cielPropre.set(gl, propre)
   }
-  robe.envMap = cielPropre
+  robe.envMap = propre
   robe.envMapRotation.copy(scene.environmentRotation)
   robe.envMapIntensity = ROBE.refletCiel
 }
