@@ -18,6 +18,7 @@ import {
   type Cockpit,
 } from "./habitacle"
 import { ECRAN_NATIF, VUE_ECRAN, zoneDuClic, type Ecran, type Zone } from "./ecran"
+import { mouilleLaChaussee } from "./prototype-effets"
 
 /* LA RUE NOCTURNE — ticket #30 : le décor gaté au #22, porté du prototype
    (route jetable, supprimée au #35) dans la coquille. City procédurale
@@ -159,6 +160,7 @@ function Decor() {
         mat.envMap = env
         mat.envMapIntensity = (mat.metalness ?? 0) > 0.5 ? 0.35 : 0.15
         mat.needsUpdate = true
+        mouilleLaChaussee(mat, LAMPES)
         /* les fenêtres de ce décor sont PEINTES dans les textures (24
            sommets pour un mur entier) : les pixels sombres eux-mêmes
            s'allument — inversion de luminance en émissif, cellule ~1

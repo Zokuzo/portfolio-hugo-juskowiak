@@ -3,6 +3,7 @@
 import { useMemo, useRef } from "react"
 import { useFrame } from "@react-three/fiber"
 import * as THREE from "three"
+import { ventSurNuages } from "./prototype-effets"
 
 /* La nappe de nuages raymarchée (FBM 2D + tranche verticale, 20 pas), portée
    telle quelle du prototype #21 (route jetable, supprimée au #35). Elle
@@ -137,6 +138,7 @@ export default function MerDeNuages({
       }),
     [soleil, crete, ombre, loin, sommet, fond, sens, couverture, echelle],
   )
+  ventSurNuages(materiau)
   const ref = useRef(materiau)
   ref.current = materiau
   useFrame((etat) => {
