@@ -18,7 +18,7 @@ import {
   type Cockpit,
 } from "./habitacle"
 import { ECRAN_NATIF, VUE_ECRAN, zoneDuClic, type Ecran, type Zone } from "./ecran"
-import { mouilleLaChaussee } from "./prototype-effets"
+import { mouilleLaChaussee } from "./chaussee-mouillee"
 
 /* LA RUE NOCTURNE — ticket #30 : le décor gaté au #22, porté du prototype
    (route jetable, supprimée au #35) dans la coquille. City procédurale

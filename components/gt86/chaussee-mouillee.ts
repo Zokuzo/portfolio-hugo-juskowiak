@@ -1,91 +1,11 @@
 import * as THREE from "three"
 
-/* PROTOTYPE JETABLE (#47) : les effets de scène, commutés par
-   ?effets=a|b|c sur /. Sans paramètre, rien ne change : les deux
-   branchements (mer-de-nuages.tsx, rue.tsx) ne posent aucun
-   onBeforeCompile et les shaders restent ceux du dépôt.
-   - a : la mer de nuages dérive au vent et se déforme, ET elle maigrit
-     pour payer l'effet (14 pas au lieu de 20, sonde solaire à 2
-     octaves au lieu de 4) ;
-   - b : l'asphalte mouillé. La chaussée prend une carte de flaques
-     procédurale (rugosité basse, albédo assombri, normale aplanie dans
-     l'eau) : les vrais spots et les néons de la voiture s'y mirent par le
-     GGX, sans lumière de plus. Les luminaires qui ne sont que des sprites
-     y laissent un reflet PEINT, une traînée verticale calculée en
-     espace monde depuis leur image miroir (aucun render target) ;
-   - c : a + b.
-   Verdict à l'œil de Hugo et au banc, puis seul ce qui gagne rejoint les
-   fichiers d'origine et ce fichier disparaît. */
-
-type Effets = { vent: boolean; mouille: boolean }
-
-const VARIANTES: Record<string, Effets> = {
-  a: { vent: true, mouille: false },
-  b: { vent: false, mouille: true },
-  c: { vent: true, mouille: true },
-}
-const AUCUN: Effets = { vent: false, mouille: false }
-
-function effetsVoulus(): Effets {
-  if (typeof window === "undefined") return AUCUN
-  return VARIANTES[new URLSearchParams(window.location.search).get("effets") ?? ""] ?? AUCUN
-}
-
-/* ---- a : le vent sur la mer de nuages ------------------------------- */
-
-const PAS_ORIGINE = 20
-const PAS_AU_VENT = 14
-
-/* La dérive et la déformation sont calculées UNE fois par fragment, au
-   point d'entrée sur la nappe, puis appliquées à tous les pas : la tranche
-   traversée par un rayon est courte devant la taille d'une masse, l'erreur
-   ne se voit pas et le vent ne coûte que 2 bruits par pixel. */
-const VENT_GLSL = /* glsl */ `
-          vec2 gVent;
-          float fbmGrossier(vec2 p) {
-            return 0.5 * bruit(p) + 0.25 * bruit(p * 2.03 + vec2(17.0, 31.0)) + 0.094;
-          }
-          float densiteGrossiere(vec3 p) {
-            float n = fbmGrossier(p.xz * uEchelle + gVent);
-            n = smoothstep(uCouverture, 1.0, n);
-            float niveau = mix(uFond, uSommet, n);
-            return uSens > 0.0
-              ? smoothstep(p.y, p.y + 1.2, niveau)
-              : smoothstep(niveau - 1.2, niveau, p.y);
-          }
-          float densite(vec3 p) {`
-
-/* la dérive (unités de bruit par seconde) : ~2,7 m/s sur le banc du bas,
-   le vent d'ouest pousse vers la caméra ; la houle tourne lentement */
-const DERIVE = "vec2(0.09, 0.035)"
-const HOULE_VITESSE = 0.06
-const HOULE_AMPLEUR = 0.55
-
-const VENT_MAIN = /* glsl */ `void main() {
-            vec2 q = vMonde.xz * uEchelle * 0.6;
-            gVent = uTemps * ${DERIVE} + ${HOULE_AMPLEUR.toFixed(2)} * (vec2(
-              bruit(q + uTemps * ${HOULE_VITESSE.toFixed(3)}),
-              bruit(q + vec2(5.2, 1.3) - uTemps * ${HOULE_VITESSE.toFixed(3)})
-            ) - 0.5);`
-
-function souffleSurLesNuages(shader: THREE.WebGLProgramParametersWithUniforms) {
-  shader.fragmentShader = shader.fragmentShader
-    .replace("float densite(vec3 p) {", VENT_GLSL)
-    .replace("vec2(uTemps * 0.012, uTemps * 0.004)", "gVent")
-    .replace("void main() {", VENT_MAIN)
-    .replace(`/ ${PAS_ORIGINE}.0 /`, `/ ${PAS_AU_VENT}.0 /`)
-    .replace(`k < ${PAS_ORIGINE};`, `k < ${PAS_AU_VENT};`)
-    .replace("densite(p + soleil * 1.6)", "densiteGrossiere(p + soleil * 1.6)")
-    /* moins de pas, chacun plus opaque : même épaisseur optique totale */
-    .replace("float a = d * 0.38;", `float a = 1.0 - pow(1.0 - d * 0.38, ${(PAS_ORIGINE / PAS_AU_VENT).toFixed(3)});`)
-}
-
-/* branchement de mer-de-nuages.tsx : sans ?effets=a|c, ne touche à rien */
-export function ventSurNuages(materiau: THREE.ShaderMaterial) {
-  if (effetsVoulus().vent) materiau.onBeforeCompile = souffleSurLesNuages
-}
-
-/* ---- b : l'asphalte mouillé ----------------------------------------- */
+/* L'ASPHALTE MOUILLÉ (#47). La chaussée prend une carte de flaques
+   procédurale (rugosité basse, albédo assombri, normale aplanie dans
+   l'eau) : les vrais spots et les néons de la voiture s'y mirent par le
+   GGX, sans lumière de plus. Les luminaires qui ne sont que des sprites y
+   laissent un reflet PEINT, une traînée verticale calculée en espace monde
+   depuis leur image miroir (aucun render target). Branché par rue.tsx. */
 
 const CHAUSSEES = ["CityGen_Streets", "CityGen_lanes_secondary_color"]
 
@@ -174,9 +94,9 @@ function refletsDe(lampes: [number, number, number, boolean?][]) {
   return refletsPartages
 }
 
-/* branchement de rue.tsx (Decor) : sans ?effets=b|c, ne touche à rien */
+/* branchement de rue.tsx (Decor), appelé pour chaque matériau du décor */
 export function mouilleLaChaussee(mat: THREE.MeshStandardMaterial, lampes: [number, number, number, boolean?][]) {
-  if (!effetsVoulus().mouille || !CHAUSSEES.includes(mat.name)) return
+  if (!CHAUSSEES.includes(mat.name)) return
   const reflets = refletsDe(lampes)
   mat.onBeforeCompile = (shader) => {
     shader.uniforms.uReflets = reflets.positions
