@@ -33,8 +33,8 @@ import type { Trajectoire } from "./vol"
 
    LA PROFONDEUR DE CHAMP : ?zoom=x seul l'active, ?zoom=x&dof=0 la coupe
    (pour la comparer au banc). Montée dans le composer dès le départ, ses
-   programmes compilent avec ceux des effets, avant le rideau (58 au lieu
-   de 50, stables du rideau à l'habitacle, mesuré en capture). Hors du vol
+   programmes compilent avec ceux des effets, avant le rideau (61 au lieu
+   de 53, stables du rideau à l'habitacle, mesuré en capture). Hors du vol
    son flou tombe à 0, mais ses passes tournent quand même. Pas de flou de
    mouvement : postprocessing n'en a pas, il faudrait un tampon de vitesse. */
 
@@ -46,8 +46,11 @@ export function zoomVoulu(): Variante | null {
   return v === "a" || v === "b" || v === "c" ? v : null
 }
 
+/* le montage (#56, prototype-montage.tsx) emprunte la même profondeur de champ */
 export function flouVoulu(): boolean {
-  return zoomVoulu() !== null && new URLSearchParams(location.search).get("dof") !== "0"
+  if (typeof location === "undefined") return false
+  const p = new URLSearchParams(location.search)
+  return (zoomVoulu() !== null || p.has("montage")) && p.get("dof") !== "0"
 }
 
 /* repris de vol.tsx, ciel.tsx et rue.tsx (le prototype ne touche pas
@@ -56,7 +59,7 @@ export function flouVoulu(): boolean {
 const CAM_FINALE: [number, number, number] = [-1.2, 2.0, -12.5]
 const POSE_VOITURE: [number, number, number] = [-4.4, -0.05, -19]
 const CHUTE_ALTITUDE = 45
-const BASCULE = 0.42
+export const BASCULE = 0.42
 const CHUTE_FENETRE: [number, number] = [0.45, 0.88]
 const PLONGEE = 9
 const POSE_CIEL = new THREE.Vector3(-4.2, -0.4, 7.8)
@@ -64,7 +67,7 @@ const ARRIVEE = new THREE.Vector3(...CAM_FINALE)
 /* le centre de la caisse, au-dessus de son point de pose */
 const CENTRE_POSEE = new THREE.Vector3(POSE_VOITURE[0], POSE_VOITURE[1] + 0.6, POSE_VOITURE[2])
 /* le retour au vol : après l'impact (0,88), avant la fin de la course */
-const RENDU_AU_VOL: [number, number] = [0.87, 0.97]
+export const RENDU_AU_VOL: [number, number] = [0.87, 0.97]
 const BOKEH = 3
 const PROFONDEUR_NETTE = 3
 
@@ -75,45 +78,52 @@ const adoucit = (t: number) => t * t * (3 - 2 * t)
 const foyer = new THREE.Vector3()
 let flou = 0
 
-type Plan = { position: THREE.Vector3; vise: THREE.Vector3; fov: number; poids: number }
+export type Plan = { position: THREE.Vector3; vise: THREE.Vector3; fov: number; poids: number }
 
 export function ZoomCamera({ etat, vol }: { etat: string; vol: MutableRefObject<Trajectoire> }) {
   const variante = zoomVoulu()
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
-  const interne = useRef({
-    fovBase: 0,
-    plan: { position: new THREE.Vector3(), vise: new THREE.Vector3(), fov: 38, poids: 0 } as Plan,
-    /* une caméra, pas un Object3D : seul un isCamera regarde vers -z */
-    pivot: new THREE.PerspectiveCamera(),
-  })
+  const interne = useRef({ fovBase: 0, plan: nouveauPlan() })
 
   useFrame(() => {
     const i = interne.current
     if (etat !== "ATTERRISSAGE" || !variante) {
       i.fovBase = 0
-      flou = 0
+      eteintFlou()
       return
     }
     if (!i.fovBase) i.fovBase = camera.fov
     const t = vol.current.t
     const plan = t < BASCULE ? acteI(variante, t / BASCULE, i.plan) : acteII(variante, vol.current, i.plan)
-
-    i.pivot.position.copy(plan.position)
-    i.pivot.lookAt(plan.vise)
-    camera.position.lerp(plan.position, plan.poids)
-    camera.quaternion.slerp(i.pivot.quaternion, plan.poids)
-    camera.fov = THREE.MathUtils.lerp(i.fovBase, plan.fov, plan.poids)
-    camera.updateProjectionMatrix()
-
-    foyer.copy(plan.vise)
-    flou = plan.poids
+    cadre(camera, plan, i.fovBase)
   })
 
   return null
 }
 
+export const nouveauPlan = (): Plan => ({ position: new THREE.Vector3(), vise: new THREE.Vector3(), fov: 38, poids: 0 })
+
+/* une caméra, pas un Object3D : seul un isCamera regarde vers -z */
+const pivot = new THREE.PerspectiveCamera()
+
+/* pose la caméra sur le plan, au poids du plan, et y met le point net */
+export function cadre(camera: THREE.PerspectiveCamera, plan: Plan, fovBase: number) {
+  pivot.position.copy(plan.position)
+  pivot.lookAt(plan.vise)
+  camera.position.lerp(plan.position, plan.poids)
+  camera.quaternion.slerp(pivot.quaternion, plan.poids)
+  camera.fov = THREE.MathUtils.lerp(fovBase, plan.fov, plan.poids)
+  camera.updateProjectionMatrix()
+  foyer.copy(plan.vise)
+  flou = plan.poids
+}
+
+export function eteintFlou() {
+  flou = 0
+}
+
 /* acte I : la voiture du ciel s'enfonce dans le banc (canal plonge = p²) */
-function acteI(variante: Variante, p: number, plan: Plan): Plan {
+export function acteI(variante: Variante, p: number, plan: Plan): Plan {
   const plonge = p * p
   const e = adoucit(p)
   const voiture = new THREE.Vector3(0, -PLONGEE * plonge, 0)
@@ -141,7 +151,7 @@ function acteI(variante: Variante, p: number, plan: Plan): Plan {
 }
 
 /* acte II : la voiture de la rue tombe sur son garage (canal chute) */
-function acteII(variante: Variante, v: Trajectoire, plan: Plan): Plan {
+export function acteII(variante: Variante, v: Trajectoire, plan: Plan): Plan {
   const voiture = CENTRE_POSEE.clone()
   voiture.y += (1 - v.chute * v.chute) * CHUTE_ALTITUDE
   /* sous le voile plein à la bascule, le poids est déjà à 1 : rien ne saute */

@@ -22,6 +22,7 @@ import { MusiqueIntro, lanceMusique } from "./musique-intro"
 import { TransitionVoile } from "./transition-voile"
 import { Effets } from "./rendu"
 import { ZoomCamera, zoomVoulu } from "./prototype-zoom"
+import { MontageCamera, montageVoulu } from "./prototype-montage"
 
 /* LES ASSETS ET LEUR CASCADE — ticket #28.
 
@@ -503,6 +504,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
             devient le fond de TOUS les états d'après. */}
         <Vol etat={etat} vol={vol} voile={voile} surBascule={surBascule} fini={() => envoie({ t: "fini" })} />
         {zoomVoulu() && <ZoomCamera etat={etat} vol={vol} />}
+        {montageVoulu() && <MontageCamera etat={etat} vol={vol} />}
         <Seuil etat={etat} cockpit={cockpit} voile={voileVerre} nom={nom} fini={() => envoie({ t: "fini" })} />
         <Pouls actif={etat === "SEUIL" || apres} ecran={ecran} />
         <Suspense fallback={null}>
