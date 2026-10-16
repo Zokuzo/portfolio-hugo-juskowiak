@@ -5,39 +5,22 @@ import type { Lang } from "@/components/proto/dict"
 import type { Etat } from "./machine"
 import { contexteAudio } from "./spotify"
 
-/* PROTOTYPE JETABLE (#58) : LA MUSIQUE DE L'INTRO.
-
-   « VISION (Slowed) » (UdieNnx, HXVSAGE, Duduzinho), le choix de Hugo pour
-   la chute. Piste sous droits : on n'héberge RIEN, on lit la préversion du
+/* LA MUSIQUE DE L'INTRO (#58) : « VISION (Slowed) » (UdieNnx, HXVSAGE,
+   Duduzinho), le choix de Hugo pour la chute. Piste sous droits : on
+   n'héberge RIEN, /api/gt86/musique-intro renvoie vers la préversion du
    CDN Spotify (p.scdn.co, CORS ouvert), comme le lecteur de l'habitacle.
    La préversion fait 24 s : 2 s de montée, puis la partie pleine jusqu'au
    bout. La chute (vol 4,6 s + seuil 6,6 s) tombe donc dessus en entier.
 
-   Commuté par ?musique=a|b sur / ; sans paramètre, lanceMusique() sort
-   tout de suite et le composant n'est pas monté.
-   - a : départ au clic de décollage, fondu d'entrée 600 ms, fondu de
-     sortie à l'entrée dans l'habitacle ;
-   - b : même départ, puis la boucle continue à volume réduit dans
-     l'habitacle jusqu'à ce que le lecteur Spotify prenne la main.
+   Départ au clic de décollage, fondu d'entrée 600 ms ; fondu de sortie
+   de 1,6 s à l'entrée dans l'habitacle. Zéro octet audio avant le clic :
+   l'<audio> naît dans lanceMusique(), appelée dans la pile du clic
+   (geste exigé par les navigateurs). */
 
-   Zéro octet audio avant le clic : l'<audio> naît dans lanceMusique(),
-   appelée dans la pile du clic (geste exigé par les navigateurs). */
-
-type Variante = "a" | "b"
-
-/* ponytail: URL relevée le 2026-10-16 dans open.spotify.com/embed/track/
-   7fx9paDdMEk5xrF5yVWUfW (audioPreview.url) ; si elle meurt, silence. Une
-   route serveur comme /api/gt86/mix le jour où on garde la musique. */
-const PREVERSION = "https://p.scdn.co/mp3-preview/7fb250cd985d7beeaad88f05390d59a123fb6da3"
+const SOURCE = "/api/gt86/musique-intro"
 const VOLUME = 0.6
-const VOLUME_HABITACLE = 0.18
 const FONDU_ENTREE_S = 0.6
 const FONDU_SORTIE_S = 1.6
-
-export function musiqueVoulue(): Variante | null {
-  const v = new URLSearchParams(window.location.search).get("musique")
-  return v === "a" || v === "b" ? v : null
-}
 
 /* une seule lecture à la fois, au module : le clic et le composant la
    partagent sans passer par React */
@@ -46,7 +29,7 @@ const ecouteurs = new Set<() => void>()
 const previens = () => ecouteurs.forEach((f) => f())
 
 export function lanceMusique() {
-  if (!musiqueVoulue() || lecture) return
+  if (lecture) return
   /* un contexte refusé ne doit jamais bloquer le décollage : sans
      musique, la chute part quand même */
   try {
@@ -54,7 +37,7 @@ export function lanceMusique() {
     const audio = new Audio()
     audio.crossOrigin = "anonymous"
     audio.loop = true
-    audio.src = PREVERSION
+    audio.src = SOURCE
     const source = ctx.createMediaElementSource(audio)
     const fondu = ctx.createGain()
     const coupe = ctx.createGain()
@@ -70,19 +53,21 @@ export function lanceMusique() {
   }
 }
 
-function rampe(cible: number, duree: number) {
-  if (!lecture) return
-  const ctx = contexteAudio()
-  const g = lecture.fondu.gain
-  g.cancelScheduledValues(ctx.currentTime)
-  g.setValueAtTime(g.value, ctx.currentTime)
-  g.linearRampToValueAtTime(cible, ctx.currentTime + duree)
+/* secondes depuis le début de l'extrait, null hors lecture ; pour caler
+   des coupes sur la musique (#56). L'extrait boucle : le temps repart à 0
+   après 24 s. */
+export function tempsMusique(): number | null {
+  return lecture && !lecture.audio.paused ? lecture.audio.currentTime : null
 }
 
 function arrete(duree: number) {
   const l = lecture
   if (!l) return
-  rampe(0, duree)
+  const ctx = contexteAudio()
+  const g = l.fondu.gain
+  g.cancelScheduledValues(ctx.currentTime)
+  g.setValueAtTime(g.value, ctx.currentTime)
+  g.linearRampToValueAtTime(0, ctx.currentTime + duree)
   lecture = null
   previens()
   setTimeout(() => {
@@ -92,7 +77,7 @@ function arrete(duree: number) {
   }, duree * 1000 + 50)
 }
 
-export function MusiqueIntro({ variante, etat, ampVivant, lang }: { variante: Variante; etat: Etat; ampVivant: boolean; lang: Lang }) {
+export function MusiqueIntro({ etat, ampVivant, lang }: { etat: Etat; ampVivant: boolean; lang: Lang }) {
   const [enCours, setEnCours] = useState(lecture !== null)
   const [muet, setMuet] = useState(false)
 
@@ -105,15 +90,12 @@ export function MusiqueIntro({ variante, etat, ampVivant, lang }: { variante: Va
     }
   }, [])
 
-  /* l'habitacle : a s'éteint, b se range sous la conversation ; le
-     lecteur Spotify, le rejeu (retour au CIEL) et le départ coupent tout */
+  /* l'habitacle éteint la musique ; le lecteur Spotify, le rejeu (retour
+     au CIEL) et le départ aussi */
   useEffect(() => {
-    if (ampVivant || etat === "CIEL" || etat === "DEPART") arrete(etat === "CIEL" ? 0.2 : FONDU_SORTIE_S)
-    else if (etat === "HABITACLE") {
-      if (variante === "a") arrete(FONDU_SORTIE_S)
-      else rampe(VOLUME_HABITACLE, FONDU_SORTIE_S)
-    }
-  }, [variante, etat, ampVivant])
+    if (etat === "CIEL") arrete(0.2)
+    else if (ampVivant || etat === "DEPART" || etat === "HABITACLE") arrete(FONDU_SORTIE_S)
+  }, [etat, ampVivant])
 
   useEffect(() => {
     if (lecture) lecture.coupe.gain.value = muet ? 0 : 1

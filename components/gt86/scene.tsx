@@ -18,7 +18,7 @@ import { Pouls, cockpitVide } from "./habitacle"
 import { PLAYLISTS, PROFIL_SPOTIFY, creeEcran, type Ecran, type ModeEcran, type Zone } from "./ecran"
 import { MoteurSpotify, RythmeAmp, type CommandesSpotify } from "./spotify"
 import { policeVoulue } from "./prototype-polices"
-import { MusiqueIntro, lanceMusique, musiqueVoulue } from "./prototype-musique"
+import { MusiqueIntro, lanceMusique } from "./musique-intro"
 import { TransitionVoile } from "./transition-voile"
 import { Effets } from "./rendu"
 import { ZoomCamera, zoomVoulu } from "./prototype-zoom"
@@ -144,7 +144,6 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
   const [fpsVoulu] = useState(() => new URLSearchParams(window.location.search).has("fps"))
   const [nodepart] = useState(() => new URLSearchParams(window.location.search).has("nodepart"))
   const [police] = useState(policeVoulue)
-  const [musique] = useState(musiqueVoulue)
   /* le composer du rendu (#46, #59), dont la chauffe retient le rideau
      comme celle de la rue */
   const [effetsPrets, setEffetsPrets] = useState(false)
@@ -679,7 +678,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
           un <audio> maison sur les préversions du CDN, gain (molette) et
           analyseur (spectre) ; il ne rend rien, il nourrit le peintre */}
       {ampVivant && <MoteurSpotify ecran={ecran} commandes={commandesSpotify} mix={mixCourant} />}
-      {musique && <MusiqueIntro variante={musique} etat={etat} ampVivant={ampVivant} lang={lang} />}
+      <MusiqueIntro etat={etat} ampVivant={ampVivant} lang={lang} />
 
       {/* le voile CHARGEMENT (7e retour #33) : couvre le ciel tant que
           les ressources décodent — transparent aux clics (le harnais et
