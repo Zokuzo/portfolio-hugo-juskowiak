@@ -21,6 +21,7 @@ import { policeVoulue } from "./prototype-polices"
 import { MusiqueIntro, lanceMusique } from "./musique-intro"
 import { TransitionVoile } from "./transition-voile"
 import { Effets } from "./rendu"
+import { ChoixDpr, DPR_DEPART } from "./dpr"
 import { ZoomCamera, zoomVoulu } from "./prototype-zoom"
 
 /* LES ASSETS ET LEUR CASCADE — ticket #28.
@@ -360,7 +361,11 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
      ne mange AUCUN clic, et ne concerne que le chemin d'intro. */
   const [ruePrete, setRuePrete] = useState(false)
   const surRuePrete = useCallback(() => setRuePrete(true), [])
-  const chargePret = cielPret && ruePrete && effetsPrets
+  /* la densité de la toile, choisie une fois sous le voile (dpr.tsx) */
+  const [dpr, setDpr] = useState<number | [number, number]>(DPR_DEPART)
+  const [dprPret, setDprPret] = useState(false)
+  const surDprPret = useCallback(() => setDprPret(true), [])
+  const chargePret = cielPret && ruePrete && effetsPrets && dprPret
   const [chargeVisible, setChargeVisible] = useState(false)
   /* le RIDEAU du rejeu (11e retour : « revoir la scène doit avoir un
      chargement ») : tout est déjà décodé au ↺, mais le ciel reprenait
@@ -482,7 +487,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
            veille, néons) et chaque interaction répond à la cadence de
            l'écran ; les invalidate() semés restent, inoffensifs. */
         frameloop="always"
-        dpr={[1, 1.5]}
+        dpr={dpr}
         /* alpha:false : la toile est OPAQUE (scene.background est posé) —
            le compositeur n'a plus à la fondre sur le DOM, c'est une frame
            moins chère sur beaucoup de GPU */
@@ -547,6 +552,9 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
           </Suspense>
         )}
         <Effets surPret={surEffetsPrets} />
+        {/* seulement sous le rideau du CIEL : une session qui rouvre à
+            l'habitacle n'a pas de voile, elle garde la densité de départ */}
+        <ChoixDpr mesure={effetsPrets && etat === "CIEL"} surChoix={setDpr} surPret={surDprPret} />
         {fpsVoulu && <Stats />}
         <RythmeAmp actif={etat === "SPOTIFY"} ecran={ecran} />
       </Canvas>
