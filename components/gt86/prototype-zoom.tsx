@@ -46,11 +46,20 @@ export function zoomVoulu(): Variante | null {
   return v === "a" || v === "b" || v === "c" ? v : null
 }
 
-/* le montage (#56, prototype-montage.tsx) emprunte la même profondeur de champ */
+/* ?montage=a|b|c (#56, prototype-montage.tsx), lu ici pour flouVoulu :
+   l'importer de prototype-montage, qui importe déjà ce fichier, ferait
+   un cycle qui casse le module au chargement. */
+export function montageVoulu(): Variante | null {
+  if (typeof location === "undefined") return null
+  const v = new URLSearchParams(location.search).get("montage")
+  return v === "a" || v === "b" || v === "c" ? v : null
+}
+
+/* le montage emprunte la même profondeur de champ */
 export function flouVoulu(): boolean {
   if (typeof location === "undefined") return false
   const p = new URLSearchParams(location.search)
-  return (zoomVoulu() !== null || p.has("montage")) && p.get("dof") !== "0"
+  return (zoomVoulu() !== null || montageVoulu() !== null) && p.get("dof") !== "0"
 }
 
 /* repris de vol.tsx, ciel.tsx et rue.tsx (le prototype ne touche pas

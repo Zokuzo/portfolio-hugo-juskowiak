@@ -5,7 +5,7 @@ import { useFrame } from "@react-three/fiber"
 import * as THREE from "three"
 
 /* La nappe de nuages raymarchée (FBM 2D + tranche verticale, 14 pas), portée
-   telle quelle du prototype #21 (route jetable, supprimée au #35). Elle
+   du prototype #21 (route jetable, supprimée au #35). Elle
    sert de sol OU de plafond (sens), et la couverture seuille le FBM pour
    tailler des masses distinctes avec du ciel entre elles, au lieu d'un tapis.
    Pas de garde prefers-reduced-motion ici : `capable.ts` interdit le montage
@@ -102,8 +102,12 @@ export default function MerDeNuages({
             }
             return v;
           }
+          /* fbm sans ses octaves 3 et 4, remplacées par leur moyenne
+             (0,125 x 0,5 + 0,0625 x 0,5) : sans elle, la sonde solaire
+             dériverait par rapport à fbm */
+          const float MOYENNE_OCTAVES_OMISES = 0.094;
           float fbmGrossier(vec2 p) {
-            return 0.5 * bruit(p) + 0.25 * bruit(p * 2.03 + vec2(17.0, 31.0)) + 0.094;
+            return 0.5 * bruit(p) + 0.25 * bruit(p * 2.03 + vec2(17.0, 31.0)) + MOYENNE_OCTAVES_OMISES;
           }
           /* le vent : calculé UNE fois par fragment, au point d'entrée sur
              la nappe, puis appliqué à tous les pas. La tranche traversée

@@ -5,7 +5,7 @@ import { useFrame, useThree } from "@react-three/fiber"
 import * as THREE from "three"
 import { VOL_MS, type Trajectoire } from "./vol"
 import { tempsMusique } from "./musique-intro"
-import { acteI, acteII, BASCULE, cadre, eteintFlou, nouveauPlan, RENDU_AU_VOL, type Plan } from "./prototype-zoom"
+import { acteI, acteII, BASCULE, cadre, eteintFlou, montageVoulu, nouveauPlan, RENDU_AU_VOL, type Plan, type Variante } from "./prototype-zoom"
 
 /* PROTOTYPE JETABLE (#56) : le zoom cinématographique, monté en plans.
 
@@ -34,14 +34,6 @@ import { acteI, acteII, BASCULE, cadre, eteintFlou, nouveauPlan, RENDU_AU_VOL, t
    de mémoire d'une image à l'autre (cercle de confusion recalculé à
    chaque image), ni le bloom, ni le tone mapping AgX (non adaptatif) :
    rien ne traîne sur une coupe. */
-
-type Variante = "a" | "b" | "c"
-
-export function montageVoulu(): Variante | null {
-  if (typeof location === "undefined") return null
-  const v = new URLSearchParams(location.search).get("montage")
-  return v === "a" || v === "b" || v === "c" ? v : null
-}
 
 /* LA GRILLE DE « VISION (Slowed) », mesurée sur la préversion de 24 s
    (ffmpeg en mono 22 050 Hz, flux spectral sur fenêtres de 1024 / pas de
@@ -104,7 +96,6 @@ export function MontageCamera({ etat, vol }: { etat: string; vol: MutableRefObje
     if (i.plan > 0 && v.t < BASCULE) pose.poids = 1
     tourne(pose, dernier ? 0 : TOURS[i.plan % TOURS.length])
     cadre(camera, pose, i.fovBase)
-    Object.assign(window, { __montage: { t: v.t, horloge, plan: i.plan, type } })
   })
 
   return null

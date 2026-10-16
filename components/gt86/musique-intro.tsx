@@ -45,8 +45,14 @@ export function lanceMusique() {
     fondu.gain.setValueAtTime(0, ctx.currentTime)
     fondu.gain.linearRampToValueAtTime(VOLUME, ctx.currentTime + FONDU_ENTREE_S)
     lecture = { audio, fondu, coupe, noeuds: [source, fondu, coupe] }
+    /* sans son, pas de bouton qui en annonce un */
+    const echec = (e: unknown) => {
+      console.warn("[gt86] musique de l'intro refusée", e)
+      if (lecture?.audio === audio) arrete(0)
+    }
+    audio.addEventListener("error", () => echec(audio.error))
     void ctx.resume()
-    audio.play().catch((e) => console.warn("[gt86] musique de l'intro refusée", e))
+    audio.play().catch(echec)
     previens()
   } catch (e) {
     console.warn("[gt86] musique de l'intro impossible", e)
@@ -126,7 +132,8 @@ export function MusiqueIntro({ etat, ampVivant, lang }: { etat: Etat; ampVivant:
         cursor: "pointer",
       }}
     >
-      {lang === "fr" ? "♪ MUSIQUE" : "♪ MUSIC"}
+      <span aria-hidden="true">♪ </span>
+      {lang === "fr" ? "MUSIQUE" : "MUSIC"}
     </button>
   )
 }

@@ -21,8 +21,8 @@ import { policeVoulue } from "./prototype-polices"
 import { MusiqueIntro, lanceMusique } from "./musique-intro"
 import { TransitionVoile } from "./transition-voile"
 import { Effets } from "./rendu"
-import { ZoomCamera, zoomVoulu } from "./prototype-zoom"
-import { MontageCamera, montageVoulu } from "./prototype-montage"
+import { montageVoulu, ZoomCamera, zoomVoulu } from "./prototype-zoom"
+import { MontageCamera } from "./prototype-montage"
 
 /* LES ASSETS ET LEUR CASCADE — ticket #28.
 

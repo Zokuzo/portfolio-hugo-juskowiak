@@ -2,13 +2,13 @@
    CÔTÉ SERVEUR : son JSON __NEXT_DATA__ porte les préversions MP3 du CDN
    (p.scdn.co). Fragile par nature (ce JSON n'est pas un contrat) : toute
    défaillance lève, à l'appelant de rendre son repli. */
-export async function entiteEmbed<T>(chemin: string): Promise<T> {
+export async function entiteEmbed<T>(chemin: string, delaiMs = 8000): Promise<T> {
   const page = await fetch(`https://open.spotify.com/embed/${chemin}`, {
     headers: { "user-agent": "Mozilla/5.0 (portfolio hugojuskowiak.com)" },
     next: { revalidate: 3600 },
     /* un réseau qui BLOQUE (DROP silencieux) suspendait la route ~300 s
-       (revue) : au-delà de 8 s on rend le repli */
-    signal: AbortSignal.timeout(8000),
+       (revue) : au-delà du délai (8 s par défaut) on rend le repli */
+    signal: AbortSignal.timeout(delaiMs),
   })
   if (!page.ok) throw new Error(`embed ${chemin} : ${page.status}`)
   const html = await page.text()
