@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef, type RefObject } from "react"
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react"
 import { useFrame, useThree } from "@react-three/fiber"
 import * as THREE from "three"
 import { EffectComposer, Bloom, ToneMapping, LUT, Noise, Vignette, ChromaticAberration } from "@react-three/postprocessing"
@@ -47,12 +47,18 @@ export function fondPourLeRendu(fragment: string): string {
 
 /* seuil sous le blanc de la scène linéaire, intensité pleine : phares,
    néons et dalle (émissifs poussés) débordent franchement */
-const BLOOM = { intensite: 1.0, seuil: 0.9 }
+const BLOOM = { intensite: 1.0, seuil: 0.9, niveaux: 8 }
+/* ?bloom=leger, pour l'œil de Hugo (#42) : 5 niveaux de flou au lieu de
+   8 (le halo porte moins loin, 6 passes de moins par image) et un seuil
+   remonté au blanc, seuls les émissifs les plus poussés débordent */
+const BLOOM_LEGER = { intensite: 1.0, seuil: 1.0, niveaux: 5 }
 /* décalage de l'aberration, en fraction d'écran, modulé vers les bords */
 const ABERRATION = new THREE.Vector2(0.0016, 0.0011)
 const GRAIN = 0.18
 const VIGNETTE = { decalage: 0.32, obscurite: 0.42 }
 const MSAA = 4
+/* ?msaa=2, pour l'œil de Hugo (#42) : moitié moins d'échantillons */
+const MSAA_LEGER = 2
 /* la couche réservée au voile (#45), hors de la passe de rendu */
 const COUCHE_VOILE = 31
 /* images composées avant de lever le rideau : la première compile les
@@ -67,16 +73,33 @@ const OMBRE = new THREE.Vector3(1.03, 0.93, 1.07)
 const LUMIERE = new THREE.Vector3(1.07, 0.95, 0.92)
 const NOIR_RELEVE = new THREE.Vector3(0.018, 0.006, 0.028)
 
+/* lus au montage : le composer se construit avec eux, ses programmes se
+   compilent donc pendant la chauffe, avant le rideau, comme le reste */
+function reglages() {
+  const url = new URLSearchParams(location.search)
+  return {
+    bloom: url.get("bloom") === "leger" ? BLOOM_LEGER : BLOOM,
+    msaa: url.get("msaa") === String(MSAA_LEGER) ? MSAA_LEGER : MSAA,
+  }
+}
+
 export function Effets({ surPret }: { surPret: () => void }) {
   const lut = useMemo(lutRose, [])
+  const [{ bloom, msaa }] = useState(reglages)
   const composer = useRef<Composer>(null)
   useVoileHorsComposer()
-  useSignalePret(composer, surPret)
+  useSignalePret(composer, msaa, surPret)
   return (
-    <EffectComposer ref={composer} multisampling={MSAA}>
+    <EffectComposer ref={composer} multisampling={msaa}>
       {flouVoulu() && <FlouZoom />}
       <ChromaticAberration offset={ABERRATION} radialModulation modulationOffset={0.2} />
-      <Bloom mipmapBlur intensity={BLOOM.intensite} luminanceThreshold={BLOOM.seuil} luminanceSmoothing={0.2} />
+      <Bloom
+        mipmapBlur
+        levels={bloom.niveaux}
+        intensity={bloom.intensite}
+        luminanceThreshold={bloom.seuil}
+        luminanceSmoothing={0.2}
+      />
       <ToneMapping mode={ToneMappingMode.AGX} />
       <LUT lut={lut} />
       <Noise premultiply blendFunction={BlendFunction.SOFT_LIGHT} opacity={GRAIN} />
@@ -150,18 +173,16 @@ function useVoileHorsComposer() {
    composer ait peint IMAGES_AVANT_PRET images avec sa passe d'effets.
    scene.tsx ne monte la rue qu'après ce signal : sa chauffe peint alors
    dans la cible du composer (chauffeDans) */
-function useSignalePret(composer: RefObject<Composer | null>, surPret: () => void) {
+function useSignalePret(composer: RefObject<Composer | null>, msaa: number, surPret: () => void) {
   const images = useRef(0)
-  /* une cible au format du composer (flottante, MSAA, profondeur), et à
-     la taille de l'écran : three r169 cale sa cible de transmission (le
-     verre du décor) sur la vue courante. Une petite cible la laissait
-     petite pendant tout le ciel, et la première image de la rue la
-     réallouait en plein écran, en pleine bascule */
+  /* une cible au FORMAT du composer (flottante, MSAA, profondeur) : c'est
+     le format que le pilote prépare, pas la taille. Elle reste à 1 × 1
+     depuis que le verre de la ville a perdu sa transmission (#42) : plus
+     aucune cible de three ne se cale sur la vue courante */
   const cibleDeChauffe = useMemo(
-    () => new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: MSAA }),
-    [],
+    () => new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: msaa }),
+    [msaa],
   )
-  const gl = useThree((s) => s.gl)
   useEffect(
     () => () => {
       chauffeDans(null)
@@ -176,8 +197,6 @@ function useSignalePret(composer: RefObject<Composer | null>, surPret: () => voi
     if (!c || c.passes.length < 2) return
     images.current++
     if (images.current < IMAGES_AVANT_PRET) return
-    const taille = gl.getDrawingBufferSize(new THREE.Vector2())
-    cibleDeChauffe.setSize(taille.x, taille.y)
     chauffeDans(cibleDeChauffe)
     surPret()
   }, 2)

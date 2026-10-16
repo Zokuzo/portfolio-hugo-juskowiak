@@ -141,6 +141,17 @@ export function envNuit() {
 
 /* ---- le décor ---------------------------------------------------------- */
 
+/* LE VERRE DE LA VILLE SANS TRANSMISSION (carte #42). Le GLB le livre en
+   KHR_materials_transmission : ce seul matériau faisait redessiner par
+   three tous les opaques de la rue dans une cible plein écran à chaque
+   image, un tiers du coût de la chute et du seuil (audit ips). Il devient
+   un verre transparent simple, même blanc à 25 % d'opacité du GLB : ce
+   sont les verrières des toits, vues d'en haut pendant la chute, où
+   l'écart ne dépasse pas quelques niveaux de gris. */
+function vitreSansTransmission(verre: THREE.MeshPhysicalMaterial) {
+  verre.transmission = 0
+}
+
 function Decor() {
   const { scene } = useGLTF(RUE_GLB)
 
@@ -160,6 +171,7 @@ function Decor() {
         mat.envMap = env
         mat.envMapIntensity = (mat.metalness ?? 0) > 0.5 ? 0.35 : 0.15
         mat.needsUpdate = true
+        if (mat.name === "CityGenGlass.001") vitreSansTransmission(mat as THREE.MeshPhysicalMaterial)
         mouilleLaChaussee(mat, LAMPES)
         /* les fenêtres de ce décor sont PEINTES dans les textures (24
            sommets pour un mur entier) : les pixels sombres eux-mêmes
