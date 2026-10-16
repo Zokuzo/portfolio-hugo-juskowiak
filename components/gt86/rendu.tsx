@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef, type RefObject } from "react"
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react"
 import { useFrame, useThree } from "@react-three/fiber"
 import * as THREE from "three"
 import { EffectComposer, Bloom, ToneMapping, LUT, Noise, Vignette, ChromaticAberration } from "@react-three/postprocessing"
@@ -47,7 +47,11 @@ export function fondPourLeRendu(fragment: string): string {
 
 /* seuil sous le blanc de la scène linéaire, intensité pleine : phares,
    néons et dalle (émissifs poussés) débordent franchement */
-const BLOOM = { intensite: 1.0, seuil: 0.9 }
+const BLOOM = { intensite: 1.0, seuil: 0.9, niveaux: 8 }
+/* ?bloom=leger, pour l'œil de Hugo (#42) : 5 niveaux de flou au lieu de
+   8 (le halo porte moins loin, 6 passes de moins par image) et un seuil
+   remonté au blanc, seuls les émissifs les plus poussés débordent */
+const BLOOM_LEGER = { intensite: 1.0, seuil: 1.0, niveaux: 5 }
 /* décalage de l'aberration, en fraction d'écran, modulé vers les bords */
 const ABERRATION = new THREE.Vector2(0.0016, 0.0011)
 const GRAIN = 0.18
@@ -67,8 +71,18 @@ const OMBRE = new THREE.Vector3(1.03, 0.93, 1.07)
 const LUMIERE = new THREE.Vector3(1.07, 0.95, 0.92)
 const NOIR_RELEVE = new THREE.Vector3(0.018, 0.006, 0.028)
 
+/* lus au montage : le composer se construit avec eux, ses programmes se
+   compilent donc pendant la chauffe, avant le rideau, comme le reste */
+function reglages() {
+  const url = new URLSearchParams(location.search)
+  return {
+    bloom: url.get("bloom") === "leger" ? BLOOM_LEGER : BLOOM,
+  }
+}
+
 export function Effets({ surPret }: { surPret: () => void }) {
   const lut = useMemo(lutRose, [])
+  const [{ bloom }] = useState(reglages)
   const composer = useRef<Composer>(null)
   useVoileHorsComposer()
   useSignalePret(composer, surPret)
@@ -76,7 +90,13 @@ export function Effets({ surPret }: { surPret: () => void }) {
     <EffectComposer ref={composer} multisampling={MSAA}>
       {flouVoulu() && <FlouZoom />}
       <ChromaticAberration offset={ABERRATION} radialModulation modulationOffset={0.2} />
-      <Bloom mipmapBlur intensity={BLOOM.intensite} luminanceThreshold={BLOOM.seuil} luminanceSmoothing={0.2} />
+      <Bloom
+        mipmapBlur
+        levels={bloom.niveaux}
+        intensity={bloom.intensite}
+        luminanceThreshold={bloom.seuil}
+        luminanceSmoothing={0.2}
+      />
       <ToneMapping mode={ToneMappingMode.AGX} />
       <LUT lut={lut} />
       <Noise premultiply blendFunction={BlendFunction.SOFT_LIGHT} opacity={GRAIN} />
