@@ -152,16 +152,14 @@ function useVoileHorsComposer() {
    dans la cible du composer (chauffeDans) */
 function useSignalePret(composer: RefObject<Composer | null>, surPret: () => void) {
   const images = useRef(0)
-  /* une cible au format du composer (flottante, MSAA, profondeur), et à
-     la taille de l'écran : three r169 cale sa cible de transmission (le
-     verre du décor) sur la vue courante. Une petite cible la laissait
-     petite pendant tout le ciel, et la première image de la rue la
-     réallouait en plein écran, en pleine bascule */
+  /* une cible au FORMAT du composer (flottante, MSAA, profondeur) : c'est
+     le format que le pilote prépare, pas la taille. Elle reste à 1 × 1
+     depuis que le verre de la ville a perdu sa transmission (#42) : plus
+     aucune cible de three ne se cale sur la vue courante */
   const cibleDeChauffe = useMemo(
     () => new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: MSAA }),
     [],
   )
-  const gl = useThree((s) => s.gl)
   useEffect(
     () => () => {
       chauffeDans(null)
@@ -176,8 +174,6 @@ function useSignalePret(composer: RefObject<Composer | null>, surPret: () => voi
     if (!c || c.passes.length < 2) return
     images.current++
     if (images.current < IMAGES_AVANT_PRET) return
-    const taille = gl.getDrawingBufferSize(new THREE.Vector2())
-    cibleDeChauffe.setSize(taille.x, taille.y)
     chauffeDans(cibleDeChauffe)
     surPret()
   }, 2)

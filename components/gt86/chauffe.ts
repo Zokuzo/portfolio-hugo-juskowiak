@@ -30,18 +30,12 @@ export function compileEnSolo(
   const horsEcran = new THREE.WebGLRenderTarget(1, 1)
   try {
     /* Seule la variante hors écran se compile ici : rien de la rue ne se
-       peint à l'écran. Toute cible hors écran (transmission du verre,
-       cible du composer) donne la même variante, sortie linéaire sans
-       tone mapping : cette compilation couvre donc aussi le composer
-       (#46, #59). rendEnSolo n'y ajoute que la préparation du pilote
-       pour le format de la cible. Le verre du décor
-       (KHR_materials_transmission) déclenche la passe de transmission :
-       les opaques y sont redessinés dans une cible hors écran, sortie
-       linéaire sans tone mapping. Une cible posée pendant la compilation
-       produit cette variante. */
+       peint à l'écran, tout passe par la cible du composer (#46, #59),
+       sortie linéaire sans tone mapping. Une cible posée pendant la
+       compilation produit cette variante ; rendEnSolo n'y ajoute que la
+       préparation du pilote pour le format de la cible. */
     gl.setRenderTarget(horsEcran)
-    const versTransmission = gl.compileAsync(sujet, camera, scene)
-    return versTransmission.finally(() => horsEcran.dispose())
+    return gl.compileAsync(sujet, camera, scene).finally(() => horsEcran.dispose())
   } finally {
     gl.setRenderTarget(cibleAvant)
     scene.visible = sceneVisible
@@ -66,8 +60,8 @@ export function chauffeDans(cible: THREE.WebGLRenderTarget | null) {
    dans le champ ni au premier allumage (cônes des phares, néons, poussière
    de l'impact naissent cachés). Les lumières, toujours montées, gardent
    leur nombre : forcer `visible` ne change pas la topologie. Ce que la
-   compilation n'a pas prévu (la face arrière du verre double face, que la
-   transmission retourne) s'y compile aussi, derrière le voile. À appeler
+   compilation n'a pas prévu (la face arrière des verres double face,
+   peinte en passe séparée) s'y compile aussi, derrière le voile. À appeler
    dans un useFrame : le rendu normal de R3F repeint la même image juste
    après, l'écran ne voit jamais ce rendu. */
 export function rendEnSolo(
