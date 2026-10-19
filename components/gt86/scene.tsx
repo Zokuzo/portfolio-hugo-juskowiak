@@ -365,15 +365,19 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
      découvre que prête. Depuis le #44 « prête » veut dire GPU CHAUD : la
      rue ne le signale qu'une fois ses programmes compilés et ses
      textures et géométries téléversées (chauffe de rue.tsx). Il
-     n'apparaît qu'après 250 ms (« si nécessaire » : cache plein = rien),
-     ne mange AUCUN clic, et ne concerne que le chemin d'intro. */
+     n'apparaît qu'après 250 ms (« si nécessaire » : cache plein = rien)
+     et ne mange AUCUN clic. Il couvre aussi la session qui rouvre à
+     l'habitacle (#42) : le décodage du GLB et les compilations y gelaient
+     l'image en pleine vue (610 et 93 ms au relevé ?ips de Hugo). */
   const [ruePrete, setRuePrete] = useState(false)
   const surRuePrete = useCallback(() => setRuePrete(true), [])
   /* la densité de la toile, choisie une fois sous le voile (dpr.tsx) */
   const [dpr, setDpr] = useState<number | [number, number]>(DPR_DEPART)
   const [dprPret, setDprPret] = useState(false)
   const surDprPret = useCallback(() => setDprPret(true), [])
-  const chargePret = cielPret && ruePrete && effetsPrets && dprPret
+  /* la densité ne se mesure qu'au CIEL (dpr.tsx) : la session revenante
+     la garde jusqu'au premier rejeu, sous le rideau */
+  const chargePret = cielPret && ruePrete && effetsPrets && (dprPret || etat !== "CIEL")
   const [chargeVisible, setChargeVisible] = useState(false)
   /* le RIDEAU du rejeu (11e retour : « revoir la scène doit avoir un
      chargement ») : tout est déjà décodé au ↺, mais le ciel reprenait
@@ -385,16 +389,16 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
     return () => clearTimeout(t0)
   }, [rideauRejeu])
   useEffect(() => {
-    if (etat !== "CIEL" || chargePret) {
+    if (chargePret) {
       setChargeVisible(false)
       return
     }
     const t0 = setTimeout(() => setChargeVisible(true), 250)
     return () => clearTimeout(t0)
-  }, [etat, chargePret])
+  }, [chargePret])
   /* la levée en transition shader (#45) : le voile DOM reste affiché
      tant que le quad n'a pas pris le relais (surLevee) */
-  const couvert = etat === "CIEL" && ((chargeVisible && !chargePret) || rideauRejeu)
+  const couvert = (chargeVisible && !chargePret) || (etat === "CIEL" && rideauRejeu)
   const [relaisAttendu, setRelaisAttendu] = useState(false)
   if (couvert && !relaisAttendu) setRelaisAttendu(true)
   const surLevee = useCallback(() => setRelaisAttendu(false), [])

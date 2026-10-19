@@ -29,13 +29,15 @@ const PAS_MS = 0.25
 const CASES = 800 // 200 ms couverts, au-delà tout tombe dans la dernière case
 const RAFRAICHI_MS = 500
 
-/* le chargement est le ciel encore couvert par le voile : ses à-coups ne se
-   voient pas, ils ne doivent pas noircir le ciel */
+/* le chargement est ce que couvre le voile CHARGEMENT (le ciel de
+   l'intro, l'habitacle d'une session revenante) : ses à-coups ne se voient
+   pas, ils ne doivent noircir aucune phase */
 const PHASES = ["chargement", "ciel", "chute", "seuil", "habitacle"] as const
 const CHARGEMENT = 0
 
 function phaseDe(etat: Etat, pret: boolean): number {
-  if (etat === "CIEL") return pret ? 1 : CHARGEMENT
+  if (!pret) return CHARGEMENT
+  if (etat === "CIEL") return 1
   if (etat === "ATTERRISSAGE") return 2
   if (etat === "SEUIL") return 3
   return 4
