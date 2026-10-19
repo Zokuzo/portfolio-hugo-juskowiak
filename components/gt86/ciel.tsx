@@ -60,13 +60,21 @@ const POSE = new THREE.Vector3(-4.2, -0.4, 7.8)
    la voiture disparaît dans les nuages avant la bascule vers la rue */
 const PLONGEE = 9
 
+/* le piqué nez vers le bas de la photo de référence (verdict #21) */
+const PIQUE = 1.0
+
 /* La GT86 flottante. Le clic sur la carrosserie EST le démarrage — le
    raycast R3F reçoit le geste parce que l'overlay DOM est
    `pointerEvents:none` partout sauf sur ses boutons ; la consigne en bas
    d'écran fait la même chose au clavier. */
+/* la carrosserie du ciel, lue par la caméra de la nouvelle chute (#56)
+   pour viser ses phares, son aileron, ses jantes */
+export const voitureDuCiel: { modele: THREE.Object3D | null } = { modele: null }
+
 function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<Trajectoire> }) {
   const { scene } = useGLTF(VOITURE)
   const groupe = useRef<THREE.Group>(null)
+  const pique = useRef<THREE.Group>(null)
   const scene3 = useThree((s) => s.scene)
   const gl3 = useThree((s) => s.gl)
   const [survol, setSurvol] = useState(false)
@@ -131,13 +139,23 @@ function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<
      piqué descend à ~-2,1 au creux de la houle, plus bas le banc mange la
      carrosserie. Le canal `plonge` du vol (#30) s'y ajoute : au clic, la
      voiture s'enfonce dans les nuages avant la bascule vers la rue. */
+  useEffect(() => {
+    voitureDuCiel.modele = modele
+    return () => {
+      voitureDuCiel.modele = null
+    }
+  }, [modele])
+
   useFrame((etat) => {
-    if (!groupe.current) return
+    if (!groupe.current || !pique.current) return
     const t = etat.clock.elapsedTime
-    const plonge = vol.current.plonge
-    groupe.current.position.y = Math.sin(t * 0.55) * 0.16 - PLONGEE * plonge
+    const { plonge, ciel } = vol.current
+    groupe.current.position.y = Math.sin(t * 0.55) * 0.16 - PLONGEE * plonge + ciel.y
+    groupe.current.rotation.y = ciel.lacet
     groupe.current.rotation.z = Math.sin(t * 0.32) * 0.022
     groupe.current.rotation.x = Math.sin(t * 0.45 + 1.3) * 0.014 + 0.18 * plonge
+    pique.current.rotation.x = PIQUE + ciel.tangage
+    pique.current.rotation.z = ciel.roulis
   })
 
   return (
@@ -151,7 +169,7 @@ function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<
     >
       {/* cap : le −36° d'origine, −65° puis +10° au fil du gate */}
       <group rotation={[0, -Math.PI / 5 - (55 * Math.PI) / 180, 0]}>
-        <group rotation={[1.0, 0, 0]}>
+        <group ref={pique} rotation={[PIQUE, 0, 0]}>
           <primitive object={modele} />
         </group>
       </group>

@@ -6,20 +6,23 @@ import type { Etat } from "./machine"
 import { contexteAudio } from "./spotify"
 
 /* LA MUSIQUE DE L'INTRO (#58) : « VISION (Slowed) » (UdieNnx, HXVSAGE,
-   Duduzinho), le choix de Hugo pour la chute. Piste sous droits : on
-   n'héberge RIEN, /api/gt86/musique-intro renvoie vers la préversion du
-   CDN Spotify (p.scdn.co, CORS ouvert), comme le lecteur de l'habitacle.
-   La préversion fait 24 s : 2 s de montée, puis la partie pleine jusqu'au
-   bout. La chute (vol 4,6 s + seuil 6,6 s) tombe donc dessus en entier.
+   Duduzinho), le choix de Hugo pour la chute. Depuis le #56, l'extrait
+   est HÉBERGÉ ici : le début du morceau, du 16,42 s au 48,42 s (32 s,
+   AAC 128 kbit/s, fondu de sortie de 2 s), coupé et calé par Hugo à
+   l'oreille. Piste sous droits : Hugo a décidé de l'héberger en
+   connaissance du risque. Il remplace la préversion du CDN Spotify, qui
+   commençait trop tard dans le morceau pour le montage du #56.
 
-   Départ au clic de décollage, fondu d'entrée 600 ms ; fondu de sortie
-   de 1,6 s à l'entrée dans l'habitacle. Zéro octet audio avant le clic :
-   l'<audio> naît dans lanceMusique(), appelée dans la pile du clic
-   (geste exigé par les navigateurs). */
+   Départ au clic de décollage ; fondu de sortie de 1,6 s à l'entrée dans
+   l'habitacle (la nouvelle chute, elle, a déjà tout fondu avant, voir
+   attenueMusique). Zéro octet audio avant le clic : l'<audio> naît dans
+   lanceMusique(), appelée dans la pile du clic (geste exigé par les
+   navigateurs). */
 
-const SOURCE = "/api/gt86/musique-intro"
+const SOURCE = "/musique/vision-debut.m4a"
 const VOLUME = 0.6
-const FONDU_ENTREE_S = 0.6
+/* un simple anti-clic : le calage de Hugo part du premier échantillon */
+const FONDU_ENTREE_S = 0.05
 const FONDU_SORTIE_S = 1.6
 
 /* une seule lecture à la fois, au module : le clic et le composant la
@@ -36,7 +39,6 @@ export function lanceMusique() {
     const ctx = contexteAudio()
     const audio = new Audio()
     audio.crossOrigin = "anonymous"
-    audio.loop = true
     audio.src = SOURCE
     const source = ctx.createMediaElementSource(audio)
     const fondu = ctx.createGain()
@@ -60,12 +62,25 @@ export function lanceMusique() {
 }
 
 /* secondes depuis le début de l'extrait, null hors lecture ; pour caler
-   des coupes sur la musique (#56). L'extrait boucle : le temps repart à 0
-   après 24 s. paused reste faux pendant le chargement et après un échec
-   réseau : seul readyState dit que le son avance vraiment. */
+   des coupes sur la musique (#56). paused reste faux pendant le
+   chargement et après un échec réseau : seul readyState dit que le son
+   avance vraiment. */
 export function tempsMusique(): number | null {
   const audio = lecture?.audio
   return audio && !audio.paused && audio.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA ? audio.currentTime : null
+}
+
+/* lancée mais pas encore partie (chargement, mise en mémoire) : la
+   nouvelle chute (#56) l'attend pour ne pas se décaler */
+export function musiqueEnAttente(): boolean {
+  return lecture !== null && !lecture.audio.ended && tempsMusique() === null
+}
+
+/* le fondu de la nouvelle chute (#56), de 1 (plein) à 0 (muet), demandé
+   image par image : la constante de temps lisse les marches */
+export function attenueMusique(niveau: number) {
+  if (!lecture) return
+  lecture.fondu.gain.setTargetAtTime(VOLUME * niveau, contexteAudio().currentTime, 0.04)
 }
 
 function arrete(duree: number) {

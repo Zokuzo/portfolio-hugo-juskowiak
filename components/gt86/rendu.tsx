@@ -1,13 +1,12 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState, type RefObject } from "react"
+import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react"
 import { useFrame, useThree } from "@react-three/fiber"
 import * as THREE from "three"
 import { EffectComposer, Bloom, ToneMapping, LUT, Noise, Vignette, ChromaticAberration } from "@react-three/postprocessing"
 import { ToneMappingMode, BlendFunction, LookupTexture, type EffectComposer as Composer } from "postprocessing"
 import { NOM_VOILE } from "./transition-voile"
 import { chauffeDans } from "./chauffe"
-import { FlouZoom, flouVoulu } from "./prototype-zoom"
 
 /* LE RENDU DE LA RÉFÉRENCE : tickets #46 et #59. La passe d'effets de
    « BMW Falling from Sky », posée sur toute l'expérience 3D : ciel, vol,
@@ -83,7 +82,9 @@ function reglages() {
   }
 }
 
-export function Effets({ surPret }: { surPret: () => void }) {
+/* enTete : un effet monté en tête du composer, compilé avec les autres
+   avant le rideau (la profondeur de champ du prototype #56) */
+export function Effets({ surPret, enTete }: { surPret: () => void; enTete?: ReactNode }) {
   const lut = useMemo(lutRose, [])
   const [{ bloom, msaa }] = useState(reglages)
   const composer = useRef<Composer>(null)
@@ -91,7 +92,7 @@ export function Effets({ surPret }: { surPret: () => void }) {
   useSignalePret(composer, msaa, surPret)
   return (
     <EffectComposer ref={composer} multisampling={msaa}>
-      {flouVoulu() && <FlouZoom />}
+      {enTete}
       <ChromaticAberration offset={ABERRATION} radialModulation modulationOffset={0.2} />
       <Bloom
         mipmapBlur

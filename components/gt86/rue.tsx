@@ -374,23 +374,31 @@ function VoitureGaree({
       r.tombe = false
       r.tau = -1
     }
-    const chute = vol.current.chute
-    if (chute < 1 && !vivant) {
+    const { chute, rue: pilotee } = vol.current
+    if (pilotee && !vivant) {
+      /* la nouvelle chute (#56) pilote tout, toucher compris : la
+         poussière suit son toucher, le ressort d'ici reste au repos */
+      r.tombe = false
+      r.tau = pilotee.toucher
+      if (porteur.current) porteur.current.position.y = pilotee.y
+      if (assiette.current) assiette.current.rotation.set(pilotee.tangage, 0, pilotee.roulis)
+    } else if (chute < 1 && !vivant) {
       r.tombe = true
       r.tau = -1
       if (porteur.current) porteur.current.position.y = (1 - chute * chute) * CHUTE_ALTITUDE
       if (assiette.current) assiette.current.rotation.x = CHUTE_CABRE
       return
-    }
-    if (r.tombe && r.tau < 0) r.tau = 0
-    if (r.tau >= 0 && r.tau < TASSE_DUREE) {
-      r.tau += Math.min(delta, 1 / 12)
-      const amorti = Math.exp(-TASSE_FREIN * r.tau)
-      if (porteur.current) porteur.current.position.y = -TASSE_Y * amorti * Math.sin(TASSE_FREQ * r.tau)
-      if (assiette.current) assiette.current.rotation.x = CHUTE_CABRE * amorti * Math.cos(TASSE_FREQ * r.tau)
     } else {
-      if (porteur.current) porteur.current.position.y = 0
-      if (assiette.current) assiette.current.rotation.x = 0
+      if (r.tombe && r.tau < 0) r.tau = 0
+      if (r.tau >= 0 && r.tau < TASSE_DUREE) {
+        r.tau += Math.min(delta, 1 / 12)
+        const amorti = Math.exp(-TASSE_FREIN * r.tau)
+        if (porteur.current) porteur.current.position.y = -TASSE_Y * amorti * Math.sin(TASSE_FREQ * r.tau)
+        if (assiette.current) assiette.current.rotation.x = CHUTE_CABRE * amorti * Math.cos(TASSE_FREQ * r.tau)
+      } else {
+        if (porteur.current) porteur.current.position.y = 0
+        if (assiette.current) assiette.current.rotation.x = 0
+      }
     }
     /* la poussière de l'impact : ouverte par le même ressort */
     if (poussiere.current) {
