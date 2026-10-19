@@ -71,14 +71,14 @@ const AIGUILLE_HAUT: [number, number] = [0.55, 1.05]
 const AIGUILLE_POSE: [number, number] = [1.05, 1.5]
 const CADRAN: [number, number] = [0.7, 1.4]
 const INTERIEUR: [number, number] = [1.15, 2.05]
-const CLAQUE: [number, number] = [2.3, 2.35]
+export const CLAQUE: [number, number] = [2.3, 2.35]
 const NOM_ENTRE: [number, number] = [2.35, 2.7]
 const NOM_SORT: [number, number] = [4.9, 5.2]
 const PLONGE_DEBUT = 5.0
 /* l'instant où la caméra TRAVERSE le pare-brise — l'entrée dans le
    véhicule est continue jusqu'au siège (3e retour de gate), le voile
    n'est plus un rideau mais une IMPULSION qui couvre la traversée */
-const VERRE_T = 5.9
+export const VERRE_T = 5.9
 /* l'impulsion couvre TOUTE la fenêtre où le near plane peut trancher le
    verre à l'approche ([5,84 → traversée], mesurée au GLB) — la sortie se
    fait caméra dedans, regard devant, le verre est derrière elle */

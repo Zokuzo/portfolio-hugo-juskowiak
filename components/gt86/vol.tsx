@@ -24,7 +24,17 @@ import { CAM_FINALE, CHUTE_ALTITUDE, CIBLE_FINALE } from "./rue"
    au temps du rendu, il finit toujours en phase avec l'image ; l'horloge de
    scene.tsx ne reste qu'en filet si la boucle de rendu meurt. */
 
-export type Trajectoire = { t: number; plonge: number; chute: number }
+/* l'assiette d'une voiture : hauteur, cap, tangage (positif = nez vers
+   le bas), roulis, et pour la rue l'âge du toucher (-1 avant), qui ouvre
+   la poussière */
+export type Pose = { y: number; lacet: number; tangage: number; roulis: number; toucher: number }
+export const poseNeutre = (): Pose => ({ y: 0, lacet: 0, tangage: 0, roulis: 0, toucher: -1 })
+
+/* ciel et rue : les deux voitures pilotées par la nouvelle chute (#56,
+   prototype-chute.tsx). ciel s'ajoute au mouvement de la voiture du ciel
+   (neutre sans elle) ; rue, quand il est posé, remplace la loi de chute
+   de la voiture de la rue */
+export type Trajectoire = { t: number; plonge: number; chute: number; ciel: Pose; rue: Pose | null }
 
 const DUREE = 4.6
 export const VOL_MS = 4600

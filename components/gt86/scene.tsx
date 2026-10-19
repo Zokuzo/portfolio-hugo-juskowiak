@@ -12,7 +12,7 @@ import { parametre } from "./capable"
 import { INTRO, RAILS, depart, marqueVue, suivant } from "./machine"
 import Ciel, { CIEL_4K, CIEL_HDR, VOITURE } from "./ciel"
 import Rue, { RUE_GLB, brume } from "./rue"
-import Vol, { VOL_MS, type Trajectoire } from "./vol"
+import Vol, { VOL_MS, poseNeutre, type Trajectoire } from "./vol"
 import Seuil, { SEUIL_MS } from "./seuil"
 import { Pouls, cockpitVide } from "./habitacle"
 import { PLAYLISTS, PROFIL_SPOTIFY, creeEcran, type Ecran, type ModeEcran, type Zone } from "./ecran"
@@ -22,8 +22,7 @@ import { MusiqueIntro, lanceMusique } from "./musique-intro"
 import { TransitionVoile } from "./transition-voile"
 import { Effets } from "./rendu"
 import { ChoixDpr, DPR_DEPART } from "./dpr"
-import { montageVoulu, ZoomCamera, zoomVoulu } from "./prototype-zoom"
-import { MontageCamera } from "./prototype-montage"
+import { BandesChute, CameraChute, Chute, CHUTE_MS, FlouChute, flouVoulu, montageVoulu, TravellingChute } from "./prototype-chute"
 import { CompteurIps, ipsVoulu } from "./compteur-ips"
 
 /* LES ASSETS ET LEUR CASCADE — ticket #28.
@@ -118,7 +117,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
   /* Le vol d'atterrissage (#30) : ses canaux vivent dans une ref — les
      scènes les consomment par frame, React ne re-rend rien. `chute: 1`
      au départ = la voiture de la rue est posée (skip, session revenante). */
-  const vol = useRef<Trajectoire>({ t: 0, plonge: 0, chute: 1 })
+  const vol = useRef<Trajectoire>({ t: 0, plonge: 0, chute: 1, ciel: poseNeutre(), rue: null })
   const voile = useRef<HTMLDivElement>(null)
   /* le seuil (#31) : son voile verre, son nom, et le cockpit — les poignées
      de la cascade, partagées entre la rue (qui les remplit) et le
@@ -148,6 +147,8 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
   const [nodepart] = useState(() => new URLSearchParams(window.location.search).has("nodepart"))
   const [police] = useState(policeVoulue)
   const [ips] = useState(ipsVoulu)
+  /* la nouvelle chute du prototype #56 (?montage=obliques|cadre) */
+  const [montage] = useState(montageVoulu)
   /* le composer du rendu (#46, #59), dont la chauffe retient le rideau
      comme celle de la rue */
   const [effetsPrets, setEffetsPrets] = useState(false)
@@ -410,9 +411,10 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
      boucle de rendu meurt. */
   useEffect(() => {
     if (!RAILS[etat]) return
-    const h = setTimeout(() => envoie({ t: "fini" }), (etat === "ATTERRISSAGE" ? VOL_MS : SEUIL_MS) + 4000)
+    const course = etat === "ATTERRISSAGE" ? (montage ? CHUTE_MS : VOL_MS) : SEUIL_MS
+    const h = setTimeout(() => envoie({ t: "fini" }), course + 4000)
     return () => clearTimeout(h)
-  }, [etat])
+  }, [etat, montage])
 
   /* L'intro est vue dès qu'on atteint l'habitacle — par le rail comme par le
      skip. Idempotent, donc sans danger sous StrictMode. */
@@ -515,9 +517,11 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
             ciel.tsx), seul `visible` bascule ; la rue attend que le ciel
             soit décodé (ou qu'on l'ait déjà quitté) pour se monter, et
             devient le fond de TOUS les états d'après. */}
-        <Vol etat={etat} vol={vol} voile={voile} surBascule={surBascule} fini={() => envoie({ t: "fini" })} />
-        {zoomVoulu() && <ZoomCamera etat={etat} vol={vol} />}
-        {montageVoulu() && <MontageCamera etat={etat} vol={vol} />}
+        {montage ? (
+          <Chute etat={etat} vol={vol} voile={voile} enRue={enRue} surBascule={surBascule} fini={() => envoie({ t: "fini" })} />
+        ) : (
+          <Vol etat={etat} vol={vol} voile={voile} surBascule={surBascule} fini={() => envoie({ t: "fini" })} />
+        )}
         <Seuil etat={etat} cockpit={cockpit} voile={voileVerre} nom={nom} fini={() => envoie({ t: "fini" })} />
         <Pouls actif={etat === "SEUIL" || apres} ecran={ecran} />
         <Suspense fallback={null}>
@@ -555,7 +559,10 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
             />
           </Suspense>
         )}
-        <Effets surPret={surEffetsPrets} />
+        {/* après le ciel et la rue : elles visent les voitures déjà posées */}
+        {montage && <CameraChute etat={etat} cockpit={cockpit} />}
+        {montage && <TravellingChute etat={etat} cockpit={cockpit} voile={voileVerre} />}
+        <Effets surPret={surEffetsPrets} enTete={flouVoulu() && <FlouChute />} />
         {/* mesurée sous le voile du CIEL, une fois la rue chaude : ses
             décodages et compilations fausseraient la cadence. Une session
             qui rouvre à l'habitacle garde la densité de départ jusqu'au
@@ -564,6 +571,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
         {fpsVoulu && <Stats />}
         <RythmeAmp actif={etat === "SPOTIFY"} ecran={ecran} />
       </Canvas>
+      {montage && <BandesChute />}
 
       {/* le voile de la bascule ciel → rue : crème des crêtes (revenues
           aux teintes du gate #21 au 9e retour), piloté par le vol image
