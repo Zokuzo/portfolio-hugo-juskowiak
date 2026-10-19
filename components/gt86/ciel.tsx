@@ -5,6 +5,7 @@ import { useFrame, useLoader, useThree } from "@react-three/fiber"
 import { Environment, Lightformer, useCursor, useGLTF } from "@react-three/drei"
 import * as THREE from "three"
 import MerDeNuages from "./mer-de-nuages"
+import { useChauffeEnSolo } from "./chauffe"
 import type { Trajectoire } from "./vol"
 import { LamesDuCiel, cliquableParSaBoite, mireLeCiel, peintureDuCiel } from "./carrosserie"
 
@@ -227,6 +228,15 @@ function Ciel({
   /* ce rendu n'existe qu'une fois les loaders résolus — le signal est là */
   useEffect(() => surPret(), [surPret])
 
+  /* LA CHAUFFE DU CIEL CACHÉ (#42) : une session qui a déjà vu l'intro
+     rouvre à l'habitacle, le ciel monté mais jamais peint. Sans chauffe,
+     ses programmes se compilaient au premier ↺ (gel de 444 ms au relevé
+     ?ips de Hugo, 12 programmes de plus) ; ils se compilent désormais
+     avec ceux de la rue, au chargement. Au chemin d'intro, le ciel est
+     déjà peint sous le voile : la chauffe n'y ajoute rien. */
+  const groupe = useRef<THREE.Group>(null)
+  useChauffeEnSolo(groupe)
+
   /* la pose d'ouverture, tenue tant que le ciel est à l'écran — le vol
      d'atterrissage (vol.tsx) prend la caméra ici au clic. Elle se REJOUE
      au retour du rejeu (dépendance `visible`), et en LAYOUT : un effet
@@ -259,7 +269,7 @@ function Ciel({
         {eclats}
       </Environment>
 
-      <group visible={visible}>
+      <group ref={groupe} visible={visible}>
         <mesh rotation-y={ROT} frustumCulled={false}>
           <sphereGeometry args={[350, 48, 32]} />
           <meshBasicMaterial
