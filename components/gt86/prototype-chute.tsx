@@ -421,9 +421,9 @@ function plansDe(r: Reperes): Record<PlanDeCoupe, Plan> {
     large: { ancre: r.centre, de: [10, 1.8, 9.5], a: [12.6, 0.8, 4.4], viseDe: r.centre, viseA: decale(r.centre, 0, 0, -0.3), fov: [30, 28], nettete: 4 },
     /* a. l'avant vu du phare, en contre-plongée : l'objectif bas, contre
        le phare, la face avant file vers le phare opposé */
-    a: { ancre: r.phare, de: [0.4, -0.3, 0.75], a: [0.5, -0.24, 0.95], viseDe: r.phare.clone().lerp(r.face, 0.6), viseA: r.face.clone().lerp(r.phareOppose, 0.5), fov: [32, 29], nettete: 0.9 },
+    a: { ancre: r.phare, de: [1.0, -0.6, 1.9], a: [1.1, -0.5, 2.2], viseDe: r.phare.clone().lerp(r.face, 0.3), viseA: r.phare.clone().lerp(r.face, 0.6), fov: [34, 31], nettete: 1.6 },
     /* b. l'arrière : du diffuseur et de la sortie d'échappement aux feux */
-    b: { ancre: r.feu, de: [0.9, 0.5, -3.0], a: [0.4, 0.7, -3.3], viseDe: r.echappement, viseA: decale(r.feu, -0.35, 0, 0), fov: [26, 24], nettete: 1.5 },
+    b: { ancre: r.feu, de: [1.3, 0.3, -4.4], a: [0.8, 0.5, -4.7], viseDe: r.echappement.clone().lerp(r.feu, 0.4), viseA: decale(r.feu, -0.4, -0.05, 0), fov: [38, 35], nettete: 2 },
     /* c. le profil en contre-plongée, l'objectif sous la ligne de caisse,
        un lent travelling de l'aile avant au passage de roue arrière */
     c: { ancre: r.centre, de: [7.2, -1.9, 1.6], a: [7.2, -1.6, -1.4], viseDe: decale(r.centre, 0, 0, 0.5), viseA: decale(r.centre, 0, 0, -0.5), fov: [33, 33], nettete: 3 },

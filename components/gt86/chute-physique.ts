@@ -124,11 +124,14 @@ const AMORTI_AERO = new THREE.Vector3(55, 55, 18)
    incommensurables, en secondes de simulation : déterministe) */
 const TURBULENCE = new THREE.Vector3(1.6, 1.4, 0.45)
 const TURBULENCE_FREQUENCES = [4.1, 9.7, 17.3]
-/* l'élan de rotation au moment où la lévitation lâche (rad/s) : elle se
-   redresse un peu de son piqué (tangage et roulis, repère de la voiture)
-   et prend un lent cap (autour de la verticale), comme la v2, mais par
-   son inertie ; l'aéro reprend ensuite la main */
-const ROTATION_DEPART = { tangage: -0.22, cap: 0.3, roulis: 0.04 }
+/* l'élan de rotation que la voiture garde de son vol quand la lévitation
+   lâche (rad/s) : elle se redresse de son piqué (tangage), tourne sur
+   elle-même (cap, autour de la verticale) et bascule sur le flanc
+   (roulis, repère de la voiture). Au ralenti, c'est ce qui se voit : sans
+   lui, la voiture partie du repos ne tournait que de 1,5 °/s à l'écran
+   (relevé du lot 4). Le couplage gyroscopique mêle ensuite les trois axes,
+   l'amortissement de l'air les éteint peu à peu */
+const ROTATION_DEPART = { tangage: -0.4, cap: 0.65, roulis: -0.15 }
 
 /* LE CIEL. La voiture pend à l'altitude 0 au clic ; à chaque coupe elle
    remonte (rien ne se voit pendant une coupe franche) pour finir chaque
@@ -142,18 +145,21 @@ const Y_CHUTE = 4.65
 const Y_BASCULE = -5
 
 /* LA RUE : la même chute se poursuit à H_BASCULE au-dessus du garage.
-   De la v2 sont repris : l'assiette d'entrée (ASSIETTE_RUE) que l'aéro
-   rétablit vers le plat du toucher, et l'atterrissage souple, freiné
-   dans les FREIN.hauteur derniers mètres jusqu'à FREIN.vitesse. Ce
-   freinage n'a rien de réaliste (une voiture ne freine pas en l'air),
-   c'est le parti de la v2 que Hugo a validé : il entre en douceur sur
+   Elle y entre avec l'assiette et les vitesses de rotation du ciel (cap
+   excepté : la rue la pose dans l'axe de sa place). De la v2 sont repris
+   le rétablissement vers le plat du toucher (ASSIETTE_TOUCHER) et
+   l'atterrissage souple, freiné dans les FREIN.hauteur derniers mètres
+   jusqu'à FREIN.vitesse. Ce freinage n'a rien de réaliste (une voiture
+   ne freine pas en l'air), c'est le parti de la v2 que Hugo a validé ;
+   il commence plus haut qu'en v2 (20 m au lieu de 14) pour ne plus
+   tirer que 1,5 g au lieu de 2,5. Il entre en douceur sur
    FREIN.rampe mètres, puis tient une décélération résolue par dichotomie
    pour toucher pile à FREIN.vitesse. Le rétablissement est un ressort
    critique sur le tangage et le roulis (pulsation STABILISATION). */
 const H_BASCULE = 30
-const ASSIETTE_RUE = { tangage: 0.5, toucher: -0.04 }
+const ASSIETTE_TOUCHER = -0.04
 const STABILISATION = 3.2
-const FREIN = { hauteur: 14, vitesse: 2.6, rampe: 3 }
+const FREIN = { hauteur: 20, vitesse: 2.6, rampe: 3 }
 /* après le toucher, la suspension de la v2 : une compression, un petit
    rebond, l'assiette qui s'amortit vers le plat */
 const SUSPENSION = { pulsation: 16, amorti: 5, plongeon: 0.05 }
@@ -228,7 +234,7 @@ function simuleVoiture(calage: Calage, pique: number) {
   const omega = new THREE.Vector3(0, ROTATION_DEPART.cap, 0)
     .applyQuaternion(attitude.clone().invert())
     .add(new THREE.Vector3(ROTATION_DEPART.tangage, 0, ROTATION_DEPART.roulis))
-  const rue: EtatRue = { tangage: ASSIETTE_RUE.tangage, vTangage: 0, roulis: 0, vRoulis: 0 }
+  const rue: EtatRue = { tangage: 0, vTangage: 0, roulis: 0, vRoulis: 0 }
   let altitude = 0
   let vitesse = 0
   let zChute = Number.NaN
@@ -312,12 +318,12 @@ function bruit(s: number, axe: number) {
   return somme / TURBULENCE_FREQUENCES.length
 }
 
-/* la bascule se fait voile plein : l'assiette de la rue reprend celle de
-   la v2, ses vitesses de rotation celles du ciel */
+/* la bascule se fait voile plein : la rue reprend l'assiette du ciel et
+   ses vitesses de rotation */
 const euler = new THREE.Euler()
 function entreeRue(attitude: THREE.Quaternion, omega: THREE.Vector3): EtatRue {
   euler.setFromQuaternion(attitude, "YXZ")
-  return { tangage: ASSIETTE_RUE.tangage, vTangage: omega.x, roulis: euler.z, vRoulis: omega.z }
+  return { tangage: euler.x, vTangage: omega.x, roulis: euler.z, vRoulis: omega.z }
 }
 
 /* le rétablissement : ressort critique vers l'assiette du toucher, la
@@ -325,7 +331,7 @@ function entreeRue(attitude: THREE.Quaternion, omega: THREE.Vector3): EtatRue {
 function stabiliseRue(rue: EtatRue, vitesse: number, s: number) {
   const pression = 0.5 * RHO_AIR * vitesse * vitesse
   const w2 = STABILISATION * STABILISATION
-  rue.vTangage += PAS_S * (-w2 * (rue.tangage - ASSIETTE_RUE.toucher) - 2 * STABILISATION * rue.vTangage + (pression * TURBULENCE.x * bruit(s, 0)) / INERTIE.x)
+  rue.vTangage += PAS_S * (-w2 * (rue.tangage - ASSIETTE_TOUCHER) - 2 * STABILISATION * rue.vTangage + (pression * TURBULENCE.x * bruit(s, 0)) / INERTIE.x)
   rue.vRoulis += PAS_S * (-w2 * rue.roulis - 2 * STABILISATION * rue.vRoulis + (pression * TURBULENCE.z * bruit(s, 2)) / INERTIE.z)
   rue.tangage += PAS_S * rue.vTangage
   rue.roulis += PAS_S * rue.vRoulis
@@ -461,10 +467,11 @@ export function poseRue(p: Partition, t: number) {
   if (t < p.tToucher) {
     const s = tempsSimule(t, p.calage)
     const kFin = p.kToucher
+    const avantBascule = s < p.kBascule * PAS_S
     return {
       hauteur: H_BASCULE + echantillonne(p.z, s, kFin) - p.zBascule,
-      tangage: s < p.kBascule * PAS_S ? ASSIETTE_RUE.tangage : echantillonne(p.tangageRue, s, kFin),
-      roulis: s < p.kBascule * PAS_S ? 0 : echantillonne(p.roulisRue, s, kFin),
+      tangage: avantBascule ? p.tangageRue[p.kBascule] : echantillonne(p.tangageRue, s, kFin),
+      roulis: avantBascule ? p.roulisRue[p.kBascule] : echantillonne(p.roulisRue, s, kFin),
       toucher: -1,
     }
   }
