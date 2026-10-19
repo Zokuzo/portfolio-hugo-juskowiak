@@ -1,46 +1,62 @@
 "use client"
 
-import { useEffect, useRef, type MutableRefObject, type RefObject } from "react"
+import { useEffect, useRef, useState, type MutableRefObject, type RefObject } from "react"
 import { useFrame, useThree } from "@react-three/fiber"
 import { DepthOfField } from "@react-three/postprocessing"
 import type { DepthOfFieldEffect } from "postprocessing"
 import * as THREE from "three"
 import { poseNeutre, type Pose, type Trajectoire } from "./vol"
-import { FOV_POSE, POSE, voitureDuCiel } from "./ciel"
+import { CAP, FOV_POSE, PIQUE, POSE, voitureDuCiel } from "./ciel"
 import { brume, CAM_FINALE, enMondeRepos, POSE_VOITURE } from "./rue"
 import { ASSISE, type Cockpit } from "./habitacle"
 import { CLAQUE, SEUIL_MS, VERRE_T } from "./seuil"
 import { attenueMusique, caleMusique, musiqueEnAttente, tempsMusique } from "./musique-intro"
+import {
+  altitudeCiel,
+  attitudeCiel,
+  detenteRoues,
+  finDeSegment,
+  lisCalage,
+  partitionDe,
+  poseRue,
+  segmentDe,
+  tempsSimule,
+  verticaleCamera,
+  type Calage,
+  type Partition,
+  type Segment,
+} from "./chute-physique"
 
-/* PROTOTYPE JETABLE (#56) : la nouvelle chute, montée sur la musique.
+/* PROTOTYPE JETABLE (#56) : la nouvelle chute, montée sur la musique (v3).
 
    La consigne de Hugo : « dès que le début de la musique se lance la
    voiture ralentit dans les airs et là on fait les différents plans de
-   coupe sur elle en rapport avec la musique [...] et après on laisse la
-   voiture tomber au sol et on rentre dedans, il faut que le travelling se
-   fasse sans à-coup ». L'entrée dans le montage coupe l'écran comme la
-   référence (« BMW Falling from Sky ») :
-   - ?montage=obliques : deux bandes noires obliques cadrent l'image en
-     parallélogramme, puis s'ouvrent sur le drop ;
-   - ?montage=cadre : le cadre se resserre en scope (2,39:1) le temps du
-     montage, puis se rouvre quand la voiture tombe.
-   &dof=0 coupe la profondeur de champ. Sans ?montage, rien ne change :
-   vol.tsx et seuil.tsx jouent la chute de toujours.
+   coupe sur elle [...] et après on laisse la voiture tomber au sol et on
+   rentre dedans ». Son retour sur la v2 : les obliques, plus longues,
+   puis les bandes ; cinq plans (l'avant vu du phare, l'arrière, le côté,
+   l'aileron, la voiture entière) ; pendant les coupes la voiture tombe
+   vraiment, au ralenti, avec les frottements de l'air ; et le calage, il
+   le fait lui-même.
+
+   ?montage (ou ?montage=obliques) l'allume ; &dof=0 coupe la profondeur
+   de champ ; &calage=ecran:0.91,ouvre:2.9,a:1.62,... règle les instants
+   (chute-physique.ts, lisCalage) et affiche un bandeau du temps musical.
+   Sans ?montage, rien ne change : vol.tsx et seuil.tsx jouent la chute
+   de toujours.
 
    LE DÉROULÉ, en secondes depuis le clic (= temps dans l'extrait) :
-   1. clic : la voiture freine, se redresse et tourne lentement sur
-      elle-même, suspendue au-dessus de la mer de nuages, jusqu'à CHUTE ;
-   2. ECRAN_COUPE : l'écran se coupe, les PLANS commencent, centrés sur le
-      design, en coupes franches aux COUPES ;
-   3. CHUTE : elle tombe (gravité, vitesse limite, le nez qui bascule), la
-      caméra la suit sur un ressort, plonge avec elle dans les nuages, la
-      lumière baisse et bleuit ; au cœur du banc, la bascule vers la rue ;
-      sous les nuages la brume s'ouvre sur la ville de nuit ; la voiture
-      freine dans ses derniers mètres et s'assied sur sa suspension ;
-   4. FINI : la caméra arrive sur la vue d'arrivée (CAM_FINALE) à la
-      vitesse et dans l'axe du travelling, qui la porte sans voile
-      jusqu'au siège (TravellingChute, pendant le SEUIL) ;
-   5. la musique fond de CHUTE à l'entrée dans l'habitacle.
+   1. clic : la lévitation lâche, le temps ralentit (chute-physique.ts) ;
+   2. ecran : l'écran se coupe sur un plan large, deux bandes noires
+      obliques le cadrent en parallélogramme ;
+   3. a, b, c, d, e : les plans de Hugo, en coupes franches ; à « ouvre »
+      les obliques se redressent en bandes de cinéma (2,39:1) ;
+   4. tombe : le temps reprend sa vitesse, les bandes s'ouvrent, la caméra
+      la suit sur un ressort ; voile du banc de nuages, bascule vers la
+      rue, la brume s'ouvre sur la ville de nuit, la voiture se rétablit
+      et freine dans ses derniers mètres (atterrissage souple de la v2) ;
+   5. fini : la caméra arrive sur la vue d'arrivée (CAM_FINALE) à la
+      vitesse et dans l'axe du travelling, qui la porte jusqu'au siège ;
+   6. la musique fond de « tombe » à l'entrée dans l'habitacle.
 
    L'HORLOGE : tempsMusique() quand la musique joue ; tant qu'elle charge,
    le temps reste au début (le ralenti attend la musique) ; sans musique
@@ -48,28 +64,25 @@ import { attenueMusique, caleMusique, musiqueEnAttente, tempsMusique } from "./m
    Elle ne recule ni ne gèle jamais : une musique en retard est recalée
    sur l'image, ou rattrapée en ralentissant l'image.
 
-   LE GEL : rien ne compile après le rideau. Les bandes et le voile sont
-   du DOM ; brume, exposition, profondeur de champ et assiettes ne sont
-   que des uniformes et des matrices ; la profondeur de champ est montée
-   en tête du composer dès le départ (rendu.tsx, enTete). */
+   LE GEL : rien ne compile après le rideau. Les bandes, le bandeau et le
+   voile sont du DOM ; brume, exposition, profondeur de champ, assiettes
+   et roues ne sont que des uniformes et des matrices ; la profondeur de
+   champ est montée en tête du composer dès le départ (rendu.tsx). */
 
-export type Montage = "obliques" | "cadre"
-
-export function montageVoulu(): Montage | null {
-  if (typeof location === "undefined") return null
-  const v = new URLSearchParams(location.search).get("montage")
-  return v === "obliques" || v === "cadre" ? v : null
+export function montageVoulu(): boolean {
+  return typeof location !== "undefined" && new URLSearchParams(location.search).has("montage")
 }
 
 export function flouVoulu(): boolean {
-  if (typeof location === "undefined") return false
-  return montageVoulu() !== null && new URLSearchParams(location.search).get("dof") !== "0"
+  return montageVoulu() && new URLSearchParams(location.search).get("dof") !== "0"
 }
 
-/* LA PARTITION, calée par Hugo à l'oreille sur vision-debut.m4a */
-const ECRAN_COUPE = 0.91
-const COUPES = [1.62, 4.62, 7.61, 10.63]
-const CHUTE = 13.01
+/* la partition, intégrée une fois par page sur le calage de l'URL */
+let partitionCourante: Partition | null = null
+function partition(): Partition {
+  partitionCourante ??= partitionDe(lisCalage(new URLSearchParams(location.search).get("calage")), PIQUE)
+  return partitionCourante
+}
 
 /* comme le vol : une image lente ne téléporte rien */
 const DELTA_MAX = 1 / 12
@@ -81,11 +94,14 @@ const ATTENTE_MAX = 4
 const RETARD_MUSIQUE_MAX = 0.5
 const RATTRAPAGE = 0.5
 
+/* la course de l'atterrissage, pour le filet de scene.tsx */
+export const dureeChuteMs = () => Math.ceil((partition().tFini + ATTENTE_MAX) * 1000)
+/* le fondu de la musique : de « tombe » à l'entrée dans l'habitacle */
+const dureeFondu = (p: Partition) => p.tFini - p.calage.tombe + SEUIL_MS / 1000
+
 const lisse = (a: number, b: number, t: number) => Math.min(1, Math.max(0, (t - a) / (b - a)))
 /* smootherstep : vitesse et accélération nulles aux deux bouts */
 const douce = (u: number) => u * u * u * (u * (6 * u - 15) + 10)
-/* la réponse d'un ressort critique à un échelon : part au repos */
-const amortiCritique = (tau: number, pulsation: number) => 1 - (1 + pulsation * tau) * Math.exp(-pulsation * tau)
 
 /* ---- l'horloge ---------------------------------------------------------- */
 
@@ -113,130 +129,49 @@ function avanceHorloge(delta: number): number {
   return horloge.t
 }
 
-/* ---- la voiture du ciel : le ralenti ------------------------------------ */
+/* ---- les voitures ------------------------------------------------------- */
 
-/* au clic elle glisse encore un peu vers le bas et s'arrête (FREINAGE),
-   se redresse de son piqué (REDRESSE, en tangage : du piqué de 57° de la
-   pose du ciel à une quinzaine de degrés) et prend un cap lent, sa
-   vitesse angulaire montant en rampe */
-const FREINAGE = { profondeur: 0.35, duree: 1.4 }
-const REDRESSE = { tangage: -0.75, debut: 0, fin: 4.2 }
-const ROTATION = { vitesse: 0.09, montee: 3 }
-/* à chaque coupe franche, où rien ne se voit, elle monte d'un PALIER : elle
-   tombe ensuite de plus haut, et le sommet du banc (-2,6) ne la touche
-   qu'une fois le voile monté (VOILE_TEMPS). Plus bas, le banc, qui ne
-   connaît pas la profondeur de la scène, la tranchait net en pleine vue */
-const PALIERS = [ECRAN_COUPE, ...COUPES]
-const PALIER = 1
-const paliersPasses = (t: number) => PALIERS.reduce((n, debut) => n + (t >= debut ? 1 : 0), 0)
+const attitude = new THREE.Quaternion()
+const assiette = new THREE.Euler()
 
-function poseSuspendue(t: number, pose: Pose) {
-  const u = Math.min(1, t / FREINAGE.duree)
-  pose.y = -FREINAGE.profondeur * (1 - (1 - u) * (1 - u) * (1 - u)) + PALIER * paliersPasses(t)
-  pose.tangage = REDRESSE.tangage * douce(lisse(REDRESSE.debut, REDRESSE.fin, t))
-  pose.lacet =
-    t < ROTATION.montee
-      ? (ROTATION.vitesse * t * t) / (2 * ROTATION.montee)
-      : ROTATION.vitesse * (t - ROTATION.montee / 2)
-  pose.roulis = 0
+/* la voiture du ciel : l'assiette simulée, décomposée comme ciel.tsx la
+   recompose (cap, piqué, roulis) */
+function poseDuCiel(p: Partition, t: number, pose: Pose) {
+  assiette.setFromQuaternion(attitudeCiel(p, tempsSimule(t, p.calage), attitude), "YXZ")
+  pose.y = altitudeCiel(p, t)
+  pose.lacet = assiette.y
+  pose.tangage = assiette.x - PIQUE
+  pose.roulis = assiette.z
   pose.toucher = -1
 }
 
-/* ---- la chute ----------------------------------------------------------- */
-
-/* gravité et traînée quadratique : la vitesse tend vers VITESSE_LIMITE
-   (v = V tanh(g t / V)), forme close, identique à toute cadence */
-const G = 9.81
-const VITESSE_LIMITE = 16
-const descente = (tau: number) => ((VITESSE_LIMITE * VITESSE_LIMITE) / G) * Math.log(Math.cosh((G * tau) / VITESSE_LIMITE))
-const vitesseDescente = (tau: number) => VITESSE_LIMITE * Math.tanh((G * tau) / VITESSE_LIMITE)
-
-/* le ciel : le nez bascule (ressort critique, part au repos) et un
-   léger roulis s'installe */
-const NEZ = { tangage: 0.38, pulsation: 1.7 }
-const ROULIS = { angle: 0.16, pulsation: 1.2 }
-
-/* la bascule ciel → rue, au cœur du banc, en secondes de chute ; la
-   voiture de la rue y est à ALTITUDE_BASCULE et poursuit la même chute */
-const BASCULE = 1.4
-const ALTITUDE_BASCULE = 40
-/* la rue : de son assiette d'entrée, elle se rétablit pour toucher à
-   plat ; dans les FREIN.hauteur derniers mètres la décélération est
-   constante jusqu'à FREIN.vitesse, puis la suspension encaisse (une
-   compression, un petit rebond) */
-const ASSIETTE_RUE = { tangage: 0.5, toucherTangage: -0.04 }
-const FREIN = { hauteur: 5, vitesse: 2.6 }
-const SUSPENSION = { pulsation: 16, amorti: 5, plongeon: 0.05 }
-/* la pose après le toucher, avant de rendre la main au seuil : plus que
-   le ressort de la rue (TASSE_DUREE 1,2 s), qui reste ainsi au repos */
-const POSE_S = 1.3
-
-/* un freinage à décélération constante, de la chute libre à `hauteur`
-   jusqu'au sol à `vitesse` (sa durée garde la vitesse moyenne) ; le
-   départ du frein est résolu une fois, par dichotomie */
-type Freinage = { hauteur: number; vitesse: number; tau: number; elan: number; duree: number }
-function freinage(hauteur: number, vitesse: number): Freinage {
-  const cible = descente(BASCULE) + ALTITUDE_BASCULE - hauteur
-  let bas = BASCULE
-  let haut = BASCULE + 20
-  for (let k = 0; k < 60; k++) {
-    const milieu = (bas + haut) / 2
-    if (descente(milieu) < cible) bas = milieu
-    else haut = milieu
-  }
-  const elan = vitesseDescente(bas)
-  return { hauteur, vitesse, tau: bas, elan, duree: (2 * hauteur) / (elan + vitesse) }
-}
-
-/* la hauteur au-dessus du sol, prolongée avant la bascule (la voiture de
-   la rue y est cachée, et le suivi en retard la lit là aussi) */
-function hauteurFreinee(tau: number, f: Freinage): number {
-  if (tau < f.tau) return ALTITUDE_BASCULE + descente(BASCULE) - descente(tau)
-  const s = Math.min(tau - f.tau, f.duree)
-  return f.hauteur - f.elan * s + ((f.elan - f.vitesse) * s * s) / (2 * f.duree)
-}
-
-const FREIN_VOITURE = freinage(FREIN.hauteur, FREIN.vitesse)
-/* la caméra freine plus haut et plus doucement : la voiture la devance
-   au sol, la caméra arrive après elle, sans à-coup */
-const FREIN_CAMERA = freinage(11, 0)
-const TAU_TOUCHER = FREIN_VOITURE.tau + FREIN_VOITURE.duree
-const T_TOUCHER = CHUTE + TAU_TOUCHER
-const T_FINI = T_TOUCHER + POSE_S
-/* la course de l'atterrissage, pour le filet de scene.tsx */
-export const CHUTE_MS = Math.ceil((T_FINI + ATTENTE_MAX) * 1000)
-/* le fondu de la musique : de CHUTE à l'entrée dans l'habitacle */
-const FONDU_S = T_FINI - CHUTE + SEUIL_MS / 1000
-
-/* l'assiette au départ de la chute */
-const SUSPENDUE = poseNeutre()
-poseSuspendue(CHUTE, SUSPENDUE)
-
-function poseTombanteCiel(tau: number, pose: Pose) {
-  poseSuspendue(CHUTE + tau, pose)
-  pose.y = SUSPENDUE.y - descente(tau)
-  pose.tangage = SUSPENDUE.tangage + NEZ.tangage * amortiCritique(tau, NEZ.pulsation)
-  pose.roulis = ROULIS.angle * amortiCritique(tau, ROULIS.pulsation)
-}
-
-function hauteurRue(tau: number): number {
-  if (tau < TAU_TOUCHER) return hauteurFreinee(tau, FREIN_VOITURE)
-  const s = tau - TAU_TOUCHER
-  return -(FREIN.vitesse / SUSPENSION.pulsation) * Math.exp(-SUSPENSION.amorti * s) * Math.sin(SUSPENSION.pulsation * s)
-}
-
-function poseTombanteRue(tau: number, pose: Pose) {
-  const retabli = douce(lisse(BASCULE, TAU_TOUCHER, tau))
-  const s = Math.max(0, tau - TAU_TOUCHER)
-  const rebond = tau < TAU_TOUCHER ? 0 : Math.exp(-SUSPENSION.amorti * s) * Math.sin(SUSPENSION.pulsation * s)
-  pose.y = hauteurRue(tau)
+function poseDeLaRue(p: Partition, t: number, pose: Pose) {
+  const r = poseRue(p, t)
+  pose.y = r.hauteur
   pose.lacet = 0
-  /* l'assiette du toucher s'amortit vers le plat : le seuil reprend une
-     voiture au repos, sans bascule */
-  const toucher = ASSIETTE_RUE.toucherTangage * Math.exp(-SUSPENSION.amorti * s)
-  pose.tangage = THREE.MathUtils.lerp(ASSIETTE_RUE.tangage, toucher, retabli) + SUSPENSION.plongeon * rebond
-  pose.roulis = ROULIS.angle * amortiCritique(BASCULE, ROULIS.pulsation) * (1 - retabli)
-  pose.toucher = tau < TAU_TOUCHER ? -1 : s
+  pose.tangage = r.tangage
+  pose.roulis = r.roulis
+  pose.toucher = r.toucher
+}
+
+/* les roues pendent en détente : le nœud Wheels du GLB (jantes, pneus,
+   freins) et sa visserie descendent le long du « bas » de la voiture */
+const ROUES = ["Wheels", "Screws"]
+const roues: { modele: THREE.Object3D | null; noeuds: { noeud: THREE.Object3D; base: THREE.Vector3; bas: THREE.Vector3 }[] } = { modele: null, noeuds: [] }
+
+function pendRoues(modele: THREE.Object3D, detente: number) {
+  if (roues.modele !== modele) {
+    modele.updateWorldMatrix(true, true)
+    const vers = (local: THREE.Vector3, parent: THREE.Object3D) => parent.worldToLocal(modele.localToWorld(local))
+    roues.modele = modele
+    roues.noeuds = ROUES.flatMap((nom) => {
+      const noeud = modele.getObjectByName(nom)
+      if (!noeud?.parent) return []
+      const bas = vers(new THREE.Vector3(0, -1, 0), noeud.parent).sub(vers(new THREE.Vector3(), noeud.parent))
+      return [{ noeud, base: noeud.position.clone(), bas }]
+    })
+  }
+  for (const { noeud, base, bas } of roues.noeuds) noeud.position.copy(base).addScaledVector(bas, detente)
 }
 
 /* ---- l'état partagé ----------------------------------------------------- */
@@ -263,10 +198,11 @@ const chute = {
 const VOILE_ENTREE: [THREE.Color, THREE.Color] = [new THREE.Color("#e7bdb3"), new THREE.Color("#b98f98")]
 const VOILE_COEUR: [THREE.Color, THREE.Color] = [new THREE.Color("#8d8a9d"), new THREE.Color("#5e5c70")]
 const VOILE_SORTIE: [THREE.Color, THREE.Color] = [new THREE.Color("#36405a"), new THREE.Color("#1c2131")]
-/* le voile monte avec l'entrée dans le banc (en secondes de chute : plein
-   avant que la voiture, partie des PALIERS, n'en touche le sommet) ou
-   avec la descente de la caméra vers le dessus de la nappe (-2,6) */
-const VOILE_TEMPS: [number, number] = [0.8, 1.1]
+/* le voile monte avec la voiture qui approche du banc (son centre, en
+   altitude : plein quand son nez, deux mètres plus bas, touche le sommet
+   -2,6 que le banc trancherait net) ou avec la caméra qui descend vers le
+   dessus de la nappe */
+const VOILE_VOITURE: [number, number] = [1.6, -0.7]
 const VOILE_HAUTEUR: [number, number] = [-0.8, -2.45]
 /* sous le banc : il s'efface dès que la rue est montée */
 const VOILE_LEVEE_S = 0.5
@@ -281,7 +217,6 @@ const BRUME_NUIT = brume()
 const teinte = [new THREE.Color(), new THREE.Color()]
 
 export function Chute({
-  montage,
   etat,
   vol,
   voile,
@@ -289,7 +224,6 @@ export function Chute({
   surBascule,
   fini,
 }: {
-  montage: Montage
   etat: string
   vol: MutableRefObject<Trajectoire>
   voile: RefObject<HTMLDivElement | null>
@@ -302,12 +236,13 @@ export function Chute({
   const interne = useRef({ enChute: false, bascule: false, fini: false, fondVoile: "" })
 
   /* poignée de test (harnais CDP), comme window.__gt86 : l'instant
-     musical et le monde, pour les captures en temps contrôlé */
+     musical, le monde et les assiettes, pour les captures en temps
+     contrôlé */
   useEffect(() => {
-    Object.assign(window as object, { __gt86chute: chute })
-  }, [])
+    Object.assign(window as object, { __gt86chute: chute, __gt86vol: vol.current })
+  }, [vol])
 
-  /* le rangement (skip compris) : voitures, voile, brume, exposition */
+  /* le rangement (skip compris) : voitures, roues, voile, brume, exposition */
   useEffect(() => {
     if (etat !== "ATTERRISSAGE") return
     const v = vol.current
@@ -318,6 +253,7 @@ export function Chute({
       v.rue = null
       v.plonge = 0
       v.chute = 1
+      if (voitureDuCiel.modele) pendRoues(voitureDuCiel.modele, 0)
       const d = voile.current
       if (d) {
         d.style.opacity = "0"
@@ -329,9 +265,9 @@ export function Chute({
         scene.fog.far = BRUME_NUIT.far
       }
       gl.toneMappingExposure = 1
-      poseBandes(montage, 0)
+      poseBandes(partition().calage, 0)
     }
-  }, [etat, vol, voile, scene, gl, montage])
+  }, [etat, vol, voile, scene, gl])
 
   useFrame((_, delta) => {
     if (etat !== "ATTERRISSAGE") {
@@ -340,6 +276,7 @@ export function Chute({
     }
     const v = vol.current
     const i = interne.current
+    const p = partition()
     if (!i.enChute) {
       /* première image : tout se capture ici (recette du vol) */
       i.enChute = true
@@ -354,22 +291,22 @@ export function Chute({
       v.rue = poseNeutre()
     }
     const t = (chute.t = avanceHorloge(delta))
-    const tau = t - CHUTE
 
-    if (tau < 0) poseSuspendue(t, v.ciel)
-    else poseTombanteCiel(tau, v.ciel)
-    if (v.rue) poseTombanteRue(Math.max(tau, 0), v.rue)
+    poseDuCiel(p, t, v.ciel)
+    if (v.rue) poseDeLaRue(p, t, v.rue)
+    if (voitureDuCiel.modele) pendRoues(voitureDuCiel.modele, detenteRoues(tempsSimule(t, p.calage)))
 
-    if (tau >= BASCULE && !i.bascule) {
+    if (t >= p.tBascule && !i.bascule) {
       i.bascule = true
       chute.monde = "rue"
       surBascule()
     }
-    regleVoileEtBrume(tau, enRue, voile.current, scene.fog, gl)
-    poseBandes(montage, t)
-    if (tau >= 0) attenueMusique(fonduMusique(tau / FONDU_S))
+    regleVoileEtBrume(p, t, enRue, voile.current, scene.fog, gl)
+    poseBandes(p.calage, t)
+    afficheCalage(p, t)
+    if (t >= p.calage.tombe) attenueMusique(fonduMusique((t - p.calage.tombe) / dureeFondu(p)))
 
-    if (t >= T_FINI && !i.fini) {
+    if (t >= p.tFini && !i.fini) {
       i.fini = true
       fini()
     }
@@ -381,19 +318,21 @@ export function Chute({
 /* la courbe du fondu : lente au départ et à l'arrivée */
 const fonduMusique = (p: number) => 0.5 * (1 + Math.cos(Math.PI * Math.min(1, Math.max(0, p))))
 
-function regleVoileEtBrume(tau: number, enRue: boolean, voile: HTMLDivElement | null, fog: THREE.Fog | THREE.FogExp2 | null, gl: THREE.WebGLRenderer) {
+function regleVoileEtBrume(p: Partition, t: number, enRue: boolean, voile: HTMLDivElement | null, fog: THREE.Fog | THREE.FogExp2 | null, gl: THREE.WebGLRenderer) {
+  const tau = t - p.calage.tombe
+  const bascule = p.tBascule - p.calage.tombe
   if (tau < 0) {
     if (voile) voile.style.opacity = "0"
     return
   }
   /* dans le ciel, le banc monte ; sous le banc, il s'efface quand la rue
      est vraiment montée (le commit React peut suivre d'une image) */
-  const entree = Math.max(lisse(...VOILE_TEMPS, tau), lisse(...VOILE_HAUTEUR, chute.cameraY))
-  const levee = enRue ? lisse(BASCULE + 0.1, BASCULE + 0.1 + VOILE_LEVEE_S, tau) : 0
+  const entree = Math.max(lisse(...VOILE_VOITURE, altitudeCiel(p, t)), lisse(...VOILE_HAUTEUR, chute.cameraY))
+  const levee = enRue ? lisse(bascule + 0.1, bascule + 0.1 + VOILE_LEVEE_S, tau) : 0
   const opacite = chute.monde === "ciel" ? douce(entree) : 1 - douce(levee)
   if (voile) {
     const coeur = Math.min(1, entree)
-    const sortie = lisse(BASCULE - 0.25, BASCULE + 0.3, tau)
+    const sortie = lisse(bascule - 0.25, bascule + 0.3, tau)
     for (let k = 0; k < 2; k++)
       teinte[k].lerpColors(VOILE_ENTREE[k], VOILE_COEUR[k], coeur).lerp(VOILE_SORTIE[k], douce(sortie))
     voile.style.background = `linear-gradient(180deg, #${teinte[0].getHexString()}, #${teinte[1].getHexString()})`
@@ -401,11 +340,11 @@ function regleVoileEtBrume(tau: number, enRue: boolean, voile: HTMLDivElement | 
   }
 
   const plongee = chute.monde === "ciel" ? douce(entree) : 1
-  const remontee = douce(lisse(BASCULE + EXPOSITION_REMONTEE[0], BASCULE + EXPOSITION_REMONTEE[1], tau))
+  const remontee = douce(lisse(bascule + EXPOSITION_REMONTEE[0], bascule + EXPOSITION_REMONTEE[1], tau))
   gl.toneMappingExposure = THREE.MathUtils.lerp(1, EXPOSITION_BANC, plongee * (1 - remontee))
 
   if (!(fog instanceof THREE.Fog) || chute.monde === "ciel") return
-  const u = douce(lisse(BASCULE, BASCULE + BRUME_OUVERTURE_S, tau))
+  const u = douce(lisse(bascule, bascule + BRUME_OUVERTURE_S, tau))
   fog.color.lerpColors(BRUME_NUAGE.couleur, BRUME_NUIT.color, u)
   fog.near = THREE.MathUtils.lerp(BRUME_NUAGE.proche, BRUME_NUIT.near, u * u)
   /* exponentielle : l'ouverture se lit régulière à l'œil */
@@ -414,54 +353,104 @@ function regleVoileEtBrume(tau: number, enRue: boolean, voile: HTMLDivElement | 
 
 /* ---- la caméra ---------------------------------------------------------- */
 
-/* LES PLANS, sur la carrosserie (repère du GLB : nez +z, côté conducteur
-   +x, phares à z 1,6 à 2,0, feux à -1,6 à -1,9, aileron vers y 1,2 et
-   z -1,8, roues avant à z 1,3 et arrière à -1,2, rayon 0,33). La caméra
-   (de, a) se place dans le repère de la voiture SANS son tangage : elle
-   tourne avec son cap, garde l'horizon droit, et la voiture bascule
-   devant elle ; la visée (viseDe, viseA) est sur la carrosserie même,
-   tangage compris, et porte le point net. Longue focale (fov 16 à 30,
-   un 50 à 85 mm), mouvement lent et constant dans chaque plan, coupe
-   franche au suivant. */
+/* LES PLANS DE HUGO. Chacun est posé dans le repère de la voiture figé au
+   milieu du plan (son assiette simulée à cet instant), qui suit la
+   voiture en translation : elle reste cadrée pendant qu'elle tombe, et
+   ce qu'elle tourne pendant le plan (le cap qui dérive, le nez qui
+   bascule, la turbulence) se VOIT, au lieu d'emporter la caméra avec
+   elle. La caméra = un repère du GLB (`ancre`, assiette comprise) plus un
+   écart en mètres dans le repère du CAP seul (`de` vers `a` : la
+   contre-plongée reste une contre-plongée quelle que soit l'assiette) ;
+   la visée (`viseDe` vers `viseA`) est sur la carrosserie et porte le
+   point net (rack focus léger). L'horizon reste droit (lookAt, haut du
+   monde). Longue focale, mouvement lent et continu, coupe franche au
+   suivant. Repère du GLB : nez +z, conducteur +x, côté éclairé par le
+   couchant de la pose du ciel. */
 type V3 = [number, number, number]
-type Plan = { debut: number; de: V3; a: V3; viseDe: V3; viseA: V3; fov: [number, number]; nettete: number }
-/* le centre de la boîte du GLB (sans son disque de sol) */
-const CENTRE_GLB: V3 = [-0.075, 0.715, 0.045]
-const PLANS: Plan[] = [
-  /* le phare, en macro, vu d'en dessous et de face : la voiture pique
-     encore du nez, l'œil regarde vers la caméra */
-  { debut: ECRAN_COUPE, de: [1.1, -1.39, 1.94], a: [0.9, -1.3, 2.0], viseDe: [0.5, 0.53, 1.82], viseA: [0.52, 0.53, 1.8], fov: [17, 15], nettete: 0.8 },
-  /* le drop : trois-quarts avant en contre-plongée, elle se redresse
-     sur le couchant, la caméra s'approche en tournant */
-  { debut: COUPES[0], de: [3.9, -0.55, 4.6], a: [3.2, -0.3, 4.4], viseDe: [0.2, 0.58, 0.9], viseA: [0.25, 0.6, 1.0], fov: [26, 23], nettete: 3 },
-  /* le profil : travelling latéral le long du flanc, de l'aile avant et
-     sa jante jusqu'au passage de roue arrière */
-  { debut: COUPES[1], de: [3.5, 0.5, 2.6], a: [3.5, 0.6, -2.2], viseDe: [0.85, 0.48, 1.35], viseA: [0.85, 0.55, -1.25], fov: [24, 24], nettete: 2 },
-  /* trois-quarts arrière : du feu à l'aileron, la caméra monte, le
-     point net glisse de l'un à l'autre */
-  { debut: COUPES[2], de: [2.5, 0.75, -4.1], a: [1.4, 2.25, -3.7], viseDe: [0.52, 0.8, -1.82], viseA: [-0.05, 1.18, -1.8], fov: [21, 17], nettete: 1.5 },
-  /* la plongée : elle, au-dessus de la mer de nuages ; la chute part de
-     ce plan, sans coupe, la visée déjà au centre de la voiture */
-  { debut: COUPES[3], de: [6.4, 4.2, 4.3], a: [7.0, 4.6, 5.0], viseDe: CENTRE_GLB, viseA: CENTRE_GLB, fov: [30, 31], nettete: 4 },
-]
+type Plan = { ancre: THREE.Vector3; de: V3; a: V3; viseDe: THREE.Vector3; viseA: THREE.Vector3; fov: [number, number]; nettete: number }
+type PlanDeCoupe = Exclude<Segment, "ciel" | "chute" | "rue">
+
+/* les repères de la carrosserie, lus aux boîtes du GLB par matériau */
+type Reperes = { centre: THREE.Vector3; phare: THREE.Vector3; phareOppose: THREE.Vector3; face: THREE.Vector3; feu: THREE.Vector3; echappement: THREE.Vector3; aileron: THREE.Vector3 }
+
+function reperesDe(modele: THREE.Object3D): Reperes {
+  modele.updateWorldMatrix(true, true)
+  const versModele = new THREE.Matrix4().copy(modele.matrixWorld).invert()
+  const boite = (materiau: string) => {
+    const b = new THREE.Box3()
+    modele.traverse((o) => {
+      const mesh = o as THREE.Mesh
+      if (!mesh.isMesh || (mesh.material as THREE.Material).name !== materiau) return
+      mesh.geometry.computeBoundingBox()
+      b.union(mesh.geometry.boundingBox!.clone().applyMatrix4(new THREE.Matrix4().multiplyMatrices(versModele, mesh.matrixWorld)))
+    })
+    if (b.isEmpty()) throw new Error(`gt86 : le GLB du ciel n'a plus de matériau ${materiau}`)
+    return b
+  }
+  const phares = boite("HeadlightsTex")
+  const feux = boite("Taillightbody")
+  /* ciel.tsx recentre le GLB sur sa boîte */
+  const centre = modele.position.clone().negate()
+  const cy = phares.getCenter(new THREE.Vector3()).y
+  return {
+    centre,
+    phare: new THREE.Vector3(phares.max.x - 0.2, cy, phares.max.z - 0.12),
+    phareOppose: new THREE.Vector3(phares.min.x + 0.2, cy, phares.max.z - 0.12),
+    face: new THREE.Vector3(centre.x, cy - 0.05, phares.max.z),
+    feu: new THREE.Vector3(feux.max.x - 0.2, feux.getCenter(new THREE.Vector3()).y, feux.min.z + 0.1),
+    echappement: boite("Exhaust").getCenter(new THREE.Vector3()),
+    /* l'aileron n'a pas de matériau à lui : au-dessus des feux, au bord
+       du coffre (mesuré au #56) */
+    aileron: new THREE.Vector3(centre.x, feux.max.y + 0.32, feux.min.z + 0.2),
+  }
+}
+
+const FOV_DERNIER_PLAN = 32
+const NETTETE_DERNIER_PLAN = 4
+
+function plansDe(r: Reperes): Record<PlanDeCoupe, Plan> {
+  const decale = (v: THREE.Vector3, x: number, y: number, z: number) => v.clone().add(new THREE.Vector3(x, y, z))
+  return {
+    /* l'écran coupé : un plan large qui file autour du trois-quarts avant */
+    large: { ancre: r.centre, de: [10, 1.8, 9.5], a: [12.6, 0.8, 4.4], viseDe: r.centre, viseA: decale(r.centre, 0, 0, -0.3), fov: [30, 28], nettete: 4 },
+    /* a. l'avant vu du phare, en contre-plongée : l'objectif bas, contre
+       le phare, la face avant file vers le phare opposé */
+    a: { ancre: r.phare, de: [0.4, -0.3, 0.75], a: [0.5, -0.24, 0.95], viseDe: r.phare.clone().lerp(r.face, 0.6), viseA: r.face.clone().lerp(r.phareOppose, 0.5), fov: [32, 29], nettete: 0.9 },
+    /* b. l'arrière : du diffuseur et de la sortie d'échappement aux feux */
+    b: { ancre: r.feu, de: [0.9, 0.5, -3.0], a: [0.4, 0.7, -3.3], viseDe: r.echappement, viseA: decale(r.feu, -0.35, 0, 0), fov: [26, 24], nettete: 1.5 },
+    /* c. le profil en contre-plongée, l'objectif sous la ligne de caisse,
+       un lent travelling de l'aile avant au passage de roue arrière */
+    c: { ancre: r.centre, de: [7.2, -1.9, 1.6], a: [7.2, -1.6, -1.4], viseDe: decale(r.centre, 0, 0, 0.5), viseA: decale(r.centre, 0, 0, -0.5), fov: [33, 33], nettete: 3 },
+    /* d. l'aileron, en gros plan */
+    d: { ancre: r.aileron, de: [1.5, 0.15, -1.35], a: [1.1, 0.4, -1.55], viseDe: decale(r.aileron, 0.25, 0, 0), viseA: r.aileron, fov: [20, 17], nettete: 0.7 },
+    /* e. la voiture entière en contre-plongée, découpée sur le couchant :
+       la chute part de ce plan, sans coupe */
+    e: { ancre: r.centre, de: [3.8, -4.2, 3.6], a: [3.4, -3.9, 3.1], viseDe: r.centre, viseA: r.centre, fov: [31, FOV_DERNIER_PLAN], nettete: NETTETE_DERNIER_PLAN },
+  }
+}
+
+const plans: { modele: THREE.Object3D | null; liste: Record<PlanDeCoupe, Plan> | null } = { modele: null, liste: null }
+function plansPour(modele: THREE.Object3D) {
+  if (plans.modele !== modele || !plans.liste) {
+    plans.modele = modele
+    plans.liste = plansDe(reperesDe(modele))
+  }
+  return plans.liste
+}
+
 const NETTETE_CHUTE = 5
 /* le premier temps, avant l'écran coupé : la pose du ciel, un souffle
    de travelling avant */
 const APPROCHE_CIEL = { avance: 0.06, fov: 35 }
 
-/* LE SUIVI, en forme close (la même courbe à toute cadence) : la caméra
-   rejoue la chute de la voiture avec RETARD secondes de retard (elle la
-   voit partir, puis tombe à sa vitesse), la visée avec RETARD_VISE, les
-   deux retards montant en RETARD_MONTEE. L'écart à la voiture, gelé au
-   départ de la chute, glisse vers celui de la rue (au-dessus, à l'est,
-   au sud) ; en rue la caméra freine plus tôt que la voiture
-   (FREIN_CAMERA) ; la vitesse du dernier plan
+/* LE SUIVI de la chute : la verticale vient du ressort de
+   chute-physique.ts (la caméra voit la voiture partir, prend du retard,
+   la rattrape) ; l'écart au dernier plan, gelé à « tombe », glisse dès
+   la chute vers celui de la rue (au-dessus, à l'est, au sud) : la
+   voiture tombe devant l'objectif de la contre-plongée, la caméra passe
+   au-dessus d'elle avant la bascule ; la vitesse du dernier plan
    s'éteint en ELAN_S ; sur APPROCHE_S la caméra rejoint la droite
-   d'approche du travelling. Ciel et rue partagent la même descente :
-   la vitesse passe la bascule telle quelle. */
-const RETARD = 0.22
-const RETARD_VISE = 0.06
-const RETARD_MONTEE = 0.8
+   d'approche du travelling. */
 const ECART_RUE = new THREE.Vector3(3.2, 4.5, 6.5)
 const ECART_RUE_S = 1.5
 const ELAN_S = 0.5
@@ -471,24 +460,23 @@ const FOV_RUE = 34
 /* le point net s'efface sous les nuages : la ville reste nette */
 const FLOU_PLANS = 3
 const FLOU_CHUTE = 2
-const NETTETE_DERNIER_PLAN = PLANS[PLANS.length - 1].nettete
 const RELAIS_FLOU_S = 0.5
 
 const CENTRE_POSEE = new THREE.Vector3(POSE_VOITURE[0], POSE_VOITURE[1] + 0.6, POSE_VOITURE[2])
 const VISE_ARRIVEE_LOCALE = new THREE.Vector3(0, 1.05, 0)
 
-const camPrec = new THREE.Vector3()
 const point = new THREE.Vector3()
 const centre = new THREE.Vector3()
 const ecart = new THREE.Vector3()
 const surDroite = new THREE.Vector3()
-const nez = new THREE.Vector3()
-const lacetMat = new THREE.Matrix4()
+const repere = new THREE.Quaternion()
+const cap = new THREE.Quaternion()
+const AXE_Y = new THREE.Vector3(0, 1, 0)
 /* une caméra, pas un Object3D : seul un isCamera regarde vers -z */
 const pivot = new THREE.PerspectiveCamera()
 
-/* gelés au départ de la chute */
-const suivi = { parti: false, ecart: new THREE.Vector3(), elan: new THREE.Vector3(), tPrec: 0 }
+/* gelés à « tombe » */
+const suivi = { parti: false, ecart: new THREE.Vector3(), elan: new THREE.Vector3() }
 
 /* APRÈS le ciel et la rue (priorité 0, et le ciel s'abonne tard, sous
    Suspense) : leurs assiettes de cette image sont posées, la caméra vise
@@ -496,7 +484,7 @@ const suivi = { parti: false, ecart: new THREE.Vector3(), elan: new THREE.Vector
 const PRIORITE_CAMERA = 0.5
 const PRIORITE_FLOU = 0.75
 
-export function CameraChute({ montage, etat, cockpit }: { montage: Montage; etat: string; cockpit: Cockpit }) {
+export function CameraChute({ etat, cockpit }: { etat: string; cockpit: Cockpit }) {
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
 
   useFrame(() => {
@@ -505,29 +493,23 @@ export function CameraChute({ montage, etat, cockpit }: { montage: Montage; etat
       chute.flou = 0
       return
     }
+    const p = partition()
     const t = chute.t
     const modele = voitureDuCiel.modele
     if (!modele) return
     modele.updateWorldMatrix(true, false)
 
-    if (t < CHUTE) {
-      suivi.parti = false
-      if (t < ECRAN_COUPE) planDuCiel(camera, modele, t)
-      else planDeCoupe(camera, modele, t)
-    } else {
+    const segment = segmentDe(p, t)
+    if (segment === "ciel") planDuCiel(camera, modele, p, t)
+    else if (t < p.calage.tombe) cadreLePlan(camera, modele, p, t, segment as PlanDeCoupe)
+    else {
       if (!suivi.parti) {
-        /* le dernier plan passe la main : son écart à la voiture et sa
-           vitesse sont repris */
         suivi.parti = true
-        suivi.ecart.subVectors(camera.position, centreDuCiel(modele, centre))
-        suivi.elan.subVectors(camera.position, camPrec).divideScalar(Math.max(1e-3, t - suivi.tPrec))
+        relaisDuDernierPlan(modele, p)
       }
-      suis(camera, modele, cockpit.voiture, t - CHUTE)
+      suis(camera, modele, cockpit.voiture, p, t)
     }
-    camPrec.copy(camera.position)
-    suivi.tPrec = t
     chute.cameraY = camera.position.y
-    compenseCadre(camera, montage, t)
   }, PRIORITE_CAMERA)
 
   return null
@@ -551,136 +533,160 @@ function cadre(camera: THREE.PerspectiveCamera, vise: THREE.Vector3, fov: number
 }
 
 /* le premier temps : la pose du ciel de toujours (aucune coupe au clic) */
-function planDuCiel(camera: THREE.PerspectiveCamera, modele: THREE.Object3D, t: number) {
-  const u = t / ECRAN_COUPE
+function planDuCiel(camera: THREE.PerspectiveCamera, modele: THREE.Object3D, p: Partition, t: number) {
+  const u = t / p.calage.ecran
   centreDuCiel(modele, point)
   camera.position.lerpVectors(POSE, point, APPROCHE_CIEL.avance * u)
   cadre(camera, point, THREE.MathUtils.lerp(FOV_POSE, APPROCHE_CIEL.fov, u), NETTETE_CHUTE, 0)
 }
 
-function planDeCoupe(camera: THREE.PerspectiveCamera, modele: THREE.Object3D, t: number) {
-  let k = 0
-  while (k + 1 < PLANS.length && t >= PLANS[k + 1].debut) k++
-  const p = PLANS[k]
-  const fin = k + 1 < PLANS.length ? PLANS[k + 1].debut : CHUTE
-  const u = lisse(p.debut, fin, t)
-  centreDuCiel(modele, centre)
-  /* le cap de la voiture, sans son tangage : l'axe du nez à plat */
-  nez.set(0, 0, 1).transformDirection(modele.matrixWorld)
-  lacetMat.makeRotationY(Math.atan2(nez.x, nez.z))
-  camera.position
-    .set(...p.de)
-    .lerp(point.set(...p.a), u)
-    .add(modele.position)
-    .applyMatrix4(lacetMat)
-    .add(centre)
-  modele.localToWorld(point.set(...p.viseDe).lerp(ecart.set(...p.viseA), u))
-  cadre(camera, point, THREE.MathUtils.lerp(p.fov[0], p.fov[1], u), p.nettete, FLOU_PLANS)
+/* le repère figé du plan : l'assiette simulée au milieu du plan, cap de
+   ciel.tsx compris, et son cap seul */
+function repereDuPlan(p: Partition, debut: number, fin: number) {
+  attitudeCiel(p, tempsSimule((debut + fin) / 2, p.calage), repere).premultiply(cap.setFromAxisAngle(AXE_Y, CAP))
+  assiette.setFromQuaternion(repere, "YXZ")
+  cap.setFromAxisAngle(AXE_Y, assiette.y)
 }
 
-/* le retard monte de 0 : la caméra part avec la voiture, au repos */
-const retarde = (tau: number, retard: number) => tau - retard * douce(lisse(0, RETARD_MONTEE, tau))
+/* la position (out) et la visée (vise) du plan à l'instant t, relatives
+   au centre de la voiture */
+function positionDuPlan(modele: THREE.Object3D, plan: Plan, u: number, out: THREE.Vector3, vise: THREE.Vector3) {
+  out
+    .copy(plan.ancre)
+    .add(modele.position)
+    .applyQuaternion(repere)
+    .add(ecart.set(...plan.de).lerp(point.set(...plan.a), u).applyQuaternion(cap))
+  vise.copy(plan.viseDe).lerp(plan.viseA, u).add(modele.position).applyQuaternion(repere)
+}
 
-function suis(camera: THREE.PerspectiveCamera, modele: THREE.Object3D, voiture: THREE.Object3D | null, tau: number) {
-  const t = CHUTE + tau
-  ecart.copy(suivi.ecart).lerp(ECART_RUE, douce(lisse(BASCULE, BASCULE + ECART_RUE_S, tau)))
+const viseRelative = new THREE.Vector3()
+function cadreLePlan(camera: THREE.PerspectiveCamera, modele: THREE.Object3D, p: Partition, t: number, segment: PlanDeCoupe) {
+  const plan = plansPour(modele)[segment]
+  const debut = segment === "large" ? p.calage.ecran : p.calage[segment]
+  const fin = finDeSegment(p, t)
+  const u = lisse(debut, fin, t)
+  repereDuPlan(p, debut, fin)
+  centreDuCiel(modele, centre)
+  positionDuPlan(modele, plan, u, camera.position, viseRelative)
+  camera.position.add(centre)
+  cadre(camera, viseRelative.add(centre), THREE.MathUtils.lerp(plan.fov[0], plan.fov[1], u), plan.nettete, FLOU_PLANS)
+}
+
+/* le dernier plan passe la main : son écart à la voiture à « tombe » et
+   sa vitesse propre (le travelling du plan), calculés d'après le plan
+   même, pas d'après l'image d'avant */
+function relaisDuDernierPlan(modele: THREE.Object3D, p: Partition) {
+  const plan = plansPour(modele).e
+  const { e, tombe } = p.calage
+  repereDuPlan(p, e, tombe)
+  positionDuPlan(modele, plan, 1, suivi.ecart, viseRelative)
+  suivi.elan.set(...plan.a).sub(point.set(...plan.de)).applyQuaternion(cap).divideScalar(tombe - e)
+}
+
+function suis(camera: THREE.PerspectiveCamera, modele: THREE.Object3D, voiture: THREE.Object3D | null, p: Partition, t: number) {
+  const tau = t - p.calage.tombe
+  const bascule = p.tBascule - p.calage.tombe
+  ecart.copy(suivi.ecart).lerp(ECART_RUE, douce(lisse(0, bascule + ECART_RUE_S, tau)))
   ecart.addScaledVector(suivi.elan, ELAN_S * (1 - Math.exp(-tau / ELAN_S)))
   if (chute.monde === "ciel") {
-    /* le centre mesuré porte la respiration ; le retard s'y ajoute */
+    /* le centre mesuré porte la respiration ; le retard du ressort s'y
+       ajoute */
+    const { camera: yCamera, visee } = verticaleCamera(p, t, "ciel")
+    const altitude = altitudeCiel(p, t)
     centreDuCiel(modele, centre)
     camera.position.copy(centre).add(ecart)
-    camera.position.y += descente(tau) - descente(retarde(tau, RETARD))
+    camera.position.y += yCamera - altitude
     point.copy(centre)
-    point.y += descente(tau) - descente(retarde(tau, RETARD_VISE))
+    point.y += visee - altitude
     /* le point net et le flou du dernier plan glissent vers ceux de la
        chute : elle part sans coupe */
     const relais = douce(lisse(0, RELAIS_FLOU_S, tau))
-    cadre(camera, point, fovDeChute(t), THREE.MathUtils.lerp(NETTETE_DERNIER_PLAN, NETTETE_CHUTE, relais), THREE.MathUtils.lerp(FLOU_PLANS, FLOU_CHUTE, relais))
+    cadre(camera, point, fovDeChute(p, t), THREE.MathUtils.lerp(NETTETE_DERNIER_PLAN, NETTETE_CHUTE, relais), THREE.MathUtils.lerp(FLOU_PLANS, FLOU_CHUTE, relais))
     return
   }
   /* la rue n'est vue qu'une fois sa voiture montée et mesurée */
   if (!voiture) return
+  const { camera: hCamera, visee } = verticaleCamera(p, t, "rue")
   const approche = travellingDe(voiture)
-  const w = douce(lisse(T_FINI - APPROCHE_S, T_FINI, t))
+  const w = douce(lisse(p.tFini - APPROCHE_S, p.tFini, t))
   camera.position.copy(CENTRE_POSEE).add(ecart)
-  camera.position.y += hauteurFreinee(retarde(tau, RETARD), FREIN_CAMERA)
-  camera.position.lerp(droiteApproche(t, approche, surDroite), w)
+  camera.position.y += hCamera
+  camera.position.lerp(droiteApproche(p, t, approche, surDroite), w)
   point.copy(CENTRE_POSEE)
-  point.y += hauteurRue(retarde(tau, RETARD_VISE))
+  point.y += visee
   point.lerp(approche.viseArriere, w)
-  cadre(camera, point, fovDeChute(t), NETTETE_CHUTE, THREE.MathUtils.lerp(FLOU_CHUTE, 0, douce(lisse(BASCULE, BASCULE + BRUME_OUVERTURE_S, tau))))
+  cadre(camera, point, fovDeChute(p, t), NETTETE_CHUTE, THREE.MathUtils.lerp(FLOU_CHUTE, 0, douce(lisse(bascule, bascule + BRUME_OUVERTURE_S, tau))))
 }
 
 /* la droite qui arrive sur le départ du travelling à sa vitesse et dans
    son axe, à l'instant FINI */
-function droiteApproche(t: number, approche: Travelling, out: THREE.Vector3) {
-  return out.copy(approche.depart).addScaledVector(approche.tangente, -V_ARRIVEE * (T_FINI - t))
+function droiteApproche(p: Partition, t: number, approche: Travelling, out: THREE.Vector3) {
+  return out.copy(approche.depart).addScaledVector(approche.tangente, -V_ARRIVEE * (p.tFini - t))
 }
 
 /* la focale du suivi : celle du dernier plan, un peu plus large pour la
    chute puis pour la rue, et celle du travelling à l'arrivée */
-const FOV_DERNIER_PLAN = PLANS[PLANS.length - 1].fov[1]
-function fovDeChute(t: number) {
-  const chuteFov = THREE.MathUtils.lerp(FOV_DERNIER_PLAN, FOV_CHUTE, douce(lisse(CHUTE, CHUTE + 1.2, t)))
-  const rueFov = THREE.MathUtils.lerp(chuteFov, FOV_RUE, douce(lisse(CHUTE + BASCULE, CHUTE + BASCULE + 1, t)))
-  return THREE.MathUtils.lerp(rueFov, FOV_POSE, douce(lisse(T_FINI - APPROCHE_S, T_FINI, t)))
+function fovDeChute(p: Partition, t: number) {
+  const { tombe } = p.calage
+  const chuteFov = THREE.MathUtils.lerp(FOV_DERNIER_PLAN, FOV_CHUTE, douce(lisse(tombe, tombe + 1.2, t)))
+  const rueFov = THREE.MathUtils.lerp(chuteFov, FOV_RUE, douce(lisse(p.tBascule, p.tBascule + 1, t)))
+  return THREE.MathUtils.lerp(rueFov, FOV_POSE, douce(lisse(p.tFini - APPROCHE_S, p.tFini, t)))
 }
 
 /* ---- les bandes --------------------------------------------------------- */
 
-/* Obliques : le parallélogramme de la référence (pente OBLIQUE_DEG, la
-   bande d'image décalée vers le haut), posé d'un coup sur l'écran coupé,
-   ouvert en un éclair sur le drop. Cadre : le scope 2,39:1, refermé en
-   un souffle et rouvert quand la voiture tombe. */
+/* Les obliques de la référence (« BMW Falling from Sky ») : un
+   parallélogramme (pente OBLIQUE_DEG, la bande d'image décalée vers le
+   haut) posé d'un coup sur l'écran coupé et tenu jusqu'à « ouvre » ; là,
+   les bandes se redressent en REDRESSE_S vers le scope 2,39:1, tenu
+   pendant les plans ; elles s'ouvrent quand la voiture tombe. */
 const OBLIQUE_DEG = -12
 const OBLIQUE_DECALAGE = -0.06
 const OBLIQUE_DEMI_HAUTEUR = 0.34
-const OBLIQUE_OUVERTURE_S = 0.22
+const REDRESSE_S = 0.6
 const FORMAT_SCOPE = 2.39
-const CADRE_FERMETURE_S = 0.35
-const CADRE_OUVERTURE_S = 0.9
+const OUVERTURE_S = 0.9
 
-const bandes: { haut: HTMLDivElement | null; bas: HTMLDivElement | null } = { haut: null, bas: null }
+const bandes: { haut: HTMLDivElement | null; bas: HTMLDivElement | null; bandeau: HTMLDivElement | null } = { haut: null, bas: null, bandeau: null }
 
-function poseBandes(montage: Montage | null, t: number) {
+function poseBandes(calage: Calage, t: number) {
   const { haut, bas } = bandes
-  if (!haut || !bas || !montage) return
+  if (!haut || !bas) return
   const h = window.innerHeight
-  const demiDiagonale = Math.hypot(window.innerWidth, h) / 2
+  const demiOuvert = Math.hypot(window.innerWidth, h) / 2
   let angle = 0
   let centre = 0
-  let demi = demiDiagonale
-  if (montage === "obliques") {
-    if (t >= ECRAN_COUPE && t < COUPES[0] + OBLIQUE_OUVERTURE_S) {
-      angle = OBLIQUE_DEG
-      centre = OBLIQUE_DECALAGE * h
-      const ouvre = 1 - Math.pow(1 - lisse(COUPES[0], COUPES[0] + OBLIQUE_OUVERTURE_S, t), 3)
-      demi = THREE.MathUtils.lerp(OBLIQUE_DEMI_HAUTEUR * h, demiDiagonale, ouvre)
-    }
-  } else {
-    demi = demiCadre(t, demiDiagonale)
+  let demi = demiOuvert
+  if (t >= calage.ecran) {
+    const redresse = douce(lisse(calage.ouvre, calage.ouvre + REDRESSE_S, t))
+    const scope = Math.min(window.innerWidth / FORMAT_SCOPE, h) / 2
+    angle = THREE.MathUtils.lerp(OBLIQUE_DEG, 0, redresse)
+    centre = THREE.MathUtils.lerp(OBLIQUE_DECALAGE * h, 0, redresse)
+    demi = THREE.MathUtils.lerp(THREE.MathUtils.lerp(OBLIQUE_DEMI_HAUTEUR * h, scope, redresse), demiOuvert, douce(lisse(calage.tombe, calage.tombe + OUVERTURE_S, t)))
   }
-  haut.style.transform = `rotate(${angle}deg) translateY(${(centre - demi).toFixed(1)}px)`
-  bas.style.transform = `rotate(${angle}deg) translateY(${(centre + demi).toFixed(1)}px)`
+  haut.style.transform = `rotate(${angle.toFixed(2)}deg) translateY(${(centre - demi).toFixed(1)}px)`
+  bas.style.transform = `rotate(${angle.toFixed(2)}deg) translateY(${(centre + demi).toFixed(1)}px)`
 }
 
-/* la demi-hauteur d'image laissée par le scope à l'instant t */
-function demiCadre(t: number, demiOuvert: number) {
-  const scope = Math.min(window.innerWidth / FORMAT_SCOPE, window.innerHeight) / 2
-  const ferme = douce(lisse(ECRAN_COUPE, ECRAN_COUPE + CADRE_FERMETURE_S, t)) * (1 - douce(lisse(CHUTE, CHUTE + CADRE_OUVERTURE_S, t)))
-  return THREE.MathUtils.lerp(demiOuvert, scope, ferme)
+/* le bandeau de calage (?calage) : le temps musical et ce qu'on voit */
+const NOMS: Record<Segment | "seuil", string> = {
+  ciel: "ciel, avant l'écran coupé",
+  large: "plan large",
+  a: "a · l'avant, depuis le phare",
+  b: "b · l'arrière",
+  c: "c · le côté",
+  d: "d · l'aileron",
+  e: "e · la voiture entière",
+  chute: "la chute",
+  rue: "la rue",
+  seuil: "le seuil",
 }
 
-/* sous le scope, la focale s'ouvre d'autant que le cadre se resserre :
-   la bande d'image garde le cadrage plein écran des plans (jantes, toit,
-   aileron) au lieu de le rogner */
-function compenseCadre(camera: THREE.PerspectiveCamera, montage: Montage, t: number) {
-  if (montage !== "cadre") return
-  const visible = (2 * demiCadre(t, window.innerHeight / 2)) / window.innerHeight
-  if (visible >= 1) return
-  const demiAngle = THREE.MathUtils.degToRad(camera.fov / 2)
-  camera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(demiAngle) / visible))
-  camera.updateProjectionMatrix()
+function afficheCalage(p: Partition, t: number, segment: Segment | "seuil" = segmentDe(p, t)) {
+  if (!bandes.bandeau) return
+  const { ecran, ouvre, tombe } = p.calage
+  const cadre = t < ecran || t >= tombe ? "" : t < ouvre ? " · obliques" : " · bandes"
+  bandes.bandeau.textContent = `${t.toFixed(2)} s · ${NOMS[segment]}${cadre}`
 }
 
 /* les deux bandes, sur la toile et sous les boutons ; chacune pivote
@@ -697,6 +703,7 @@ const bande = {
 } as const
 
 export function BandesChute() {
+  const [calageAffiche] = useState(() => new URLSearchParams(location.search).has("calage"))
   return (
     <>
       <div
@@ -707,6 +714,22 @@ export function BandesChute() {
         ref={(d) => void (bandes.bas = d)}
         style={{ ...bande, transformOrigin: "50% 0", transform: "translateY(150vmax)" }}
       />
+      {calageAffiche && (
+        <div
+          ref={(d) => void (bandes.bandeau = d)}
+          data-gt86="calage"
+          style={{
+            position: "absolute",
+            left: 14,
+            bottom: 12,
+            font: "500 12px/1 var(--f-mono)",
+            letterSpacing: "0.06em",
+            color: "#e8dff5",
+            textShadow: "0 0 3px rgba(0, 0, 0, 0.9)",
+            pointerEvents: "none",
+          }}
+        />
+      )}
     </>
   )
 }
@@ -929,21 +952,23 @@ export function TravellingChute({ etat, cockpit, voile }: { etat: string; cockpi
     /* même condition de départ que le seuil : la voiture mesurée */
     const voiture = cockpit.voiture
     if (!voiture) return
+    const p = partition()
     if (!i.parti) {
       /* la chute a pu filer une image ou deux sur sa droite d'approche
          avant que React ne pose le SEUIL : le travelling reprend où elle
          en est */
       i.parti = true
-      i.t = Math.max(0, chute.t - T_FINI)
+      i.t = Math.max(0, chute.t - p.tFini)
     }
     /* même horloge que le seuil (delta plafonné) : la partition reste en
        phase, le verre passe au réglage intérieur à la traversée */
     const duree = SEUIL_MS / 1000
     i.t = Math.min(duree, i.t + Math.min(delta, DELTA_MAX))
-    chute.t = T_FINI + i.t
+    chute.t = p.tFini + i.t
     poseTravelling(camera, travellingDe(voiture), i.t)
     if (voile.current) voile.current.style.opacity = "0"
-    attenueMusique(fonduMusique((T_FINI - CHUTE + i.t) / FONDU_S))
+    attenueMusique(fonduMusique((p.tFini - p.calage.tombe + i.t) / dureeFondu(p)))
+    afficheCalage(p, chute.t, "seuil")
   })
 
   return null
