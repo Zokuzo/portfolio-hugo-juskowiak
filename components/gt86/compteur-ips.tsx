@@ -29,12 +29,31 @@ const RAFRAICHI_MS = 500
 /* le chargement est le ciel encore couvert par le voile : ses à-coups ne se
    voient pas, ils ne doivent pas noircir le ciel */
 const PHASES = ["chargement", "ciel", "chute", "seuil", "habitacle"] as const
+const CHARGEMENT = 0
 
 function phaseDe(etat: Etat, pret: boolean): number {
-  if (etat === "CIEL") return pret ? 1 : 0
+  if (etat === "CIEL") return pret ? 1 : CHARGEMENT
   if (etat === "ATTERRISSAGE") return 2
   if (etat === "SEUIL") return 3
   return 4
+}
+
+/* LES GELS NOMMÉS : un relevé qui montre une image de 840 ms sans dire qui
+   l'a prise ne se corrige pas, et le headless ne reproduit pas tout. Les
+   long-animation-frame (Chrome 123+) portent l'attribution des scripts :
+   on garde les pires au-delà de GEL_MS, avec la phase en cours quand
+   Chrome les signale (celle où le tableau range l'image lente). Ceux du
+   chargement restent sous le voile, ils ne prennent pas la place. */
+const GEL_MS = 50
+const GELS_GARDES = 3
+
+type Gel = { phase: number; duree: number; cause: string }
+
+/* le sous-ensemble de PerformanceLongAnimationFrameTiming qu'on lit,
+   absent de lib.dom de TypeScript 5 */
+type ImageLongue = {
+  duration: number
+  scripts: { invoker: string; sourceFunctionName: string; sourceURL: string; duration: number }[]
 }
 
 type Releve = {
@@ -43,6 +62,7 @@ type Releve = {
   lentes: Uint32Array
   somme: Float64Array
   pire: Float64Array
+  gels: Gel[]
 }
 
 function releveVide(): Releve {
@@ -53,6 +73,7 @@ function releveVide(): Releve {
     lentes: new Uint32Array(n),
     somme: new Float64Array(n),
     pire: new Float64Array(n),
+    gels: [],
   }
 }
 
@@ -97,6 +118,34 @@ function ligne(r: Releve, nom: string, phases: number[]): string {
   )
 }
 
+function observeGels(r: Releve, phase: { current: number }): PerformanceObserver | null {
+  if (!PerformanceObserver.supportedEntryTypes?.includes("long-animation-frame")) return null
+  const observateur = new PerformanceObserver((liste) => {
+    for (const image of liste.getEntries() as unknown as ImageLongue[])
+      if (image.duration > GEL_MS && phase.current !== CHARGEMENT) retiensGel(r.gels, { phase: phase.current, duree: image.duration, cause: causeDe(image) })
+  })
+  observateur.observe({ type: "long-animation-frame" })
+  return observateur
+}
+
+function causeDe(image: ImageLongue): string {
+  const script = [...image.scripts].sort((a, b) => b.duration - a.duration)[0]
+  if (!script) return "aucun script (rendu, GPU ou natif)"
+  const fichier = script.sourceURL.split("/").pop() || "?"
+  return `${script.invoker} ${script.sourceFunctionName || "?"}@${fichier} ${script.duration.toFixed(0)} ms`
+}
+
+function retiensGel(gels: Gel[], gel: Gel) {
+  gels.push(gel)
+  gels.sort((a, b) => b.duree - a.duree)
+  gels.length = Math.min(gels.length, GELS_GARDES)
+}
+
+function ligneGels(r: Releve): string {
+  if (!r.gels.length) return `gels > ${GEL_MS} ms : aucun`
+  return ["gels :", ...r.gels.map((g) => `  ${g.duree.toFixed(0)} ms [${PHASES[g.phase]}] ${g.cause}`)].join("\n")
+}
+
 function decritToile(): string {
   const toile = document.querySelector<HTMLCanvasElement>("[data-etat] canvas")
   if (!toile) return "toile : pas encore montée"
@@ -120,6 +169,7 @@ function texte(r: Releve, ips: number, gpu: string): string {
     "phase".padEnd(10) + ["images", "moy", "p95", "pire"].map((c) => c.padStart(COL)).join("") + ">16,7".padStart(COL + 2),
     ...PHASES.map((nom, i) => ligne(r, nom, [i])),
     ligne(r, "total", toutes),
+    ligneGels(r),
     gpu,
     decritToile(),
   ].join("\n")
@@ -163,10 +213,12 @@ export function CompteurIps({ etat, pret }: { etat: Etat; pret: boolean }) {
       if (sortie.current) sortie.current.textContent = texte(r, ips.current, gpu.current)
     }
     id = requestAnimationFrame(boucle)
+    const observateur = observeGels(r, phase)
     const h = setInterval(rafraichit, RAFRAICHI_MS)
     document.addEventListener("visibilitychange", visibilite)
     return () => {
       cancelAnimationFrame(id)
+      observateur?.disconnect()
       clearInterval(h)
       document.removeEventListener("visibilitychange", visibilite)
     }
