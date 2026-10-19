@@ -34,8 +34,8 @@ import {
    La consigne de Hugo : « dès que le début de la musique se lance la
    voiture ralentit dans les airs et là on fait les différents plans de
    coupe sur elle [...] et après on laisse la voiture tomber au sol et on
-   rentre dedans ». Son retour sur la v2 : les obliques, plus longues,
-   puis les bandes ; cinq plans (l'avant vu du phare, l'arrière, le côté,
+   rentre dedans ». Son retour sur la v2 : les obliques seules, plus
+   longues ; cinq plans (l'avant vu du phare, l'arrière, le côté,
    l'aileron, la voiture entière) ; pendant les coupes la voiture tombe
    vraiment, au ralenti, avec les frottements de l'air ; et le calage, il
    le fait lui-même.
@@ -51,8 +51,8 @@ import {
    2. ecran : l'écran se coupe sur un plan large, deux bandes noires
       obliques le cadrent en parallélogramme ;
    3. a, b, c, d, e : les plans de Hugo, en coupes franches ; à « ouvre »
-      les obliques se redressent en bandes de cinéma (2,39:1) ;
-   4. tombe : le temps reprend sa vitesse, les bandes s'ouvrent, la caméra
+      les obliques s'ouvrent et rendent l'écran entier ;
+   4. tombe : le temps reprend sa vitesse, la caméra
       la suit sur un ressort ; voile du banc de nuages, bascule vers la
       rue, la brume s'ouvre sur la ville de nuit, la voiture se rétablit
       et freine dans ses derniers mètres (atterrissage souple de la v2) ;
@@ -644,13 +644,10 @@ function fovDeChute(p: Partition, t: number) {
 /* Les obliques de la référence (« BMW Falling from Sky ») : un
    parallélogramme (pente OBLIQUE_DEG, la bande d'image décalée vers le
    haut) posé d'un coup sur l'écran coupé et tenu jusqu'à « ouvre » ; là,
-   les bandes se redressent en REDRESSE_S vers le scope 2,39:1, tenu
-   pendant les plans ; elles s'ouvrent quand la voiture tombe. */
+   les bandes s'ouvrent en OUVERTURE_S, toujours penchées. */
 const OBLIQUE_DEG = -12
 const OBLIQUE_DECALAGE = -0.06
 const OBLIQUE_DEMI_HAUTEUR = 0.34
-const REDRESSE_S = 0.6
-const FORMAT_SCOPE = 2.39
 const OUVERTURE_S = 0.9
 
 const bandes: { haut: HTMLDivElement | null; bas: HTMLDivElement | null; bandeau: HTMLDivElement | null } = { haut: null, bas: null, bandeau: null }
@@ -664,11 +661,9 @@ function poseBandes(calage: Calage, t: number) {
   let centre = 0
   let demi = demiOuvert
   if (t >= calage.ecran) {
-    const redresse = douce(lisse(calage.ouvre, calage.ouvre + REDRESSE_S, t))
-    const scope = Math.min(window.innerWidth / FORMAT_SCOPE, h) / 2
-    angle = THREE.MathUtils.lerp(OBLIQUE_DEG, 0, redresse)
-    centre = THREE.MathUtils.lerp(OBLIQUE_DECALAGE * h, 0, redresse)
-    demi = THREE.MathUtils.lerp(THREE.MathUtils.lerp(OBLIQUE_DEMI_HAUTEUR * h, scope, redresse), demiOuvert, douce(lisse(calage.tombe, calage.tombe + OUVERTURE_S, t)))
+    angle = OBLIQUE_DEG
+    centre = OBLIQUE_DECALAGE * h
+    demi = THREE.MathUtils.lerp(OBLIQUE_DEMI_HAUTEUR * h, demiOuvert, douce(lisse(calage.ouvre, calage.ouvre + OUVERTURE_S, t)))
   }
   haut.style.transform = `rotate(${angle.toFixed(2)}deg) translateY(${(centre - demi).toFixed(1)}px)`
   bas.style.transform = `rotate(${angle.toFixed(2)}deg) translateY(${(centre + demi).toFixed(1)}px)`
@@ -690,8 +685,8 @@ const NOMS: Record<Segment | "seuil", string> = {
 
 function afficheCalage(p: Partition, t: number, segment: Segment | "seuil" = segmentDe(p, t)) {
   if (!bandes.bandeau) return
-  const { ecran, ouvre, tombe } = p.calage
-  const cadre = t < ecran || t >= tombe ? "" : t < ouvre ? " · obliques" : " · bandes"
+  const { ecran, ouvre } = p.calage
+  const cadre = t >= ecran && t < ouvre ? " · obliques" : ""
   bandes.bandeau.textContent = `${t.toFixed(2)} s · ${NOMS[segment]}${cadre}`
 }
 
