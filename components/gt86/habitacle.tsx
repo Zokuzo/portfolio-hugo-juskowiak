@@ -378,8 +378,9 @@ export function habilleInterieur(
    le signe x du centre de chaque triangle, et chacune reçoit un pivot au
    centre de son moyeu, que `recentrage` pose sur le centre des
    graduations de son cadran. L'axe est la normale moyenne du cadran. Les
-   deux moitiés partagent les attributs et le matériau d'origine : même programme GPU, une rotation
-   n'est qu'une matrice (uniform), rien ne compile. */
+   deux moitiés partagent les attributs et le matériau d'origine : même
+   programme GPU, une rotation n'est qu'une matrice (uniform), rien ne
+   compile. */
 function pivoteAiguilles(mesh: THREE.Mesh, cadran: THREE.Mesh): Aiguille[] {
   const parent = mesh.parent
   if (!parent) return []
@@ -398,8 +399,8 @@ function pivoteAiguilles(mesh: THREE.Mesh, cadran: THREE.Mesh): Aiguille[] {
     for (let j = 0; j < 3; j++) x += v.fromBufferAttribute(pos, sommet(k + j)).x
     moities[x < 0 ? 0 : 1].push(sommet(k), sommet(k + 1), sommet(k + 2))
   }
-  const aiguilles = [CADRANS.tours, CADRANS.vitesse].map((graduations, k) => {
-    const indices = moities[k]
+  const aiguilles = [CADRANS.tours, CADRANS.vitesse].map((graduations) => {
+    const indices = moities[graduations.indice]
     const moyeu = moyeuDe(pos, indices)
     const moitie = new THREE.BufferGeometry()
     for (const [nom, attribut] of Object.entries(geo.attributes)) moitie.setAttribute(nom, attribut)

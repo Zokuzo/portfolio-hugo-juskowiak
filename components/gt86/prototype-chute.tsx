@@ -562,9 +562,13 @@ function capDuPlan(p: Partition, t: number): number {
 const azimutDeVisee = (de: V3) => Math.atan2(-de[0], -de[2])
 
 /* le cap de la voiture simulée, celui de ciel.tsx compris */
+const attitudeCap = new THREE.Quaternion()
+const assietteCap = new THREE.Euler()
+const capCiel = new THREE.Quaternion()
+
 function capSimule(p: Partition, t: number) {
-  attitudeCiel(p, tempsSimule(t, p.calage), attitude).premultiply(cap.setFromAxisAngle(AXE_Y, CAP))
-  return assiette.setFromQuaternion(attitude, "YXZ").y
+  attitudeCiel(p, tempsSimule(t, p.calage), attitudeCap).premultiply(capCiel.setFromAxisAngle(AXE_Y, CAP))
+  return assietteCap.setFromQuaternion(attitudeCap, "YXZ").y
 }
 
 function milieuDuPlan(p: Partition, t: number) {

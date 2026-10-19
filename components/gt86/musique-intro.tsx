@@ -9,9 +9,10 @@ import { contexteAudio } from "./spotify"
    Duduzinho), le choix de Hugo pour la chute. Depuis le #56, l'extrait
    est HÉBERGÉ ici : le début du morceau, du 13,92 s au 48,42 s (34,5 s,
    AAC 128 kbit/s, fondu d'entrée de 30 ms, de sortie de 2 s), coupé et
-   calé par Hugo à l'oreille (recoupé pour la chute v4). Piste sous droits : Hugo a décidé de l'héberger en
-   connaissance du risque. Il remplace la préversion du CDN Spotify, qui
-   commençait trop tard dans le morceau pour le montage du #56.
+   calé par Hugo à l'oreille (recoupé pour la chute v4). Piste sous
+   droits : Hugo a décidé de l'héberger en connaissance du risque. Il
+   remplace la préversion du CDN Spotify, qui commençait trop tard dans
+   le morceau pour le montage du #56.
 
    Départ au clic de décollage ; fondu de sortie de 1,6 s à l'entrée dans
    l'habitacle (la nouvelle chute, elle, a déjà tout fondu avant, voir

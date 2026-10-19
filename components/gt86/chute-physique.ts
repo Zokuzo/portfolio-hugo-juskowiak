@@ -1,6 +1,6 @@
 import * as THREE from "three"
 
-/* LA PHYSIQUE DE LA CHUTE (#56, v3), sans React ni scène : le calage de
+/* LA PHYSIQUE DE LA CHUTE (#56, v4), sans React ni scène : le calage de
    Hugo, le temps ralenti, la voiture en corps rigide, la caméra sur
    ressort. Tout est intégré UNE fois, au premier usage, en pas fixes
    (PAS_S) : la même trajectoire à toute cadence, et la même sous
