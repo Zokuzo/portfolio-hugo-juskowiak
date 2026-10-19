@@ -24,7 +24,7 @@ import { Effets } from "./rendu"
 import { ChoixDpr, DPR_DEPART } from "./dpr"
 import { BandesChute, CameraChute, Chute, dureeChuteMs, FlouChute, flouVoulu, montageVoulu, TravellingChute } from "./prototype-chute"
 import { CompteurIps, ipsVoulu } from "./compteur-ips"
-import { Demarrage, moteurVoulu, prechargeDemarrage } from "./demarrage"
+import { Demarrage, prechargeDemarrage } from "./demarrage"
 
 /* LES ASSETS ET LEUR CASCADE — ticket #28.
 
@@ -150,8 +150,6 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
   const [ips] = useState(ipsVoulu)
   /* la nouvelle chute du prototype #56 (?montage=obliques, ?montage) */
   const [montage] = useState(montageVoulu)
-  /* le démarrage du moteur à l'entrée dans l'habitacle (#42, ?moteur) */
-  const [moteur] = useState(moteurVoulu)
   /* le composer du rendu (#46, #59), dont la chauffe retient le rideau
      comme celle de la rue */
   const [effetsPrets, setEffetsPrets] = useState(false)
@@ -357,9 +355,9 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
      `visible` (#42) */
   const surClic = useCallback(() => {
     lanceMusique()
-    prechargeDemarrage(moteur)
+    prechargeDemarrage()
     envoie({ t: "clic" })
-  }, [moteur])
+  }, [])
   /* L'ÉCRAN DE CHARGEMENT (7e retour #33) : tant que ciel ET rue ne sont
      pas décodés, un voile CHARGEMENT couvre le dôme — l'animation ne se
      découvre que prête. Depuis le #44 « prête » veut dire GPU CHAUD : la
@@ -530,8 +528,8 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
         ) : (
           <Vol etat={etat} vol={vol} voile={voile} surBascule={surBascule} fini={() => envoie({ t: "fini" })} />
         )}
-        <Seuil etat={etat} cockpit={cockpit} voile={voileVerre} nom={nom} moteur={moteur} fini={() => envoie({ t: "fini" })} />
-        {moteur && <Demarrage etat={etat} cockpit={cockpit} />}
+        <Seuil etat={etat} cockpit={cockpit} voile={voileVerre} nom={nom} fini={() => envoie({ t: "fini" })} />
+        <Demarrage etat={etat} cockpit={cockpit} />
         <Pouls actif={etat === "SEUIL" || apres} ecran={ecran} />
         <Suspense fallback={null}>
           <Ciel

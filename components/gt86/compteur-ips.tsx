@@ -55,6 +55,25 @@ const GEL_MS = 50
 const GELS_GARDES = 3
 
 type Gel = { phase: number; duree: number; cause: string }
+
+/* CE QUE LE GPU A REÇU PENDANT UNE IMAGE LENTE : un gel du ciel (#42)
+   ne se reproduisait pas en headless, et « e5 396 ms » ne dit que « la
+   boucle de R3F ». Le compteur relève à chaque image programmes, textures
+   et géométries du renderer (window.__gt86, sans rien allouer) ; une image
+   lente garde ses ajouts et son instant depuis le rideau, que le gel
+   affiche : une compilation, un téléversement ou ni l'un ni l'autre. */
+const COMPTES = ["programmes", "textures", "géométries"]
+const BILANS_GARDES = 16
+type Bilan = { debut: number; fin: number; ajouts: number[] }
+
+function lisGpu(dest: Float64Array): boolean {
+  const info = (window as { __gt86?: { gl?: { info: { programs: unknown[] | null; memory: { textures: number; geometries: number } } } } }).__gt86?.gl?.info
+  if (!info) return false
+  dest[0] = info.programs?.length ?? 0
+  dest[1] = info.memory.textures
+  dest[2] = info.memory.geometries
+  return true
+}
 type Changement = { t: number; phase: number }
 
 /* le sous-ensemble de PerformanceLongAnimationFrameTiming qu'on lit,
@@ -134,12 +153,13 @@ function ligne(r: Releve, nom: string, phases: number[]): string {
 
 const pourcent = (n: number, total: number) => `${((100 * n) / total).toFixed(1).padStart(COL)} %`
 
-function observeGels(r: Releve, changements: Changement[]): PerformanceObserver | null {
+function observeGels(r: Releve, changements: Changement[], bilans: Bilan[]): PerformanceObserver | null {
   if (!PerformanceObserver.supportedEntryTypes?.includes("long-animation-frame")) return null
   const observateur = new PerformanceObserver((liste) => {
     for (const image of liste.getEntries() as unknown as ImageLongue[]) {
       const phase = phaseA(changements, image.startTime + image.duration)
-      if (image.duration > GEL_MS && phase !== CHARGEMENT) retiensGel(r.gels, { phase, duree: image.duration, cause: causeDe(image) })
+      if (image.duration > GEL_MS && phase !== CHARGEMENT)
+        retiensGel(r.gels, { phase, duree: image.duration, cause: causeDe(image) + contexteDe(image, changements, bilans) })
     }
   })
   observateur.observe({ type: "long-animation-frame" })
@@ -157,6 +177,18 @@ function causeDe(image: ImageLongue): string {
   if (!script) return "aucun script (rendu, GPU ou natif)"
   const fichier = script.sourceURL.split("/").pop() || "?"
   return `${script.invoker} ${script.sourceFunctionName || "?"}@${fichier} ${script.duration.toFixed(0)} ms`
+}
+
+/* l'instant depuis le rideau et les ajouts au GPU de l'image lente qui
+   recouvre ce gel */
+function contexteDe(image: ImageLongue, changements: Changement[], bilans: Bilan[]): string {
+  const rideau = changements.find((c) => c.phase !== CHARGEMENT)?.t
+  const quand = rideau === undefined ? "" : ` · +${((image.startTime - rideau) / 1000).toFixed(1)} s après le rideau`
+  const fin = image.startTime + image.duration
+  const bilan = bilans.find((b) => b.debut < fin && b.fin > image.startTime)
+  if (!bilan) return quand
+  const ajouts = bilan.ajouts.map((n, i) => (n ? `${COMPTES[i]} ${n > 0 ? "+" : ""}${n}` : "")).filter(Boolean)
+  return `${quand} · GPU ${ajouts.length ? ajouts.join(", ") : "sans ajout"}`
 }
 
 function retiensGel(gels: Gel[], gel: Gel) {
@@ -219,8 +251,21 @@ export function CompteurIps({ etat, pret }: { etat: Etat; pret: boolean }) {
     releve.current = r
     let precedent = 0
     let id = 0
+    const bilans: Bilan[] = []
+    const gpuAvant = new Float64Array(COMPTES.length)
+    const gpuMaintenant = new Float64Array(COMPTES.length)
+    let gpuLu = false
     const boucle = (t: number) => {
-      if (precedent) enregistre(r, phase.current, t - precedent)
+      const lu = lisGpu(gpuMaintenant)
+      if (precedent) {
+        enregistre(r, phase.current, t - precedent)
+        if (t - precedent > GEL_MS && lu && gpuLu) {
+          bilans.push({ debut: precedent, fin: t, ajouts: Array.from(gpuMaintenant, (n, i) => n - gpuAvant[i]) })
+          if (bilans.length > BILANS_GARDES) bilans.shift()
+        }
+      }
+      gpuAvant.set(gpuMaintenant)
+      gpuLu = lu
       precedent = t
       id = requestAnimationFrame(boucle)
     }
@@ -240,7 +285,7 @@ export function CompteurIps({ etat, pret }: { etat: Etat; pret: boolean }) {
       if (sortie.current) sortie.current.textContent = texte(r, ips.current, gpu.current)
     }
     id = requestAnimationFrame(boucle)
-    const observateur = observeGels(r, changements.current)
+    const observateur = observeGels(r, changements.current, bilans)
     const h = setInterval(rafraichit, RAFRAICHI_MS)
     document.addEventListener("visibilitychange", visibilite)
     return () => {

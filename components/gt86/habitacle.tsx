@@ -376,9 +376,9 @@ export function habilleInterieur(
 /* Les deux aiguilles du GLB vivent dans UN mesh, de part et d'autre de son
    origine (compte-tours d'un côté, compteur de l'autre). On les sépare par
    le signe x du centre de chaque triangle, et chacune reçoit un pivot au
-   centre de son moyeu : l'anneau de sommets le plus éloigné de la pointe.
-   L'axe est la normale moyenne du cadran. Les deux moitiés partagent les
-   attributs et le matériau d'origine : même programme GPU, une rotation
+   centre de son moyeu, que `recentrage` pose sur le centre des
+   graduations de son cadran. L'axe est la normale moyenne du cadran. Les
+   deux moitiés partagent les attributs et le matériau d'origine : même programme GPU, une rotation
    n'est qu'une matrice (uniform), rien ne compile. */
 function pivoteAiguilles(mesh: THREE.Mesh, cadran: THREE.Mesh): Aiguille[] {
   const parent = mesh.parent
@@ -398,16 +398,18 @@ function pivoteAiguilles(mesh: THREE.Mesh, cadran: THREE.Mesh): Aiguille[] {
     for (let j = 0; j < 3; j++) x += v.fromBufferAttribute(pos, sommet(k + j)).x
     moities[x < 0 ? 0 : 1].push(sommet(k), sommet(k + 1), sommet(k + 2))
   }
-  const aiguilles = moities.map((indices) => {
+  const aiguilles = [CADRANS.tours, CADRANS.vitesse].map((graduations, k) => {
+    const indices = moities[k]
     const moyeu = moyeuDe(pos, indices)
     const moitie = new THREE.BufferGeometry()
     for (const [nom, attribut] of Object.entries(geo.attributes)) moitie.setAttribute(nom, attribut)
     moitie.setIndex(indices)
+    const centre = moyeu.clone().applyMatrix4(mesh.matrix)
     const pivot = new THREE.Object3D()
-    pivot.position.copy(moyeu.applyMatrix4(mesh.matrix))
+    pivot.position.copy(moyeu.add(graduations.recentrage).applyMatrix4(mesh.matrix))
     const morceau = new THREE.Mesh(moitie, mesh.material)
     morceau.name = mesh.name
-    morceau.position.copy(mesh.position).sub(pivot.position)
+    morceau.position.copy(mesh.position).sub(centre)
     morceau.quaternion.copy(mesh.quaternion)
     morceau.scale.copy(mesh.scale)
     pivot.add(morceau)
@@ -428,22 +430,31 @@ function normaleMoyenne(geo: THREE.BufferGeometry) {
 
 /* la pointe est le sommet le plus loin du barycentre (le moyeu, dense en
    sommets, l'attire à lui) ; le moyeu, la moyenne des sommets à plus de
-   80 % de la longueur de l'aiguille depuis la pointe */
+   la moitié de la longueur depuis la pointe : le disque ENTIER, ses deux
+   anneaux réguliers se centrent d'eux-mêmes. Au-delà de 80 %, seul le
+   demi-disque du fond comptait : le pivot tombait à 0,7 rayon du centre,
+   le moyeu tournait en orbite et la pointe sortait du cadran en butée
+   (gros plans du #42). */
 function moyeuDe(pos: THREE.BufferAttribute | THREE.InterleavedBufferAttribute, indices: number[]) {
   const sommets = [...new Set(indices)].map((i) => new THREE.Vector3().fromBufferAttribute(pos, i))
   const centre = sommets.reduce((s, p) => s.add(p), new THREE.Vector3()).divideScalar(sommets.length)
   const pointe = sommets.reduce((loin, p) => (p.distanceTo(centre) > loin.distanceTo(centre) ? p : loin))
   const longueur = Math.max(...sommets.map((p) => p.distanceTo(pointe)))
-  const anneau = sommets.filter((p) => p.distanceTo(pointe) > 0.8 * longueur)
+  const anneau = sommets.filter((p) => p.distanceTo(pointe) > 0.5 * longueur)
   return anneau.reduce((s, p) => s.add(p), new THREE.Vector3()).divideScalar(anneau.length)
 }
 
-/* les graduations, en radians depuis la pose du GLB (les deux aiguilles y
-   sont au 0) : `plein` est la course jusqu'à `echelle`, négative car le
-   cadran tourne en sens horaire vu du siège (relevés en gros plan, #42) */
+/* les graduations, en radians depuis la pose du GLB : `zero` amène
+   l'aiguille sur le 0, `plein` est la course jusqu'à `echelle`, négative
+   car le cadran tourne en sens horaire vu du siège. `recentrage` déplace
+   l'aiguille de son moyeu au centre des graduations, en unités du GLB.
+   Relevés en gros plan face au cadran (#42) : le moyeu du compte-tours
+   est au centre de ses graduations, mais la pose du GLB pointe 7° après
+   le 0 et la course fait 219° ; celui du compteur est à 4,8 mm de son
+   anneau violet, au centre duquel sa pose et sa course tombent justes. */
 const CADRANS = {
-  tours: { indice: 0, plein: -3.72, echelle: 9000 },
-  vitesse: { indice: 1, plein: -4.185, echelle: 260 },
+  tours: { indice: 0, zero: 0.1246, plein: -3.822, echelle: 9000, recentrage: new THREE.Vector3() },
+  vitesse: { indice: 1, zero: 0, plein: -4.185, echelle: 260, recentrage: new THREE.Vector3(-0.0045, 0.021, -0.1017) },
 }
 export const TOURS_RALENTI = 800
 export const TOURS_BUTEE = CADRANS.tours.echelle
@@ -456,7 +467,7 @@ export function poseAiguilles(cockpit: Cockpit, tours: number, vitesse: number) 
   ] as const) {
     const aiguille = cockpit.aiguilles[cadran.indice]
     if (!aiguille) continue
-    aiguille.pivot.quaternion.setFromAxisAngle(aiguille.axe, (valeur / cadran.echelle) * cadran.plein)
+    aiguille.pivot.quaternion.setFromAxisAngle(aiguille.axe, cadran.zero + (valeur / cadran.echelle) * cadran.plein)
   }
 }
 

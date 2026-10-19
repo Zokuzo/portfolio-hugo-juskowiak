@@ -3,9 +3,9 @@
 import { useEffect, useRef, type RefObject } from "react"
 import { useFrame, useThree } from "@react-three/fiber"
 import * as THREE from "three"
-import { ALLUME, ASSISE, allumeHabitacle, type Cockpit } from "./habitacle"
+import { ALLUME, ASSISE, type Cockpit } from "./habitacle"
 import { CAM_FINALE, enMondeRepos } from "./rue"
-import { lanceDemarrage, type Moteur } from "./demarrage"
+import { lanceDemarrage } from "./demarrage"
 
 /* LE SEUIL — ticket #31, la mise en scène gravée au #24 : « la mise sous
    contact et la plongée dans le verre ». Sur la recette du vol (#30/#26) :
@@ -161,13 +161,9 @@ export default function Seuil({
   voile,
   nom,
   fini,
-  moteur,
 }: {
   etat: string
   cockpit: Cockpit
-  /* le démarrage qui prend la suite dans l'habitacle (#42), null = l'état
-     final posé d'un coup comme avant */
-  moteur: Moteur | null
   /* le voile de la plongée (#161b21, le verre fumé gaté) et le nom — deux
      divs du DOM pilotés image par image via leur ref, comme le voile crème
      du vol */
@@ -301,8 +297,8 @@ export default function Seuil({
     }
 
     /* ---- la mise sous contact ; sous la traversée du verre, le tableau
-       de bord s'éteint quand le démarrage (#42) doit le rallumer ---- */
-    const tableau = moteur && t >= VERRE_T ? 0 : 1
+       de bord s'éteint : le démarrage (#42) le rallume ---- */
+    const tableau = t >= VERRE_T ? 0 : 1
     const haut = fenetre(AIGUILLE_HAUT, t)
     const pose = fenetre(AIGUILLE_POSE, t)
     const aiguille = (AIGUILLE_CRETE * haut + (ALLUME.aiguille - AIGUILLE_CRETE) * pose) * tableau
@@ -348,11 +344,9 @@ export default function Seuil({
 
     if (i.t >= 1 && !i.fini) {
       i.fini = true
-      /* la course a fini SUR l'œil du conducteur : le moteur démarre, ou
-         l'état final se pose (idempotent : verre déjà intérieur, focale
-         déjà à 45) ; l'assise exacte est reprise au millimètre */
-      if (moteur) lanceDemarrage(moteur)
-      else allumeHabitacle(cockpit)
+      /* la course a fini SUR l'œil du conducteur : le moteur démarre
+         (verre déjà intérieur, focale déjà à 45) ; l'assise exacte est reprise au millimètre */
+      lanceDemarrage()
       camera.position.copy(i.assiseCam)
       camera.fov = 45
       camera.lookAt(i.assiseVise)
