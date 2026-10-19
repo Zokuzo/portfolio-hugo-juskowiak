@@ -61,8 +61,11 @@ export const FOV_POSE = 38
    la voiture disparaît dans les nuages avant la bascule vers la rue */
 const PLONGEE = 9
 
-/* le piqué nez vers le bas de la photo de référence (verdict #21) */
-const PIQUE = 1.0
+/* le piqué nez vers le bas de la photo de référence (verdict #21), et le
+   cap de la voiture : le -36° d'origine, -65° puis +10° au fil du gate.
+   La nouvelle chute (#56) en part et compose ses assiettes dessus */
+export const PIQUE = 1.0
+export const CAP = -Math.PI / 5 - (55 * Math.PI) / 180
 
 /* La GT86 flottante. Le clic sur la carrosserie EST le démarrage — le
    raycast R3F reçoit le geste parce que l'overlay DOM est
@@ -180,8 +183,7 @@ function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<
       onPointerOver={() => setSurvol(true)}
       onPointerOut={() => setSurvol(false)}
     >
-      {/* cap : le −36° d'origine, −65° puis +10° au fil du gate */}
-      <group rotation={[0, -Math.PI / 5 - (55 * Math.PI) / 180, 0]}>
+      <group rotation={[0, CAP, 0]}>
         <group ref={pique} rotation={[PIQUE, 0, 0]}>
           <primitive object={modele} />
           <mesh visible={false}>

@@ -22,7 +22,7 @@ import { MusiqueIntro, lanceMusique } from "./musique-intro"
 import { TransitionVoile } from "./transition-voile"
 import { Effets } from "./rendu"
 import { ChoixDpr, DPR_DEPART } from "./dpr"
-import { BandesChute, CameraChute, Chute, CHUTE_MS, FlouChute, flouVoulu, montageVoulu, TravellingChute } from "./prototype-chute"
+import { BandesChute, CameraChute, Chute, dureeChuteMs, FlouChute, flouVoulu, montageVoulu, TravellingChute } from "./prototype-chute"
 import { CompteurIps, ipsVoulu } from "./compteur-ips"
 
 /* LES ASSETS ET LEUR CASCADE — ticket #28.
@@ -147,7 +147,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
   const [nodepart] = useState(() => new URLSearchParams(window.location.search).has("nodepart"))
   const [police] = useState(policeVoulue)
   const [ips] = useState(ipsVoulu)
-  /* la nouvelle chute du prototype #56 (?montage=obliques|cadre) */
+  /* la nouvelle chute du prototype #56 (?montage=obliques, ?montage) */
   const [montage] = useState(montageVoulu)
   /* le composer du rendu (#46, #59), dont la chauffe retient le rideau
      comme celle de la rue */
@@ -411,7 +411,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
      boucle de rendu meurt. */
   useEffect(() => {
     if (!RAILS[etat]) return
-    const course = etat === "ATTERRISSAGE" ? (montage ? CHUTE_MS : VOL_MS) : SEUIL_MS
+    const course = etat === "ATTERRISSAGE" ? (montage ? dureeChuteMs() : VOL_MS) : SEUIL_MS
     const h = setTimeout(() => envoie({ t: "fini" }), course + 4000)
     return () => clearTimeout(h)
   }, [etat, montage])
@@ -518,7 +518,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
             soit décodé (ou qu'on l'ait déjà quitté) pour se monter, et
             devient le fond de TOUS les états d'après. */}
         {montage ? (
-          <Chute montage={montage} etat={etat} vol={vol} voile={voile} enRue={enRue} surBascule={surBascule} fini={() => envoie({ t: "fini" })} />
+          <Chute etat={etat} vol={vol} voile={voile} enRue={enRue} surBascule={surBascule} fini={() => envoie({ t: "fini" })} />
         ) : (
           <Vol etat={etat} vol={vol} voile={voile} surBascule={surBascule} fini={() => envoie({ t: "fini" })} />
         )}
@@ -560,7 +560,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
           </Suspense>
         )}
         {/* après le ciel et la rue (CameraChute par sa priorité) : elles visent les voitures déjà posées */}
-        {montage && <CameraChute montage={montage} etat={etat} cockpit={cockpit} />}
+        {montage && <CameraChute etat={etat} cockpit={cockpit} />}
         {montage && <TravellingChute etat={etat} cockpit={cockpit} voile={voileVerre} />}
         <Effets surPret={surEffetsPrets} enTete={flouVoulu() && <FlouChute />} />
         {/* mesurée sous le voile du CIEL, une fois la rue chaude : ses
