@@ -114,6 +114,18 @@ function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<
     return scene
   }, [scene])
 
+  /* LA CIBLE DU CLIC (#42) : un pavé invisible à la boîte de la voiture.
+     Le raycast R3F testait ses 321 k triangles à chaque pointerdown,
+     pointerup, click et survol : 24 ms chacun, 72 ms sur le seul clic de
+     décollage. three ne regarde pas `visible` au raycast : le pavé caché
+     reçoit les gestes, la carrosserie n'est plus testée. */
+  const cible = useMemo(() => {
+    modele.traverse((o) => {
+      if ((o as THREE.Mesh).isMesh) o.raycast = () => {}
+    })
+    return new THREE.Box3().setFromObject(modele).getSize(new THREE.Vector3())
+  }, [modele])
+
   /* chrome miroir : le ciel et ses lames se découpent dans la robe.
      Le nom "Paint" est porteur : la voiture de la RUE (#30) se clone
      depuis ce même GLB déjà mué — son rhabillage retrouve la peinture
@@ -171,6 +183,9 @@ function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<
       <group rotation={[0, -Math.PI / 5 - (55 * Math.PI) / 180, 0]}>
         <group ref={pique} rotation={[PIQUE, 0, 0]}>
           <primitive object={modele} />
+          <mesh visible={false}>
+            <boxGeometry args={[cible.x, cible.y, cible.z]} />
+          </mesh>
         </group>
       </group>
     </group>

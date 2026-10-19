@@ -104,6 +104,16 @@ export function MusiqueIntro({ etat, ampVivant, lang }: { etat: Etat; ampVivant:
   const [enCours, setEnCours] = useState(lecture !== null)
   const [muet, setMuet] = useState(false)
 
+  /* LE CONTEXTE AUDIO NAÎT SOUS LE VOILE (#42) : `new AudioContext()` est
+     synchrone et interroge le périphérique de sortie. Créé dans la pile du
+     clic, il gelait l'image du décollage (45 ms en headless muet, de
+     l'ordre de 800 ms au relevé ?ips de Hugo). Créé au montage, pendant le
+     chargement, il naît suspendu (pas de geste) ; lanceMusique le reprend
+     dans le clic, ce qui ne bloque pas. */
+  useEffect(() => {
+    contexteAudio()
+  }, [])
+
   useEffect(() => {
     const f = () => setEnCours(lecture !== null)
     ecouteurs.add(f)
