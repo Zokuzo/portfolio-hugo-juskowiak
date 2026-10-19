@@ -5,8 +5,9 @@ import { useFrame, useLoader, useThree } from "@react-three/fiber"
 import { Environment, Lightformer, useCursor, useGLTF } from "@react-three/drei"
 import * as THREE from "three"
 import MerDeNuages from "./mer-de-nuages"
+import { useChauffeEnSolo } from "./chauffe"
 import type { Trajectoire } from "./vol"
-import { LamesDuCiel, mireLeCiel, peintureDuCiel } from "./carrosserie"
+import { LamesDuCiel, cliquableParSaBoite, mireLeCiel, peintureDuCiel } from "./carrosserie"
 
 /* LE CIEL — ticket #29 : le verdict « Pellicule » du gate #21, porté du
    prototype (route jetable, supprimée au #35) dans la coquille.
@@ -115,16 +116,11 @@ function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<
     return scene
   }, [scene])
 
-  /* LA CIBLE DU CLIC (#42) : un pavé invisible à la boîte de la voiture.
-     Le raycast R3F testait ses 321 k triangles à chaque pointerdown,
-     pointerup, click et survol : 24 ms chacun, 72 ms sur le seul clic de
-     décollage. three ne regarde pas `visible` au raycast : le pavé caché
-     reçoit les gestes, la carrosserie n'est plus testée. */
-  const cible = useMemo(() => {
-    modele.traverse((o) => {
-      if ((o as THREE.Mesh).isMesh) o.raycast = () => {}
-    })
-    return new THREE.Box3().setFromObject(modele).getSize(new THREE.Vector3())
+  /* la cible du clic (carrosserie.tsx) : la boîte de la voiture centrée,
+     dans le repère du piqué */
+  useMemo(() => {
+    const taille = new THREE.Box3().setFromObject(modele).getSize(new THREE.Vector3())
+    cliquableParSaBoite(modele, new THREE.Box3().setFromCenterAndSize(new THREE.Vector3(), taille))
   }, [modele])
 
   /* chrome miroir : le ciel et ses lames se découpent dans la robe.
@@ -184,9 +180,6 @@ function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<
       <group rotation={[0, -Math.PI / 5 - (55 * Math.PI) / 180, 0]}>
         <group ref={pique} rotation={[PIQUE, 0, 0]}>
           <primitive object={modele} />
-          <mesh visible={false}>
-            <boxGeometry args={[cible.x, cible.y, cible.z]} />
-          </mesh>
         </group>
       </group>
     </group>
@@ -235,6 +228,15 @@ function Ciel({
   /* ce rendu n'existe qu'une fois les loaders résolus — le signal est là */
   useEffect(() => surPret(), [surPret])
 
+  /* LA CHAUFFE DU CIEL CACHÉ (#42) : une session qui a déjà vu l'intro
+     rouvre à l'habitacle, le ciel monté mais jamais peint. Sans chauffe,
+     ses programmes se compilaient au premier ↺ (gel de 444 ms au relevé
+     ?ips de Hugo, 12 programmes de plus) ; ils se compilent désormais
+     avec ceux de la rue, au chargement. Au chemin d'intro, le ciel est
+     déjà peint sous le voile : la chauffe n'y ajoute rien. */
+  const groupe = useRef<THREE.Group>(null)
+  useChauffeEnSolo(groupe)
+
   /* la pose d'ouverture, tenue tant que le ciel est à l'écran — le vol
      d'atterrissage (vol.tsx) prend la caméra ici au clic. Elle se REJOUE
      au retour du rejeu (dépendance `visible`), et en LAYOUT : un effet
@@ -267,7 +269,7 @@ function Ciel({
         {eclats}
       </Environment>
 
-      <group visible={visible}>
+      <group ref={groupe} visible={visible}>
         <mesh rotation-y={ROT} frustumCulled={false}>
           <sphereGeometry args={[350, 48, 32]} />
           <meshBasicMaterial

@@ -1,12 +1,12 @@
 "use client"
 
-import { useEffect, useLayoutEffect, useMemo, useRef, type MutableRefObject } from "react"
+import { useLayoutEffect, useMemo, useRef, type MutableRefObject } from "react"
 import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber"
 import { useGLTF, useTexture } from "@react-three/drei"
 import * as THREE from "three"
 import type { Trajectoire } from "./vol"
-import { compileEnSolo, rendEnSolo } from "./chauffe"
-import { peintureDeNuit } from "./carrosserie"
+import { useChauffeEnSolo } from "./chauffe"
+import { cliquableParSaBoite, peintureDeNuit } from "./carrosserie"
 import { fondPourLeRendu } from "./rendu"
 import {
   ASSISE,
@@ -325,6 +325,7 @@ function VoitureGaree({
       -boite.min.y,
       -(boite.min.z + boite.max.z) / 2,
     )
+    cliquableParSaBoite(clone, boite.translate(clone.position))
     cockpit.voiture = clone
     return clone
   }, [scene, art, lueur, compteur, ecran, gl, cockpit])
@@ -753,40 +754,15 @@ export default function Rue({
   /* GPU chaud (chauffe ci-dessous) : le voile CHARGEMENT peut se lever */
   surChaude: () => void
 }) {
-  const scene3 = useThree((s) => s.scene)
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera
   const invalide = useThree((s) => s.invalidate)
 
   /* LA CHAUFFE (5e retour de gate : « trop de saccades », refaite au
-     #44) : tous les programmes de la rue se compilent EN PARALLÈLE dès
-     son montage, avec SA topologie de lumières (chauffe.ts), puis un rendu
-     en solo téléverse textures et géométries. Le voile CHARGEMENT attend
-     `surChaude` : quand il se lève, plus rien ne compile ni ne téléverse
-     à la bascule ciel → rue, ni aux premières apparitions du seuil. */
-  const gl = useThree((s) => s.gl)
+     #44, chauffe.ts) : le voile CHARGEMENT attend `surChaude` ; quand il
+     se lève, plus rien ne compile ni ne téléverse à la bascule ciel vers
+     la rue, ni aux premières apparitions du seuil. */
   const groupe = useRef<THREE.Group>(null)
-  const chauffe = useRef<"froide" | "compilee" | "rendue" | "chaude">("froide")
-  useEffect(() => {
-    if (!groupe.current) return
-    let annule = false
-    compileEnSolo(gl, scene3, camera, groupe.current).then(() => {
-      if (!annule && chauffe.current === "froide") chauffe.current = "compilee"
-    })
-    return () => {
-      annule = true
-    }
-  }, [gl, scene3, camera])
-  useFrame(() => {
-    if (chauffe.current === "compilee" && groupe.current) {
-      chauffe.current = "rendue"
-      rendEnSolo(gl, scene3, camera, groupe.current)
-    } else if (chauffe.current === "rendue") {
-      /* une image plus tard : le GPU a digéré le rendu en solo, sinon la
-         première image découverte attendait derrière lui (70 ms au banc) */
-      chauffe.current = "chaude"
-      surChaude()
-    }
-  })
+  useChauffeEnSolo(groupe, surChaude)
 
   /* LE RAIL (recette #26, portée au #32) : les poses se posent NET —
      sauf assis ⇄ ecran, le seul trajet volé (1,1 s, courbe douce, delta

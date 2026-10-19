@@ -1,3 +1,5 @@
+import { useEffect, useRef, type RefObject } from "react"
+import { useFrame, useThree } from "@react-three/fiber"
 import * as THREE from "three"
 
 /* LA CHAUFFE EN SOLO : ticket #44 de la carte #42.
@@ -92,4 +94,38 @@ export function rendEnSolo(
     if (cibleDeChauffe) gl.setRenderTarget(cibleAvant)
     restaure.forEach((r) => r())
   }
+}
+
+/* LA CHAUFFE D'UN GROUPE MONTÉ (#44) : tous ses programmes se compilent
+   EN PARALLÈLE dès le montage, avec SA topologie de lumières
+   (compileEnSolo), puis un rendu en solo téléverse textures et
+   géométries (rendEnSolo). `surChaude` tombe une image plus tard : le GPU
+   a digéré le rendu en solo, sinon la première image découverte attendait
+   derrière lui (70 ms au banc). */
+export function useChauffeEnSolo(groupe: RefObject<THREE.Object3D | null>, surChaude?: () => void) {
+  const gl = useThree((s) => s.gl)
+  const scene = useThree((s) => s.scene)
+  const camera = useThree((s) => s.camera)
+  const chauffe = useRef<"froide" | "compilee" | "rendue" | "chaude">("froide")
+  useEffect(() => {
+    if (!groupe.current) return
+    let annule = false
+    compileEnSolo(gl, scene, camera, groupe.current).then(() => {
+      if (!annule && chauffe.current === "froide") chauffe.current = "compilee"
+    })
+    return () => {
+      annule = true
+    }
+  }, [gl, scene, camera, groupe])
+  useFrame(() => {
+    /* le rendu en solo attend la cible du composer : peint à l'écran, il
+       compilait pour rien les variantes sRVB (10 programmes de plus) */
+    if (chauffe.current === "compilee" && groupe.current && cibleDeChauffe) {
+      chauffe.current = "rendue"
+      rendEnSolo(gl, scene, camera, groupe.current)
+    } else if (chauffe.current === "rendue") {
+      chauffe.current = "chaude"
+      surChaude?.()
+    }
+  })
 }
