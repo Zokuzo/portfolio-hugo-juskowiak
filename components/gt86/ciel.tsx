@@ -54,7 +54,8 @@ const ROT = Math.PI * 0.25
    aujourd'hui parce qu'il mire SON environnement : les LamesDuCiel cuites
    dans la cubemap, et une PMREM tirée en propre (voir mireLeCiel). */
 /* la pose du gate : caméra au flanc, fov 38, la voiture au centre du cadre */
-const POSE = new THREE.Vector3(-4.2, -0.4, 7.8)
+export const POSE = new THREE.Vector3(-4.2, -0.4, 7.8)
+export const FOV_POSE = 38
 
 /* la profondeur de la plongée (#30) : bien sous le sommet du banc (-2,6),
    la voiture disparaît dans les nuages avant la bascule vers la rue */
@@ -242,7 +243,7 @@ function Ciel({
   useLayoutEffect(() => {
     if (!visible) return
     camera.position.copy(POSE)
-    camera.fov = 38
+    camera.fov = FOV_POSE
     camera.lookAt(0, 0, 0)
     camera.updateProjectionMatrix()
   }, [camera, visible])

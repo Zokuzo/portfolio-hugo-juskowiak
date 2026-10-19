@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react"
-import { useThree } from "@react-three/fiber"
+import { useFrame, useThree } from "@react-three/fiber"
 import { SpotLight as SpotVolumetrique, useTexture } from "@react-three/drei"
 import * as THREE from "three"
 import { type Ecran } from "./ecran"
@@ -543,6 +543,12 @@ function Phares({ cockpit }: { cockpit: Cockpit }) {
     [-0.075 + 0.63, 0.61, 1.78],
     [-0.075 - 0.63, 0.61, 1.78],
   ]
+  const halos = useRef<(THREE.Group | null)[]>([])
+  useFrame(({ camera }) => {
+    halos.current.forEach((halo, i) => {
+      if (halo) eteintDeDos(halo, cockpit.phareCones[i], camera)
+    })
+  })
   /* en LAYOUT, même raison que Neons */
   useLayoutEffect(() => {
     cockpit.phareLums = []
@@ -581,7 +587,7 @@ function Phares({ cockpit }: { cockpit: Cockpit }) {
       ))}
       <group visible={false} ref={(g) => { cockpit.phares = g }}>
         {optiques.map(([x, y, z], i) => (
-          <group key={i}>
+          <group key={i} ref={(g) => { halos.current[i] = g }}>
             <sprite position={[x, y, z]} scale={[0.55, 0.55, 1]}>
               <spriteMaterial map={halo()} color="#fffaf0" transparent opacity={0.85} blending={THREE.AdditiveBlending} depthWrite={false} />
             </sprite>
@@ -593,6 +599,27 @@ function Phares({ cockpit }: { cockpit: Cockpit }) {
       </group>
     </group>
   )
+}
+
+/* une optique n'éclaire que vers l'avant : vue de derrière (la caméra
+   au-dessus du capot, assise au volant), son halo et son cône s'éteignent.
+   Ces additifs remplissaient sinon le cadre d'un voile laiteux en passant
+   à un mètre d'eux (le flash de l'entrée dans la voiture, #56) ; assis,
+   le capot les cachait déjà */
+const FACE: [number, number] = [0, 0.35]
+const versCamera = new THREE.Vector3()
+const avantVoiture = new THREE.Vector3()
+function eteintDeDos(halo: THREE.Group, cone: THREE.Object3D | undefined, camera: THREE.Camera) {
+  halo.children[0].getWorldPosition(versCamera)
+  versCamera.subVectors(camera.position, versCamera).normalize()
+  avantVoiture.set(0, 0, 1).transformDirection(halo.matrixWorld)
+  const face = THREE.MathUtils.smoothstep(versCamera.dot(avantVoiture), ...FACE)
+  for (const sprite of halo.children) {
+    const materiau = (sprite as THREE.Sprite).material
+    materiau.opacity = (materiau.userData.plein ??= materiau.opacity) * face
+  }
+  const uniformes = ((cone as THREE.Mesh | undefined)?.material as THREE.ShaderMaterial | undefined)?.uniforms
+  if (uniformes?.opacity) uniformes.opacity.value = face
 }
 
 /* monté par rue.tsx dans le repère brut de la voiture garée */

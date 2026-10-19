@@ -518,7 +518,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
             soit décodé (ou qu'on l'ait déjà quitté) pour se monter, et
             devient le fond de TOUS les états d'après. */}
         {montage ? (
-          <Chute etat={etat} vol={vol} voile={voile} enRue={enRue} surBascule={surBascule} fini={() => envoie({ t: "fini" })} />
+          <Chute montage={montage} etat={etat} vol={vol} voile={voile} enRue={enRue} surBascule={surBascule} fini={() => envoie({ t: "fini" })} />
         ) : (
           <Vol etat={etat} vol={vol} voile={voile} surBascule={surBascule} fini={() => envoie({ t: "fini" })} />
         )}
@@ -559,8 +559,8 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
             />
           </Suspense>
         )}
-        {/* après le ciel et la rue : elles visent les voitures déjà posées */}
-        {montage && <CameraChute etat={etat} cockpit={cockpit} />}
+        {/* après le ciel et la rue (CameraChute par sa priorité) : elles visent les voitures déjà posées */}
+        {montage && <CameraChute montage={montage} etat={etat} cockpit={cockpit} />}
         {montage && <TravellingChute etat={etat} cockpit={cockpit} voile={voileVerre} />}
         <Effets surPret={surEffetsPrets} enTete={flouVoulu() && <FlouChute />} />
         {/* mesurée sous le voile du CIEL, une fois la rue chaude : ses

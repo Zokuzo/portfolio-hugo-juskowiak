@@ -38,7 +38,6 @@ export function lanceMusique() {
   try {
     const ctx = contexteAudio()
     const audio = new Audio()
-    audio.crossOrigin = "anonymous"
     audio.src = SOURCE
     const source = ctx.createMediaElementSource(audio)
     const fondu = ctx.createGain()
@@ -68,6 +67,12 @@ export function lanceMusique() {
 export function tempsMusique(): number | null {
   const audio = lecture?.audio
   return audio && !audio.paused && audio.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA ? audio.currentTime : null
+}
+
+/* recale la lecture sur l'image de la nouvelle chute (#56), quand la
+   musique a pris du retard (départ tardif, trou de lecture) */
+export function caleMusique(t: number) {
+  if (lecture) lecture.audio.currentTime = t
 }
 
 /* lancée mais pas encore partie (chargement, mise en mémoire) : la
