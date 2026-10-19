@@ -3,6 +3,7 @@
 import { useFrame } from "@react-three/fiber"
 import { ALLUME, TOURS_BUTEE, TOURS_RALENTI, VITESSE_BUTEE, allumeHabitacle, poseAiguilles, type Cockpit } from "./habitacle"
 import type { Etat } from "./machine"
+import { lisse } from "./chute-physique"
 import { musiqueCoupee } from "./musique-intro"
 import { contexteAudio } from "./spotify"
 
@@ -47,7 +48,7 @@ const VOLUME = 0.8
 /* la source se cale un souffle plus tard que l'appel : son départ tombe
    juste, même si le fil audio est en retard d'un bloc */
 const AVANCE_S = 0.05
-const TOURS_LANCEUR = 250
+const TOURS_LANCEUR = 260
 const TOURS_COUP_DE_GAZ = 2500
 const MONTEE_S = 0.09
 /* les compressions au lanceur font vaciller la tension, ~8 par seconde */
@@ -70,6 +71,7 @@ const TENSION_LANCEUR = 0.55
 let tampon: AudioBuffer | null = null
 let chargement: Promise<void> | null = null
 let depart: { son: (typeof SONS)[Moteur]; audio: number | null; t: number; allume: boolean } | null = null
+let source: AudioBufferSourceNode | null = null
 
 /* appelée dans le clic de décollage : le son a toute la chute pour arriver */
 export function prechargeDemarrage(moteur: Moteur | null) {
@@ -96,25 +98,28 @@ export function lanceDemarrage(moteur: Moteur) {
 function joueSon(): number | null {
   const ctx = contexteAudio()
   if (!tampon || ctx.state !== "running" || musiqueCoupee()) return null
-  const source = ctx.createBufferSource()
+  const joue = (source = ctx.createBufferSource())
   const gain = ctx.createGain()
-  source.buffer = tampon
+  joue.buffer = tampon
   gain.gain.value = VOLUME
-  source.connect(gain).connect(ctx.destination)
+  joue.connect(gain).connect(ctx.destination)
   const debut = ctx.currentTime + AVANCE_S
-  source.start(debut)
-  source.onended = () => {
-    source.disconnect()
+  joue.start(debut)
+  joue.onended = () => {
+    joue.disconnect()
     gain.disconnect()
+    if (source === joue) source = null
   }
   return debut
 }
 
 export function Demarrage({ etat, cockpit }: { etat: Etat; cockpit: Cockpit }) {
   useFrame(({ clock }, delta) => {
-    /* le rejeu repart d'une voiture morte */
+    /* le rejeu repart d'une voiture morte, et le moteur se tait */
     if (etat === "CIEL" || etat === "ATTERRISSAGE") {
       depart = null
+      source?.stop()
+      source = null
       return
     }
     if (!depart) {
@@ -146,7 +151,6 @@ function horloge(audio: number | null, t: number, delta: number) {
   return Math.max(0, ctx.currentTime - audio - (ctx.outputLatency || 0))
 }
 
-const lisse = (a: number, b: number, t: number) => Math.min(1, Math.max(0, (t - a) / (b - a)))
 const adoucit = (t: number) => t * t * (3 - 2 * t)
 
 /* le régime du son : rien, le lanceur, puis le coup de gaz qui retombe

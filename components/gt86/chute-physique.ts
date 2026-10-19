@@ -29,14 +29,16 @@ export function lisCalage(texte: string | null): Calage {
   const calage = { ...CALAGE_DEFAUT }
   for (const morceau of texte.split(",")) {
     if (!morceau.trim()) continue
-    const [cle, valeur = ""] = morceau.split(":").map((m) => m.trim())
+    const paire = morceau.split(":").map((m) => m.trim())
+    const [cle, valeur] = paire
     const v = Number(valeur)
-    if (!(cle in calage) || valeur === "" || !Number.isFinite(v)) return refuseCalage(texte, `« ${morceau} » illisible`)
+    if (paire.length !== 2 || !Object.hasOwn(calage, cle) || valeur === "" || !Number.isFinite(v))
+      return refuseCalage(texte, `« ${morceau} » illisible`)
     calage[cle as keyof Calage] = v
   }
   const croissant = SUITE.every((cle, k) => (k === 0 ? calage[cle] >= 0 : calage[SUITE[k - 1]] < calage[cle]))
-  if (!croissant || !(calage.ecran < calage.ouvre && calage.ouvre <= calage.tombe))
-    return refuseCalage(texte, "les instants doivent croître : ecran < a < b < c < d < e < tombe, ecran < ouvre <= tombe")
+  if (!croissant || !(calage.ecran < calage.ouvre && calage.ouvre <= calage.tombe) || calage.tombe < RAMPE_CLIC)
+    return refuseCalage(texte, `les instants doivent croître : ecran < a < b < c < d < e < tombe, ecran < ouvre <= tombe, tombe >= ${RAMPE_CLIC}`)
   return calage
 }
 
@@ -56,7 +58,10 @@ export const RALENTI = 0.1
 const RAMPE_CLIC = 0.3
 const RAMPE_CHUTE = 0.8
 
-const douce = (u: number) => u * u * u * (u * (6 * u - 15) + 10)
+/* smootherstep : vitesse et accélération nulles aux deux bouts */
+export const douce = (u: number) => u * u * u * (u * (6 * u - 15) + 10)
+/* la progression linéaire de a à b, bornée à [0, 1] */
+export const lisse = (a: number, b: number, t: number) => Math.min(1, Math.max(0, (t - a) / (b - a)))
 /* l'intégrale de douce sur [0, u] */
 const douceIntegree = (u: number) => u * u * u * u * (u * (u - 3) + 2.5)
 const borne = (u: number) => Math.min(1, Math.max(0, u))

@@ -10,8 +10,9 @@
    dans tous les navigateurs, rien ne calcule sur le fil audio à l'entrée
    dans l'habitacle, et le spectrogramme se contrôle avant publication.
 
-   La partition (secondes) doit rester celle de MARQUES.synth dans
-   components/gt86/moteur.ts : démarreur, prise, ralenti. */
+   La partition (secondes) doit rester celle de SONS.synth dans
+   components/gt86/demarrage.tsx (démarreur, prise), et les régimes ses
+   TOURS_LANCEUR, TOURS_COUP_DE_GAZ et TOURS_RALENTI. */
 
 import { writeFileSync } from "node:fs"
 

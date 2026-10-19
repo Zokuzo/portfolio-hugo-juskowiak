@@ -15,8 +15,10 @@ import {
   altitudeCiel,
   attitudeCiel,
   detenteRoues,
+  douce,
   finDeSegment,
   lisCalage,
+  lisse,
   partitionDe,
   poseRue,
   segmentDe,
@@ -89,8 +91,9 @@ const DELTA_MAX = 1 / 12
 /* au-delà, la musique qui charge ne retient plus le montage */
 const ATTENTE_MAX = 4
 /* une musique en retard de plus que ça (départ tardif, trou de lecture)
-   est recalée sur l'image ; en deçà, l'image ralentit de moitié pour se
-   laisser rattraper */
+   est recalée sur l'image, une seule fois par chute : sur un réseau lent,
+   le saut vide le tampon et le retard se reformerait sans fin ; en deçà,
+   et ensuite, l'image ralentit de moitié pour se laisser rattraper */
 const RETARD_MUSIQUE_MAX = 0.5
 const RATTRAPAGE = 0.5
 
@@ -99,18 +102,16 @@ export const dureeChuteMs = () => Math.ceil((partition().tFini + ATTENTE_MAX) * 
 /* le fondu de la musique : de « tombe » à l'entrée dans l'habitacle */
 const dureeFondu = (p: Partition) => p.tFini - p.calage.tombe + SEUIL_MS / 1000
 
-const lisse = (a: number, b: number, t: number) => Math.min(1, Math.max(0, (t - a) / (b - a)))
-/* smootherstep : vitesse et accélération nulles aux deux bouts */
-const douce = (u: number) => u * u * u * (u * (6 * u - 15) + 10)
 
 /* ---- l'horloge ---------------------------------------------------------- */
 
-const horloge = { t: 0, partie: false, attente: 0 }
+const horloge = { t: 0, partie: false, attente: 0, recalee: false }
 
 function remetHorloge() {
   horloge.t = 0
   horloge.partie = false
   horloge.attente = 0
+  horloge.recalee = false
 }
 
 function avanceHorloge(delta: number): number {
@@ -118,7 +119,10 @@ function avanceHorloge(delta: number): number {
   const musique = tempsMusique()
   if (musique !== null) {
     horloge.partie = true
-    if (horloge.t - musique > RETARD_MUSIQUE_MAX) caleMusique(horloge.t)
+    if (!horloge.recalee && horloge.t - musique > RETARD_MUSIQUE_MAX) {
+      horloge.recalee = true
+      caleMusique(horloge.t)
+    }
     horloge.t = musique >= horloge.t ? musique : horloge.t + pas * RATTRAPAGE
     return horloge.t
   }
@@ -237,9 +241,11 @@ export function Chute({
 
   /* poignée de test (harnais CDP), comme window.__gt86 : l'instant
      musical, le monde et les assiettes, pour les captures en temps
-     contrôlé */
+     contrôlé. La partition s'intègre ici, sous le voile du chargement,
+     pas dans l'image du clic */
   useEffect(() => {
     Object.assign(window as object, { __gt86chute: chute, __gt86vol: vol.current })
+    partition()
   }, [vol])
 
   /* le rangement (skip compris) : voitures, roues, voile, brume, exposition */
