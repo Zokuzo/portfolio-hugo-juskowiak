@@ -19,31 +19,17 @@ import { contexteAudio } from "./spotify"
    Ni le skip ni la session revenante ne démarrent : ils arrivent moteur
    tournant (allumeHabitacle).
 
-   Deux sons, interrupteur ?moteur=libre|synth|0 (libre par défaut) :
-   - libre : Subaru Impreza 2003 (boxer EJ20), « subaru impreza start
-     up-idle-launch limiter.wav » de t33kno sur Freesound, CC0
-     (crédits du README) ;
-   - synth : un boxer synthétisé hors ligne (tools/moteur/synth-demarrage.mjs).
+   Le son : Subaru Impreza 2003 (boxer EJ20), « subaru impreza start
+   up-idle-launch limiter.wav » de t33kno sur Freesound, CC0 (crédits du
+   README).
    Zéro octet audio avant le clic de décollage : le fichier part sous la
    chute (prechargeDemarrage, appelée dans le clic). Le son passe par le
    contexte audio partagé et se tait si la MUSIQUE a été coupée. */
 
-export type Moteur = "libre" | "synth"
-
-export function moteurVoulu(): Moteur | null {
-  if (typeof location === "undefined") return null
-  const valeur = new URLSearchParams(location.search).get("moteur")
-  if (valeur === "0") return null
-  return valeur === "synth" ? "synth" : "libre"
-}
-
-/* la partition de chaque son, en secondes depuis son début : le démarreur
+/* la partition du son, en secondes depuis son début : le démarreur
    lance, le moteur prend, puis le régime retombe vers le ralenti avec la
    constante de temps `retombee` (relevés à l'enveloppe et au spectrogramme) */
-const SONS: Record<Moteur, { fichier: string; demarreur: number; prise: number; retombee: number }> = {
-  libre: { fichier: "/sons/demarrage-libre.m4a", demarreur: 0.08, prise: 0.44, retombee: 1.1 },
-  synth: { fichier: "/sons/demarrage-synth.m4a", demarreur: 0.1, prise: 0.72, retombee: 0.55 },
-}
+const SON = { fichier: "/sons/demarrage-libre.m4a", demarreur: 0.08, prise: 0.44, retombee: 1.1 }
 const VOLUME = 0.8
 /* la source se cale un souffle plus tard que l'appel : son départ tombe
    juste, même si le fil audio est en retard d'un bloc */
@@ -70,13 +56,13 @@ const TENSION_LANCEUR = 0.55
 
 let tampon: AudioBuffer | null = null
 let chargement: Promise<void> | null = null
-let depart: { son: (typeof SONS)[Moteur]; audio: number | null; t: number; allume: boolean } | null = null
+let depart: { audio: number | null; t: number; allume: boolean } | null = null
 let source: AudioBufferSourceNode | null = null
 
 /* appelée dans le clic de décollage : le son a toute la chute pour arriver */
-export function prechargeDemarrage(moteur: Moteur | null) {
-  if (!moteur || chargement) return
-  chargement = fetch(SONS[moteur].fichier)
+export function prechargeDemarrage() {
+  if (chargement) return
+  chargement = fetch(SON.fichier)
     .then((reponse) => {
       if (!reponse.ok) throw new Error(`HTTP ${reponse.status}`)
       return reponse.arrayBuffer()
@@ -89,8 +75,8 @@ export function prechargeDemarrage(moteur: Moteur | null) {
 }
 
 /* appelée par le seuil au bout de sa course, dans l'habitacle */
-export function lanceDemarrage(moteur: Moteur) {
-  depart = { son: SONS[moteur], audio: joueSon(), t: 0, allume: false }
+export function lanceDemarrage() {
+  depart = { audio: joueSon(), t: 0, allume: false }
 }
 
 /* l'instant de départ sur l'horloge audio, ou null sans son : le
@@ -128,16 +114,16 @@ export function Demarrage({ etat, cockpit }: { etat: Etat; cockpit: Cockpit }) {
       return
     }
     depart.t = horloge(depart.audio, depart.t, delta)
-    const { son, t } = depart
-    if (!depart.allume && t - son.prise > CASCADE_FIN) {
+    const { t } = depart
+    if (!depart.allume && t - SON.prise > CASCADE_FIN) {
       /* la cascade est finie : l'état final d'un coup, puis plus que les
          aiguilles (l'écran et ses modes reprennent la main) */
       allumeHabitacle(cockpit)
       depart.allume = true
     }
-    if (!depart.allume) eclaire(cockpit, son, t)
-    const tours = regime(son, t)
-    const balaye = balayage(t - son.prise)
+    if (!depart.allume) eclaire(cockpit, t)
+    const tours = regime(t)
+    const balaye = balayage(t - SON.prise)
     poseAiguilles(cockpit, tours + (TOURS_BUTEE - tours) * balaye, VITESSE_BUTEE * balaye)
   })
   return null
@@ -155,11 +141,11 @@ const adoucit = (t: number) => t * t * (3 - 2 * t)
 
 /* le régime du son : rien, le lanceur, puis le coup de gaz qui retombe
    vers le ralenti */
-function regime(son: (typeof SONS)[Moteur], t: number) {
-  if (t < son.demarreur) return 0
-  if (t < son.prise) return TOURS_LANCEUR * (1 + 0.2 * Math.sin((t - son.demarreur) * 2 * Math.PI * VACILLEMENT_HZ))
-  const u = t - son.prise
-  return TOURS_RALENTI + (TOURS_COUP_DE_GAZ - TOURS_RALENTI) * (1 - Math.exp(-u / MONTEE_S)) * Math.exp(-u / son.retombee) + tremble(t)
+function regime(t: number) {
+  if (t < SON.demarreur) return 0
+  if (t < SON.prise) return TOURS_LANCEUR * (1 + 0.2 * Math.sin((t - SON.demarreur) * 2 * Math.PI * VACILLEMENT_HZ))
+  const u = t - SON.prise
+  return TOURS_RALENTI + (TOURS_COUP_DE_GAZ - TOURS_RALENTI) * (1 - Math.exp(-u / MONTEE_S)) * Math.exp(-u / SON.retombee) + tremble(t)
 }
 
 /* le ralenti tremble à peine : ±20 tr/min, moins d'un demi-degré */
@@ -177,15 +163,15 @@ function balayage(prise: number) {
 
 /* les lumières à l'instant t : uniforms seulement (topologie constante,
    voir le Cockpit d'habitacle.tsx) */
-function eclaire(cockpit: Cockpit, son: (typeof SONS)[Moteur], t: number) {
-  const lance = t >= son.demarreur && t < son.prise
-  const vacille = 0.75 + 0.25 * Math.sin((t - son.demarreur) * 2 * Math.PI * VACILLEMENT_HZ)
-  const prise = t - son.prise
+function eclaire(cockpit: Cockpit, t: number) {
+  const lance = t >= SON.demarreur && t < SON.prise
+  const vacille = 0.75 + 0.25 * Math.sin((t - SON.demarreur) * 2 * Math.PI * VACILLEMENT_HZ)
+  const prise = t - SON.prise
   const cascade = ([a, b]: readonly [number, number]) => adoucit(lisse(a, b, prise))
   /* les voyants : rien avant le démarreur, mi-force vacillante au
      lanceur, pleine force en cascade après la prise */
   const voyant = (etape: readonly [number, number]) =>
-    t < son.demarreur ? 0 : lance ? VOYANTS * vacille : VOYANTS + (1 - VOYANTS) * cascade(etape)
+    t < SON.demarreur ? 0 : lance ? VOYANTS * vacille : VOYANTS + (1 - VOYANTS) * cascade(etape)
   const cadran = voyant(CASCADE.cadran)
   for (const m of cockpit.cadran) m.emissiveIntensity = cadran * ALLUME.cadran
   for (const m of cockpit.aiguille) m.emissiveIntensity = cadran * ALLUME.aiguille
