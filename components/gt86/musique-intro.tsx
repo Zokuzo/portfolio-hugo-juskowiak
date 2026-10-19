@@ -28,6 +28,10 @@ const FONDU_SORTIE_S = 1.6
 /* une seule lecture à la fois, au module : le clic et le composant la
    partagent sans passer par React */
 let lecture: { audio: HTMLAudioElement; fondu: GainNode; coupe: GainNode; noeuds: AudioNode[] } | null = null
+/* le bouton MUSIQUE coupé l'est aussi pour le démarrage du moteur (#42),
+   qui joue après la disparition du bouton */
+let coupee = false
+export const musiqueCoupee = () => coupee
 const ecouteurs = new Set<() => void>()
 const previens = () => ecouteurs.forEach((f) => f())
 
@@ -107,7 +111,7 @@ function arrete(duree: number) {
 
 export function MusiqueIntro({ etat, ampVivant, lang }: { etat: Etat; ampVivant: boolean; lang: Lang }) {
   const [enCours, setEnCours] = useState(lecture !== null)
-  const [muet, setMuet] = useState(false)
+  const [muet, setMuet] = useState(coupee)
 
   /* LE CONTEXTE AUDIO NAÎT SOUS LE VOILE (#42) : `new AudioContext()` est
      synchrone et interroge le périphérique de sortie. Créé dans la pile du
@@ -136,6 +140,7 @@ export function MusiqueIntro({ etat, ampVivant, lang }: { etat: Etat; ampVivant:
   }, [etat, ampVivant])
 
   useEffect(() => {
+    coupee = muet
     if (lecture) lecture.coupe.gain.value = muet ? 0 : 1
   }, [muet, enCours])
 

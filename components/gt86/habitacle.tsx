@@ -86,7 +86,11 @@ export type Cockpit = {
   phares: THREE.Group | null
   phareLums: THREE.SpotLight[]
   phareCones: THREE.Object3D[]
+  /* compte-tours et compteur de vitesse, chacun sur son pivot (#42) */
+  aiguilles: Aiguille[]
 }
+
+type Aiguille = { pivot: THREE.Object3D; axe: THREE.Vector3 }
 
 export function cockpitVide(): Cockpit {
   return {
@@ -107,6 +111,7 @@ export function cockpitVide(): Cockpit {
     phares: null,
     phareLums: [],
     phareCones: [],
+    aiguilles: [],
   }
 }
 
@@ -141,6 +146,7 @@ export function habilleInterieur(
   cockpit.signature = []
   cockpit.braises = []
   cockpit.clignotants = []
+  cockpit.aiguilles = []
 
   const { art, lueur, compteur } = textures
   for (const t of [art, lueur, compteur]) {
@@ -155,6 +161,8 @@ export function habilleInterieur(
   const env = envNuit()
   const INTERIEUR = new Set(["InteriorBlack", "InteriorStuff", "SilverPlastic", "Pedals", "Carbon"])
   let planche: THREE.Mesh | null = null
+  let cadran: THREE.Mesh | null = null
+  let aiguilles: THREE.Mesh | null = null
 
   clone.traverse((o) => {
     const mesh = o as THREE.Mesh
@@ -164,10 +172,10 @@ export function habilleInterieur(
       if (!mat) continue
       /* le combiné passe au violet (gate #23) : même cadran à la teinte
          près, et l'aiguille suit. Le GLB n'offre AUCUN pivot d'aiguille
-         (bbox du nœud Car_1 symétrique autour de son origine, les deux
-         cadrans fusionnés) : le « balayage » du #24 est une surtension
-         d'émissif, pas une rotation. */
+         (les deux aiguilles fusionnées dans le nœud Car_1) : pivoteAiguilles
+         les reconstruit depuis la géométrie (#42). */
       if (mat.name === "Speedo") {
+        cadran = mesh
         mat.map = compteur
         mat.emissiveMap = compteur
         mat.emissive = new THREE.Color("#ffffff")
@@ -175,6 +183,7 @@ export function habilleInterieur(
         cockpit.cadran.push(mat)
       }
       if (mat.name === "Speedoneedle") {
+        aiguilles = mesh
         mat.color.set("#1a1022")
         mat.emissive.set("#a86bff")
         mat.emissiveIntensity = 0
@@ -266,6 +275,8 @@ export function habilleInterieur(
       mat.needsUpdate = true
     }
   })
+
+  if (aiguilles && cadran) cockpit.aiguilles = pivoteAiguilles(aiguilles as THREE.Mesh, cadran as THREE.Mesh)
 
   /* L'ALCANTARA du haut de planche (gate #26) — taillé dans la GÉOMÉTRIE
      (le masque shader ne se déclenchait pas au prototype) : triangles
@@ -360,11 +371,101 @@ export function habilleInterieur(
   }
 }
 
+/* ---- les aiguilles (#42) ------------------------------------------------ */
+
+/* Les deux aiguilles du GLB vivent dans UN mesh, de part et d'autre de son
+   origine (compte-tours d'un côté, compteur de l'autre). On les sépare par
+   le signe x du centre de chaque triangle, et chacune reçoit un pivot au
+   centre de son moyeu : l'anneau de sommets le plus éloigné de la pointe.
+   L'axe est la normale moyenne du cadran. Les deux moitiés partagent les
+   attributs et le matériau d'origine : même programme GPU, une rotation
+   n'est qu'une matrice (uniform), rien ne compile. */
+function pivoteAiguilles(mesh: THREE.Mesh, cadran: THREE.Mesh): Aiguille[] {
+  const parent = mesh.parent
+  if (!parent) return []
+  mesh.updateWorldMatrix(true, false)
+  cadran.updateWorldMatrix(true, false)
+  const versParent = parent.matrixWorld.clone().invert()
+  const axe = normaleMoyenne(cadran.geometry).transformDirection(cadran.matrixWorld).transformDirection(versParent)
+  const geo = mesh.geometry
+  const pos = geo.attributes.position
+  const total = geo.index ? geo.index.count : pos.count
+  const sommet = (k: number) => (geo.index ? geo.index.getX(k) : k)
+  const moities: number[][] = [[], []]
+  const v = new THREE.Vector3()
+  for (let k = 0; k + 2 < total; k += 3) {
+    let x = 0
+    for (let j = 0; j < 3; j++) x += v.fromBufferAttribute(pos, sommet(k + j)).x
+    moities[x < 0 ? 0 : 1].push(sommet(k), sommet(k + 1), sommet(k + 2))
+  }
+  const aiguilles = moities.map((indices) => {
+    const moyeu = moyeuDe(pos, indices)
+    const moitie = new THREE.BufferGeometry()
+    for (const [nom, attribut] of Object.entries(geo.attributes)) moitie.setAttribute(nom, attribut)
+    moitie.setIndex(indices)
+    const pivot = new THREE.Object3D()
+    pivot.position.copy(moyeu.applyMatrix4(mesh.matrix))
+    const morceau = new THREE.Mesh(moitie, mesh.material)
+    morceau.name = mesh.name
+    morceau.position.copy(mesh.position).sub(pivot.position)
+    morceau.quaternion.copy(mesh.quaternion)
+    morceau.scale.copy(mesh.scale)
+    pivot.add(morceau)
+    parent.add(pivot)
+    return { pivot, axe }
+  })
+  parent.remove(mesh)
+  return aiguilles
+}
+
+function normaleMoyenne(geo: THREE.BufferGeometry) {
+  const normales = geo.attributes.normal
+  const somme = new THREE.Vector3()
+  const n = new THREE.Vector3()
+  for (let i = 0; i < normales.count; i++) somme.add(n.fromBufferAttribute(normales, i))
+  return somme.normalize()
+}
+
+/* la pointe est le sommet le plus loin du barycentre (le moyeu, dense en
+   sommets, l'attire à lui) ; le moyeu, la moyenne des sommets à plus de
+   80 % de la longueur de l'aiguille depuis la pointe */
+function moyeuDe(pos: THREE.BufferAttribute | THREE.InterleavedBufferAttribute, indices: number[]) {
+  const sommets = [...new Set(indices)].map((i) => new THREE.Vector3().fromBufferAttribute(pos, i))
+  const centre = sommets.reduce((s, p) => s.add(p), new THREE.Vector3()).divideScalar(sommets.length)
+  const pointe = sommets.reduce((loin, p) => (p.distanceTo(centre) > loin.distanceTo(centre) ? p : loin))
+  const longueur = Math.max(...sommets.map((p) => p.distanceTo(pointe)))
+  const anneau = sommets.filter((p) => p.distanceTo(pointe) > 0.8 * longueur)
+  return anneau.reduce((s, p) => s.add(p), new THREE.Vector3()).divideScalar(anneau.length)
+}
+
+/* les graduations, en radians depuis la pose du GLB (les deux aiguilles y
+   sont au 0) : `plein` est la course jusqu'à `echelle`, négative car le
+   cadran tourne en sens horaire vu du siège (relevés en gros plan, #42) */
+const CADRANS = {
+  tours: { indice: 0, plein: -3.72, echelle: 9000 },
+  vitesse: { indice: 1, plein: -4.185, echelle: 260 },
+}
+export const TOURS_RALENTI = 800
+export const TOURS_BUTEE = CADRANS.tours.echelle
+export const VITESSE_BUTEE = CADRANS.vitesse.echelle
+
+export function poseAiguilles(cockpit: Cockpit, tours: number, vitesse: number) {
+  for (const [cadran, valeur] of [
+    [CADRANS.tours, tours],
+    [CADRANS.vitesse, vitesse],
+  ] as const) {
+    const aiguille = cockpit.aiguilles[cadran.indice]
+    if (!aiguille) continue
+    aiguille.pivot.quaternion.setFromAxisAngle(aiguille.axe, (valeur / cadran.echelle) * cadran.plein)
+  }
+}
+
 /* l'état FINAL, d'un coup — le chemin du skip et des sessions revenantes,
    et le filet après la cascade (idempotent) */
 export function allumeHabitacle(cockpit: Cockpit) {
   for (const m of cockpit.aiguille) m.emissiveIntensity = ALLUME.aiguille
   for (const m of cockpit.cadran) m.emissiveIntensity = ALLUME.cadran
+  poseAiguilles(cockpit, TOURS_RALENTI, 0)
   for (const m of cockpit.boutons) m.emissiveIntensity = ALLUME.boutons
   for (const m of cockpit.planche) m.emissiveIntensity = ALLUME.planche
   for (const m of cockpit.ecran) {
@@ -395,6 +496,7 @@ export function allumeHabitacle(cockpit: Cockpit) {
 export function eteindreHabitacle(cockpit: Cockpit) {
   for (const m of cockpit.aiguille) m.emissiveIntensity = 0
   for (const m of cockpit.cadran) m.emissiveIntensity = 0
+  poseAiguilles(cockpit, 0, 0)
   for (const m of cockpit.boutons) m.emissiveIntensity = 0
   for (const m of cockpit.planche) m.emissiveIntensity = 0
   for (const m of cockpit.ecran) {
