@@ -316,6 +316,7 @@ function VoitureGaree({
        cockpit (StrictMode/HMR rejouent ce memo sur un clone NEUF : les
        tableaux du cockpit sont repartis de zéro dans habilleInterieur) */
     habilleInterieur(clone, { art, lueur, compteur }, ecran.tex, gl.capabilities.getMaxAnisotropy(), cockpit)
+    peinteEnPremier(clone)
     /* posée sur ses roues : le bas de la bbox affleure l'asphalte (y=0) —
        recalculé sur le clone, qui hérite du centrage fait par le ciel */
     const boite = new THREE.Box3().setFromObject(clone)
@@ -462,6 +463,23 @@ function VoitureGaree({
       </group>
     </group>
   )
+}
+
+/* LA VOITURE D'ABORD (#42). three trie les opaques par matériau avant de
+   les trier par profondeur, et les matériaux du clone, créés après ceux de
+   la ville, passaient en dernier. Assis dedans, chaque pixel de rue caché
+   par la planche était ombré pour rien, neuf spots compris. Peinte la
+   première, la voiture laisse le test de profondeur écarter ce qu'elle
+   masque : 2 ms GPU sur 13 dans l'habitacle au banc, image identique (seuls
+   les opaques changent d'ordre, les transparents gardent le leur). */
+const VOITURE_D_ABORD = -1
+function peinteEnPremier(voiture: THREE.Object3D) {
+  voiture.traverse((o) => {
+    const mesh = o as THREE.Mesh
+    if (!mesh.isMesh) return
+    const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+    if (!mats.some((m) => m.transparent)) mesh.renderOrder = VOITURE_D_ABORD
+  })
 }
 
 /* ---- la vie nocturne (luminaires + feux), portée du #22 ---------------- */
