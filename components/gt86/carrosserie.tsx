@@ -224,3 +224,28 @@ function peinsLampadaires(ctx: CanvasRenderingContext2D) {
     }
   }
 }
+
+/* LA CIBLE DU CLIC (#42) : la boîte de la voiture, pas ses triangles. Le
+   raycast R3F testait les 321 k triangles de la GT86 à chaque
+   pointerdown, pointerup, click et cran de molette : 24 à 33 ms chacun,
+   jusqu'à 90 ms par clic. Ses maillages deviennent transparents au rayon
+   et la racine répond par `boite`, posée dans le repère de son parent.
+   Le rayon qui part de DEDANS (l'habitacle) touche la face de sortie :
+   seule sa direction compte pour les zones de la dalle (zoneDuClic).
+   Aucun maillage de plus : rien à compiler, rien à peindre. */
+export function cliquableParSaBoite(voiture: THREE.Object3D, boite: THREE.Box3) {
+  voiture.traverse((o) => {
+    if ((o as THREE.Mesh).isMesh) o.raycast = () => {}
+  })
+  const versParent = new THREE.Matrix4()
+  const rayon = new THREE.Ray()
+  voiture.raycast = (raycaster, touches) => {
+    const parent = voiture.parent
+    if (!parent) return
+    rayon.copy(raycaster.ray).applyMatrix4(versParent.copy(parent.matrixWorld).invert())
+    const point = rayon.intersectBox(boite, new THREE.Vector3())
+    if (!point) return
+    point.applyMatrix4(parent.matrixWorld)
+    touches.push({ distance: raycaster.ray.origin.distanceTo(point), point, object: voiture })
+  }
+}

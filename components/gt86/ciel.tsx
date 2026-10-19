@@ -6,7 +6,7 @@ import { Environment, Lightformer, useCursor, useGLTF } from "@react-three/drei"
 import * as THREE from "three"
 import MerDeNuages from "./mer-de-nuages"
 import type { Trajectoire } from "./vol"
-import { LamesDuCiel, mireLeCiel, peintureDuCiel } from "./carrosserie"
+import { LamesDuCiel, cliquableParSaBoite, mireLeCiel, peintureDuCiel } from "./carrosserie"
 
 /* LE CIEL — ticket #29 : le verdict « Pellicule » du gate #21, porté du
    prototype (route jetable, supprimée au #35) dans la coquille.
@@ -115,16 +115,11 @@ function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<
     return scene
   }, [scene])
 
-  /* LA CIBLE DU CLIC (#42) : un pavé invisible à la boîte de la voiture.
-     Le raycast R3F testait ses 321 k triangles à chaque pointerdown,
-     pointerup, click et survol : 24 ms chacun, 72 ms sur le seul clic de
-     décollage. three ne regarde pas `visible` au raycast : le pavé caché
-     reçoit les gestes, la carrosserie n'est plus testée. */
-  const cible = useMemo(() => {
-    modele.traverse((o) => {
-      if ((o as THREE.Mesh).isMesh) o.raycast = () => {}
-    })
-    return new THREE.Box3().setFromObject(modele).getSize(new THREE.Vector3())
+  /* la cible du clic (carrosserie.tsx) : la boîte de la voiture centrée,
+     dans le repère du piqué */
+  useMemo(() => {
+    const taille = new THREE.Box3().setFromObject(modele).getSize(new THREE.Vector3())
+    cliquableParSaBoite(modele, new THREE.Box3().setFromCenterAndSize(new THREE.Vector3(), taille))
   }, [modele])
 
   /* chrome miroir : le ciel et ses lames se découpent dans la robe.
@@ -184,9 +179,6 @@ function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<
       <group rotation={[0, -Math.PI / 5 - (55 * Math.PI) / 180, 0]}>
         <group ref={pique} rotation={[PIQUE, 0, 0]}>
           <primitive object={modele} />
-          <mesh visible={false}>
-            <boxGeometry args={[cible.x, cible.y, cible.z]} />
-          </mesh>
         </group>
       </group>
     </group>

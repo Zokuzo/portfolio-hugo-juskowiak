@@ -6,7 +6,7 @@ import { useGLTF, useTexture } from "@react-three/drei"
 import * as THREE from "three"
 import type { Trajectoire } from "./vol"
 import { compileEnSolo, rendEnSolo } from "./chauffe"
-import { peintureDeNuit } from "./carrosserie"
+import { cliquableParSaBoite, peintureDeNuit } from "./carrosserie"
 import { fondPourLeRendu } from "./rendu"
 import {
   ASSISE,
@@ -325,6 +325,7 @@ function VoitureGaree({
       -boite.min.y,
       -(boite.min.z + boite.max.z) / 2,
     )
+    cliquableParSaBoite(clone, boite.translate(clone.position))
     cockpit.voiture = clone
     return clone
   }, [scene, art, lueur, compteur, ecran, gl, cockpit])
