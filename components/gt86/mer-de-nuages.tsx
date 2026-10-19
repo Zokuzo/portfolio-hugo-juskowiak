@@ -25,6 +25,11 @@ const HOULE_AMPLEUR = 0.55
 const PAS_ORIGINE = 20
 const PAS = 14
 
+/* le décalage vertical de chaque nappe, en mètres : la nouvelle chute
+   (#56) descend la mer de nuages avec la voiture, puis monte le plafond.
+   Un uniforme et une matrice : aucun programme ne se recompile */
+export const decalageNuages = { sol: 0, plafond: 0 }
+
 export default function MerDeNuages({
   soleil,
   crete = "#ffce8f",
@@ -177,11 +182,18 @@ export default function MerDeNuages({
   )
   const ref = useRef(materiau)
   ref.current = materiau
+  const nappe = useRef<THREE.Mesh>(null)
   useFrame((etat) => {
-    ref.current.uniforms.uTemps.value = etat.clock.elapsedTime
+    const { uniforms } = ref.current
+    const decalage = decalageNuages[sens]
+    uniforms.uTemps.value = etat.clock.elapsedTime
+    uniforms.uSommet.value = sommet + decalage
+    uniforms.uFond.value = fond + decalage
+    if (nappe.current) nappe.current.position.y = sommet + decalage
   })
   return (
     <mesh
+      ref={nappe}
       material={materiau}
       rotation-x={sens === "sol" ? -Math.PI / 2 : Math.PI / 2}
       position={[0, sommet, 0]}

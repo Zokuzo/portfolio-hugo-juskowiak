@@ -16,13 +16,16 @@ import * as THREE from "three"
 /* ---- le calage ------------------------------------------------------------ */
 
 /* les instants du montage, en secondes depuis le clic (= temps dans
-   l'extrait) : écran coupé, fin des obliques, début des plans a à e, la
-   chute. Hugo les règle par l'URL (?calage=ecran:0.91,a:1.62,...) */
-export type Calage = Record<"ecran" | "ouvre" | "a" | "b" | "c" | "d" | "e" | "tombe", number>
-export const CALAGE_DEFAUT: Calage = { ecran: 0.91, ouvre: 2.9, a: 1.62, b: 4.62, c: 7.61, d: 10.63, e: 12, tombe: 13.01 }
+   l'extrait) : écran coupé, fin des obliques, début des plans a à d, la
+   chute. Hugo les règle par l'URL (?calage=ecran:2.29,a:4.12,...) */
+export type Calage = Record<"ecran" | "ouvre" | "a" | "b" | "c" | "d" | "tombe", number>
+export const CALAGE_DEFAUT: Calage = { ecran: 2.29, ouvre: 5.74, a: 4.12, b: 7.12, c: 10.11, d: 13.13, tombe: 16.12 }
 /* l'ordre que les instants doivent respecter ; « ouvre » se glisse
    n'importe où entre l'écran coupé et la chute */
-const SUITE: (keyof Calage)[] = ["ecran", "a", "b", "c", "d", "e", "tombe"]
+const SUITE: (keyof Calage)[] = ["ecran", "a", "b", "c", "d", "tombe"]
+/* le plan e de la v3 n'existe plus : une URL qui le porte encore reste
+   lisible, sa valeur est ignorée */
+const CLES_RETIREES = ["e"]
 
 export function lisCalage(texte: string | null): Calage {
   if (texte === null) return CALAGE_DEFAUT
@@ -32,13 +35,13 @@ export function lisCalage(texte: string | null): Calage {
     const paire = morceau.split(":").map((m) => m.trim())
     const [cle, valeur] = paire
     const v = Number(valeur)
-    if (paire.length !== 2 || !Object.hasOwn(calage, cle) || valeur === "" || !Number.isFinite(v))
+    if (paire.length !== 2 || valeur === "" || !Number.isFinite(v) || !(Object.hasOwn(calage, cle) || CLES_RETIREES.includes(cle)))
       return refuseCalage(texte, `« ${morceau} » illisible`)
-    calage[cle as keyof Calage] = v
+    if (Object.hasOwn(calage, cle)) calage[cle as keyof Calage] = v
   }
-  const croissant = SUITE.every((cle, k) => (k === 0 ? calage[cle] >= 0 : calage[SUITE[k - 1]] < calage[cle]))
-  if (!croissant || !(calage.ecran < calage.ouvre && calage.ouvre <= calage.tombe) || calage.tombe < RAMPE_CLIC)
-    return refuseCalage(texte, `les instants doivent croître : ecran < a < b < c < d < e < tombe, ecran < ouvre <= tombe, tombe >= ${RAMPE_CLIC}`)
+  const croissant = SUITE.every((cle, k) => (k === 0 ? calage[cle] > 0 : calage[SUITE[k - 1]] < calage[cle]))
+  if (!croissant || !(calage.ecran < calage.ouvre && calage.ouvre <= calage.tombe))
+    return refuseCalage(texte, "les instants doivent croître : 0 < ecran < a < b < c < d < tombe, ecran < ouvre <= tombe")
   return calage
 }
 
@@ -49,14 +52,15 @@ function refuseCalage(texte: string, pourquoi: string): Calage {
 
 /* ---- le temps ralenti ----------------------------------------------------- */
 
-/* le temps de la simulation avance à RALENTI fois le temps de la musique
-   pendant les plans : au clic il y descend en RAMPE_CLIC (« la voiture
-   ralentit dans les airs »), à la chute il remonte à 1 en RAMPE_CHUTE.
-   Les rampes sont des smootherstep : la cadence, donc la vitesse de la
+/* du clic à l'écran coupé, la voiture tombe en vitesse réelle ; dans les
+   RAMPE_ECRAN dernières secondes avant l'écran coupé le temps de la
+   simulation descend à RALENTI fois celui de la musique, et y reste
+   pendant les plans ; à la chute il remonte à 1 en RAMPE_CHUTE. Les
+   rampes sont des smootherstep : la cadence, donc la vitesse de la
    voiture à l'écran, n'a aucune cassure */
 export const RALENTI = 0.1
-const RAMPE_CLIC = 0.3
-const RAMPE_CHUTE = 0.8
+const RAMPE_ECRAN = 0.6
+const RAMPE_CHUTE = 1
 
 /* smootherstep : vitesse et accélération nulles aux deux bouts */
 export const douce = (u: number) => u * u * u * (u * (6 * u - 15) + 10)
@@ -72,15 +76,21 @@ function rampe(duree: number, r0: number, r1: number, ecoule: number) {
   return duree * (r0 * u + (r1 - r0) * douceIntegree(u))
 }
 
+/* le ralenti s'installe de debutRalenti à l'écran coupé */
+const debutRalenti = (calage: Calage) => Math.max(0, calage.ecran - RAMPE_ECRAN)
+
 export function tempsSimule(t: number, calage: Calage): number {
-  const clic = rampe(RAMPE_CLIC, 1, RALENTI, t)
-  const plans = RALENTI * Math.max(0, Math.min(t, calage.tombe) - RAMPE_CLIC)
+  const debut = debutRalenti(calage)
+  const libre = Math.min(t, debut)
+  const ralentit = rampe(calage.ecran - debut, 1, RALENTI, t - debut)
+  const plans = RALENTI * Math.max(0, Math.min(t, calage.tombe) - calage.ecran)
   const chute = rampe(RAMPE_CHUTE, RALENTI, 1, t - calage.tombe)
-  return clic + plans + chute + Math.max(0, t - calage.tombe - RAMPE_CHUTE)
+  return libre + ralentit + plans + chute + Math.max(0, t - calage.tombe - RAMPE_CHUTE)
 }
 
 export function cadence(t: number, calage: Calage): number {
-  if (t < RAMPE_CLIC) return 1 + (RALENTI - 1) * douce(borne(t / RAMPE_CLIC))
+  const debut = debutRalenti(calage)
+  if (t < calage.ecran) return 1 + (RALENTI - 1) * douce(borne((t - debut) / (calage.ecran - debut)))
   return RALENTI + (1 - RALENTI) * douce(borne((t - calage.tombe) / RAMPE_CHUTE))
 }
 
@@ -110,10 +120,14 @@ const MASSE = 1250
 const PLANCHER = { aire: 7.6, cx: 1.1 }
 const FACE_AVANT = { aire: 1.95, cx: 0.4 }
 const FLANC = { aire: 3.4, cx: 0.9 }
-/* le centre de poussée, derrière le centre de gravité : le vent qui monte
-   sous le plancher soulève l'arrière, la voiture tend à se mettre nez en
-   bas */
-const RECUL_POUSSEE = 0.6
+/* le centre de poussée glisse vers le bord d'attaque, comme sur une
+   plaque qui tombe : AVANCE_POUSSEE mètres devant le centre de gravité
+   quand la voiture tombe nez en premier, au centre quand elle tombe à
+   plat. Le vent qui monte sous le plancher relève donc le nez, d'autant
+   plus vite qu'elle tombe vite, et la plaque se stabilise à plat : nez en
+   bas au plan a, elle se remet peu à peu à plat jusqu'au plan d, comme
+   dans les références de Hugo (v4) */
+const AVANCE_POUSSEE = 1.5
 /* les inerties d'une coupé de 1 250 kg (kg m²), en tangage, lacet, roulis */
 const INERTIE = new THREE.Vector3(1900, 2100, 520)
 /* l'amortissement aérodynamique des rotations : un couple -k |v| omega
@@ -125,24 +139,30 @@ const AMORTI_AERO = new THREE.Vector3(55, 55, 18)
 const TURBULENCE = new THREE.Vector3(1.6, 1.4, 0.45)
 const TURBULENCE_FREQUENCES = [4.1, 9.7, 17.3]
 /* l'élan de rotation que la voiture garde de son vol quand la lévitation
-   lâche (rad/s) : elle se redresse de son piqué (tangage), tourne sur
+   lâche (rad/s) : elle pique encore un peu (tangage), tourne sur
    elle-même (cap, autour de la verticale) et bascule sur le flanc
    (roulis, repère de la voiture). Au ralenti, c'est ce qui se voit : sans
    lui, la voiture partie du repos ne tournait que de 1,5 °/s à l'écran
    (relevé du lot 4). Le couplage gyroscopique mêle ensuite les trois axes,
    l'amortissement de l'air les éteint peu à peu */
-const ROTATION_DEPART = { tangage: -0.4, cap: 0.65, roulis: -0.15 }
+const ROTATION_DEPART = { tangage: 0.3, cap: 0.65, roulis: -0.15 }
 
-/* LE CIEL. La voiture pend à l'altitude 0 au clic ; à chaque coupe elle
-   remonte (rien ne se voit pendant une coupe franche) pour finir chaque
-   plan à Y_FIN_PLAN : le sommet de la mer de nuages (-2,6) ne la touche
-   jamais en pleine vue, et la caméra de contre-plongée reste dans le
-   clair. Elle quitte le dernier plan (e) à Y_CHUTE, l'altitude de la v2.
-   Le voile blanchit l'écran avant qu'elle n'entre dans le banc ; la
+/* LE CIEL. La voiture pend à l'altitude 0 au clic, 2,6 m au-dessus du
+   sommet de la mer de nuages (-2,6), et tombe en vitesse réelle jusqu'à
+   l'écran coupé : près de 20 m. Pour qu'elle tombe de haut sans
+   traverser la nappe, la nappe descend avec elle (nappeDuCiel) : vue
+   d'une caméra qui ne la suit qu'à moitié, elle file vers une mer de
+   nuages lointaine. À l'écran coupé, la nappe reprend sa place ; à
+   chaque coupe la voiture remonte (rien ne se voit pendant une coupe
+   franche) pour finir chaque plan à Y_FIN_PLAN, haut au-dessus de la
+   nappe, et la chute part de Y_CHUTE. Le plafond de nuages (sommet 8)
+   monte de HAUSSE_PLAFOND dès l'écran coupé pour laisser la place. Le
+   voile blanchit l'écran avant qu'elle n'entre dans le banc ; la
    bascule vers la rue se fait quand elle est à Y_BASCULE, voile plein */
-const Y_FIN_PLAN = 1.5
-const Y_CHUTE = 4.65
-const Y_BASCULE = -5
+const Y_FIN_PLAN = 28
+const Y_CHUTE = 48
+const Y_BASCULE = -6
+const HAUSSE_PLAFOND = 60
 
 /* LA RUE : la même chute se poursuit à H_BASCULE au-dessus du garage.
    Elle y entre avec l'assiette et les vitesses de rotation du ciel (cap
@@ -157,6 +177,10 @@ const Y_BASCULE = -5
    pour toucher pile à FREIN.vitesse. Le rétablissement est un ressort
    critique sur le tangage et le roulis (pulsation STABILISATION). */
 const H_BASCULE = 30
+/* la rue la reçoit à V_RUE au plus (m/s, sa vitesse de la v3) : venue de
+   plus haut, elle tombe deux fois plus vite, et la rue n'aurait plus le
+   temps de s'ouvrir. Le banc, voile plein, cache ce freinage */
+const V_RUE = 21
 const ASSIETTE_TOUCHER = -0.04
 const STABILISATION = 3.2
 const FREIN = { hauteur: 20, vitesse: 2.6, rampe: 3 }
@@ -256,6 +280,7 @@ function simuleVoiture(calage: Calage, pique: number) {
         kBascule = k
         zBascule = altitude
         Object.assign(rue, entreeRue(attitude, omega))
+        vitesse = Math.max(vitesse, -V_RUE)
       }
     }
     if (kBascule < 0) {
@@ -286,8 +311,8 @@ function avanceCiel(attitude: THREE.Quaternion, omega: THREE.Vector3, vitesse: n
   vent.set(0, Math.sign(-vitesse) || 1, 0).applyQuaternion(inverse.copy(attitude).invert())
   const pression = 0.5 * RHO_AIR * vitesse * vitesse
   const trainee = pression * aireEffective(Math.abs(vent.y), Math.abs(vent.z), Math.abs(vent.x))
-  /* la poussée au centre de poussée, (0, 0, -RECUL) : r x F */
-  couple.set(0, 0, -RECUL_POUSSEE).cross(moment.copy(vent).multiplyScalar(trainee))
+  /* la poussée au centre de poussée : r x F */
+  couple.set(0, 0, -AVANCE_POUSSEE * vent.z).cross(moment.copy(vent).multiplyScalar(trainee))
   couple.x += pression * TURBULENCE.x * bruit(s, 0) - AMORTI_AERO.x * Math.abs(vitesse) * omega.x
   couple.y += pression * TURBULENCE.y * bruit(s, 1) - AMORTI_AERO.y * Math.abs(vitesse) * omega.y
   couple.z += pression * TURBULENCE.z * bruit(s, 2) - AMORTI_AERO.z * Math.abs(vitesse) * omega.z
@@ -389,10 +414,19 @@ function simuleCamera(p: Omit<Partition, "zCamera" | "zVisee">) {
   const camera = { z: depart.z, v: depart.v }
   const visee = { z: depart.z, v: depart.v }
   let frein: Freinage | null = null
+  let enRue = false
   for (let j = 0; j < n; j++) {
     const t = calage.tombe + j * PAS_S
     zCamera[j] = camera.z
     zVisee[j] = visee.z
+    if (!enRue && t >= p.tBascule) {
+      /* la voiture passe à V_RUE sous le voile : la caméra et sa visée
+         perdent la même vitesse, sans quoi leurs ressorts plongeraient */
+      enRue = true
+      const saut = (p.vz[p.kBascule + 1] - p.vz[p.kBascule]) * cadence(t, calage)
+      camera.v += saut
+      visee.v += saut
+    }
     const voiture = voitureVerticale(p, t)
     const hauteur = H_BASCULE + camera.z - p.zBascule
     const ressort = suitRessort(camera, voiture, RESSORT_CAMERA)
@@ -429,8 +463,8 @@ export function echantillonne(table: Float64Array, s: number, fin: number) {
 }
 
 /* les segments du montage, pour le bandeau de calage et les plans */
-export type Segment = "ciel" | "large" | "a" | "b" | "c" | "d" | "e" | "chute" | "rue"
-const DEBUTS: [Segment, keyof Calage][] = [["large", "ecran"], ["a", "a"], ["b", "b"], ["c", "c"], ["d", "d"], ["e", "e"], ["chute", "tombe"]]
+export type Segment = "ciel" | "large" | "a" | "b" | "c" | "d" | "chute" | "rue"
+const DEBUTS: [Segment, keyof Calage][] = [["large", "ecran"], ["a", "a"], ["b", "b"], ["c", "c"], ["d", "d"], ["chute", "tombe"]]
 
 export function segmentDe(p: Partition, t: number): Segment {
   if (t >= p.tBascule) return "rue"
@@ -449,9 +483,16 @@ export function finDeSegment(p: Partition, t: number) {
    plan à Y_FIN_PLAN, et partir de Y_CHUTE */
 export function decalageCiel(p: Partition, t: number) {
   if (t < p.calage.ecran) return 0
-  if (t >= p.calage.e) return Y_CHUTE - p.zChute
+  if (t >= p.calage.tombe) return Y_CHUTE - p.zChute
   return Y_FIN_PLAN - echantillonne(p.z, tempsSimule(finDeSegment(p, t), p.calage), p.kToucher)
 }
+
+/* le décalage vertical de la mer de nuages : avant l'écran coupé, elle
+   descend avec la voiture */
+export const nappeDuCiel = (p: Partition, t: number) => (t < p.calage.ecran ? altitudeCiel(p, t) : 0)
+
+/* le décalage vertical du plafond de nuages : il monte dès l'écran coupé */
+export const plafondDuCiel = (p: Partition, t: number) => (t < p.calage.ecran ? 0 : HAUSSE_PLAFOND)
 
 /* l'assiette du ciel (sans le cap fixe de ciel.tsx), figée à la bascule */
 const avant = new THREE.Quaternion()

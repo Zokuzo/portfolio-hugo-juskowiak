@@ -7,9 +7,9 @@ import { contexteAudio } from "./spotify"
 
 /* LA MUSIQUE DE L'INTRO (#58) : « VISION (Slowed) » (UdieNnx, HXVSAGE,
    Duduzinho), le choix de Hugo pour la chute. Depuis le #56, l'extrait
-   est HÉBERGÉ ici : le début du morceau, du 16,42 s au 48,42 s (32 s,
-   AAC 128 kbit/s, fondu de sortie de 2 s), coupé et calé par Hugo à
-   l'oreille. Piste sous droits : Hugo a décidé de l'héberger en
+   est HÉBERGÉ ici : le début du morceau, du 13,92 s au 48,42 s (34,5 s,
+   AAC 128 kbit/s, fondu d'entrée de 30 ms, de sortie de 2 s), coupé et
+   calé par Hugo à l'oreille (recoupé pour la chute v4). Piste sous droits : Hugo a décidé de l'héberger en
    connaissance du risque. Il remplace la préversion du CDN Spotify, qui
    commençait trop tard dans le morceau pour le montage du #56.
 
