@@ -6,6 +6,7 @@ import { SpotLight as SpotVolumetrique, useTexture } from "@react-three/drei"
 import * as THREE from "three"
 import { type Ecran } from "./ecran"
 import { envNuit, halo } from "./rue"
+import { VIOLET_LUEUR } from "./lueurs"
 
 /* L'HABITACLE — ticket #31 : l'habillage gaté aux #23/#26 (combiné violet,
    rétroéclairage par glyphe, planche Haunter, alcantara, moquette, néons),
@@ -234,13 +235,20 @@ export function habilleInterieur(
       /* les optiques : réglages gatés du #22 posés dès maintenant, mais à
          intensité ZÉRO — le claquement du seuil n'a plus qu'à monter le son */
       if (mat.name === "LightsFront") {
-        mat.emissive?.set("#b07cff")
+        mat.emissive?.set("#eef4ff")
         mat.toneMapped = false
         mat.emissiveIntensity = 0
         cockpit.optiques.push(mat)
       }
+      /* le feu arrière rouge vif, allumé avec les optiques (le tone
+         mapping blanchit son cœur, le bord reste rouge) */
+      if (mat.name === "Taillightbody") {
+        mat.emissive?.set("#ff2a1a")
+        mat.emissiveIntensity = 0
+        cockpit.optiques.push(mat)
+      }
       if (mat.name === "HeadlightsTex") {
-        mat.emissive?.set("#9d5cff")
+        mat.emissive?.set("#dfeaff")
         mat.emissiveMap = mat.map
         mat.emissiveIntensity = 0
         cockpit.signature.push(mat)
@@ -657,6 +665,11 @@ function Phares({ cockpit }: { cockpit: Cockpit }) {
     [-0.075 + 0.63, 0.61, 1.78],
     [-0.075 - 0.63, 0.61, 1.78],
   ]
+  /* la lueur violette des feux arrière (lueurs.tsx), même repère */
+  const feuxArriere: [number, number, number][] = [
+    [-0.075 + 0.62, 0.77, -1.9],
+    [-0.075 - 0.62, 0.77, -1.9],
+  ]
   const halos = useRef<(THREE.Group | null)[]>([])
   useFrame(({ camera }) => {
     halos.current.forEach((halo, i) => {
@@ -687,7 +700,7 @@ function Phares({ cockpit }: { cockpit: Cockpit }) {
             ref={(l: THREE.SpotLight | null) => { lums.current[i] = l }}
             position={[x, y, z]}
             target={cibles[i]}
-            color="#ffeecb"
+            color={VIOLET_LUEUR}
             intensity={0}
             angle={0.5}
             penumbra={0.6}
@@ -703,12 +716,17 @@ function Phares({ cockpit }: { cockpit: Cockpit }) {
         {optiques.map(([x, y, z], i) => (
           <group key={i} ref={(g) => { halos.current[i] = g }}>
             <sprite position={[x, y, z]} scale={[0.55, 0.55, 1]}>
-              <spriteMaterial map={halo()} color="#fffaf0" transparent opacity={0.85} blending={THREE.AdditiveBlending} depthWrite={false} />
+              <spriteMaterial map={halo()} color="#f4f8ff" transparent opacity={0.85} blending={THREE.AdditiveBlending} depthWrite={false} />
             </sprite>
             <sprite position={[x, y, z]} scale={[2.2, 2.2, 1]}>
-              <spriteMaterial map={halo()} color="#ffeecb" transparent opacity={0.22} blending={THREE.AdditiveBlending} depthWrite={false} />
+              <spriteMaterial map={halo()} color={VIOLET_LUEUR} transparent opacity={0.4} blending={THREE.AdditiveBlending} depthWrite={false} />
             </sprite>
           </group>
+        ))}
+        {feuxArriere.map(([x, y, z], i) => (
+          <sprite key={i} position={[x, y, z]} scale={[1.1, 1.1, 1]}>
+            <spriteMaterial map={halo()} color={VIOLET_LUEUR} transparent opacity={0.3} blending={THREE.AdditiveBlending} depthWrite={false} />
+          </sprite>
         ))}
       </group>
     </group>

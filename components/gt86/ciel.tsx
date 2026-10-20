@@ -8,6 +8,8 @@ import MerDeNuages from "./mer-de-nuages"
 import { useChauffeEnSolo } from "./chauffe"
 import type { Trajectoire } from "./vol"
 import { LamesDuCiel, cliquableParSaBoite, mireLeCiel, pieceDeRobe, robeDuCiel } from "./carrosserie"
+import { poseAkrapovic } from "./echappement"
+import { LueursDuCiel } from "./lueurs"
 
 /* LE CIEL — ticket #29 : le verdict « Pellicule » du gate #21, porté du
    prototype (route jetable, supprimée au #35) dans la coquille.
@@ -114,6 +116,7 @@ function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<
       }
     })
     morts.forEach((o) => o.removeFromParent())
+    poseAkrapovic(scene)
     const centre = new THREE.Box3().setFromObject(scene).getCenter(new THREE.Vector3())
     scene.position.sub(centre)
     return scene
@@ -180,6 +183,7 @@ function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<
       <group rotation={[0, CAP, 0]}>
         <group ref={pique} rotation={[PIQUE, 0, 0]}>
           <primitive object={modele} />
+          <LueursDuCiel modele={modele} />
         </group>
       </group>
     </group>

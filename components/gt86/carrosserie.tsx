@@ -34,12 +34,24 @@ const CHROME = {
   metal: 1,
   rugosite: 0.05,
 }
+/* Midnight Purple III (Nissan LV4, Hugo le 2026-10-20) : une base violet
+   très sombre, presque noire dans l'ombre, sous un vernis épais. Le flip
+   vert, bronze et or des reflets rasants vient d'un film mince
+   (iridescence) et d'un voile vert (sheen). Ces deux réglages ajoutent
+   chacun un define : posés dès la création, jamais allumés après le
+   rideau. */
 const PEINTURE = {
-  couleur: "#b9bfcc",
-  metal: 0.3,
-  rugosite: 0.42,
+  couleur: "#2c0a4a",
+  metal: 0.62,
+  rugosite: 0.34,
   vernis: 1,
-  rugositeVernis: 0.04,
+  rugositeVernis: 0.03,
+  film: 0.6,
+  indiceFilm: 1.7,
+  epaisseursFilm: [380, 820] as [number, number],
+  voile: 0.3,
+  couleurVoile: "#2f7a46",
+  rugositeVoile: 0.4,
 }
 const REFLET = {
   /* l'<Environment> du ciel donne 0,6 à tout le reste */
@@ -60,6 +72,12 @@ export function robeDuCiel(): Robe {
     roughness: PEINTURE.rugosite,
     clearcoat: PEINTURE.vernis,
     clearcoatRoughness: PEINTURE.rugositeVernis,
+    iridescence: PEINTURE.film,
+    iridescenceIOR: PEINTURE.indiceFilm,
+    iridescenceThicknessRange: PEINTURE.epaisseursFilm,
+    sheen: PEINTURE.voile,
+    sheenColor: PEINTURE.couleurVoile,
+    sheenRoughness: PEINTURE.rugositeVoile,
   })
   caisse.name = PIECES_DE_CAISSE[0]
   const jantes = new THREE.MeshPhysicalMaterial({
