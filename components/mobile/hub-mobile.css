@@ -14,7 +14,7 @@
   .hubm-entete {
     position: fixed;
     inset: 0 0 auto 0;
-    z-index: 60;
+    z-index: 63;
     display: flex;
     align-items: center;
     justify-content: space-between;
