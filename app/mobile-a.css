@@ -1,0 +1,97 @@
+/* HUB MOBILE, dosage A « Y2K fidèle, arrondi » : biseaux Win9x, chrome
+   lavande, néon, angles adoucis. Téléphone seulement, le desktop ne bouge pas. */
+@media (max-width: 767px) {
+  /* Les jetons Y2K vivent sous .y2k (y2k.css), absent de la planche : on en
+     reprend ici les valeurs utiles, téléphone seulement. */
+  :root {
+    --y2k-chrome: #cdc9e6;
+    --y2k-chrome-2: #b6b0d8;
+    --y2k-clair: #f2f0fd;
+    --y2k-ombre: #575178;
+    --y2k-encre: #241f3d;
+    --y2k-rose: #ff3ea5;
+    --y2k-violet: #a06bff;
+    --bev-haut: inset 1px 1px 0 var(--y2k-clair), inset -1px -1px 0 var(--y2k-ombre),
+      inset 2px 2px 0 rgba(255 255 255 / 0.45), inset -2px -2px 0 rgba(36 31 61 / 0.25);
+    --bev-creux: inset 1px 1px 0 var(--y2k-ombre), inset -1px -1px 0 var(--y2k-clair);
+    --mob-r-s: 8px;
+    --mob-r-m: 14px;
+    --mob-r-l: 22px;
+    --mob-cible: 44px;
+    --mob-neon: 0 0 0 1px var(--y2k-rose), 0 0 14px color-mix(in srgb, var(--y2k-rose) 55%, transparent);
+  }
+
+  .plaque {
+    min-height: 100svh;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+
+  .plaque .topbar {
+    position: sticky;
+    top: env(safe-area-inset-top);
+    margin: 8px 12px 0;
+    min-height: var(--mob-cible);
+    padding: 4px 6px 4px 12px;
+    gap: 8px;
+    flex-wrap: wrap;
+    border-radius: var(--mob-r-m) var(--mob-r-m) var(--mob-r-s) var(--mob-r-s);
+    background: linear-gradient(90deg, var(--y2k-violet), var(--y2k-rose));
+    color: var(--y2k-clair);
+    box-shadow: var(--bev-haut), var(--mob-neon);
+  }
+
+  .plaque .topbar .dim { color: var(--y2k-clair); opacity: .8; }
+
+  .plaque .langtoggle button {
+    min-width: var(--mob-cible);
+    min-height: var(--mob-cible);
+    border-radius: var(--mob-r-s);
+    background: var(--y2k-chrome);
+    color: var(--y2k-encre);
+    box-shadow: var(--bev-haut);
+  }
+
+  .plaque .langtoggle button[aria-pressed="true"] { box-shadow: var(--bev-creux); background: var(--y2k-chrome-2); }
+
+  .plaque .plate {
+    margin: 0 12px 12px;
+    padding: 20px 16px;
+    border-radius: var(--mob-r-s) var(--mob-r-s) var(--mob-r-l) var(--mob-r-l);
+    background: color-mix(in srgb, var(--y2k-chrome) 92%, transparent);
+    color: var(--y2k-encre);
+    box-shadow: var(--bev-haut);
+  }
+
+  .plaque .rail { display: none; }
+
+  /* Le menu « démarrer » : l'index devient une grille de boutons biseautés. */
+  .nomen {
+    margin: 12px;
+    padding: 16px 12px;
+    border-radius: var(--mob-r-l);
+    background: var(--y2k-chrome);
+    color: var(--y2k-encre);
+    box-shadow: var(--bev-haut), var(--mob-neon);
+  }
+
+  .nomen-liste {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 0;
+  }
+
+  .nomen-lien {
+    display: flex;
+    align-items: center;
+    min-height: var(--mob-cible);
+    padding: 8px 10px;
+    border-radius: var(--mob-r-s);
+    background: var(--y2k-chrome-2);
+    color: var(--y2k-encre);
+    box-shadow: var(--bev-haut);
+  }
+
+  .nomen-lien:active { box-shadow: var(--bev-creux); }
+  .nomen-lien:focus-visible { outline: 2px solid var(--y2k-rose); outline-offset: 2px; }
+}
