@@ -7,6 +7,7 @@ import * as THREE from "three"
 import MerDeNuages from "./mer-de-nuages"
 import { useChauffeEnSolo } from "./chauffe"
 import type { Trajectoire } from "./vol"
+import { posePlaque } from "./plaque"
 import { LamesDuCiel, cliquableParSaBoite, mireLeCiel, pieceDeRobe, robeDuCiel } from "./carrosserie"
 
 /* LE CIEL — ticket #29 : le verdict « Pellicule » du gate #21, porté du
@@ -114,6 +115,7 @@ function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<
       }
     })
     morts.forEach((o) => o.removeFromParent())
+    posePlaque(scene)
     const centre = new THREE.Box3().setFromObject(scene).getCenter(new THREE.Vector3())
     scene.position.sub(centre)
     return scene
