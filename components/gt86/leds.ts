@@ -1,11 +1,12 @@
 import * as THREE from "three"
 
-/* LES BANDES LED DES OPTIQUES (Hugo, 2026-10-20, références 9 et 10) :
-   à l'avant, une fine bande blanche qui suit le bord haut de chaque phare
-   puis se recourbe vers le bas côté calandre (une virgule) ; à l'arrière,
-   un tube rouge en C, cœur presque blanc, dans un feu fumé. De la vraie
-   géométrie : des tubes le long de courbes posées sur le verre des
-   optiques (relevées au rayon sur le GLB, repère du GLB, côté droit ; le
+/* LES BANDES LED DES OPTIQUES (Hugo, 2026-10-20, références 10 et 11) :
+   à l'avant, une barre blanc bleuté épaisse qui longe le bord BAS de
+   chaque phare de l'extérieur vers la calandre puis remonte en crochet
+   (GT86 phase 2) ; à l'arrière, un tube rouge en C, cœur presque blanc,
+   posé sur le C du GLB (RedGlow) sous le verre fumé. De la vraie
+   géométrie : des tubes le long de courbes relevées au rayon sur le GLB,
+   DANS le boîtier, derrière le verre (repère du GLB, côté droit ; le
    gauche en est le miroir autour de l'axe de la voiture).
 
    Les matériaux sont des MeshStandardMaterial noirs à émissif hors tone
@@ -19,29 +20,38 @@ export const LED = { avant: "LedAvant", arriere: "LedArriere", coeur: "LedCoeur"
 /* l'axe de symétrie de la caisse (boîte des optiques, plaque.ts) */
 const AXE_X = -0.074
 
-/* x, y, z : la courbe du phare droit, 8 mm devant le verre */
+/* x, y, z : la barre du phare droit, de l'angle extérieur à la calandre,
+   9 mm au-dessus du bord bas du verre et 4 à 8 mm derrière lui ; le
+   crochet remonte le long de la pointe intérieure */
 const PHARE: [number, number, number][] = [
-  [0.645, 0.712, 1.688], [0.6, 0.706, 1.741], [0.54, 0.692, 1.785], [0.49, 0.674, 1.833],
-  [0.44, 0.655, 1.876], [0.39, 0.635, 1.913], [0.35, 0.617, 1.94], [0.325, 0.603, 1.952],
-  [0.316, 0.592, 1.959], [0.335, 0.586, 1.961], [0.38, 0.589, 1.95], [0.45, 0.594, 1.914],
+  [0.655, 0.584, 1.775], [0.63, 0.572, 1.789], [0.6, 0.57, 1.8], [0.57, 0.577, 1.824],
+  [0.54, 0.585, 1.836], [0.5, 0.592, 1.86], [0.45, 0.591, 1.896], [0.4, 0.589, 1.917],
+  [0.36, 0.588, 1.936], [0.335, 0.59, 1.948], [0.322, 0.597, 1.949], [0.328, 0.606, 1.948],
+  [0.345, 0.614, 1.944],
 ]
-/* le C du feu arrière droit, ouvert vers la plaque, 9 mm derrière le verre */
+/* le C du feu arrière droit, ouvert vers la plaque : l'axe du RedGlow du
+   GLB, 2 mm derrière lui, sous le verre fumé */
 const FEU: [number, number, number][] = [
-  [0.42, 0.835, -1.906], [0.52, 0.838, -1.858], [0.61, 0.838, -1.804], [0.643, 0.815, -1.778],
-  [0.646, 0.775, -1.776], [0.625, 0.748, -1.794], [0.585, 0.752, -1.825], [0.535, 0.775, -1.857],
+  [0.39, 0.832, -1.892], [0.46, 0.833, -1.86], [0.53, 0.833, -1.822], [0.6, 0.832, -1.783],
+  [0.624, 0.827, -1.77], [0.634, 0.815, -1.762], [0.636, 0.79, -1.761], [0.635, 0.765, -1.762],
+  [0.627, 0.748, -1.768], [0.61, 0.737, -1.784], [0.585, 0.733, -1.808], [0.56, 0.739, -1.828],
+  [0.54, 0.75, -1.838], [0.515, 0.763, -1.85], [0.49, 0.772, -1.86],
 ]
-const RAYON = { avant: 0.0055, arriere: 0.0075, coeur: 0.0022 }
+const RAYON = { avant: 0.008, arriere: 0.0045, coeur: 0.0016 }
 const SEGMENTS = 64
 const FACETTES = 8
 
 /* l'émissif à intensité 1 ; l'allumage pose la même intensité partout
-   (ALLUME.optiques, 8) : la bande avant blanc froid, le tube arrière rouge
+   (ALLUME.optiques, 8) : la barre avant blanc bleuté, le tube arrière rouge
    vif, son cœur rose pâle que le bloom blanchit */
 export const EMISSIF = {
-  avant: new THREE.Color(0.5, 0.55, 0.6),
+  avant: new THREE.Color(0.7, 0.8, 1),
   arriere: new THREE.Color(0.9, 0.012, 0.008),
   coeur: new THREE.Color(0.32, 0.07, 0.05),
 }
+/* les projecteurs du GLB (LightsFront), au-dessus de la barre : un reflet
+   bleuté, et non plus les points blancs qui s'allumaient sous la bande en v9 */
+export const PROJECTEUR = "#2a4a8a"
 /* éteintes, les bandes restent un liseré sombre sous le verre */
 const ETEINTE = { avant: "#1c1d20", arriere: "#140808", coeur: "#1a0c0c" }
 

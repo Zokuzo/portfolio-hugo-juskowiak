@@ -21,24 +21,28 @@ import * as THREE from "three"
 /* Deux matériaux depuis le v7 (Hugo, 2026-10-20 : « du chrome lilas qui
    reflète tout ») : la CAISSE porte une vraie peinture, une base nette
    presque diélectrique sous un vernis poli qui seul mire le ciel ; les
-   JANTES gardent le chrome miroir, le métal y est réservé. Le vernis est
+   JANTES ont leur propre matériau (JANTES, plus bas). Le vernis est
    posé dès la création : passer clearcoat de 0 à plus de 0 recompile le
    programme, à faire avant le rideau, jamais après.
 
-   La teinte de base reste le gris bleuté du chrome : la LUT rose du rendu
+   Les blancs restent froids, à peine bleutés : la LUT rose du rendu
    (rendu.tsx) multiplie les hautes lumières par (1,07 ; 0,95 ; 0,92), un
    gris neutre y ressortait taupe rosé. Le reflet du ciel reste bas : le
    crépuscule est clair partout. La nuit porte l'éclat en rue. */
-const CHROME = {
-  couleur: "#e4e9ef",
-  metal: 1,
-  rugosite: 0.05,
+/* Les jantes en blanc laqué (Hugo, 2026-10-20 : « pour que ça matche »)
+   : le blanc froid de la caisse, peu métallique, sous un vernis brillant
+   posé dès la création (même règle que la caisse : avant le rideau). */
+const JANTES = {
+  couleur: "#eef2f7",
+  metal: 0.1,
+  rugosite: 0.22,
+  vernis: 1,
+  rugositeVernis: 0.04,
 }
-/* Deux robes (Hugo, 2026-10-20, après le Midnight Purple : « repasse sur
-   un blanc glacier ou un noir métallique ») : par défaut un NOIR
-   MÉTALLIQUE profond à peine bleuté, paillettes fines sous un vernis
-   miroir ; ?robe=blanc donne un BLANC GLACIER nacré (Crystal White
-   Pearl). Les deux compilent le MÊME programme : film mince (iridescence),
+/* Deux robes (Hugo, 2026-10-20 : « on reste avec le blanc ») : par
+   défaut un BLANC GLACIER nacré (Crystal White Pearl) ; ?robe=noir donne
+   le NOIR MÉTALLIQUE profond à peine bleuté de la v9, paillettes fines
+   sous un vernis miroir. Les deux compilent le MÊME programme : film mince (iridescence),
    voile (sheen) et carte de paillettes ajoutent chacun un define, ils
    restent donc posés dès la création et jamais nuls, même quand le noir
    n'en veut presque pas. Seules les valeurs changent. */
@@ -75,7 +79,7 @@ const PEINTURES = {
 /* lue une fois, à la création du matériau : avant le rideau */
 function peintureChoisie() {
   const robe = typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("robe")
-  return robe === "blanc" ? PEINTURES.blanc : PEINTURES.noir
+  return robe === "noir" ? PEINTURES.noir : PEINTURES.blanc
 }
 /* la carte de paillettes : une normale tirée au hasard par texel, répétée
    fin sur l'UV de la caisse (un atlas de ~4 m) : un texel ≈ 0,25 mm. Les
@@ -112,9 +116,11 @@ export function robeDuCiel(): Robe {
   })
   caisse.name = PIECES_DE_CAISSE[0]
   const jantes = new THREE.MeshPhysicalMaterial({
-    color: CHROME.couleur,
-    metalness: CHROME.metal,
-    roughness: CHROME.rugosite,
+    color: JANTES.couleur,
+    metalness: JANTES.metal,
+    roughness: JANTES.rugosite,
+    clearcoat: JANTES.vernis,
+    clearcoatRoughness: JANTES.rugositeVernis,
   })
   jantes.name = PIECES_DE_JANTE[0]
   return { caisse, jantes }

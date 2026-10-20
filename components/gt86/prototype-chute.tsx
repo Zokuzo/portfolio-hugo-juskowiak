@@ -10,7 +10,7 @@ import { CAP, FOV_POSE, PIQUE, POSE, voitureDuCiel } from "./ciel"
 import { brume, CAM_FINALE, enMondeRepos, POSE_VOITURE } from "./rue"
 import { ASSISE, type Cockpit } from "./habitacle"
 import { allumeLueurs } from "./lueurs"
-import { EMISSIF, LED } from "./leds"
+import { EMISSIF, LED, PROJECTEUR } from "./leds"
 import { CLAQUE, SEUIL_MS, VERRE_T } from "./seuil"
 import { attenueMusique, caleMusique, musiqueEnAttente, tempsMusique } from "./musique-intro"
 import { decalageNuages, fileNuages } from "./mer-de-nuages"
@@ -193,20 +193,22 @@ function pendRoues(modele: THREE.Object3D, detente: number) {
   for (const { noeud, base, bas } of roues.noeuds) noeud.position.copy(base).addScaledVector(bas, detente)
 }
 
-/* les feux, allumés pendant toute la chute (références 4, 6 et 7) : le
-   feu arrière fumé à peine rougi, ses bandes LED en rouge vif (leds.ts),
-   les phares et leur optique en blanc froid ; la
+/* les feux, allumés pendant toute la chute (références 4, 6, 7, 10 et
+   11) : le feu arrière fumé rougi de l'intérieur, son C du GLB (RedGlow)
+   en lueur et le tube LED en rouge vif (leds.ts), la barre des phares en
+   blanc bleuté, leurs projecteurs (LightsFront) en simple reflet bleuté ; la
    lumière qui s'en dégage est violette (lueurs.tsx). La couleur et l'intensité
    émissives des matériaux du GLB, deux uniformes de leur programme déjà
    compilé (pas de carte émissive : elle en compilerait un autre). Hors de
    la chute ils retrouvent leurs valeurs du GLB */
 const SEGMENTS_ALLUMES: Segment[] = ["a", "b", "c", "d", "chute"]
 const FEUX = [
-  { materiau: "Taillightbody", couleur: new THREE.Color("#ff2a1a"), intensite: 0.35 },
-  { materiau: LED.avant, couleur: EMISSIF.avant, intensite: 8 },
+  { materiau: "Taillightbody", couleur: new THREE.Color("#ff2a1a"), intensite: 0.8 },
+  { materiau: "RedGlow", couleur: new THREE.Color("#ff1a0a"), intensite: 1.5 },
+  { materiau: LED.avant, couleur: EMISSIF.avant, intensite: 14 },
   { materiau: LED.arriere, couleur: EMISSIF.arriere, intensite: 8 },
   { materiau: LED.coeur, couleur: EMISSIF.coeur, intensite: 8 },
-  { materiau: "LightsFront", couleur: new THREE.Color("#eef4ff"), intensite: 7 },
+  { materiau: "LightsFront", couleur: new THREE.Color(PROJECTEUR), intensite: 4 },
   { materiau: "HeadlightsTex", couleur: new THREE.Color("#dfeaff"), intensite: 0.8 },
 ]
 type FeuDuModele = { materiau: THREE.MeshStandardMaterial; couleur: THREE.Color; intensite: number }
@@ -735,6 +737,74 @@ function planDOuverture(camera: THREE.PerspectiveCamera, modele: THREE.Object3D,
   souffle(camera.position, viseOuverture, t, PLONGEE_CAMERA.vent * elan)
   const fov = THREE.MathUtils.lerp(FOV_POSE, OUVERTURE.fov, glisse) + PLONGEE_CAMERA.fov * elan
   cadre(camera, viseOuverture, fov, NETTETE_CHUTE, FLOU_PLANS * depart)
+  tiensEntreLesBandes(camera, modele, viseOuverture, depart)
+}
+
+/* LA VOITURE ENTIÈRE ENTRE LES OBLIQUES (Hugo, 2026-10-20 : « elle est
+   coupée par les bandes ou par le cadre ») : de l'intro au plan a, la
+   caméra recule le long de sa visée jusqu'à ce que les huit coins de la
+   boîte de la voiture tiennent dans la fenêtre des bandes fermées
+   (poseBandes), réduite de MARGE_CADRE, et dans l'écran. Le recul monte
+   avec `poids` (0 au clic : la pose du ciel reste celle du clic). Deux
+   passes : le recul change la profondeur des coins, la seconde rattrape. */
+const MARGE_CADRE = 0.9
+const PASSES_DE_RECUL = 2
+const coin = new THREE.Vector3()
+
+function tiensEntreLesBandes(camera: THREE.PerspectiveCamera, modele: THREE.Object3D, vise: THREE.Vector3, poids: number) {
+  if (poids <= 0) return
+  for (let passe = 0; passe < PASSES_DE_RECUL; passe++) {
+    camera.updateMatrixWorld()
+    const recul = THREE.MathUtils.lerp(1, reculPourLaFenetre(camera, modele), poids)
+    if (recul <= 1) return
+    camera.position.sub(vise).multiplyScalar(recul).add(vise)
+  }
+}
+
+/* le facteur de recul (≥ 1) qui fait tenir les coins : en recul, leur
+   écart au centre de l'écran se divise à peu près par ce facteur */
+function reculPourLaFenetre(camera: THREE.PerspectiveCamera, modele: THREE.Object3D) {
+  const angle = OBLIQUE_DEG * DEGRE
+  const nx = -Math.sin(angle)
+  const ny = Math.cos(angle)
+  const centre = OBLIQUE_DECALAGE
+  const demi = OBLIQUE_DEMI_HAUTEUR * MARGE_CADRE
+  const demiLargeur = (camera.aspect / 2) * MARGE_CADRE
+  const demiHauteur = 0.5 * MARGE_CADRE
+  let recul = 1
+  for (const local of coinsDe(modele)) {
+    coin.copy(local).applyMatrix4(modele.matrixWorld).project(camera)
+    /* en hauteurs d'écran depuis le centre, y vers le bas comme le CSS */
+    const x = (coin.x * camera.aspect) / 2
+    const y = -coin.y / 2
+    const d = nx * x + ny * y
+    recul = Math.max(recul, d > 0 ? d / (centre + demi) : d / (centre - demi), Math.abs(x) / demiLargeur, Math.abs(y) / demiHauteur)
+  }
+  return recul
+}
+
+/* les coins de la boîte de la voiture, dans le repère du modèle, tirés une
+   fois des boîtes de ses géométries */
+const coinsDuModele = new WeakMap<THREE.Object3D, THREE.Vector3[]>()
+function coinsDe(modele: THREE.Object3D) {
+  let coins = coinsDuModele.get(modele)
+  if (coins) return coins
+  modele.updateWorldMatrix(true, true)
+  const versModele = modele.matrixWorld.clone().invert()
+  const boite = new THREE.Box3()
+  const piece = new THREE.Box3()
+  const matrice = new THREE.Matrix4()
+  modele.traverse((o) => {
+    const mesh = o as THREE.Mesh
+    if (!mesh.isMesh) return
+    if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox()
+    piece.copy(mesh.geometry.boundingBox!).applyMatrix4(matrice.multiplyMatrices(versModele, mesh.matrixWorld))
+    boite.union(piece)
+  })
+  const { min, max } = boite
+  coins = [0, 1, 2, 3, 4, 5, 6, 7].map((i) => new THREE.Vector3(i & 1 ? max.x : min.x, i & 2 ? max.y : min.y, i & 4 ? max.z : min.z))
+  coinsDuModele.set(modele, coins)
+  return coins
 }
 
 /* LE VENT (lot 9) : la caméra tremble à `force` mètres, sur des sinus de

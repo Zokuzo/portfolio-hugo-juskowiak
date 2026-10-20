@@ -7,7 +7,7 @@ import * as THREE from "three"
 import { type Ecran } from "./ecran"
 import { envNuit, halo } from "./rue"
 import { VIOLET_LUEUR } from "./lueurs"
-import { LED } from "./leds"
+import { LED, PROJECTEUR } from "./leds"
 
 /* L'HABITACLE — ticket #31 : l'habillage gaté aux #23/#26 (combiné violet,
    rétroéclairage par glyphe, planche Haunter, alcantara, moquette, néons),
@@ -236,15 +236,15 @@ export function habilleInterieur(
       /* les optiques : réglages gatés du #22 posés dès maintenant, mais à
          intensité ZÉRO — le claquement du seuil n'a plus qu'à monter le son */
       if (mat.name === "LightsFront") {
-        mat.emissive?.set("#eef4ff")
+        mat.emissive?.set(PROJECTEUR)
         mat.toneMapped = false
         mat.emissiveIntensity = 0
         cockpit.optiques.push(mat)
       }
-      /* le feu arrière fumé, à peine rougi avec les optiques : son C LED
-         (leds.ts) porte la lumière */
+      /* le feu arrière fumé, rougi de l'intérieur avec les optiques : son
+         C LED (leds.ts) porte la lumière */
       if (mat.name === "Taillightbody") {
-        mat.emissive?.set("#120302")
+        mat.emissive?.set("#2a0604")
         mat.emissiveIntensity = 0
         cockpit.optiques.push(mat)
       }
