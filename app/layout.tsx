@@ -1,5 +1,5 @@
 import type React from "react"
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Archivo, JetBrains_Mono, Michroma, Noto_Sans_JP, Saira } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import FiltreCrt from "@/components/filtre-crt"
@@ -39,6 +39,8 @@ const jp = Noto_Sans_JP({
 const vitesse = Saira({ subsets: ["latin"], axes: ["wdth"], style: ["normal", "italic"], variable: "--f-vitesse", display: "swap" })
 const etendue = Michroma({ weight: "400", subsets: ["latin"], variable: "--f-etendue", display: "swap" })
 const policesSeuil = [vitesse, etendue].map((police) => police.variable).join(" ")
+
+export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover" }
 
 export const metadata: Metadata = {
   title: "Hugo Juskowiak | Ingénieur Full Stack & IA",
