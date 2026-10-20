@@ -97,7 +97,6 @@ function plancher(p: Pieces, c: Cote, caisse: THREE.Box3) {
   for (const z of [0.25, 0.5, 0.75]) {
     p.alu.push(boite([c.x * 1.2, 0.01, 0.02], [0, c.sol, sabotArriere + (sabotAvant - sabotArriere) * z]))
   }
-  p.plancher.push(boite([c.x * 1.9, EPAISSEUR, 0.3], [0, c.sol + 0.03, sabotAvant + 0.12]))
 }
 
 /* le collecteur sous le moteur, le tube dans le tunnel, le résonateur, le
