@@ -1,0 +1,896 @@
+/* Direction C « Cockpit » : le site est le système embarqué de la GT86.
+   Toutes les teintes viennent de l'intro (habitacle, écran AMP, chrome). */
+.racine {
+  --nuit: #08070f;
+  --planche: #1a1022;
+  --alcantara: #140c20;
+  --neon: #a86bff;
+  --neon-2: #8a5cff;
+  --lueur: #9a4dff;
+  --lcd: #ffd9f6;
+  --texte: #f3daff;
+  --cadre-a: #b47ad2;
+  --cadre-b: #7a3fa2;
+  --ecran: #0e0a1d;
+  --maison: #8f5cff;
+  --travail: #e561d3;
+  --acier: #eef4ff;
+  --acier-bleu: #8fb0ff;
+  --led: #bfe0ff;
+  --rouge: #ff3b30;
+  --vert: #3bd06b;
+  --ambre: #ffab2e;
+  --oblique: polygon(12px 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+  --chrome: linear-gradient(180deg, #ffffff 0%, #b4c6ee 30%, #ffffff 47%, #1b2754 50%, #3c5aa8 60%, #8fb0ff 82%, #e4eeff 100%);
+
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--nuit);
+  color: var(--texte);
+  font-family: var(--f-mono), monospace;
+  z-index: 10;
+}
+
+/* ---------- typographie partagée ---------- */
+.chrome {
+  font-family: var(--f-vitesse), sans-serif;
+  font-style: italic;
+  font-weight: 800;
+  font-stretch: 125%;
+  text-transform: uppercase;
+  line-height: 0.92;
+  background: var(--chrome);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 1px 0 #0c1430) drop-shadow(0 0 22px rgba(96, 140, 255, 0.45));
+}
+.tm {
+  font-size: 0.28em;
+  vertical-align: super;
+  font-style: normal;
+}
+.jp {
+  font-family: var(--f-jp), sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  color: var(--acier-bleu);
+}
+.mention {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: rgba(243, 218, 255, 0.55);
+}
+.titre {
+  font-family: var(--f-vitesse), sans-serif;
+  font-style: italic;
+  font-weight: 700;
+  font-stretch: 125%;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ============================================================
+   DESKTOP : la planche de bord vue depuis le siège conducteur
+   ============================================================ */
+.pareBrise {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 46%;
+  background: url("/da/c/3-rue-nuit.jpg") center 62% / cover no-repeat;
+  filter: saturate(0.8) brightness(0.55);
+}
+.pareBrise::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 90% at 50% 120%, transparent 30%, var(--nuit) 80%),
+    linear-gradient(180deg, rgba(8, 7, 15, 0.2), rgba(8, 7, 15, 0) 40%, var(--nuit) 100%);
+}
+.grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.18;
+  mix-blend-mode: soft-light;
+  background-image: repeating-radial-gradient(circle at 17% 32%, #fff 0 1px, transparent 1px 3px);
+}
+.vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.6) 100%);
+}
+
+.bandeauHaut {
+  position: absolute;
+  top: 22px;
+  left: 32px;
+  right: 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  z-index: 3;
+}
+.bandeauHaut a {
+  color: inherit;
+  text-decoration: none;
+}
+.bandeauHaut a:hover {
+  color: var(--texte);
+}
+
+.enseigne {
+  position: absolute;
+  top: 64px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  z-index: 3;
+}
+.enseigne h1 {
+  font-size: 64px;
+  margin: 0;
+}
+.enseigne .jp {
+  display: block;
+  margin-top: 10px;
+  font-size: 13px;
+}
+.enseigne .role {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 5px 22px;
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--acier);
+  background: linear-gradient(180deg, #1c2a58, #0c1430);
+  clip-path: var(--oblique);
+}
+
+/* la casquette de la planche : courbe sombre où s'encastrent les cadrans */
+.planche {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 64%;
+  background:
+    radial-gradient(60% 40% at 50% 0%, rgba(168, 107, 255, 0.14), transparent 70%),
+    linear-gradient(180deg, var(--planche), var(--alcantara) 40%, #07050c);
+  border-top-left-radius: 50% 90px;
+  border-top-right-radius: 50% 90px;
+  box-shadow: 0 -1px 0 rgba(183, 155, 255, 0.35), 0 -30px 80px rgba(154, 77, 255, 0.12);
+  display: grid;
+  grid-template-columns: 300px 640px 300px;
+  justify-content: center;
+  align-items: start;
+  gap: 36px;
+  padding-top: 54px;
+}
+
+/* ---------- cadrans ---------- */
+.cadran {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding-top: 18px;
+}
+.cadran svg {
+  width: 268px;
+  height: 268px;
+  filter: drop-shadow(0 0 18px rgba(168, 107, 255, 0.28));
+}
+.cadranLegende {
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--lcd);
+}
+.cadranLegende b {
+  display: block;
+  font-family: var(--f-vitesse), sans-serif;
+  font-style: italic;
+  font-stretch: 125%;
+  font-size: 20px;
+  letter-spacing: 0.04em;
+  color: var(--acier);
+  margin-top: 4px;
+}
+.aiguille {
+  transition: transform 0.7s cubic-bezier(0.3, 1.4, 0.5, 1);
+  transform-origin: 100px 100px;
+}
+
+/* ---------- écran média (dalle 2:1 façon AMP) ---------- */
+.ecranCadre {
+  padding: 10px;
+  background: linear-gradient(180deg, var(--cadre-a), var(--cadre-b));
+  border-radius: 14px;
+  box-shadow: 0 0 0 2px #05030a, 0 0 40px rgba(169, 95, 208, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+.ecran {
+  height: 344px;
+  background: radial-gradient(120% 120% at 20% 0%, #2b1040, var(--ecran) 60%);
+  border-radius: 6px;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: 30px 1fr 34px;
+  position: relative;
+}
+.ecran::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 3px);
+}
+.ecranTitre {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  background: linear-gradient(90deg, #5a2378, #a95fd0, #5a2378);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #fff;
+}
+.ecranCorps {
+  padding: 14px 16px;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--cadre-b) transparent;
+}
+.ecranPied {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid rgba(180, 122, 210, 0.35);
+}
+.onglet {
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: rgba(255, 217, 246, 0.6);
+  background: transparent;
+  border: 0;
+  border-right: 1px solid rgba(180, 122, 210, 0.2);
+  cursor: pointer;
+}
+.onglet:last-child {
+  border-right: 0;
+}
+.onglet[aria-selected="true"] {
+  color: #fff;
+  background: linear-gradient(180deg, rgba(169, 95, 208, 0.45), rgba(90, 35, 120, 0.2));
+  text-shadow: 0 0 8px var(--travail);
+}
+
+/* media : liste de pistes à gauche, fiche à droite */
+.media {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 16px;
+  height: 100%;
+}
+.pistes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+}
+.piste {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  width: 100%;
+  padding: 5px 6px;
+  font: inherit;
+  text-align: left;
+  color: var(--lcd);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.piste span:first-child {
+  color: rgba(255, 217, 246, 0.45);
+}
+.piste[aria-current="true"] {
+  background: rgba(229, 97, 211, 0.18);
+  color: #fff;
+  box-shadow: inset 2px 0 0 var(--travail);
+}
+.groupe {
+  margin: 8px 0 4px;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--cadre-a);
+}
+.fiche h2 {
+  margin: 0 0 4px;
+  font-size: 30px;
+}
+.fiche .jp {
+  font-size: 11px;
+}
+.fiche p {
+  margin: 12px 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--texte);
+}
+.tuiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin: 10px 0;
+}
+.tuile {
+  padding: 6px 8px;
+  background: rgba(14, 10, 29, 0.7);
+  border: 1px solid rgba(180, 122, 210, 0.35);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--cadre-a);
+  text-transform: uppercase;
+}
+.tuile b {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  letter-spacing: 0;
+  color: var(--lcd);
+  text-transform: none;
+}
+.puces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.puce {
+  padding: 2px 7px;
+  font-size: 10px;
+  color: var(--lcd);
+  border: 1px solid rgba(255, 217, 246, 0.25);
+  border-radius: 999px;
+}
+
+/* nav : la route GPS du parcours */
+.route {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 22px;
+  position: relative;
+}
+.route::before {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 6px;
+  bottom: 6px;
+  width: 3px;
+  background: linear-gradient(180deg, #b78aff, #ff64d2);
+  box-shadow: 0 0 10px #ff64d2;
+}
+.etape {
+  position: relative;
+  padding: 0 0 12px 8px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.etape::before {
+  content: "";
+  position: absolute;
+  left: -21px;
+  top: 3px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--maison);
+  box-shadow: 0 0 0 3px var(--ecran), 0 0 10px var(--maison);
+}
+.etapeTravail::before {
+  background: var(--travail);
+  box-shadow: 0 0 0 3px var(--ecran), 0 0 10px var(--travail);
+}
+.etape b {
+  color: #fff;
+}
+.etape small {
+  display: block;
+  font-size: 10px;
+  color: var(--cadre-a);
+  letter-spacing: 0.1em;
+}
+
+/* pilote et radio */
+.spec {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 4px 12px;
+  margin: 0 0 12px;
+  font-size: 12px;
+}
+.spec dt {
+  color: var(--cadre-a);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.spec dd {
+  margin: 0;
+  color: var(--lcd);
+}
+.radio {
+  display: grid;
+  gap: 8px;
+}
+.station {
+  display: grid;
+  grid-template-columns: 70px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  color: var(--lcd);
+  text-decoration: none;
+  border: 1px solid rgba(180, 122, 210, 0.35);
+  background: rgba(14, 10, 29, 0.6);
+}
+.station:hover {
+  border-color: var(--travail);
+  box-shadow: 0 0 16px rgba(229, 97, 211, 0.3);
+}
+.station span:first-child {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--cadre-a);
+}
+
+/* ---------- console centrale : les boutons-voyants ---------- */
+.console {
+  position: absolute;
+  left: 50%;
+  bottom: 40px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 14px;
+  z-index: 3;
+}
+.bouton {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 26px;
+  font-family: var(--f-vitesse), sans-serif;
+  font-style: italic;
+  font-weight: 700;
+  font-stretch: 125%;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--acier);
+  background: linear-gradient(180deg, #1c2a58, #0c1430);
+  border: 0;
+  clip-path: var(--oblique);
+  cursor: pointer;
+}
+.bouton:hover,
+.bouton[aria-pressed="true"] {
+  background: linear-gradient(180deg, #3c5aa8, #1b2754);
+}
+.voyant {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2a2340;
+}
+.bouton[aria-pressed="true"] .voyant {
+  background: var(--led);
+  box-shadow: 0 0 8px var(--led), 0 0 16px var(--neon);
+}
+.temoins {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 18px;
+  z-index: 3;
+}
+.temoin {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.temoin i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+/* ============================================================
+   MOBILE : l'appli compagnon de la voiture, au pouce
+   ============================================================ */
+.tel {
+  position: fixed;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--nuit);
+  padding-bottom: 96px;
+  -webkit-tap-highlight-color: transparent;
+}
+.telEntete {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px 10px;
+  background: linear-gradient(180deg, var(--nuit) 60%, transparent);
+}
+.connexion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--lcd);
+}
+.connexion i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--vert);
+  box-shadow: 0 0 10px var(--vert);
+  animation: pulse 2.4s ease-in-out infinite;
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* l'écran-titre de l'intro, recadré à la verticale entre deux obliques */
+.titreEcran {
+  position: relative;
+  margin: 0 16px;
+  height: 360px;
+  clip-path: polygon(0 6%, 100% 0, 100% 94%, 0 100%);
+  background: url("/da/c/1-ciel.jpg") 58% center / cover no-repeat;
+  display: grid;
+  align-content: end;
+  padding: 0 18px 44px;
+}
+.titreEcran::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(8, 7, 15, 0) 30%, rgba(8, 7, 15, 0.92));
+}
+.titreEcran > * {
+  position: relative;
+}
+.titreEcran h1 {
+  margin: 0;
+  font-size: 46px;
+}
+.titreEcran .jp {
+  margin-top: 8px;
+  font-size: 11px;
+}
+.roleTel {
+  justify-self: start;
+  margin-top: 12px;
+  padding: 4px 16px;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--acier);
+  background: linear-gradient(180deg, #1c2a58, #0c1430);
+  clip-path: var(--oblique);
+}
+
+.rubrique {
+  padding: 26px 16px 0;
+}
+.rubriqueTete {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 12px;
+}
+.rubriqueTete h2 {
+  margin: 0;
+  font-size: 22px;
+  color: var(--acier);
+}
+
+/* garage : cartes en carrousel, une par projet, au glissé */
+.jauge {
+  display: flex;
+  gap: 4px;
+  margin: 0 16px 12px;
+}
+.jauge span {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(168, 107, 255, 0.2);
+  transition: background 0.25s;
+}
+.jauge span[data-actif="true"] {
+  background: var(--neon);
+  box-shadow: 0 0 8px var(--neon);
+}
+.garage {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 0 16px 6px;
+  scrollbar-width: none;
+}
+.garage::-webkit-scrollbar {
+  display: none;
+}
+.carte {
+  flex: 0 0 82%;
+  scroll-snap-align: center;
+  min-height: 330px;
+  padding: 18px;
+  border-radius: 18px;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(90% 60% at 100% 0%, rgba(229, 97, 211, 0.28), transparent 60%),
+    radial-gradient(80% 60% at 0% 100%, rgba(143, 92, 255, 0.3), transparent 60%),
+    linear-gradient(160deg, #2b1040, #0e0a1d);
+  border: 1px solid rgba(180, 122, 210, 0.4);
+  display: grid;
+  align-content: space-between;
+}
+.carteFormation {
+  background:
+    radial-gradient(90% 60% at 100% 0%, rgba(143, 176, 255, 0.25), transparent 60%),
+    linear-gradient(160deg, #1b2754, #0c1430);
+  border-color: rgba(143, 176, 255, 0.4);
+}
+.carteJp {
+  position: absolute;
+  right: -8px;
+  top: 40px;
+  writing-mode: vertical-rl;
+  font-family: var(--f-jp), sans-serif;
+  font-size: 54px;
+  font-weight: 500;
+  color: rgba(255, 217, 246, 0.07);
+  pointer-events: none;
+}
+.carteHaut {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--cadre-a);
+}
+.carte h3 {
+  margin: 18px 0 8px;
+  font-size: 34px;
+}
+.carte p {
+  margin: 0 0 14px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--texte);
+}
+.etatTel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.etatTel i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--vert);
+  box-shadow: 0 0 6px var(--vert);
+}
+.indice {
+  margin: 10px 16px 0;
+  text-align: center;
+}
+
+/* trajet : la route GPS verticale */
+.trajet {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.troncon {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 10px;
+}
+.troncon::before {
+  content: "";
+  justify-self: center;
+  width: 3px;
+  background: linear-gradient(180deg, #b78aff, rgba(183, 138, 255, 0.2));
+  border-radius: 2px;
+  grid-row: 1;
+  grid-column: 1;
+  margin-top: 18px;
+}
+.troncon:last-child::before {
+  visibility: hidden;
+}
+.borne {
+  grid-row: 1;
+  grid-column: 1;
+  justify-self: center;
+  width: 14px;
+  height: 14px;
+  margin-top: 4px;
+  border-radius: 50%;
+  border: 3px solid var(--nuit);
+  background: var(--maison);
+  box-shadow: 0 0 10px var(--maison);
+}
+.borneTravail {
+  background: var(--travail);
+  box-shadow: 0 0 10px var(--travail);
+}
+.tronconCorps {
+  grid-column: 2;
+  padding-bottom: 18px;
+}
+.tronconCorps small {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--cadre-a);
+}
+.tronconCorps b {
+  display: block;
+  margin: 2px 0;
+  font-family: var(--f-vitesse), sans-serif;
+  font-style: italic;
+  font-stretch: 125%;
+  font-size: 17px;
+  color: #fff;
+}
+.tronconCorps span {
+  font-size: 12px;
+  color: var(--lcd);
+}
+.tronconCorps details {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(243, 218, 255, 0.8);
+}
+.tronconCorps summary {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--neon);
+  cursor: pointer;
+}
+
+/* pilote : compteurs ronds en grille */
+.compteurs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.compteur {
+  padding: 14px;
+  border-radius: 16px;
+  background: linear-gradient(160deg, #1a1022, #0e0a1d);
+  border: 1px solid rgba(180, 122, 210, 0.3);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--cadre-a);
+}
+.compteur b {
+  display: block;
+  margin-top: 6px;
+  font-size: 13px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--lcd);
+}
+.texteTel {
+  margin: 14px 0 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--texte);
+}
+
+/* contact : grosses touches au pouce */
+.touches {
+  display: grid;
+  gap: 10px;
+}
+.touche {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 60px;
+  padding: 0 20px;
+  font-family: var(--f-vitesse), sans-serif;
+  font-style: italic;
+  font-weight: 700;
+  font-stretch: 125%;
+  font-size: 16px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--acier);
+  text-decoration: none;
+  background: linear-gradient(180deg, #1c2a58, #0c1430);
+  clip-path: var(--oblique);
+}
+.touche small {
+  font-family: var(--f-mono), monospace;
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: none;
+  color: var(--acier-bleu);
+}
+.touche:active {
+  background: linear-gradient(180deg, #3c5aa8, #1b2754);
+}
+.surPc {
+  margin: 22px 16px 0;
+  text-align: center;
+}
+
+/* le dock : quatre touches au pouce, toujours là */
+.dock {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 6;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  padding: 8px;
+  border-radius: 22px;
+  background: rgba(20, 12, 32, 0.86);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(180, 122, 210, 0.35);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 24px rgba(154, 77, 255, 0.18);
+}
+.dockTouche {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 8px 0;
+  font: inherit;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 217, 246, 0.55);
+  background: none;
+  border: 0;
+  border-radius: 14px;
+}
+.dockTouche svg {
+  width: 22px;
+  height: 22px;
+}
+.dockTouche[aria-current="true"] {
+  color: #fff;
+  background: rgba(168, 107, 255, 0.2);
+}
+.dockTouche[aria-current="true"] svg {
+  filter: drop-shadow(0 0 6px var(--neon));
+}

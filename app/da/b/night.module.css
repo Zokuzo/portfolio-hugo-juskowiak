@@ -1,0 +1,340 @@
+/* Night drive : la DA de l'intro GT86 prolongée après l'habitacle.
+   NUIT #08070f, lueur des feux #9a4dff, chrome bleu acier, obliques -12°. */
+.page {
+  --nuit: #08070f;
+  --nuit-2: #141221;
+  --lueur: #9a4dff;
+  --neon: #a86bff;
+  --rose: #e561d3;
+  --sodium: #ffca7a;
+  --acier: #eef4ff;
+  --acier-bleu: #8fb0ff;
+  --bleu-nuit: #0c1430;
+  --rouge: #e60302;
+  --oblique: -12deg;
+  --chrome: linear-gradient(180deg, #ffffff 0%, #b4c6ee 30%, #ffffff 47%, #1b2754 50%, #3c5aa8 60%, #8fb0ff 82%, #e4eeff 100%);
+  background: var(--nuit);
+  color: var(--acier);
+  font-family: var(--f-vitesse), sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* ---------- cinéma : bandes, grain, mentions mono ---------- */
+.bandeHaut,
+.bandeBas {
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  height: 44px;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  font: 10px/1 var(--f-mono), monospace;
+  letter-spacing: 0.18em;
+  color: rgba(238, 244, 255, 0.55);
+}
+.bandeHaut { top: 0; }
+.bandeBas { bottom: 0; }
+.bandeHaut span:first-child { color: var(--rouge); }
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 19;
+  pointer-events: none;
+  opacity: 0.18;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23g)'/></svg>");
+}
+.mention {
+  font: 10px/1.4 var(--f-mono), monospace;
+  letter-spacing: 0.18em;
+  color: rgba(238, 244, 255, 0.55);
+  text-transform: lowercase;
+}
+
+/* ---------- hub : la rue de nuit, le nom, les panneaux ---------- */
+.hub {
+  position: relative;
+  height: 100vh;
+  min-height: 760px;
+  display: grid;
+  grid-template-columns: 1fr 560px;
+  align-items: center;
+  padding: 44px 72px;
+  gap: 48px;
+}
+.hubFond {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 30% 60%;
+  filter: saturate(0.9) contrast(1.05);
+}
+.hubVoile {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 45% at 22% 62%, rgba(154, 77, 255, 0.28), transparent 70%),
+    linear-gradient(90deg, rgba(8, 7, 15, 0.82) 0%, rgba(8, 7, 15, 0.35) 45%, rgba(8, 7, 15, 0.9) 70%),
+    linear-gradient(0deg, var(--nuit) 0%, transparent 30%);
+}
+.hubTitre { position: relative; align-self: end; padding-bottom: 72px; }
+.chrome {
+  font-family: var(--f-vitesse), sans-serif;
+  font-style: italic;
+  font-weight: 800;
+  font-stretch: 125%;
+  font-size: clamp(44px, 6.6vw, 108px);
+  line-height: 0.92;
+  margin: 14px 0 0;
+  background: var(--chrome);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 1px 0 var(--bleu-nuit)) drop-shadow(0 0 22px rgba(96, 140, 255, 0.45));
+}
+.chrome sup { font-size: 0.18em; vertical-align: top; margin-left: 0.3em; }
+.kata {
+  font-family: var(--f-jp), sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  color: var(--acier-bleu);
+  margin: 18px 0 0;
+  font-size: 18px;
+}
+.role {
+  font-style: italic;
+  font-weight: 700;
+  font-stretch: 125%;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 15px;
+  margin-top: 26px;
+  color: var(--acier);
+  border-left: 3px solid var(--lueur);
+  padding-left: 14px;
+}
+
+.panneaux {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.panneau {
+  display: grid;
+  grid-template-columns: 64px 1fr auto;
+  grid-template-rows: auto auto;
+  align-items: baseline;
+  column-gap: 18px;
+  padding: 18px 34px 18px 30px;
+  text-decoration: none;
+  color: var(--acier);
+  background: linear-gradient(90deg, rgba(28, 42, 88, 0.85), rgba(12, 20, 48, 0.85));
+  clip-path: polygon(22px 0, 100% 0, calc(100% - 22px) 100%, 0 100%);
+  box-shadow: inset 0 1px 0 rgba(143, 176, 255, 0.35);
+  transition: transform 0.25s ease, background 0.25s ease;
+}
+.panneau:nth-child(2) { margin-left: 24px; }
+.panneau:nth-child(3) { margin-left: 48px; }
+.panneau:nth-child(4) { margin-left: 72px; }
+.panneau:hover {
+  transform: translateX(-14px);
+  background: linear-gradient(90deg, #5a2378, #a95fd0 55%, #5a2378);
+}
+.panneauNum {
+  grid-row: span 2;
+  font: italic 800 40px/1 var(--f-vitesse);
+  font-stretch: 125%;
+  color: var(--lueur);
+  text-shadow: 0 0 18px rgba(154, 77, 255, 0.8);
+}
+.panneau:hover .panneauNum { color: #fff; }
+.panneauNom {
+  font-style: italic;
+  font-weight: 800;
+  font-stretch: 125%;
+  font-size: 30px;
+  letter-spacing: 0.04em;
+}
+.panneauJp { font-family: var(--f-jp); font-size: 13px; letter-spacing: 0.3em; color: var(--acier-bleu); }
+.panneauLeg {
+  grid-column: 2 / 4;
+  font: 10px/1 var(--f-mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(238, 244, 255, 0.55);
+}
+
+/* ---------- chapitres ---------- */
+.chapitre {
+  position: relative;
+  padding: 120px 72px 96px;
+  border-top: 1px solid rgba(154, 77, 255, 0.25);
+}
+.enTete { display: flex; align-items: baseline; gap: 22px; margin-bottom: 48px; }
+.enTeteNum { font: italic 800 22px var(--f-vitesse); color: var(--lueur); }
+.enTeteNom {
+  margin: 0;
+  font-style: italic;
+  font-weight: 800;
+  font-stretch: 125%;
+  font-size: 84px;
+  line-height: 0.9;
+  background: var(--chrome);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.enTeteJp { font-family: var(--f-jp); letter-spacing: 0.32em; color: var(--acier-bleu); font-size: 16px; }
+
+/* courses : enseignes au néon */
+.enseignes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+.enseigne {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 300px;
+  padding: 28px 28px 24px;
+  text-decoration: none;
+  color: var(--acier);
+  background: linear-gradient(160deg, #150a20, #0e0a1d 70%);
+  border: 1px solid rgba(180, 122, 210, 0.35);
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.enseigne:nth-child(4),
+.enseigne:nth-child(5) { min-height: 220px; }
+.enseigne:hover {
+  border-color: var(--neon);
+  box-shadow: 0 0 0 1px var(--neon), 0 0 40px rgba(154, 77, 255, 0.35);
+}
+.enseigneCourante { border-color: var(--rose); }
+.enseigneCourante::after {
+  content: "EN SERVICE";
+  position: absolute;
+  top: 18px;
+  right: -34px;
+  transform: rotate(38deg);
+  background: var(--rouge);
+  color: #fff;
+  font: 700 9px/1 var(--f-mono);
+  letter-spacing: 0.2em;
+  padding: 5px 40px;
+}
+.enseigneJp {
+  position: absolute;
+  right: 18px;
+  bottom: 10px;
+  writing-mode: vertical-rl;
+  font-family: var(--f-jp);
+  font-weight: 500;
+  font-size: 44px;
+  letter-spacing: 0.1em;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(168, 107, 255, 0.55);
+  text-shadow: 0 0 24px rgba(168, 107, 255, 0.35);
+}
+.enseigneMeta, .enseigneEtat {
+  font: 10px/1.4 var(--f-mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(238, 244, 255, 0.55);
+}
+.enseigneEtat { margin-top: auto; color: var(--sodium); }
+.enseigneNom {
+  font-style: italic;
+  font-weight: 800;
+  font-stretch: 125%;
+  font-size: 40px;
+  line-height: 0.95;
+  color: #fff;
+  text-shadow: 0 0 14px rgba(229, 97, 211, 0.55);
+  max-width: 80%;
+}
+.enseigneSous { font-size: 15px; line-height: 1.45; color: rgba(238, 244, 255, 0.78); max-width: 78%; }
+
+/* trajet : bornes kilométriques le long d'une route */
+.route {
+  list-style: none;
+  margin: 0;
+  padding: 36px 0 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 40px 28px;
+  position: relative;
+  background:
+    linear-gradient(90deg, transparent 0 50%, var(--sodium) 50% 100%) 0 12px / 40px 2px repeat-x;
+}
+.borne { display: flex; flex-direction: column; gap: 6px; padding-top: 22px; position: relative; }
+.borne::before {
+  content: "";
+  position: absolute;
+  top: -34px;
+  left: 0;
+  width: 14px;
+  height: 14px;
+  transform: skewX(var(--oblique));
+  background: var(--lueur);
+  box-shadow: 0 0 16px var(--lueur);
+}
+.borneEtude::before { background: var(--acier-bleu); box-shadow: 0 0 16px var(--acier-bleu); }
+.bornePeriode { font: 11px/1 var(--f-mono); letter-spacing: 0.14em; color: var(--sodium); }
+.borneNom { font-style: italic; font-weight: 800; font-stretch: 125%; font-size: 26px; }
+.borneFonction { font-size: 14px; line-height: 1.4; color: rgba(238, 244, 255, 0.7); }
+
+/* pilote */
+.piloteGrille { display: grid; grid-template-columns: 1.1fr 1fr; gap: 56px; align-items: start; }
+.habitacle {
+  margin: 0;
+  clip-path: polygon(48px 0, 100% 0, calc(100% - 48px) 100%, 0 100%);
+  box-shadow: 0 0 60px rgba(154, 77, 255, 0.3);
+}
+.habitacle img { display: block; width: 100%; height: auto; }
+.piloteCorps { font-size: 24px; line-height: 1.35; font-weight: 600; margin: 0 0 18px; }
+.piloteTexte { font-size: 15px; line-height: 1.6; color: rgba(238, 244, 255, 0.72); margin: 0 0 14px; }
+.jauges { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 26px 0 0; }
+.jauges div { border-top: 2px solid var(--neon); padding-top: 8px; }
+.jauges dt { font: 10px/1 var(--f-mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--acier-bleu); }
+.jauges dd { margin: 6px 0 0; font-size: 14px; line-height: 1.4; }
+
+/* radio : la plaque comme signature */
+.radio { padding-bottom: 140px; }
+.plaque {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 56px 18px;
+  background: linear-gradient(180deg, #fbf6ea, #e9e0cc);
+  border-radius: 12px;
+  border: 3px solid #222;
+  box-shadow: 0 0 0 6px #0b0a12, 0 0 60px rgba(154, 77, 255, 0.45);
+  color: #13235e;
+  margin-bottom: 40px;
+}
+.plaqueEtat { font: italic 600 20px/1 "Brush Script MT", cursive; color: #b3161b; }
+.plaqueTexte { font-weight: 800; font-size: 88px; line-height: 1; letter-spacing: 0.04em; font-stretch: 100%; }
+.frequences { list-style: none; padding: 0; margin: 0 0 40px; display: flex; gap: 14px; flex-wrap: wrap; }
+.bouton {
+  display: inline-block;
+  padding: 16px 34px;
+  text-decoration: none;
+  font-style: italic;
+  font-weight: 700;
+  font-stretch: 125%;
+  letter-spacing: 0.12em;
+  font-size: 14px;
+  color: var(--acier);
+  background: linear-gradient(180deg, #1c2a58, var(--bleu-nuit));
+  clip-path: polygon(12px 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+}
+.bouton span { color: var(--acier-bleu); margin-right: 10px; text-transform: uppercase; }
+.bouton:hover { background: linear-gradient(90deg, #5a2378, #a95fd0, #5a2378); }
