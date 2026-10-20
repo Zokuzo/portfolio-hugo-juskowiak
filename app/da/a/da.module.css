@@ -177,7 +177,7 @@
   position: relative;
   padding: 16px 18px 14px;
   background: rgba(8, 7, 15, 0.6);
-  border-left: 3px solid var(--neon);
+  border: 1px solid color-mix(in srgb, var(--neon) 45%, transparent);
   text-decoration: none;
   color: inherit;
   transition: background 0.15s;
@@ -203,7 +203,7 @@
 .licence dd { margin: 4px 0 0; font-style: italic; font-weight: 700; font-stretch: 115%; font-size: 22px; text-transform: uppercase; }
 
 .radio { display: flex; flex-direction: column; gap: 14px; }
-.frequence { display: flex; justify-content: space-between; align-items: center; padding: 18px 24px; background: rgba(8, 7, 15, 0.6); border-left: 3px solid var(--rose); text-decoration: none; color: inherit; }
+.frequence { display: flex; justify-content: space-between; align-items: center; padding: 18px 24px; background: rgba(8, 7, 15, 0.6); border: 1px solid color-mix(in srgb, var(--rose) 45%, transparent); text-decoration: none; color: inherit; }
 .frequence:hover { background: rgba(229, 97, 211, 0.16); }
 .frequenceValeur { font-style: italic; font-weight: 700; font-stretch: 115%; font-size: 22px; }
 
@@ -317,7 +317,7 @@
 .permisImage { height: 180px; margin: -18px -18px 16px; background: url(/da/a/2-chute-obliques.jpg) center / cover; }
 .permis dd { margin: 3px 0 12px; font-style: italic; font-weight: 700; font-stretch: 115%; font-size: 19px; text-transform: uppercase; }
 
-.appel { display: block; margin-bottom: 12px; padding: 20px 18px; min-height: 64px; background: rgba(43, 16, 64, 0.7); border-left: 3px solid var(--rose); text-decoration: none; color: inherit; }
+.appel { display: block; margin-bottom: 12px; padding: 20px 18px; min-height: 64px; background: rgba(43, 16, 64, 0.7); border: 1px solid color-mix(in srgb, var(--rose) 45%, transparent); text-decoration: none; color: inherit; }
 .appel b { display: block; margin-top: 4px; font-style: italic; font-weight: 700; font-stretch: 110%; font-size: 18px; color: var(--acier); overflow-wrap: anywhere; }
 .pc { margin-top: 24px; text-align: center; }
 
