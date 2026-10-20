@@ -30,6 +30,14 @@ const PAS = 14
    Un uniforme et une matrice : aucun programme ne se recompile */
 export const decalageNuages = { sol: 0, plafond: 0 }
 
+/* LES TRAÎNÉES (#56, lot 9) : quand la voiture tombe vite, le bruit des
+   nappes s'étire (`etirement`, 0 : intact) et glisse de `defile` mètres
+   le long de l'axe de visée horizontal de la caméra : à l'écran, les
+   masses filent vers le bas en traînées. Deux uniformes : rien ne se
+   recompile, et à 0 l'image est celle de toujours */
+export const fileNuages = { etirement: 0, defile: 0 }
+const visee = new THREE.Vector3()
+
 export default function MerDeNuages({
   soleil,
   crete = "#ffce8f",
@@ -68,6 +76,9 @@ export default function MerDeNuages({
           uSens: { value: sens === "sol" ? 1 : -1 },
           uCouverture: { value: couverture },
           uEchelle: { value: echelle },
+          uAxeFile: { value: new THREE.Vector2(0, -1) },
+          uEtirement: { value: 0 },
+          uDefile: { value: 0 },
         },
         vertexShader: /* glsl */ `
           varying vec3 vMonde;
@@ -82,6 +93,7 @@ export default function MerDeNuages({
           uniform vec3 uCrete; uniform vec3 uOmbre; uniform vec3 uLoin;
           uniform float uSommet; uniform float uFond;
           uniform float uSens; uniform float uCouverture; uniform float uEchelle;
+          uniform vec2 uAxeFile; uniform float uEtirement; uniform float uDefile;
           varying vec3 vMonde;
 
           float hash(vec2 p) {
@@ -128,12 +140,18 @@ export default function MerDeNuages({
               ? smoothstep(p.y, p.y + 1.2, niveau)
               : smoothstep(niveau - 1.2, niveau, p.y);
           }
+          /* le point de bruit lu : comprimé le long de l'axe de fuite
+             (autour de la caméra) et glissé, les traînées */
+          vec2 file(vec2 xz) {
+            float le_long = dot(xz - cameraPosition.xz, uAxeFile);
+            return xz - uAxeFile * (le_long * uEtirement / (1.0 + uEtirement) - uDefile);
+          }
           float densite(vec3 p) {
-            return epaisseur(fbm(p.xz * uEchelle + gVent), p);
+            return epaisseur(fbm(file(p.xz) * uEchelle + gVent), p);
           }
           /* la sonde solaire n'a pas besoin du détail fin */
           float densiteGrossiere(vec3 p) {
-            return epaisseur(fbmGrossier(p.xz * uEchelle + gVent), p);
+            return epaisseur(fbmGrossier(file(p.xz) * uEchelle + gVent), p);
           }
           void main() {
             vec2 q = vMonde.xz * uEchelle * 0.6;
@@ -187,6 +205,10 @@ export default function MerDeNuages({
     const { uniforms } = ref.current
     const decalage = decalageNuages[sens]
     uniforms.uTemps.value = etat.clock.elapsedTime
+    etat.camera.getWorldDirection(visee)
+    if (Math.hypot(visee.x, visee.z) > 1e-3) uniforms.uAxeFile.value.set(visee.x, visee.z).normalize()
+    uniforms.uEtirement.value = fileNuages.etirement
+    uniforms.uDefile.value = fileNuages.defile
     uniforms.uSommet.value = sommet + decalage
     uniforms.uFond.value = fond + decalage
     if (nappe.current) nappe.current.position.y = sommet + decalage

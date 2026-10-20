@@ -1,6 +1,6 @@
 "use client"
 
-import { useLayoutEffect, useMemo, useRef, type MutableRefObject } from "react"
+import { useLayoutEffect, useMemo, useRef, type MutableRefObject, type RefObject } from "react"
 import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber"
 import { useGLTF, useTexture } from "@react-three/drei"
 import * as THREE from "three"
@@ -78,6 +78,22 @@ const POUSSIERE_DOUCE = { duree: POUSSIERE_DUREE, taille: 3.4, souffle: 0.5, hau
 const POUSSIERE: [number, number][] = [
   [1.15, 1.9], [-1.15, 1.9], [1.3, 0.2], [-1.3, 0.2], [1.15, -1.6], [-1.15, -1.6],
 ]
+
+/* L'IMPACT de la nouvelle chute (#56, lot 9 : les bouffées rondes
+   faisaient « boules blanches ») : une nappe de poussière plate et large
+   qui roule au ras du sol vers l'extérieur et se dissipe, des étincelles
+   sous la caisse au toucher, quelques débris. Rien que des sprites du
+   même matériau que la couronne (un seul programme, compilé avant le
+   rideau). Les directions sont fixes (angle d'or) : déterministe */
+const IMPACT = {
+  nappe: { nombre: 26, rayon: [1.2, 7], largeur: [2.6, 8], epaisseur: [0.9, 1.8], duree: 2.4, opacite: 0.34 },
+  etincelles: { nombre: 12, vitesse: [7, 12], montee: 1.6, taille: 0.16, duree: 0.45 },
+  debris: { nombre: 8, vitesse: [2.5, 5], montee: [2.5, 4.5], taille: 0.09, duree: 1.4 },
+}
+const ANGLE_D_OR = Math.PI * (3 - Math.sqrt(5))
+/* une valeur de [a, b] fixe par sprite */
+const parmi = ([a, b]: number[], i: number) => a + (b - a) * ((i * 0.618034) % 1)
+const GRAVITE = 9.81
 
 /* ---- textures partagées, peintes une fois (module client) ------------ */
 
@@ -374,6 +390,7 @@ function VoitureGaree({
 
   const ressort = useRef({ tombe: false, tau: -1 })
   const poussiere = useRef<THREE.Group>(null)
+  const impact = useRef<THREE.Group>(null)
   useFrame((_, delta) => {
     const r = ressort.current
     if (vivant) {
@@ -407,9 +424,11 @@ function VoitureGaree({
         if (assiette.current) assiette.current.rotation.x = 0
       }
     }
-    /* la poussière de l'impact : ouverte par le même ressort */
+    if (impact.current) animeImpact(impact.current, pilotee && !vivant ? r.tau : -1)
+    /* la poussière de l'impact : ouverte par le même ressort (l'ancienne
+       chute seule, la nouvelle a son impact) */
     if (poussiere.current) {
-      const k = r.tau >= 0 ? Math.min(1, r.tau / bouffees.duree) : 1
+      const k = r.tau >= 0 && bouffees === POUSSIERE_DOUCE ? Math.min(1, r.tau / bouffees.duree) : 1
       poussiere.current.visible = k < 1
       if (k < 1) {
         const taille = 0.6 + bouffees.taille * k
@@ -475,8 +494,87 @@ function VoitureGaree({
           </sprite>
         ))}
       </group>
+      <ImpactCache ref={impact} />
     </group>
   )
+}
+
+/* les sprites de l'impact, montés cachés : nappe, étincelles, débris */
+function ImpactCache({ ref }: { ref: RefObject<THREE.Group | null> }) {
+  const { nappe, etincelles, debris } = IMPACT
+  return (
+    <group ref={ref} visible={false}>
+      <group>
+        {Array.from({ length: nappe.nombre }, (_, i) => (
+          <sprite key={i}>
+            <spriteMaterial map={halo()} color="#726a61" transparent opacity={0} depthWrite={false} />
+          </sprite>
+        ))}
+      </group>
+      <group>
+        {Array.from({ length: etincelles.nombre }, (_, i) => (
+          <sprite key={i} scale={etincelles.taille}>
+            <spriteMaterial map={halo()} color="#ffb257" transparent opacity={0} depthWrite={false} blending={THREE.AdditiveBlending} />
+          </sprite>
+        ))}
+      </group>
+      <group>
+        {Array.from({ length: debris.nombre }, (_, i) => (
+          <sprite key={i} scale={debris.taille}>
+            <spriteMaterial map={halo()} color="#2a2622" transparent opacity={0} depthWrite={false} />
+          </sprite>
+        ))}
+      </group>
+    </group>
+  )
+}
+
+/* `depuis` : secondes depuis le toucher (négatif : rien) */
+function animeImpact(groupe: THREE.Group, depuis: number) {
+  const fin = Math.max(IMPACT.nappe.duree, IMPACT.debris.duree)
+  groupe.visible = depuis >= 0 && depuis < fin
+  if (!groupe.visible) return
+  const [nappe, etincelles, debris] = groupe.children
+  nappe.children.forEach((enfant, i) => animeNappe(enfant as THREE.Sprite, i, depuis))
+  etincelles.children.forEach((enfant, i) => animeEtincelle(enfant as THREE.Sprite, i, depuis))
+  debris.children.forEach((enfant, i) => animeDebris(enfant as THREE.Sprite, i, depuis))
+}
+
+const opaciteDe = (sprite: THREE.Sprite, valeur: number) => ((sprite.material as THREE.SpriteMaterial).opacity = valeur)
+
+/* la nappe roule vers l'extérieur, vite puis de moins en moins, s'élargit
+   et s'aplatit au sol, se dissipe */
+function animeNappe(sprite: THREE.Sprite, i: number, depuis: number) {
+  const n = IMPACT.nappe
+  const k = Math.min(1, depuis / n.duree)
+  const roule = 1 - (1 - k) ** 3
+  const angle = i * ANGLE_D_OR
+  const rayon = THREE.MathUtils.lerp(n.rayon[0], parmi(n.rayon, i + 3), roule)
+  sprite.position.set(Math.sin(angle) * rayon * 0.8, 0.12 + 0.3 * roule, Math.cos(angle) * rayon)
+  sprite.scale.set(THREE.MathUtils.lerp(n.largeur[0], n.largeur[1], roule), THREE.MathUtils.lerp(n.epaisseur[0], n.epaisseur[1], roule), 1)
+  opaciteDe(sprite, n.opacite * Math.min(1, depuis / 0.06) * (1 - k) ** 1.6)
+}
+
+/* les étincelles jaillissent sous la caisse, rasantes */
+function animeEtincelle(sprite: THREE.Sprite, i: number, depuis: number) {
+  const e = IMPACT.etincelles
+  const k = depuis / e.duree
+  if (k >= 1) return void opaciteDe(sprite, 0)
+  const angle = i * ANGLE_D_OR
+  const parcours = parmi(e.vitesse, i) * depuis
+  sprite.position.set(Math.sin(angle) * parcours * 0.7, Math.max(0.03, 0.05 + e.montee * depuis - 0.5 * GRAVITE * depuis * depuis), Math.cos(angle) * (0.4 + parcours))
+  opaciteDe(sprite, 1 - k)
+}
+
+/* les débris : des arcs balistiques, éteints au sol */
+function animeDebris(sprite: THREE.Sprite, i: number, depuis: number) {
+  const d = IMPACT.debris
+  const hauteur = 0.1 + parmi(d.montee, i + 1) * depuis - 0.5 * GRAVITE * depuis * depuis
+  if (hauteur < 0 || depuis >= d.duree) return void opaciteDe(sprite, 0)
+  const angle = i * ANGLE_D_OR + 0.9
+  const parcours = parmi(d.vitesse, i + 2) * depuis
+  sprite.position.set(Math.sin(angle) * (0.9 + parcours), hauteur, Math.cos(angle) * (1.2 + parcours))
+  opaciteDe(sprite, 1)
 }
 
 /* LA VOITURE D'ABORD (#42). three trie les opaques par matériau avant de

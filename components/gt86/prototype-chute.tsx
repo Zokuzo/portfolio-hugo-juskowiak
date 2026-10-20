@@ -11,19 +11,22 @@ import { brume, CAM_FINALE, enMondeRepos, POSE_VOITURE } from "./rue"
 import { ASSISE, type Cockpit } from "./habitacle"
 import { CLAQUE, SEUIL_MS, VERRE_T } from "./seuil"
 import { attenueMusique, caleMusique, musiqueEnAttente, tempsMusique } from "./musique-intro"
-import { decalageNuages } from "./mer-de-nuages"
+import { decalageNuages, fileNuages } from "./mer-de-nuages"
 import {
   altitudeCiel,
   attitudeCiel,
   detenteRoues,
   douce,
+  elanPlongee,
   finDeSegment,
   lisCalage,
   lisse,
   nappeDuCiel,
   partitionDe,
   plafondDuCiel,
+  plongee,
   poseRue,
+  progresPlongee,
   segmentDe,
   tempsSimule,
   verticaleCamera,
@@ -331,6 +334,8 @@ export function Chute({
       gl.toneMappingExposure = 1
       decalageNuages.sol = 0
       decalageNuages.plafond = 0
+      fileNuages.etirement = 0
+      fileNuages.defile = 0
       poseBandes(partition().calage, 0)
     }
   }, [etat, vol, voile, scene, gl])
@@ -362,6 +367,7 @@ export function Chute({
     if (v.rue) poseDeLaRue(p, t, v.rue)
     decalageNuages.sol = nappeDuCiel(p, t)
     decalageNuages.plafond = plafondDuCiel(p, t)
+    regleTrainees(p, t)
     if (voitureDuCiel.modele) {
       pendRoues(voitureDuCiel.modele, detenteRoues(tempsSimule(t, p.calage)))
       allumeFeu(voitureDuCiel.modele, segmentDe(p, t))
@@ -384,6 +390,32 @@ export function Chute({
   })
 
   return null
+}
+
+/* LES TRAÎNÉES DES NUAGES (lot 9) : pendant la plongée de l'intro et la
+   chute du plan 5, la mer de nuages s'étire et défile avec la vitesse. Le
+   défilé est un chemin (la plongée parcourue, ou l'altitude perdue depuis
+   « tombe ») : déterministe, il ne recule jamais */
+const TRAINEES = { etirementPlongee: 1.6, defilePlongee: 260, etirementChute: 1.6, defileChute: 1.4 }
+
+function regleTrainees(p: Partition, t: number) {
+  if (t < p.calage.tombe) {
+    fileNuages.etirement = TRAINEES.etirementPlongee * elanPlongee(p, t)
+    fileNuages.defile = TRAINEES.defilePlongee * progresPlongee(p, t)
+    return
+  }
+  const ciel = chute.monde === "ciel"
+  fileNuages.etirement = ciel ? TRAINEES.etirementChute * elanDeChute(p, t) : 0
+  fileNuages.defile = ciel ? TRAINEES.defileChute * (altitudeCiel(p, p.calage.tombe) - altitudeCiel(p, t)) : 0
+}
+
+/* la vitesse de chute du plan 5, de 0 à 1 (1 : VITESSE_PLEINE m/s) ; 0
+   une fois en rue */
+const VITESSE_PLEINE = 55
+function elanDeChute(p: Partition, t: number) {
+  if (t < p.calage.tombe || t >= p.tBascule) return 0
+  const d = 1 / 120
+  return Math.min(1, Math.max(0, (altitudeCiel(p, t - d) - altitudeCiel(p, t + d)) / (2 * d * VITESSE_PLEINE)))
 }
 
 /* la courbe du fondu : lente au départ et à l'arrivée */
@@ -544,6 +576,11 @@ const NETTETE_CHUTE = 5
    descente de la voiture, qui glisse un peu dans le cadre sans que la
    caméra ne passe au-dessus d'elle */
 const OUVERTURE = { ecart: new THREE.Vector3(-8, -1.2, 10.5), fov: 30, suivi: 0.85, depart: 0.8 }
+/* la plongée (lot 9) : la caméra la suit avec `retard` secondes de
+   retard, sa visée avec `retardVisee` : la voiture file vers les nuages
+   et la caméra peine à suivre ; la focale s'ouvre de `fov` degrés au plus
+   fort, le vent la secoue */
+const PLONGEE_CAMERA = { retard: 0.12, retardVisee: 0.03, fov: 16, vent: 0.22 }
 /* la pose du ciel vise l'origine (ciel.tsx) */
 const VISEE_DU_CIEL = new THREE.Vector3()
 
@@ -565,6 +602,11 @@ const ECART_RUE_S = 1.5
 const APPROCHE_S = 2.2
 const FOV_CHUTE = 30
 const FOV_RUE = 34
+/* au plan 5 (lot 9), la vitesse se sent : la focale s'ouvre de FOV_VITESSE
+   degrés à pleine vitesse, le vent secoue la caméra de VENT_CHUTE mètres
+   (au carré de la vitesse, comme la pression) */
+const FOV_VITESSE = 9
+const VENT_CHUTE = 0.18
 /* le point net s'efface sous les nuages : la ville reste nette */
 const FLOU_PLANS = 3
 const FLOU_CHUTE = 2
@@ -668,14 +710,35 @@ function planDOuverture(camera: THREE.PerspectiveCamera, modele: THREE.Object3D,
   const glisse = douce(lisse(0, p.calage.a, t))
   const depart = douce(lisse(0, OUVERTURE.depart, t))
   const altitude = altitudeCiel(p, t)
+  const plonge = plongee(p, t)
   centreDuCiel(modele, point)
   ecart.copy(point).add(OUVERTURE.ecart)
   ecart.y -= altitude
   camera.position.lerpVectors(POSE, ecart, glisse)
-  camera.position.y += OUVERTURE.suivi * depart * altitude
-  /* le ciel visait l'origine : la visée rejoint la voiture qui part */
+  camera.position.y += OUVERTURE.suivi * depart * (altitude - plonge) + plongee(p, t - PLONGEE_CAMERA.retard)
+  /* le ciel visait l'origine : la visée rejoint la voiture qui part, et
+     suit sa plongée de près */
+  point.y -= plonge
   viseOuverture.lerpVectors(VISEE_DU_CIEL, point, depart)
-  cadre(camera, viseOuverture, THREE.MathUtils.lerp(FOV_POSE, OUVERTURE.fov, glisse), NETTETE_CHUTE, FLOU_PLANS * depart)
+  viseOuverture.y += plongee(p, t - PLONGEE_CAMERA.retardVisee)
+  const elan = elanPlongee(p, t)
+  souffle(camera.position, viseOuverture, t, PLONGEE_CAMERA.vent * elan)
+  const fov = THREE.MathUtils.lerp(FOV_POSE, OUVERTURE.fov, glisse) + PLONGEE_CAMERA.fov * elan
+  cadre(camera, viseOuverture, fov, NETTETE_CHUTE, FLOU_PLANS * depart)
+}
+
+/* LE VENT (lot 9) : la caméra tremble à `force` mètres, sur des sinus de
+   fréquences incommensurables (déterministe), plus vite que la secousse
+   de l'impact n'est longue : un bourdonnement, pas un choc */
+const VENT_FREQUENCES = [23, 31, 37, 43]
+
+function souffle(position: THREE.Vector3, visee: THREE.Vector3, t: number, force: number) {
+  if (force <= 0) return
+  const [a, b, c, d] = VENT_FREQUENCES
+  position.x += force * Math.sin(a * t + 0.4) * 0.6
+  position.y += force * Math.sin(b * t + 1.9)
+  visee.x += force * 0.35 * Math.sin(c * t + 2.6)
+  visee.y += force * 0.35 * Math.sin(d * t + 0.8)
 }
 
 /* le repère du plan : l'assiette simulée au milieu du plan (ou, selon
@@ -735,7 +798,9 @@ function suis(camera: THREE.PerspectiveCamera, modele: THREE.Object3D, voiture: 
     camera.position.y += yCamera - altitude
     point.copy(centre)
     point.y += visee - altitude
-    cadre(camera, point, fovDeChute(p, t), NETTETE_CHUTE, FLOU_CHUTE)
+    const elan = elanDeChute(p, t)
+    souffle(camera.position, point, t, VENT_CHUTE * elan * elan)
+    cadre(camera, point, fovDeChute(p, t) + FOV_VITESSE * elan, NETTETE_CHUTE, FLOU_CHUTE)
     return
   }
   /* la rue n'est vue qu'une fois sa voiture montée et mesurée */

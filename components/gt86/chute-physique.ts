@@ -515,17 +515,43 @@ export function finDeSegment(p: Partition, t: number) {
    et la nappe restent où la chute les mène */
 const finIntro = (p: Partition) => p.calage.a
 
+/* LA PLONGÉE de l'intro (lot 9, « on voit la voiture tomber à une vitesse
+   folle, de l'espace, puis elle ralentit ») : de la mise en scène, pas de
+   la physique. Au-dessus de la chute simulée, la voiture descend encore
+   de `hauteur` mètres entre le clic et l'écran coupé, vite au départ
+   (l'exposant tire le pic de vitesse vers le début), à l'arrêt quand le
+   ralenti s'installe. La nappe la suit, mais se creuse de `creux` mètres
+   sous elle au plus fort de la plongée puis remonte à sa rencontre quand
+   elle ralentit (au clic comme à l'écran coupé, elle est à sa place : le
+   clic ne fait rien sauter) ; le plafond, lui, reste où il est et file
+   vers le haut */
+const PLONGEE = { hauteur: 160, exposant: 0.7, creux: 45 }
+
+/* le chemin parcouru par la plongée, de 0 au clic à 1 à l'écran coupé */
+export const progresPlongee = (p: Partition, t: number) => douce(borne(t / p.calage.ecran) ** PLONGEE.exposant)
+
+/* le décalage vertical de la plongée (négatif : elle descend) */
+export const plongee = (p: Partition, t: number) => (t < finIntro(p) ? -PLONGEE.hauteur * progresPlongee(p, t) : 0)
+
+/* la vitesse de la plongée, de 0 à 1 (1 : son pic) */
+export function elanPlongee(p: Partition, t: number) {
+  const d = 1 / 120
+  const vitesse = (plongee(p, t - d) - plongee(p, t + d)) / (2 * d)
+  return Math.min(1, vitesse / ((2.2 * PLONGEE.hauteur) / p.calage.ecran))
+}
+
 /* la remontée du ciel : 0 jusqu'au plan a, puis de quoi finir chaque
    plan à Y_FIN_PLAN, et partir de Y_CHUTE */
 export function decalageCiel(p: Partition, t: number) {
-  if (t < finIntro(p)) return 0
+  if (t < finIntro(p)) return plongee(p, t)
   if (t >= p.calage.tombe) return Y_CHUTE - p.zChute
   return Y_FIN_PLAN - echantillonne(p.z, tempsSimule(finDeSegment(p, t), p.calage), p.kToucher)
 }
 
 /* le décalage vertical de la mer de nuages : jusqu'au plan a, elle
-   descend avec la voiture */
-export const nappeDuCiel = (p: Partition, t: number) => (t < finIntro(p) ? altitudeCiel(p, t) : 0)
+   descend avec la voiture, creusée pendant la plongée */
+export const nappeDuCiel = (p: Partition, t: number) =>
+  t < finIntro(p) ? altitudeCiel(p, t) - PLONGEE.creux * Math.sin(Math.PI * progresPlongee(p, t)) : 0
 
 /* le décalage vertical du plafond de nuages : il monte à la coupe du plan
    a, et encore à celle de « tombe » */
