@@ -7,6 +7,7 @@ import * as THREE from "three"
 import { type Ecran } from "./ecran"
 import { envNuit, halo } from "./rue"
 import { VIOLET_LUEUR } from "./lueurs"
+import { avance } from "./trajet"
 import { LED, PROJECTEUR } from "./leds"
 
 /* L'HABITACLE — ticket #31 : l'habillage gaté aux #23/#26 (combiné violet,
@@ -619,6 +620,28 @@ function Retro() {
    sprites seuls — NUM_POINT_LIGHTS tombe à ZÉRO pour toute la scène, la
    boucle disparaît de chaque shader éclairé — et les spots sous caisse
    passent de 4 à 2 (avant/arrière), la nappe additive porte la flaque. */
+const NAPPE_OPACITE = 0.55
+
+/* le dégradé de la nappe : décroissance douce sans coude (le cran à 0,4
+   de halo() dessinait un bord d'ellipse sur un plan aussi grand) */
+let haloDouxPartage: THREE.CanvasTexture | null = null
+function haloDoux() {
+  if (!haloDouxPartage) {
+    const c = document.createElement("canvas")
+    c.width = c.height = 128
+    const ctx = c.getContext("2d")!
+    const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64)
+    for (let i = 0; i <= 8; i++) {
+      const d = i / 8
+      g.addColorStop(d, `rgba(255,255,255,${((1 - d) ** 2.2).toFixed(3)})`)
+    }
+    ctx.fillStyle = g
+    ctx.fillRect(0, 0, 128, 128)
+    haloDouxPartage = new THREE.CanvasTexture(c)
+  }
+  return haloDouxPartage
+}
+
 function Neons({ cockpit }: { cockpit: Cockpit }) {
   const cibles = useMemo(() => Array.from({ length: 2 }, () => new THREE.Object3D()), [])
   const lums = useRef<({ lum: THREE.SpotLight | THREE.PointLight; plein: number } | null)[]>([])
@@ -634,6 +657,12 @@ function Neons({ cockpit }: { cockpit: Cockpit }) {
   useLayoutEffect(() => {
     cockpit.neonLums = lums.current.filter((e): e is NonNullable<typeof e> => e !== null)
   }, [cockpit])
+  /* en roulant, la caméra basse voit la nappe à plat : elle s'efface avec
+     la vitesse, sinon elle trace un ovale net sur l'asphalte */
+  const nappe = useRef<THREE.MeshBasicMaterial>(null)
+  useFrame(() => {
+    if (nappe.current) nappe.current.opacity = NAPPE_OPACITE * (1 - 0.65 * avance.elan)
+  })
   return (
     <group>
       {sol.map(([x, z], i) => (
@@ -647,8 +676,8 @@ function Neons({ cockpit }: { cockpit: Cockpit }) {
       ))}
       <group visible={false} ref={(g) => { cockpit.neons = g }}>
         <mesh position={[-0.075, 0.045, 0.05]} rotation-x={-Math.PI / 2}>
-          <planeGeometry args={[3.3, 5.6]} />
-          <meshBasicMaterial map={halo()} color="#7a2cf0" transparent opacity={0.55} blending={THREE.AdditiveBlending} depthWrite={false} />
+          <planeGeometry args={[2.6, 5.2]} />
+          <meshBasicMaterial ref={nappe} map={haloDoux()} color="#7a2cf0" transparent opacity={NAPPE_OPACITE} blending={THREE.AdditiveBlending} depthWrite={false} />
         </mesh>
         {dedans.map(([x, y, z], i) => (
           <sprite key={i} position={[x, y, z]} scale={[0.16, 0.16, 1]}>

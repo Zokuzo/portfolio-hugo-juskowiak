@@ -533,9 +533,14 @@ export function creeEcran(lang: Lang): Ecran {
 
   /* les chemins de l'itinéraire — partagés entre le calque statique
      (rubans) et la couche dynamique (points qui avancent) */
-  const B_TRONC: Bezier = [256, 246, 252, 215, 262, 160, 274, 112]
-  const B_GAUCHE: Bezier = [274, 112, 240, 100, 180, 98, 116, 98]
-  const B_DROITE: Bezier = [274, 112, 320, 100, 380, 94, 436, 96]
+  /* un SEUL réseau : la rue de la voiture rejoint le boulevard (y = 102)
+     au carrefour de l'avenue (x = 276), et les deux branches SONT des
+     morceaux du boulevard, sur son axe exact (avant, elles le longeaient
+     à quelques pixels : deux rubans superposés) */
+  const CARREFOUR = { x: 276, y: 102 }
+  const B_TRONC: Bezier = [256, 246, 254, 200, CARREFOUR.x, 160, CARREFOUR.x, CARREFOUR.y]
+  const B_GAUCHE: Bezier = [CARREFOUR.x, CARREFOUR.y, 222, CARREFOUR.y, 170, CARREFOUR.y, 116, CARREFOUR.y]
+  const B_DROITE: Bezier = [CARREFOUR.x, CARREFOUR.y, 330, CARREFOUR.y, 382, CARREFOUR.y, 436, CARREFOUR.y]
   const trace = (b: Bezier) => () => {
     g.moveTo(b[0], b[1])
     g.bezierCurveTo(b[2], b[3], b[4], b[5], b[6], b[7])
@@ -643,16 +648,13 @@ export function creeEcran(lang: Lang): Ecran {
     g.fillStyle = "#16132a"
     g.fillRect(0, 0, l, h)
     if (quartier) g.drawImage(quartier, 0, 0, l, h)
-    /* le réseau mort suit les vraies rues (boulevard sud, verticales des
-       bords) — jamais empruntable */
+    /* le réseau suit les vraies rues, en hiérarchie Waze : rues
+       secondaires étroites d'abord, puis le boulevard plus large par-dessus
+       (il couvre proprement les carrefours), puis l'itinéraire seul */
     const morte = (chemin: () => void, large = 1) => ruban(chemin, "#100d1f", u * 1.6, "#2a2447", u * (3.2 * large))
     morte(() => {
-      g.moveTo(0, 102)
-      g.bezierCurveTo(170, 98, 342, 106, 512, 100)
-    }, 1.5)
-    morte(() => {
-      g.moveTo(276, 108)
-      g.bezierCurveTo(272, 70, 284, 30, 280, -8)
+      g.moveTo(CARREFOUR.x, CARREFOUR.y)
+      g.bezierCurveTo(CARREFOUR.x, 70, 282, 30, 280, -8)
     })
     morte(() => {
       g.moveTo(54, 256)
@@ -662,35 +664,24 @@ export function creeEcran(lang: Lang): Ecran {
       g.moveTo(494, 256)
       g.bezierCurveTo(490, 190, 502, 120, 496, 60)
     })
-    /* l'itinéraire : tronc en S puis la fourche — rubans VIOLETS (le code
-       Waze de la route optimale) ; les points qui avancent vivent dans la
-       couche DYNAMIQUE */
-    const vive = (chemin: () => void, choisi: boolean) => {
-      if (choisi) {
-        g.save()
-        g.shadowColor = "#a06bff"
-        g.shadowBlur = u * 5
-        ruban(chemin, "#0e0a1d", u * 1.6, "#b78aff", u * 4.6)
-        g.restore()
-      } else {
-        ruban(chemin, "#0e0a1d", u * 1.6, "#8f5cff", u * 4.2)
-      }
-    }
-    /* sans destination, la fourche n'est que des rues normales (façon
-       Waze — l'itinéraire n'existe qu'après le choix) */
-    if (etat.choix === null || !etat.traceFini) {
-      morte(tronc, 1.2)
-      morte(brancheGauche, 1.2)
-      morte(brancheDroite, 1.2)
-    } else {
-      vive(tronc, true)
-      if (etat.choix === "maison") {
-        morte(brancheDroite, 1.2)
-        vive(brancheGauche, true)
-      } else {
-        morte(brancheGauche, 1.2)
-        vive(brancheDroite, true)
-      }
+    morte(tronc)
+    ruban(() => {
+      g.moveTo(0, CARREFOUR.y)
+      g.lineTo(l, CARREFOUR.y)
+    }, "#100d1f", u * 1.6, "#3a3263", u * 5)
+    /* l'itinéraire, qui n'existe qu'après le choix (façon Waze) : ruban
+       VIOLET, tronc et branche en UN chemin (deux rubans se croisaient au
+       carrefour) ; les points qui avancent vivent dans la couche DYNAMIQUE */
+    if (etat.choix !== null && etat.traceFini) {
+      const b = etat.choix === "maison" ? B_GAUCHE : B_DROITE
+      g.save()
+      g.shadowColor = "#a06bff"
+      g.shadowBlur = u * 5
+      ruban(() => {
+        tronc()
+        g.bezierCurveTo(b[2], b[3], b[4], b[5], b[6], b[7])
+      }, "#0e0a1d", u * 1.6, "#b78aff", u * 4.6)
+      g.restore()
     }
     /* la voiture : flèche blanche en écusson violet */
     g.save()
@@ -716,8 +707,8 @@ export function creeEcran(lang: Lang): Ecran {
     g.fill()
     /* le ballon n'apparaît qu'à la destination CHOISIE */
     const itineraire = etat.traceFini ? etat.choix : null
-    if (itineraire === "maison") ballon(100, 58, 116, 96, MAISON(), "#8f5cff", true, glypheMaison)
-    if (itineraire === "travail") ballon(452, 56, 436, 94, TRAVAIL(), "#e561d3", true, glypheTravail)
+    if (itineraire === "maison") ballon(100, 58, 116, CARREFOUR.y, MAISON(), "#8f5cff", true, glypheMaison)
+    if (itineraire === "travail") ballon(452, 56, 436, CARREFOUR.y, TRAVAIL(), "#e561d3", true, glypheTravail)
     /* le sélecteur : « OÙ VA-T-ON ? » + deux rangées favoris — les zones
        de clicGps sont CALQUÉES sur ce dessin */
     if (etat.choix === null) {
@@ -900,10 +891,7 @@ export function creeEcran(lang: Lang): Ecran {
     }
     const traceP = enDouceur(phase(p, 0.3, TRACE_FIN))
     if (traceP > 0) {
-      const [branche, autre] = dest === "maison" ? [B_GAUCHE, B_DROITE] : [B_DROITE, B_GAUCHE]
-      g.globalAlpha = 0.6 * Math.min(1, traceP * 3)
-      ruban(trace(autre), "#0e0a1d", u * 1.2, "#5a3d8a", u * 3.4)
-      g.globalAlpha = 1
+      const branche = dest === "maison" ? B_GAUCHE : B_DROITE
       const lt = longueur(B_TRONC)
       const lb = longueur(branche)
       const d = traceP * (lt + lb)

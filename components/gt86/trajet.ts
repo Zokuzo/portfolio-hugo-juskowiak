@@ -34,8 +34,9 @@ export function tempsTrajet(): number {
 }
 
 /* ce que la voiture garée applique à son porteur (rue.tsx) : zéro hors
-   trajet */
-export const avance = { z: 0, y: 0, tangage: 0 }
+   trajet. `caisse` ne soulève que la carrosserie (les roues restent au
+   sol), `roue` est l'angle des roues, `elan` la part de vitesse atteinte */
+export const avance = { z: 0, y: 0, tangage: 0, caisse: 0, roue: 0, elan: 0 }
 
 export function distance(t: number): number {
   const u = Math.max(0, t - LANCE_S)
@@ -51,6 +52,18 @@ export function rapport(t: number): number {
   const v = vitesse(t)
   const i = RAPPORTS.findIndex((borne) => v < borne)
   return i < 0 ? RAPPORTS.length - 1 : i
+}
+
+/* les secondes depuis le dernier passage de rapport (montée en 2e, 3e...),
+   -1 avant le premier : la caisse, la caméra et le champ y réagissent
+   ensemble, au même instant que la dent de scie du son */
+export function passage(t: number): number {
+  let dernier = -1
+  for (let i = 1; i < RAPPORTS.length - 1; i++) {
+    const instant = LANCE_S + RAPPORTS[i] / ACCEL
+    if (t >= instant) dernier = instant
+  }
+  return dernier < 0 ? -1 : t - dernier
 }
 
 /* le régime : coup de gaz qui monte vers le rupteur, puis la dent de

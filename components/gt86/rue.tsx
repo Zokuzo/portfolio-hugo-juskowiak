@@ -8,6 +8,7 @@ import type { Trajectoire } from "./vol"
 import { useChauffeEnSolo } from "./chauffe"
 import { posePlaque } from "./plaque"
 import { avance } from "./trajet"
+import { detacheRoues, tourneRoues } from "./roues"
 import { poseLeds } from "./leds"
 import { cliquableParSaBoite, pieceDeRobe, robeDeNuit } from "./carrosserie"
 import { fondPourLeRendu } from "./rendu"
@@ -63,6 +64,9 @@ export const brume = () => new THREE.Fog(BRUME[0], BRUME[1], BRUME[2])
    vol, et assiette cabrée tenue jusqu'au toucher — montée à 45 m au 3e
    retour de gate (« une chute d'encore plus haut ») */
 export const CHUTE_ALTITUDE = 45
+/* un tour complet de l'équirect de nuit tous les PAS_LAMPADAIRES mètres :
+   la bande chaude du zénith glisse du capot au coffre, puis revient */
+const PAS_LAMPADAIRES = 16
 const CHUTE_CABRE = -0.22
 /* le TASSEMENT du toucher (retour de gate #31 : l'adoucissement en sortie
    posait la voiture en plume — une chute, ça ACCÉLÈRE) : ressort amorti,
@@ -280,7 +284,7 @@ function VoitureGaree({
   const porteur = useRef<THREE.Group>(null)
   const assiette = useRef<THREE.Group>(null)
 
-  const modele = useMemo(() => {
+  const voiture = useMemo(() => {
     const clone = scene.clone(true)
     /* le clone hérite du CENTRAGE du ciel dans sa position — le laisser
        fausserait la mesure d'assise ci-dessous d'exactement cet offset
@@ -291,6 +295,7 @@ function VoitureGaree({
        couleurs des deux voitures », #53) : seule son équirect de nuit,
        plus riche que celle du décor, la distingue */
     const robe = robeDeNuit()
+    const reflets: THREE.MeshStandardMaterial[] = [robe.caisse]
     clone.traverse((o) => {
       const mesh = o as THREE.Mesh
       if (!mesh.isMesh) return
@@ -318,6 +323,7 @@ function VoitureGaree({
           verre.envMapIntensity = 1.2
           verre.transparent = true
           verre.opacity = 0.8
+          reflets.push(verre)
         }
         /* la livrée d'usine rougeoie magenta la nuit — neutralisée,
            verdict robe unique du #21 */
@@ -352,8 +358,9 @@ function VoitureGaree({
     )
     cliquableParSaBoite(clone, boite.translate(clone.position))
     cockpit.voiture = clone
-    return clone
+    return { clone, roues: detacheRoues(clone), reflets }
   }, [scene, art, lueur, compteur, ecran, gl, cockpit])
+  const { clone: modele, roues, reflets } = voiture
 
   /* le chemin sans cascade (skip, session revenante) : l'état final d'un
      coup — et son INVERSE au rejeu de la scène (HABITACLE → CIEL, 4e
@@ -393,6 +400,21 @@ function VoitureGaree({
     if (cockpit.triangle) cockpit.triangle.opacity = allume ? 0.9 : 0
   })
 
+  /* le trajet roule : roues hors caisse (elles gardent l'assiette de la
+     chute mais pas le cabrage), caisse qui pilonne, reflets du ciel qui
+     glissent sur le vernis au rythme des lampadaires. Uniformes et
+     matrices seulement. */
+  const rouesPosees = useRef<THREE.Group>(null)
+  const roulePendantLeTrajet = () => {
+    const a = assiette.current
+    const r = rouesPosees.current
+    if (!a || !r) return
+    r.rotation.set(a.rotation.x - avance.tangage, a.rotation.y, a.rotation.z)
+    a.position.y = avance.caisse
+    tourneRoues(roues, avance.roue)
+    for (const m of reflets) m.envMapRotation.x = (avance.z / PAS_LAMPADAIRES) * Math.PI * 2
+  }
+
   const ressort = useRef({ tombe: false, tau: -1 })
   const poussiere = useRef<THREE.Group>(null)
   const impact = useRef<THREE.Group>(null)
@@ -416,6 +438,7 @@ function VoitureGaree({
       r.tau = -1
       if (porteur.current) porteur.current.position.y = (1 - chute * chute) * CHUTE_ALTITUDE
       if (assiette.current) assiette.current.rotation.x = CHUTE_CABRE
+      roulePendantLeTrajet()
       return
     } else {
       if (r.tombe && r.tau < 0) r.tau = 0
@@ -435,6 +458,7 @@ function VoitureGaree({
       porteur.current.position.y += avance.y
     }
     if (assiette.current) assiette.current.rotation.x += avance.tangage
+    roulePendantLeTrajet()
     if (impact.current) animeImpact(impact.current, pilotee && !vivant ? r.tau : -1)
     /* la poussière de l'impact : ouverte par le même ressort (l'ancienne
        chute seule, la nouvelle a son impact) */
@@ -496,6 +520,7 @@ function VoitureGaree({
             <VieVoiture cockpit={cockpit} />
           </group>
         </group>
+        <primitive ref={rouesPosees} object={roues.groupe} />
       </group>
       {/* la poussière de l'impact — au sol, hors des groupes qui tombent */}
       <group ref={poussiere} visible={false}>
