@@ -880,6 +880,8 @@ const DICT = {
   creditModeles: { fr: "Modèles 3D :", en: "3D models:" },
   creditGt86: { fr: "« Fox's Rocketbunny GT86 » par Swiss_Fox", en: "“Fox's Rocketbunny GT86” by Swiss_Fox" },
   creditVille: { fr: "« Procedural City 5 » par abhayexe", en: "“Procedural City 5” by abhayexe" },
+  creditSon: { fr: "Son :", en: "Sound:" },
+  creditAcceleration: { fr: "« FR-S BRZ GT-86 Vortech Supercharged Dyno Run » par dezoris", en: "“FR-S BRZ GT-86 Vortech Supercharged Dyno Run” by dezoris" },
   hubTravailSys: { fr: "TRAVAIL.SYS", en: "WORK.SYS" },
   hubBoot: {
     fr: "session ouverte, partition montée",

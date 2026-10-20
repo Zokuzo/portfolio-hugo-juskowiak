@@ -6,7 +6,7 @@ import type { Etat } from "./machine"
 import { lisse } from "./chute-physique"
 import { musiqueCoupee } from "./musique-intro"
 import { contexteAudio } from "./audio"
-import { TOURS_MAX, TRAJET_MS, regime as regimeTrajet } from "./trajet"
+import { TRAJET_MS } from "./trajet"
 
 /* LE DÉMARRAGE (#42) : en entrant dans la voiture, la GT86 démarre. Le
    seuil (seuil.tsx) a éteint le tableau de bord sous la traversée du
@@ -56,23 +56,28 @@ const VOYANTS = 0.35
 const TENSION_LANCEUR = 0.55
 
 let tampon: AudioBuffer | null = null
-let chargement: Promise<void> | null = null
+let tamponTrajet: AudioBuffer | null = null
+let chargement: Promise<unknown> | null = null
 let depart: { audio: number | null; t: number; allume: boolean } | null = null
 let source: AudioBufferSourceNode | null = null
 
 /* appelée dans le clic de décollage : le son a toute la chute pour arriver */
 export function prechargeDemarrage() {
   if (chargement) return
-  chargement = fetch(SON.fichier)
-    .then((reponse) => {
-      if (!reponse.ok) throw new Error(`HTTP ${reponse.status}`)
-      return reponse.arrayBuffer()
-    })
-    .then((octets) => contexteAudio().decodeAudioData(octets))
-    .then((decode) => {
-      tampon = decode
-    })
-    .catch((e) => console.warn("[gt86] son du démarrage indisponible, démarrage muet", e))
+  chargement = Promise.all([
+    chargeSon(SON.fichier)
+      .then((decode) => (tampon = decode))
+      .catch((e) => console.warn("[gt86] son du démarrage indisponible, démarrage muet", e)),
+    chargeSon(SON_TRAJET)
+      .then((decode) => (tamponTrajet = decode))
+      .catch((e) => console.warn("[gt86] son du trajet indisponible, trajet muet", e)),
+  ])
+}
+
+async function chargeSon(fichier: string): Promise<AudioBuffer> {
+  const reponse = await fetch(fichier)
+  if (!reponse.ok) throw new Error(`${fichier} : HTTP ${reponse.status}`)
+  return contexteAudio().decodeAudioData(await reponse.arrayBuffer())
 }
 
 /* appelée par le seuil au bout de sa course, dans l'habitacle */
@@ -100,39 +105,29 @@ function joueSon(): number | null {
   return debut
 }
 
-/* LE COUP DE GAZ du menu NFS : le même enregistrement,
-   rejoué depuis la prise, avec le ralenti stable en boucle ; la vitesse
-   de lecture suit le régime du trajet (trajet.ts), la courbe que lit
-   aussi le compteur. Muet si le son n'est pas là ou la musique coupée. */
-const BOUCLE = { debut: 1.2, fin: 3.4 }
-const LECTURE = { ralenti: 0.55, plage: 1.55 }
-const PAS_COURBE_S = 0.02
-const FONDU_S = 0.4
+/* LE COUP DE GAZ du menu NFS : un vrai enregistrement, joué tel quel.
+   La bande est fabriquée hors ligne (tools/sons/acceleration.py) par
+   grains pris dans la pleine charge d'une GT86 au banc, au régime que
+   donne regime() de trajet.ts à chaque instant : la dent de scie des
+   rapports sans changer la hauteur, donc sans effet bande accélérée.
+   Son : « FR-S BRZ GT-86 Vortech Supercharged Dyno Run » de dezoris sur
+   Freesound, CC BY 4.0 (crédité sur les pages d'arrivée et au README).
+   Si TRAJET_MS ou la partition changent, relancer le script. */
+const SON_TRAJET = "/sons/acceleration-gt86.m4a"
 const VOLUME_TRAJET = 0.9
 
 export function lanceTrajet() {
   const ctx = contexteAudio()
   void ctx.resume()
-  if (!tampon || musiqueCoupee()) return
-  const duree = TRAJET_MS / 1000
+  if (!tamponTrajet || musiqueCoupee()) return
   const joue = ctx.createBufferSource()
   const gain = ctx.createGain()
-  joue.buffer = tampon
-  joue.loop = true
-  joue.loopStart = BOUCLE.debut
-  joue.loopEnd = BOUCLE.fin
-  const courbe = new Float32Array(Math.ceil(duree / PAS_COURBE_S))
-  for (let i = 0; i < courbe.length; i++) {
-    courbe[i] = LECTURE.ralenti + (LECTURE.plage * regimeTrajet(i * PAS_COURBE_S)) / TOURS_MAX
-  }
-  const debut = ctx.currentTime + AVANCE_S
-  joue.playbackRate.setValueCurveAtTime(courbe, debut, duree)
-  gain.gain.setValueAtTime(VOLUME_TRAJET, debut)
-  gain.gain.setValueAtTime(VOLUME_TRAJET, debut + duree - FONDU_S)
-  gain.gain.linearRampToValueAtTime(0, debut + duree)
+  joue.buffer = tamponTrajet
+  gain.gain.value = VOLUME_TRAJET
   joue.connect(gain).connect(ctx.destination)
-  joue.start(debut, SON.prise)
-  joue.stop(debut + duree + 0.05)
+  const debut = ctx.currentTime + AVANCE_S
+  joue.start(debut)
+  joue.stop(debut + TRAJET_MS / 1000 + 0.2)
   joue.onended = () => {
     joue.disconnect()
     gain.disconnect()

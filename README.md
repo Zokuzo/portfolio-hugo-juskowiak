@@ -139,6 +139,7 @@ These are enforced in code review, not by a linter.
 - 3D car: ["Fox's Rocketbunny GT86"](https://sketchfab.com/3d-models/foxs-rocketbunny-gt86-815691bbc8cd459fb0fafea2d7a02df7) by [Swiss_Fox](https://sketchfab.com/Swiss_Fox), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Compressed and re-materialled for the web.
 - 3D city: ["Procedural City 5"](https://sketchfab.com/3d-models/procedural-city-5-c2a33cf0165b497cabd5e4a22599277b) by [abhayexe](https://sketchfab.com/abhayexe), Sketchfab Standard licence.
 - Sky: `qwantani_dusk_2_puresky` from [Poly Haven](https://polyhaven.com/), CC0.
+- Acceleration (`public/sons/acceleration-gt86.m4a`): ["FR-S BRZ GT-86 Vortech Supercharged Dyno Run"](https://freesound.org/people/dezoris/sounds/191194/) by [dezoris](https://freesound.org/people/dezoris/), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Rebuilt into a 3.75 s gear-change run by grains taken from the 4th-gear pull (`tools/sons/acceleration.py`).
 - Engine start (`public/sons/demarrage-libre.m4a`): ["subaru impreza start up-idle-launch limiter.wav"](https://freesound.org/people/t33kno/sounds/369797/) by [t33kno](https://freesound.org/people/t33kno/) (2003 Subaru Impreza, EJ20 boxer), [CC0](https://creativecommons.org/publicdomain/zero/1.0/). First 4.2 s, mono, faded and loudness-normalised.
 
 ### Contact

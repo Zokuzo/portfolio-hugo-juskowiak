@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react"
 import { t, type Lang } from "@/components/proto/dict"
 import { employeurs, etudes, perso, type Lien } from "@/components/proto/parcours"
 import { LienFiche } from "@/components/proto/lien-fiche"
+import { CreditsModeles } from "@/components/y2k/credits-modeles"
 import a from "./arrivee.module.css"
 import c from "./course.module.css"
 import { MENU, Volet, VoletSortant } from "./course"
@@ -67,6 +68,9 @@ function Arrivee({ cadre, lang, setLang, children }: { cadre: Cadre; lang: Lang;
       {children}
 
       <Radio lang={lang} />
+      <footer className={a.credits}>
+        <CreditsModeles lang={lang} />
+      </footer>
       <VoletSortant piste={cadre.piste} />
       {repart && (
         <div className={c.course}>

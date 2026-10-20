@@ -49,6 +49,8 @@ html:has(.page) body { background: #08070f; }
   color: transparent;
   filter: drop-shadow(0 1px 0 var(--bleu-nuit)) drop-shadow(0 0 22px rgba(96, 140, 255, 0.45));
 }
+.credits { padding: 24px 0 48px; font-family: var(--f-mono), monospace; font-size: 10px; letter-spacing: 0.08em; color: rgba(238, 244, 255, 0.5); }
+.credits a { color: inherit; }
 .mono { font-family: var(--f-mono), monospace; font-size: 10px; letter-spacing: 0.16em; color: rgba(238, 244, 255, 0.62); font-style: normal; }
 .jp { font-family: var(--f-jp), sans-serif; letter-spacing: 0.4em; color: var(--acier-bleu); font-size: 14px; }
 
