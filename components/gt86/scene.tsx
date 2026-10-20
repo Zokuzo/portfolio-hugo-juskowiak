@@ -335,7 +335,8 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
         envoie({ t: "retour" })
         setZoome(true)
         ecran.hub()
-      } else if (r === "maison") envoie({ t: "choisit", dest: "/home" })
+      } else if (r === "go") ecran.go()
+      else if (r === "maison") envoie({ t: "choisit", dest: "/home" })
       else if (r === "travail") envoie({ t: "choisit", dest: "/work" })
     }
   }
@@ -744,7 +745,15 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
       {nfs && etat === "HABITACLE" && !zoome && (
         <MenuNfs
           variante="scene"
-          surDestination={(piste) => envoie({ t: "part", dest: DEST[piste] })}
+          surDestination={(piste) => {
+            /* le chemin du GPS : la caméra glisse vers la dalle, la
+               planification Waze s'y joue, puis le trajet part. gps()
+               d'abord : les deux envois se fondent en un rendu (CHOIX
+               direct), l'effet de peinture ne verrait jamais GPS */
+            ecran.gps()
+            envoie({ t: "va", ou: "GPS" })
+            envoie({ t: "choisit", dest: DEST[piste] })
+          }}
           surRejoue={() => {
             setRideauRejeu(true)
             envoie({ t: "rejoue" })

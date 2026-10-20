@@ -83,13 +83,6 @@ assert.deepEqual(g, S("CHOIX", "/work"), "le choix retient la destination")
 g = suivant(g, { t: "confirme" })
 assert.deepEqual(g, S("DEPART", "/work"), "le départ garde la destination")
 
-// Le menu Need for Speed part de l'habitacle, et de lui seul.
-assert.deepEqual(suivant(S("HABITACLE"), { t: "part", dest: "/home" }), S("DEPART", "/home"), "le menu part avec sa destination")
-for (const etat of ETATS.filter((e) => e !== "HABITACLE")) {
-  const avant = S(etat)
-  assert.equal(suivant(avant, { t: "part", dest: "/work" }), avant, `partir est inerte depuis ${etat}`)
-}
-
 // Le retour est un seul chemin, et DÉPART est terminal.
 for (const etat of ["GPS", "CHOIX", "MUSIQUES", "SPOTIFY", "SEUIL"])
   assert.equal(suivant(S(etat), { t: "retour" }).etat, "HABITACLE", `retour depuis ${etat}`)
@@ -116,7 +109,6 @@ const SIGNAUX = [
   { t: "confirme" },
   { t: "retour" },
   { t: "rejoue" },
-  { t: "part", dest: "/home" },
 ]
 for (const etat of ETATS)
   for (const sig of SIGNAUX) {

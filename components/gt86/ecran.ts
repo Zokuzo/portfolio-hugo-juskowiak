@@ -144,7 +144,8 @@ export type Ecran = {
   stats: () => void
   eteint: () => void
   surDepart: (fn: (dest: DestEcran) => void) => void
-  clicGps: (u: number, v: number) => "retour" | DestEcran | null
+  clicGps: (u: number, v: number) => "retour" | "go" | DestEcran | null
+  go: () => void
   tic: () => void
   choisit: (dest: DestEcran) => void
   spotify: () => void
@@ -165,6 +166,36 @@ export type Ecran = {
    à chaque peinture. Rendu identique à l'œil (écart ≤ 4/255 sur la veille,
    quelques pixels de bord sur les icônes pixel-art). */
 const PEINTRE_CPU: CanvasRenderingContext2DSettings = { willReadFrequently: true }
+
+/* la planification Waze : 3,6 s, le tracé rose fini à 60 % ; le GO
+   (coordonnées uv de la dalle) se vide ensuite jusqu'au départ */
+const PLANIF_MS = 3600
+const TRACE_FIN = 0.6
+const GO = { x: 0.84, y: 0.835 }
+
+type Bezier = [number, number, number, number, number, number, number, number]
+
+const point = (b: Bezier, s: number): [number, number] => {
+  const m = 1 - s
+  const k = [m * m * m, 3 * m * m * s, 3 * m * s * s, s * s * s]
+  return [k[0] * b[0] + k[1] * b[2] + k[2] * b[4] + k[3] * b[6], k[0] * b[1] + k[1] * b[3] + k[2] * b[5] + k[3] * b[7]]
+}
+
+const longueur = (b: Bezier) => {
+  let total = 0
+  let [px, py] = point(b, 0)
+  for (let i = 1; i <= 24; i++) {
+    const [x, y] = point(b, i / 24)
+    total += Math.hypot(x - px, y - py)
+    px = x
+    py = y
+  }
+  return total
+}
+
+/* la fraction parcourue d'un intervalle [a, b] de la planification */
+const phase = (p: number, a: number, b: number) => Math.min(1, Math.max(0, (p - a) / (b - a)))
+const enDouceur = (x: number) => (x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2)
 
 export function creeEcran(lang: Lang): Ecran {
   const c = document.createElement("canvas")
@@ -187,7 +218,10 @@ export function creeEcran(lang: Lang): Ecran {
     tic: 0,
     choix: null as null | DestEcran,
     transition: 0,
+    /* la planification façon Waze : le tracé rose est-il fini ? */
+    traceFini: false,
   }
+  let planifDebut = 0
   let quandDepart: ((dest: DestEcran) => void) | null = null
   const MAISON = () => t(langue, "gt86Maison").toUpperCase()
   const TRAVAIL = () => t(langue, "gt86Travail").toUpperCase()
@@ -499,18 +533,16 @@ export function creeEcran(lang: Lang): Ecran {
 
   /* les chemins de l'itinéraire — partagés entre le calque statique
      (rubans) et la couche dynamique (points qui avancent) */
-  const tronc = () => {
-    g.moveTo(256, 246)
-    g.bezierCurveTo(252, 215, 262, 160, 274, 112)
+  const B_TRONC: Bezier = [256, 246, 252, 215, 262, 160, 274, 112]
+  const B_GAUCHE: Bezier = [274, 112, 240, 100, 180, 98, 116, 98]
+  const B_DROITE: Bezier = [274, 112, 320, 100, 380, 94, 436, 96]
+  const trace = (b: Bezier) => () => {
+    g.moveTo(b[0], b[1])
+    g.bezierCurveTo(b[2], b[3], b[4], b[5], b[6], b[7])
   }
-  const brancheGauche = () => {
-    g.moveTo(274, 112)
-    g.bezierCurveTo(240, 100, 180, 98, 116, 98)
-  }
-  const brancheDroite = () => {
-    g.moveTo(274, 112)
-    g.bezierCurveTo(320, 100, 380, 94, 436, 96)
-  }
+  const tronc = trace(B_TRONC)
+  const brancheGauche = trace(B_GAUCHE)
+  const brancheDroite = trace(B_DROITE)
 
   const glypheMaison = (cx: number, cy: number, r: number) => {
     g.beginPath()
@@ -531,6 +563,77 @@ export function creeEcran(lang: Lang): Ecran {
     g.lineTo(cx + r * 0.35, cy - r * 0.85)
     g.lineTo(cx + r * 0.35, cy - r * 0.45)
     g.stroke()
+  }
+
+  /* la barre latérale CarPlay (lot 20) : trois tuiles chromées côté
+     conducteur, NAV allumée : décor seul, hors des zones de clicGps */
+  const barreCarplay = () => {
+    const bl = 40
+    g.fillStyle = "#0d0718"
+    g.fillRect(0, 16, bl, h - 16)
+    const tuiles: [string, (cx: number, cy: number) => void][] = [
+      ["ナビ", (cx, cy) => {
+        g.moveTo(cx, cy - 6)
+        g.lineTo(cx + 5, cy + 6)
+        g.lineTo(cx, cy + 3)
+        g.lineTo(cx - 5, cy + 6)
+        g.closePath()
+        g.fill()
+      }],
+      ["音楽", (cx, cy) => {
+        g.arc(cx - 2, cy + 4, 2.6, 0, Math.PI * 2)
+        g.fill()
+        g.fillRect(cx, cy - 6, 1.6, 10)
+        g.fillRect(cx, cy - 6, 5, 1.6)
+      }],
+      ["電話", (cx, cy) => {
+        g.lineWidth = 2.4
+        g.lineCap = "round"
+        g.arc(cx + 5, cy - 5, 9, Math.PI * 0.55, Math.PI * 0.95)
+        g.stroke()
+      }],
+    ]
+    tuiles.forEach(([nom, icone], i) => {
+      const x = 6
+      const y = 24 + i * 52
+      const cote = 28
+      const fond = g.createLinearGradient(0, y, 0, y + cote)
+      fond.addColorStop(0, "#2a1a48")
+      fond.addColorStop(1, "#140a24")
+      g.save()
+      if (i === 0) {
+        g.shadowColor = "#e561d3"
+        g.shadowBlur = 8
+      }
+      g.beginPath()
+      g.roundRect(x, y, cote, cote, 7)
+      g.fillStyle = fond
+      g.fill()
+      g.restore()
+      g.beginPath()
+      g.roundRect(x, y, cote, cote / 2, [7, 7, 0, 0])
+      g.fillStyle = "rgba(255, 255, 255, 0.08)"
+      g.fill()
+      g.beginPath()
+      g.roundRect(x, y, cote, cote, 7)
+      g.strokeStyle = i === 0 ? "#f4ecff" : "#3b2466"
+      g.lineWidth = 1
+      g.stroke()
+      g.fillStyle = i === 0 ? "#e561d3" : "#a58fd0"
+      g.strokeStyle = g.fillStyle
+      g.beginPath()
+      icone(x + cote / 2, y + cote / 2)
+      g.textAlign = "center"
+      g.font = "bold 7px monospace"
+      g.fillStyle = "#a58fd0"
+      g.fillText(nom, x + cote / 2, y + cote + 8)
+      g.textAlign = "left"
+    })
+    g.textAlign = "center"
+    g.font = "italic bold 9px monospace"
+    g.fillStyle = "#f4ecff"
+    g.fillText("23:42", bl / 2, h - 12)
+    g.textAlign = "left"
   }
 
   const peintGpsStatique = () => {
@@ -575,7 +678,7 @@ export function creeEcran(lang: Lang): Ecran {
     }
     /* sans destination, la fourche n'est que des rues normales (façon
        Waze — l'itinéraire n'existe qu'après le choix) */
-    if (etat.choix === null) {
+    if (etat.choix === null || !etat.traceFini) {
       morte(tronc, 1.2)
       morte(brancheGauche, 1.2)
       morte(brancheDroite, 1.2)
@@ -612,8 +715,9 @@ export function creeEcran(lang: Lang): Ecran {
     g.fillStyle = "#ffffff"
     g.fill()
     /* le ballon n'apparaît qu'à la destination CHOISIE */
-    if (etat.choix === "maison") ballon(100, 58, 116, 96, MAISON(), "#8f5cff", true, glypheMaison)
-    if (etat.choix === "travail") ballon(452, 56, 436, 94, TRAVAIL(), "#e561d3", true, glypheTravail)
+    const itineraire = etat.traceFini ? etat.choix : null
+    if (itineraire === "maison") ballon(100, 58, 116, 96, MAISON(), "#8f5cff", true, glypheMaison)
+    if (itineraire === "travail") ballon(452, 56, 436, 94, TRAVAIL(), "#e561d3", true, glypheTravail)
     /* le sélecteur : « OÙ VA-T-ON ? » + deux rangées favoris — les zones
        de clicGps sont CALQUÉES sur ce dessin */
     if (etat.choix === null) {
@@ -664,6 +768,7 @@ export function creeEcran(lang: Lang): Ecran {
       rangee(py0 + h * 0.115, MAISON(), "#8f5cff", glypheMaison)
       rangee(py0 + h * 0.3, TRAVAIL(), "#e561d3", glypheTravail)
     }
+    barreCarplay()
     /* le bandeau HJ·NAV (9e retour : le GPS rejoint le langage de l'AMP)
        — la zone retour u<0,22 × v<0,26 couvre le ‹ inchangée */
     const bandeauNav = g.createLinearGradient(0, 0, l, 0)
@@ -690,8 +795,8 @@ export function creeEcran(lang: Lang): Ecran {
     g.textAlign = "right"
     g.fillText("23:42", l - 36, 8)
     g.textAlign = "left"
-    /* la sélection : carte ETA façon Waze, jauge fine tenue 2,6 s */
-    if (etat.choix) {
+    /* la sélection : carte ETA façon Waze, jauge fine, une fois le tracé posé */
+    if (itineraire) {
       const nom = etat.choix === "maison" ? MAISON() : TRAVAIL()
       const teinte = etat.choix === "maison" ? "#8f5cff" : "#e561d3"
       const bl = l * 0.5
@@ -727,7 +832,7 @@ export function creeEcran(lang: Lang): Ecran {
       g.fillText(`${t(langue, "gt86Partir").toUpperCase()} → ${nom}`, bx + u * 17, by + h * 0.062)
       g.font = `${Math.round(u * 5.5)}px monospace`
       g.fillStyle = "#a99cc8"
-      g.fillText("0,4 km · 2 min", bx + u * 17, by + h * 0.128)
+      g.fillText(etat.choix === "maison" ? "0,4 km · 2 min" : "0,6 km · 3 min", bx + u * 17, by + h * 0.128)
       g.beginPath()
       g.roundRect(bx + u * 4, by + h * 0.157, bl - u * 8, u * 1.8, u * 0.9)
       g.fillStyle = "#37305c"
@@ -746,7 +851,8 @@ export function creeEcran(lang: Lang): Ecran {
     } else {
       g.drawImage(gpsCalque, 0, 0)
     }
-    if (etat.choix) {
+    if (etat.choix && !etat.traceFini) peintPlanification(etat.choix)
+    else if (etat.choix) {
       pointsQuiAvancent(tronc)
       pointsQuiAvancent(etat.choix === "maison" ? brancheGauche : brancheDroite)
       /* le ballon et la carte ETA repassent PAR-DESSUS les points (l'ordre
@@ -764,10 +870,133 @@ export function creeEcran(lang: Lang): Ecran {
       else patte(406, 14, 92, 100)
       const teinte = etat.choix === "maison" ? "#8f5cff" : "#e561d3"
       g.beginPath()
-      g.roundRect(bx + u * 4, by + h * 0.157, (bl - u * 8) * etat.transition, u * 1.8, u * 0.9)
+      const reste = phase(etat.transition, TRACE_FIN, 1)
+      g.roundRect(bx + u * 4, by + h * 0.157, (bl - u * 8) * reste, u * 1.8, u * 0.9)
       g.fillStyle = teinte
       g.fill()
+      peintGo(reste)
     }
+  }
+
+  /* LA PLANIFICATION (lot 20, « on voit le trajet se planifier ») : la
+     barre de recherche tape la destination, le calcul pulse autour de la
+     voiture, puis le tracé rose court jusqu'à l'arrivée. Couche par tic :
+     JAMAIS de shadowBlur ici (le halo vit dans le calque statique). */
+  const peintPlanification = (dest: DestEcran) => {
+    const p = etat.transition
+    const nom = dest === "maison" ? MAISON() : TRAVAIL()
+    const calcul = phase(p, 0.12, 0.32)
+    g.fillStyle = `rgba(0, 0, 0, ${0.25 * Math.sin(Math.PI * Math.min(1, calcul * 1.4))})`
+    g.fillRect(0, 16, l, h - 16)
+    if (calcul > 0 && p < 0.42) {
+      for (let i = 0; i < 3; i++) {
+        const f = (performance.now() / 1000 + i / 3) % 1
+        g.beginPath()
+        g.arc(256, 244, u * 5 + f * u * 28, 0, Math.PI * 2)
+        g.strokeStyle = `rgba(229, 97, 211, ${1 - f})`
+        g.lineWidth = u * 0.9
+        g.stroke()
+      }
+    }
+    const traceP = enDouceur(phase(p, 0.3, TRACE_FIN))
+    if (traceP > 0) {
+      const [branche, autre] = dest === "maison" ? [B_GAUCHE, B_DROITE] : [B_DROITE, B_GAUCHE]
+      g.globalAlpha = 0.6 * Math.min(1, traceP * 3)
+      ruban(trace(autre), "#0e0a1d", u * 1.2, "#5a3d8a", u * 3.4)
+      g.globalAlpha = 1
+      const lt = longueur(B_TRONC)
+      const lb = longueur(branche)
+      const d = traceP * (lt + lb)
+      const partiel = (b: Bezier, fait: number) => {
+        if (fait <= 0) return
+        g.setLineDash([fait, 4000])
+        ruban(trace(b), "#0e0a1d", u * 1.6, dest === "maison" ? "#b78aff" : "#e561d3", u * 4.6)
+        g.setLineDash([])
+      }
+      partiel(B_TRONC, Math.min(d, lt))
+      partiel(branche, d - lt)
+      const [tx, ty] = d < lt ? point(B_TRONC, d / lt) : point(branche, Math.min(1, (d - lt) / lb))
+      g.beginPath()
+      g.arc(tx, ty, u * 4.5, 0, Math.PI * 2)
+      g.fillStyle = "rgba(229, 97, 211, 0.35)"
+      g.fill()
+      g.beginPath()
+      g.arc(tx, ty, u * 2, 0, Math.PI * 2)
+      g.fillStyle = "#ffffff"
+      g.fill()
+    }
+    peintRecherche(nom, p)
+  }
+
+  const peintRecherche = (nom: string, p: number) => {
+    const entree = 1 - Math.pow(1 - phase(p, 0, 0.08), 3)
+    const by = 22 - (1 - entree) * 30
+    const bx = l * 0.2
+    const bl = l * 0.6
+    const bh = u * 11
+    g.beginPath()
+    g.roundRect(bx, by, bl, bh, bh / 2)
+    g.fillStyle = "rgba(20, 10, 36, 0.94)"
+    g.fill()
+    g.strokeStyle = "#e561d3"
+    g.lineWidth = 1.5
+    g.stroke()
+    const cy = by + bh / 2
+    g.beginPath()
+    g.arc(bx + u * 7, cy - u * 0.6, u * 2.2, 0, Math.PI * 2)
+    g.moveTo(bx + u * 8.6, cy + u * 1)
+    g.lineTo(bx + u * 10.2, cy + u * 2.6)
+    g.strokeStyle = "#f4ecff"
+    g.lineWidth = u * 0.8
+    g.stroke()
+    const tape = nom.slice(0, Math.floor((p * PLANIF_MS - 150) / 60))
+    g.font = `italic bold ${Math.round(u * 6.5)}px monospace`
+    g.fillStyle = "#f4ecff"
+    g.fillText(tape, bx + u * 14, cy)
+    if (tape.length < nom.length && Math.floor(performance.now() / 250) % 2 === 0) {
+      g.fillStyle = "#e561d3"
+      g.fillRect(bx + u * 14 + g.measureText(tape).width + 1, cy - u * 3, u * 0.8, u * 6)
+    }
+    g.textAlign = "right"
+    g.font = `bold ${Math.round(u * 4.6)}px monospace`
+    g.fillStyle = "#a58fd0"
+    if (p < 0.12) g.fillText("検索中", bx + bl - u * 6, cy)
+    else {
+      const a = performance.now() * 0.008
+      g.beginPath()
+      g.arc(bx + bl - u * 7, cy, u * 2.4, a, a + 1.5 * Math.PI)
+      g.strokeStyle = "#e561d3"
+      g.lineWidth = u * 0.8
+      g.stroke()
+      const points = ".".repeat(1 + (Math.floor(performance.now() / 300) % 3))
+      g.fillText((langue === "en" ? "ROUTING" : "CALCUL") + points.padEnd(3), bx + bl - u * 12, cy)
+    }
+    g.textAlign = "left"
+  }
+
+  /* le GO de Waze : il se presse tout seul quand l'anneau se vide, ou au
+     clic (clicGps → go) */
+  const peintGo = (reste: number) => {
+    const cx = GO.x * l
+    const cy = GO.y * h
+    const r = u * 9
+    g.beginPath()
+    g.arc(cx, cy, r, 0, Math.PI * 2)
+    const fond = g.createLinearGradient(cx - r, cy - r, cx + r, cy + r)
+    fond.addColorStop(0, "#9a4dff")
+    fond.addColorStop(1, "#e561d3")
+    g.fillStyle = fond
+    g.fill()
+    g.beginPath()
+    g.arc(cx, cy, r + u * 2, -Math.PI / 2, -Math.PI / 2 + 2 * Math.PI * (1 - reste))
+    g.strokeStyle = "#f4ecff"
+    g.lineWidth = u * 1.2
+    g.stroke()
+    g.textAlign = "center"
+    g.font = `italic bold ${Math.round(u * (reste < 1 ? 7 : 6))}px monospace`
+    g.fillStyle = "#ffffff"
+    g.fillText(reste < 1 ? "GO" : "出発", cx, cy)
+    g.textAlign = "left"
   }
 
   const peintMusiques = () => {
@@ -1345,25 +1574,29 @@ export function creeEcran(lang: Lang): Ecran {
     },
     /* zones CALQUÉES sur le dessin (panneau x ∈ [0,2 ; 0,8], rangée
        MAISON y ∈ [0,535 ; 0,69], TRAVAIL [0,72 ; 0,875]) */
-    clicGps(uv: number, vv: number): "retour" | DestEcran | null {
+    clicGps(uv: number, vv: number): "retour" | "go" | DestEcran | null {
       if (uv < 0.22 && vv < 0.26) return "retour"
-      if (etat.choix !== null) return null
+      if (etat.choix !== null) return etat.traceFini && Math.hypot(uv - GO.x, (vv - GO.y) / 2) < 0.06 ? "go" : null
       if (uv < 0.18 || uv > 0.82) return null
       if (vv >= 0.5 && vv < 0.705) return "maison"
       if (vv >= 0.705 && vv <= 0.9) return "travail"
       return null
     },
+    go() {
+      planifDebut = performance.now() - PLANIF_MS
+    },
     tic() {
       etat.tic += 1.4
       peint()
     },
-    /* la sélection : la branche s'allume, la jauge se remplit en 2,6 s —
+    /* la sélection : la planification se joue en PLANIF_MS,
        une HORLOGE, pas un rAF (le rAF est étranglé quand la scène rame,
        piège payé au #26) — puis le départ part */
     choisit(dest: DestEcran) {
       if (etat.choix) return
       etat.choix = dest
       etat.transition = 0
+      etat.traceFini = false
       gpsSale = true
       const fini = () => {
         setTimeout(() => {
@@ -1372,14 +1605,19 @@ export function creeEcran(lang: Lang): Ecran {
       }
       if (REDUIT) {
         etat.transition = 1
+        etat.traceFini = true
         peint()
         fini()
         return
       }
-      const debut = performance.now()
+      planifDebut = performance.now()
       const pas = () => {
         if (etat.mode !== "gps" || !etat.choix) return
-        etat.transition = Math.min(1, (performance.now() - debut) / 2600)
+        etat.transition = Math.min(1, (performance.now() - planifDebut) / PLANIF_MS)
+        if (!etat.traceFini && etat.transition >= TRACE_FIN) {
+          etat.traceFini = true
+          gpsSale = true
+        }
         peint()
         if (etat.transition < 1) setTimeout(pas, 40)
         else fini()
