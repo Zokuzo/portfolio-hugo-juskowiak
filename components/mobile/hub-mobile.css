@@ -1,0 +1,109 @@
+/* HUB MOBILE, dosage B : rayons concentriques 8 / 14 / 22 + pilule. */
+.hubm { display: none; }
+
+@media (max-width: 767px) {
+  .hubm {
+    display: block;
+    --r-1: 8px;
+    --r-2: 14px;
+    --r-3: 22px;
+    --cible: 44px;
+    --verre: color-mix(in srgb, #161129 62%, transparent);
+  }
+
+  .hubm-entete {
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: var(--cible);
+    padding: calc(env(safe-area-inset-top) + 6px) calc(env(safe-area-inset-right) + 16px) 6px calc(env(safe-area-inset-left) + 16px);
+    background: var(--verre);
+    -webkit-backdrop-filter: blur(20px) saturate(1.6);
+    backdrop-filter: blur(20px) saturate(1.6);
+    border-bottom: 1px solid color-mix(in srgb, #f2f0fd 14%, transparent);
+    color: #f2f0fd;
+    font: 600 13px/1 var(--f-mono, monospace);
+    letter-spacing: 0.08em;
+  }
+
+  .hubm-pilule {
+    min-height: var(--cible);
+    min-width: var(--cible);
+    padding: 0 18px;
+    border: 0;
+    border-radius: 999px;
+    background: #cdc9e6;
+    color: #241f3d;
+    font: inherit;
+    box-shadow: inset 1px 1px 0 #f2f0fd, inset -1px -1px 0 #575178;
+  }
+
+  .hubm-voile {
+    position: fixed;
+    inset: 0;
+    z-index: 61;
+    background: rgb(13 10 24 / 0.45);
+  }
+
+  /* Le verre de la feuille : jamais d'opacity sur elle ni sur un parent,
+     sinon le backdrop-filter meurt. Elle glisse par transform seulement. */
+  .hubm-feuille {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 62;
+    max-height: 78svh;
+    overflow-y: auto;
+    padding: 8px calc(env(safe-area-inset-right) + 12px) calc(env(safe-area-inset-bottom) + 16px) calc(env(safe-area-inset-left) + 12px);
+    border-radius: var(--r-3) var(--r-3) 0 0;
+    background: var(--verre);
+    -webkit-backdrop-filter: blur(28px) saturate(1.6);
+    backdrop-filter: blur(28px) saturate(1.6);
+    border-top: 1px solid color-mix(in srgb, #f2f0fd 18%, transparent);
+    transform: translateY(105%);
+    transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  .hubm-feuille[data-ouverte="true"] { transform: none; }
+
+  .hubm-poignee {
+    display: block;
+    width: 36px;
+    height: 5px;
+    margin: 0 auto 10px;
+    border-radius: 999px;
+    background: color-mix(in srgb, #f2f0fd 40%, transparent);
+  }
+
+  .hubm-feuille ul { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+
+  /* Cartes Y2K : biseau en relief, rayon 14 dans une feuille de 22. */
+  .hubm-carte {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 52px;
+    padding: 6px 12px 6px 6px;
+    border-radius: var(--r-2);
+    background: #cdc9e6;
+    color: #241f3d;
+    text-decoration: none;
+    box-shadow: inset 1px 1px 0 #f2f0fd, inset -1px -1px 0 #575178;
+    font: 600 15px/1.2 var(--f-display, sans-serif);
+  }
+  .hubm-carte b {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--r-1);
+    background: #1c1430;
+    color: #ffb3dc;
+    font: 500 13px/1 var(--f-mono, monospace);
+    box-shadow: inset 1px 1px 0 #575178, inset -1px -1px 0 #f2f0fd;
+  }
+  .hubm-carte small { display: block; margin-top: 2px; color: #433d68; font: 400 11px/1.3 var(--f-mono, monospace); }
+
+  main:has(.hubm) > section:first-of-type { padding-top: calc(env(safe-area-inset-top) + 56px); min-height: 100svh; }
+}

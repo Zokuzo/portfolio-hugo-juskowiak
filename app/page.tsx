@@ -18,6 +18,7 @@ import { Voiture } from "@/components/proto/voiture"
 import type { Lang } from "@/components/proto/dict"
 import { useGt86 } from "@/components/gt86/capable"
 import Surcouche from "@/components/gt86/surcouche"
+import { HubMobile } from "@/components/mobile/hub-mobile"
 
 /* LE JEU DE PLANS COMPLET — dix feuilles, numérotées sans trou.
 
@@ -98,6 +99,7 @@ export default function Page() {
         <span className="tick br" />
       </div>
 
+      <HubMobile lang={lang} />
       <Plaque lang={lang} setLang={setLang} />
       <IndexFeuilles lang={lang} />
       <Trace lang={lang} />
