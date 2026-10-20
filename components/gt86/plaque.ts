@@ -3,9 +3,10 @@ import * as THREE from "three"
 /* LA PLAQUE ARRIÈRE (demande de Hugo, 2026-10-20 : « une plaque
    d'immatriculation derrière avec écrit HUGOJSK ») : une plaque
    américaine personnalisée, style Californie, 12 x 6 pouces. Le GLB n'a
-   ni maillage ni cavité de plaque : elle se pose à plat sur le bandeau
-   peint du pare-chocs, entre le diffuseur et l'arête du coffre, dans
-   l'axe des feux (mesures au rayon sur le modèle, repère du GLB).
+   pas de maillage de plaque mais la malle a son renfoncement : un pan
+   peint entre les deux feux, sous la lèvre du logo (y 0,65 à 0,83),
+   au-dessus du pare-chocs. Elle s'y pose, comme sur la photo 10
+   (mesures au rayon sur le modèle, repère du GLB).
 
    Un enfant nommé du modèle : le ciel la pose sur la scène du cache, la
    rue la retrouve dans son clone, et la chauffe de chaque groupe la
@@ -15,11 +16,12 @@ const TEXTE = "HUGOJSK"
 const ETAT = "California"
 const LARGEUR = 0.305
 const HAUTEUR = 0.152
-/* centre du bandeau (y 0,48 à 0,64) ; la peinture affleure à z -2,025,
-   la plaque s'en décolle de 7 mm contre le z-fighting et la courbure */
-const POSE = new THREE.Vector3(-0.074, 0.556, -2.032)
-/* le bandeau se couche vers le coffre : 1,1 cm sur 12,5 cm de haut */
-const INCLINAISON = Math.atan2(0.011, 0.125)
+/* centre du renfoncement : la peinture y affleure à z -1,929 ; la
+   plaque s'en décolle de 4 mm le long de sa normale contre le z-fighting
+   (le pan est bombé, les bords restent devant la peinture) */
+const POSE = new THREE.Vector3(-0.074, 0.741, -1.933)
+/* le pan se couche vers l'habitacle : 4,6 cm sur 14 cm de haut */
+const INCLINAISON = Math.atan2(0.046, 0.14)
 const PIXELS = { l: 1024, h: 512 }
 const ANISOTROPIE = 8
 
