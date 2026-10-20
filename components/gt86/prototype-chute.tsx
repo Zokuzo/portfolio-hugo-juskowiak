@@ -50,19 +50,21 @@ import {
    de toujours.
 
    LE DÉROULÉ, en secondes depuis le clic (= temps dans l'extrait) :
-   1. clic : la lévitation lâche, la voiture tombe en vitesse réelle, la
-      caméra la suit à moitié ; le ralenti s'installe juste avant
-      l'écran coupé (chute-physique.ts) ;
-   2. ecran : l'écran se coupe sur un plan large, deux bandes noires
-      obliques le cadrent en parallélogramme ;
+   1. clic : la lévitation lâche, la voiture tombe en vitesse réelle ; la
+      caméra part de la pose du ciel et glisse, sans coupe, vers le plan
+      large de trois-quarts qui la suit dans sa chute ; le ralenti
+      s'installe juste avant l'écran coupé (chute-physique.ts) ;
+   2. ecran : deux bandes noires obliques se referment sur ce même plan
+      et le cadrent en parallélogramme (lot 8 : plus de coupe vers un
+      autre angle) ;
    3. a, b, c, d : les plans de Hugo, en coupes franches ; à « ouvre »
       les obliques s'ouvrent et rendent l'écran entier ;
    4. tombe : coupe sur le plan 5, le temps reprend sa vitesse en moins
       d'une seconde, la voiture réaccélère jusqu'à 55 m/s, la caméra la suit
       d'au-dessus sur un ressort, en retard ; voile du banc de nuages,
       bascule vers la rue, la brume s'ouvre sur la ville de nuit, la
-      voiture se rétablit et freine dans ses derniers mètres
-      (atterrissage souple de la v2) ;
+      voiture se rétablit et frappe le sol (lot 8 : impact franc,
+      écrasement, rebond, secousse de la caméra, poussière) ;
    5. fini : la caméra arrive sur la vue d'arrivée (CAM_FINALE) à la
       vitesse et dans l'axe du travelling, qui la porte jusqu'au siège ;
    6. la musique fond de « tombe » à l'entrée dans l'habitacle.
@@ -457,7 +459,7 @@ type Plan = {
   tangage: number
   suit: number
 }
-type PlanDeCoupe = Exclude<Segment, "ciel" | "chute" | "rue">
+type PlanDeCoupe = Exclude<Segment, "ciel" | "large" | "chute" | "rue">
 
 /* l'azimut du soleil du ciel, atan2(x, z) de sa direction : le point le
    plus lumineux du dôme (ciel-4k, rotation ROT de ciel.tsx), mesuré à
@@ -503,8 +505,6 @@ function plansDe(r: Reperes): Record<PlanDeCoupe, Plan> {
   const decale = (v: THREE.Vector3, x: number, y: number, z: number) => v.clone().add(new THREE.Vector3(x, y, z))
   const calandre = r.face.clone().lerp(r.phare, 0.5)
   return {
-    /* l'écran coupé : un plan large qui file autour du trois-quarts avant */
-    large: { ancre: r.centre, de: [10, 1.8, 9.5], a: [12.6, 0.8, 4.4], viseDe: r.centre, viseA: decale(r.centre, 0, 0, -0.3), fov: [30, 28], nettete: 4, soleil: 15, tangage: 0, suit: 0 },
     /* a (référence 3) : la voiture entière, nez en bas, de trois-quarts
        avant en légère contre-plongée, découpée sur le couchant */
     a: { ancre: r.centre, de: [8, -2.6, 8], a: [7.3, -2.3, 8.7], viseDe: r.centre, viseA: decale(r.centre, 0, 0, 0.2), fov: [26, 25], nettete: 4, soleil: 30, tangage: 0, suit: 0 },
@@ -535,10 +535,17 @@ function plansPour(modele: THREE.Object3D) {
 }
 
 const NETTETE_CHUTE = 5
-/* le premier temps, avant l'écran coupé : la pose du ciel, un souffle
-   de travelling avant ; la caméra descend de `suivi` fois la chute de la
-   voiture, qui file sous elle vers la mer de nuages */
-const APPROCHE_CIEL = { avance: 0.06, fov: 35, suivi: 0.5 }
+/* L'OUVERTURE, du clic au plan a, sous les obliques comme avant elles :
+   UN plan continu (lot 8, « un plan en plongée qui ne matche pas avec le
+   plan des obliques »). La caméra part de la pose du ciel (position,
+   visée, focale, immobile) et glisse jusqu'au plan a vers `ecart` (repère
+   du monde, depuis le centre de la voiture) et `fov` ; sur `depart`
+   secondes elle se met à suivre la chute, jusqu'à `suivi` fois la
+   descente de la voiture, qui glisse un peu dans le cadre sans que la
+   caméra ne passe au-dessus d'elle */
+const OUVERTURE = { ecart: new THREE.Vector3(-8, -1.2, 10.5), fov: 30, suivi: 0.85, depart: 0.8 }
+/* la pose du ciel vise l'origine (ciel.tsx) */
+const VISEE_DU_CIEL = new THREE.Vector3()
 
 /* LE PLAN 5, la chute, après la coupe de « tombe » : la caméra part
    d'ECART_CHUTE, au-dessus et à côté de la voiture entière, la mer de
@@ -596,7 +603,7 @@ export function CameraChute({ etat, cockpit }: { etat: string; cockpit: Cockpit 
     modele.updateWorldMatrix(true, false)
 
     const segment = segmentDe(p, t)
-    if (segment === "ciel") planDuCiel(camera, modele, p, t)
+    if (segment === "ciel" || segment === "large") planDOuverture(camera, modele, p, t)
     else if (t < p.calage.tombe) cadreLePlan(camera, modele, p, t, segment as PlanDeCoupe)
     else suis(camera, modele, cockpit.voiture, p, t)
     chute.cameraY = camera.position.y
@@ -605,14 +612,14 @@ export function CameraChute({ etat, cockpit }: { etat: string; cockpit: Cockpit 
   return null
 }
 
-/* LE CAP DU PLAN, constant d'une coupe à la suivante : 0 avant l'écran
-   coupé (le clic ne bouge rien) ; pour un plan de coupe, de quoi mettre
+/* LE CAP DU PLAN, constant d'une coupe à la suivante : 0 jusqu'au plan a
+   (le clic ne bouge rien) ; pour un plan de coupe, de quoi mettre
    le soleil à `soleil` degrés de son axe de visée (au milieu du plan) ;
    pour la chute, de quoi présenter VUE_CHUTE à la caméra (à « tombe ») */
 function capDuPlan(p: Partition, t: number): number {
   const modele = voitureDuCiel.modele
   const segment = segmentDe(p, t)
-  if (!modele || segment === "ciel" || segment === "rue") return 0
+  if (!modele || segment === "ciel" || segment === "large" || segment === "rue") return 0
   if (segment === "chute") {
     const azimutCamera = Math.atan2(-ECART_CHUTE.x, -ECART_CHUTE.z)
     return azimutCamera - azimutDeVisee(VUE_CHUTE) - capSimule(p, p.calage.tombe)
@@ -635,8 +642,7 @@ function capSimule(p: Partition, t: number) {
 }
 
 function milieuDuPlan(p: Partition, t: number) {
-  const segment = segmentDe(p, t)
-  const debut = segment === "large" ? p.calage.ecran : p.calage[segment as Exclude<PlanDeCoupe, "large">]
+  const debut = p.calage[segmentDe(p, t) as PlanDeCoupe]
   return (debut + finDeSegment(p, t)) / 2
 }
 
@@ -657,13 +663,19 @@ function cadre(camera: THREE.PerspectiveCamera, vise: THREE.Vector3, fov: number
   chute.flou = flou
 }
 
-/* le premier temps : la pose du ciel de toujours (aucune coupe au clic) */
-function planDuCiel(camera: THREE.PerspectiveCamera, modele: THREE.Object3D, p: Partition, t: number) {
-  const u = t / p.calage.ecran
+const viseOuverture = new THREE.Vector3()
+function planDOuverture(camera: THREE.PerspectiveCamera, modele: THREE.Object3D, p: Partition, t: number) {
+  const glisse = douce(lisse(0, p.calage.a, t))
+  const depart = douce(lisse(0, OUVERTURE.depart, t))
+  const altitude = altitudeCiel(p, t)
   centreDuCiel(modele, point)
-  camera.position.lerpVectors(POSE, point, APPROCHE_CIEL.avance * u)
-  camera.position.y += APPROCHE_CIEL.suivi * altitudeCiel(p, t)
-  cadre(camera, point, THREE.MathUtils.lerp(FOV_POSE, APPROCHE_CIEL.fov, u), NETTETE_CHUTE, 0)
+  ecart.copy(point).add(OUVERTURE.ecart)
+  ecart.y -= altitude
+  camera.position.lerpVectors(POSE, ecart, glisse)
+  camera.position.y += OUVERTURE.suivi * depart * altitude
+  /* le ciel visait l'origine : la visée rejoint la voiture qui part */
+  viseOuverture.lerpVectors(VISEE_DU_CIEL, point, depart)
+  cadre(camera, viseOuverture, THREE.MathUtils.lerp(FOV_POSE, OUVERTURE.fov, glisse), NETTETE_CHUTE, FLOU_PLANS * depart)
 }
 
 /* le repère du plan : l'assiette simulée au milieu du plan (ou, selon
@@ -683,7 +695,7 @@ function repereDuPlan(p: Partition, t: number, plan: Plan) {
 function tangageDuPlan(p: Partition, t: number): number {
   const modele = voitureDuCiel.modele
   const segment = segmentDe(p, t)
-  if (!modele || segment === "ciel" || segment === "chute" || segment === "rue") return 0
+  if (!modele || segment === "ciel" || segment === "large" || segment === "chute" || segment === "rue") return 0
   return plansPour(modele)[segment].tangage * DEGRE
 }
 
@@ -701,8 +713,7 @@ function positionDuPlan(modele: THREE.Object3D, plan: Plan, u: number, out: THRE
 const viseRelative = new THREE.Vector3()
 function cadreLePlan(camera: THREE.PerspectiveCamera, modele: THREE.Object3D, p: Partition, t: number, segment: PlanDeCoupe) {
   const plan = plansPour(modele)[segment]
-  const debut = segment === "large" ? p.calage.ecran : p.calage[segment]
-  const u = lisse(debut, finDeSegment(p, t), t)
+  const u = lisse(p.calage[segment], finDeSegment(p, t), t)
   repereDuPlan(p, t, plan)
   centreDuCiel(modele, centre)
   positionDuPlan(modele, plan, u, camera.position, viseRelative)
@@ -738,7 +749,24 @@ function suis(camera: THREE.PerspectiveCamera, modele: THREE.Object3D, voiture: 
   point.copy(CENTRE_POSEE)
   point.y += visee
   point.lerp(approche.viseArriere, w)
+  secoue(camera.position, point, t - p.tToucher)
   cadre(camera, point, fovDeChute(p, t), NETTETE_CHUTE, THREE.MathUtils.lerp(FLOU_CHUTE, 0, douce(lisse(bascule, bascule + BRUME_OUVERTURE_S, tau))))
+}
+
+/* LA SECOUSSE de l'impact (lot 8) : courte et forte, la caméra et sa
+   visée tremblent sur des sinus de fréquences incommensurables
+   (déterministe), l'amplitude s'éteint en `duree` secondes */
+const SECOUSSE = { position: 0.32, visee: 0.12, duree: 0.13, frequences: [47, 61, 53] }
+
+function secoue(position: THREE.Vector3, visee: THREE.Vector3, depuisToucher: number) {
+  if (depuisToucher < 0) return
+  const force = Math.exp(-depuisToucher / SECOUSSE.duree)
+  const [fx, fy, fz] = SECOUSSE.frequences
+  const tremble = (f: number, phase: number) => force * Math.sin(f * depuisToucher + phase)
+  position.x += SECOUSSE.position * tremble(fx, 0.3)
+  position.y += SECOUSSE.position * tremble(fy, 1.1)
+  position.z += SECOUSSE.position * tremble(fz, 2.2)
+  visee.y += SECOUSSE.visee * tremble(fz, 0.7)
 }
 
 /* la droite qui arrive sur le départ du travelling à sa vitesse et dans
@@ -758,11 +786,14 @@ function fovDeChute(p: Partition, t: number) {
 
 /* Les obliques de la référence (« BMW Falling from Sky ») : un
    parallélogramme (pente OBLIQUE_DEG, la bande d'image décalée vers le
-   haut) posé d'un coup sur l'écran coupé et tenu jusqu'à « ouvre » ; là,
-   les bandes s'ouvrent en OUVERTURE_S, toujours penchées. */
+   haut) qui se referme en FERMETURE_S sur le plan continu, fermé pile à
+   l'écran coupé, et tenu jusqu'à « ouvre » ; là, les bandes s'ouvrent en
+   OUVERTURE_S, toujours penchées. Ouvertes, elles sont hors de l'écran
+   quelle que soit leur pente : elles penchent dès le début. */
 const OBLIQUE_DEG = -12
 const OBLIQUE_DECALAGE = -0.06
 const OBLIQUE_DEMI_HAUTEUR = 0.34
+const FERMETURE_S = 0.3
 const OUVERTURE_S = 0.9
 
 const bandes: { haut: HTMLDivElement | null; bas: HTMLDivElement | null; bandeau: HTMLDivElement | null } = { haut: null, bas: null, bandeau: null }
@@ -775,10 +806,12 @@ function poseBandes(calage: Calage, t: number) {
   let angle = 0
   let centre = 0
   let demi = demiOuvert
-  if (t >= calage.ecran) {
+  if (t > 0) {
+    const fermeture = douce(lisse(calage.ecran - FERMETURE_S, calage.ecran, t))
+    const ouverture = douce(lisse(calage.ouvre, calage.ouvre + OUVERTURE_S, t))
     angle = OBLIQUE_DEG
-    centre = OBLIQUE_DECALAGE * h
-    demi = THREE.MathUtils.lerp(OBLIQUE_DEMI_HAUTEUR * h, demiOuvert, douce(lisse(calage.ouvre, calage.ouvre + OUVERTURE_S, t)))
+    centre = OBLIQUE_DECALAGE * h * fermeture
+    demi = THREE.MathUtils.lerp(demiOuvert, OBLIQUE_DEMI_HAUTEUR * h, fermeture * (1 - ouverture))
   }
   haut.style.transform = `rotate(${angle.toFixed(2)}deg) translateY(${(centre - demi).toFixed(1)}px)`
   bas.style.transform = `rotate(${angle.toFixed(2)}deg) translateY(${(centre + demi).toFixed(1)}px)`

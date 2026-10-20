@@ -71,6 +71,10 @@ const TASSE_DUREE = 1.2
 /* la POUSSIÈRE de l'impact : une couronne de bouffées qui s'ouvre et se
    dissout au toucher (l'« effet à la tombée » du 3e retour) */
 const POUSSIERE_DUREE = 0.85
+/* l'impact de la nouvelle chute (#56, lot 8 : « plus violemment ») : la
+   même couronne, plus large, plus dense, plus longue */
+const POUSSIERE_FORTE = { duree: 1.3, taille: 5.6, souffle: 0.95, hauteur: 0.9 }
+const POUSSIERE_DOUCE = { duree: POUSSIERE_DUREE, taille: 3.4, souffle: 0.5, hauteur: 0.55 }
 const POUSSIERE: [number, number][] = [
   [1.15, 1.9], [-1.15, 1.9], [1.3, 0.2], [-1.3, 0.2], [1.15, -1.6], [-1.15, -1.6],
 ]
@@ -377,6 +381,7 @@ function VoitureGaree({
       r.tau = -1
     }
     const { chute, rue: pilotee } = vol.current
+    const bouffees = pilotee && !vivant ? POUSSIERE_FORTE : POUSSIERE_DOUCE
     if (pilotee && !vivant) {
       /* la nouvelle chute (#56) pilote tout, toucher compris : la
          poussière suit son toucher, le ressort d'ici reste au repos */
@@ -404,15 +409,15 @@ function VoitureGaree({
     }
     /* la poussière de l'impact : ouverte par le même ressort */
     if (poussiere.current) {
-      const k = r.tau >= 0 ? Math.min(1, r.tau / POUSSIERE_DUREE) : 1
+      const k = r.tau >= 0 ? Math.min(1, r.tau / bouffees.duree) : 1
       poussiere.current.visible = k < 1
       if (k < 1) {
-        const taille = 0.6 + 3.4 * k
-        const souffle = (1 - k) * (1 - k) * 0.5
+        const taille = 0.6 + bouffees.taille * k
+        const souffle = (1 - k) * (1 - k) * bouffees.souffle
         for (const enfant of poussiere.current.children) {
           const bouffee = enfant as THREE.Sprite
           bouffee.scale.set(taille, taille * 0.6, 1)
-          bouffee.position.y = 0.1 + 0.55 * k
+          bouffee.position.y = 0.1 + bouffees.hauteur * k
           ;(bouffee.material as THREE.SpriteMaterial).opacity = souffle
         }
       }

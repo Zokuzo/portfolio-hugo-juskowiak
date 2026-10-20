@@ -147,6 +147,10 @@ const TURBULENCE_FREQUENCES = [4.1, 9.7, 17.3]
    (relevé du lot 4). Le couplage gyroscopique mêle ensuite les trois axes,
    l'amortissement de l'air les éteint peu à peu */
 const ROTATION_DEPART = { tangage: 0.3, cap: 0.65, roulis: -0.15 }
+/* cet élan s'installe en douceur sur DEPART_S secondes de simulation (lot 8,
+   « la transition au clic doit être fluide ») : immobile avant le clic, la
+   voiture ne se met pas à tourner d'un coup */
+const DEPART_S = 0.6
 
 /* LA REPRISE (v5). Le retour de Hugo sur la v4 : « ça doit être assez
    rapide, et elle doit réaccélérer pour retrouver sa vitesse de chute ».
@@ -166,7 +170,8 @@ const accelerationReprise = (vitesse: number) => -REPRISE.gravite * (1 - (vitess
    d'une caméra qui ne la suit qu'à moitié, elle file vers une mer de
    nuages lointaine. À l'écran coupé, la nappe reprend sa place ; à
    chaque coupe la voiture remonte (rien ne se voit pendant une coupe
-   franche) pour finir chaque plan à Y_FIN_PLAN, haut au-dessus de la
+   franche ; le plan large prolonge l'intro sans coupe, lot 8 : la nappe
+   la suit jusqu'au plan a, première coupe) pour finir chaque plan à Y_FIN_PLAN, haut au-dessus de la
    nappe, et la chute part de Y_CHUTE. Le plafond de nuages (sommet 8)
    monte de HAUSSE_PLAFOND dès l'écran coupé pour laisser la place, et de
    HAUSSE_PLAFOND_CHUTE à « tombe » : la reprise (v5) part de plus haut,
@@ -185,9 +190,8 @@ const HAUSSE_PLAFOND_CHUTE = 105
    le rétablissement vers le plat du toucher (ASSIETTE_TOUCHER) et
    l'atterrissage souple, freiné dans les FREIN.hauteur derniers mètres
    jusqu'à FREIN.vitesse. Ce freinage n'a rien de réaliste (une voiture
-   ne freine pas en l'air), c'est le parti de la v2 que Hugo a validé ;
-   il commence plus haut qu'en v2 (20 m au lieu de 14) pour ne plus
-   tirer que 1,5 g au lieu de 2,5. Il entre en douceur sur
+   ne freine pas en l'air), c'est le parti de la v2 que Hugo a validé,
+   allégé au lot 8 pour un impact franc. Il entre en douceur sur
    FREIN.rampe mètres, puis tient une décélération résolue par dichotomie
    pour toucher pile à FREIN.vitesse. Le rétablissement est un ressort
    critique sur le tangage et le roulis (pulsation STABILISATION). */
@@ -198,10 +202,13 @@ const H_BASCULE = 30
 const V_RUE = 21
 const ASSIETTE_TOUCHER = -0.04
 const STABILISATION = 3.2
-const FREIN = { hauteur: 20, vitesse: 2.6, rampe: 3 }
-/* après le toucher, la suspension de la v2 : une compression, un petit
-   rebond, l'assiette qui s'amortit vers le plat */
-const SUSPENSION = { pulsation: 16, amorti: 5, plongeon: 0.05 }
+/* lot 8, « il faut qu'elle tombe plus violemment » : elle touche à
+   14 m/s (2,6 en v4), freinée moins longtemps */
+const FREIN = { hauteur: 16, vitesse: 14, rampe: 3 }
+/* après le toucher, la suspension : un écrasement franc (`ecrasement`
+   mètres), un rebond qui la soulève, l'assiette qui s'amortit vers le
+   plat */
+const SUSPENSION = { pulsation: 14, amorti: 4, plongeon: 0.09, ecrasement: 0.17 }
 /* la pose après le toucher, avant de rendre la main au seuil (plus que
    le ressort de la rue, TASSE_DUREE 1,2 s, qui reste ainsi au repos) */
 const POSE_S = 1.3
@@ -276,9 +283,10 @@ function simuleVoiture(calage: Calage, pique: number) {
   const sChute = tempsSimule(calage.tombe, calage)
 
   const attitude = new THREE.Quaternion().setFromEuler(new THREE.Euler(pique, 0, 0, "YXZ"))
-  const omega = new THREE.Vector3(0, ROTATION_DEPART.cap, 0)
+  const elan = new THREE.Vector3(0, ROTATION_DEPART.cap, 0)
     .applyQuaternion(attitude.clone().invert())
     .add(new THREE.Vector3(ROTATION_DEPART.tangage, 0, ROTATION_DEPART.roulis))
+  const omega = new THREE.Vector3()
   const rue: EtatRue = { tangage: 0, vTangage: 0, roulis: 0, vRoulis: 0 }
   let altitude = 0
   let vitesse = 0
@@ -304,6 +312,7 @@ function simuleVoiture(calage: Calage, pique: number) {
         vitesse = Math.max(vitesse, -V_RUE)
       }
     }
+    if (s < DEPART_S) omega.addScaledVector(elan, douce(borne((s + PAS_S) / DEPART_S)) - douce(s / DEPART_S))
     if (kBascule < 0) {
       const physique = avanceCiel(attitude, omega, vitesse, s)
       vitesse += PAS_S * (s >= sChute ? accelerationReprise(vitesse) : physique)
@@ -502,21 +511,25 @@ export function finDeSegment(p: Partition, t: number) {
   return p.calage.tombe
 }
 
-/* la remontée du ciel : 0 avant l'écran coupé, puis de quoi finir chaque
+/* le plan large prolonge l'intro sans coupe : jusqu'au plan a, la voiture
+   et la nappe restent où la chute les mène */
+const finIntro = (p: Partition) => p.calage.a
+
+/* la remontée du ciel : 0 jusqu'au plan a, puis de quoi finir chaque
    plan à Y_FIN_PLAN, et partir de Y_CHUTE */
 export function decalageCiel(p: Partition, t: number) {
-  if (t < p.calage.ecran) return 0
+  if (t < finIntro(p)) return 0
   if (t >= p.calage.tombe) return Y_CHUTE - p.zChute
   return Y_FIN_PLAN - echantillonne(p.z, tempsSimule(finDeSegment(p, t), p.calage), p.kToucher)
 }
 
-/* le décalage vertical de la mer de nuages : avant l'écran coupé, elle
+/* le décalage vertical de la mer de nuages : jusqu'au plan a, elle
    descend avec la voiture */
-export const nappeDuCiel = (p: Partition, t: number) => (t < p.calage.ecran ? altitudeCiel(p, t) : 0)
+export const nappeDuCiel = (p: Partition, t: number) => (t < finIntro(p) ? altitudeCiel(p, t) : 0)
 
-/* le décalage vertical du plafond de nuages : il monte dès l'écran coupé,
-   et encore à la coupe de « tombe » */
-export const plafondDuCiel = (p: Partition, t: number) => (t < p.calage.ecran ? 0 : t < p.calage.tombe ? HAUSSE_PLAFOND : HAUSSE_PLAFOND_CHUTE)
+/* le décalage vertical du plafond de nuages : il monte à la coupe du plan
+   a, et encore à celle de « tombe » */
+export const plafondDuCiel = (p: Partition, t: number) => (t < finIntro(p) ? 0 : t < p.calage.tombe ? HAUSSE_PLAFOND : HAUSSE_PLAFOND_CHUTE)
 
 /* l'assiette du ciel (sans le cap fixe de ciel.tsx), figée à la bascule */
 const avant = new THREE.Quaternion()
@@ -544,7 +557,7 @@ export function poseRue(p: Partition, t: number) {
   const amorti = Math.exp(-SUSPENSION.amorti * apres)
   const rebond = amorti * Math.sin(SUSPENSION.pulsation * apres)
   return {
-    hauteur: -(FREIN.vitesse / SUSPENSION.pulsation) * rebond,
+    hauteur: -SUSPENSION.ecrasement * rebond,
     tangage: p.tangageRue[p.kToucher - 1] * amorti + SUSPENSION.plongeon * rebond,
     roulis: p.roulisRue[p.kToucher - 1] * amorti,
     toucher: apres,
