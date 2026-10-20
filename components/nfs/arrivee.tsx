@@ -23,7 +23,7 @@ type Cadre = { piste: Piste; titre: string; jp: string; accroche: string; stats:
 function Arrivee({ cadre, lang, setLang, children }: { cadre: Cadre; lang: Lang; setLang: (l: Lang) => void; children: ReactNode }) {
   const [repart, setRepart] = useState(false)
   /* un VRAI chargement, pas router.push : le masque d'attente du layout
-     (#54) ne joue qu'au chargement, et la scène lit ?menu=nfs à son
+     (#54) ne joue qu'au chargement, et la scène lit le drapeau du menu à son
      montage, avant que le routeur client n'ait réécrit l'adresse */
   const retour = () => {
     if (repart) return

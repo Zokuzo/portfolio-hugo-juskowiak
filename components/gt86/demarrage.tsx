@@ -100,7 +100,7 @@ function joueSon(): number | null {
   return debut
 }
 
-/* LE COUP DE GAZ du menu NFS (?menu=nfs) : le même enregistrement,
+/* LE COUP DE GAZ du menu NFS : le même enregistrement,
    rejoué depuis la prise, avec le ralenti stable en boucle ; la vitesse
    de lecture suit le régime du trajet (trajet.ts), la courbe que lit
    aussi le compteur. Muet si le son n'est pas là ou la musique coupée. */

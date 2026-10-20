@@ -72,7 +72,7 @@ const ENCRE = "#e8dff5"
 /* Le fondu avant la navigation — même ordre de grandeur que le départ GPS
    du prototype #26. */
 const DEPART_MS = 650
-/* le menu Need for Speed (?menu=nfs) : MAISON et WORK, puis le trajet */
+/* le menu Need for Speed : MAISON et WORK, puis le trajet */
 const PISTE: Record<Dest, Piste> = { "/home": "maison", "/work": "work" }
 const DEST: Record<Piste, Dest> = { maison: "/home", work: "/work" }
 /* le verre fumé gaté (#21/#24) : la couleur du voile de la plongée */
@@ -153,8 +153,8 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
      ?nodepart fige l'itinéraire à l'écran (gates visuels, recette #26) */
   const [fpsVoulu] = useState(() => new URLSearchParams(window.location.search).has("fps"))
   const [nodepart] = useState(() => new URLSearchParams(window.location.search).has("nodepart"))
-  /* le menu NFS derrière son drapeau : sans lui, rien ne change */
-  const [nfs] = useState(() => new URLSearchParams(window.location.search).get("menu") === "nfs")
+  /* le menu NFS, par défaut ; ?menu=ancien rend l'habitacle d'avant */
+  const [nfs] = useState(() => new URLSearchParams(window.location.search).get("menu") !== "ancien")
   const domTrajet = useRef(domTrajetVide()).current
   useEffect(() => {
     if (!nfs) return

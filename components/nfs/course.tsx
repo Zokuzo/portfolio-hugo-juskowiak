@@ -12,7 +12,7 @@ import type { Piste } from "./menu-nfs"
    CSS seul (useDepartSeul). */
 
 export const ROUTES: Record<Piste, string> = { maison: "/da/a/maison", work: "/da/a/work" }
-export const MENU = "/?menu=nfs"
+export const MENU = "/"
 
 const CARTES: Record<Piste | "garage", { nom: string; jp: string }> = {
   maison: { nom: "Maison", jp: "ホーム" },

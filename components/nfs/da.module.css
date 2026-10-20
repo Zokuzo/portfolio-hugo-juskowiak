@@ -106,6 +106,7 @@
 .marque .jp { display: block; font-size: 12px; margin-top: 10px; filter: none; }
 .trait { display: block; width: 300px; height: 8px; margin-top: 10px; }
 .hudDroit { display: flex; gap: 24px; align-items: center; }
+.chantier { padding: 4px 10px; border: 1px solid var(--rose); color: var(--rose); text-transform: uppercase; letter-spacing: 0.12em; }
 .pastille { padding: 4px 10px; border: 1px solid rgba(143, 176, 255, 0.35); }
 .pastilleActive { background: var(--acier); color: var(--bleu-nuit); }
 

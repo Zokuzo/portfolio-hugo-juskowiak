@@ -83,7 +83,7 @@ assert.deepEqual(g, S("CHOIX", "/work"), "le choix retient la destination")
 g = suivant(g, { t: "confirme" })
 assert.deepEqual(g, S("DEPART", "/work"), "le départ garde la destination")
 
-// Le menu Need for Speed (?menu=nfs) part de l'habitacle, et de lui seul.
+// Le menu Need for Speed part de l'habitacle, et de lui seul.
 assert.deepEqual(suivant(S("HABITACLE"), { t: "part", dest: "/home" }), S("DEPART", "/home"), "le menu part avec sa destination")
 for (const etat of ETATS.filter((e) => e !== "HABITACLE")) {
   const avant = S(etat)
@@ -151,7 +151,7 @@ for (const f of ["components/gt86/capable.ts", "components/gt86/surcouche.tsx", 
   assert.equal(fautif, null, `${f} importe ${fautif?.[1]} statiquement — la 3D doit rester derrière le dynamic`)
 }
 
-/* LE TRAJET DU MENU NFS (?menu=nfs) : la partition pure que lisent la
+/* LE TRAJET DU MENU NFS : la partition pure que lisent la
    voiture, la caméra, le compteur et le son. La voiture doit rester dans
    la partie éclairée de la rue (~50 m devant elle) jusqu'au volet, et le
    régime dans le cadran. Ses deux pages d'arrivée existent. */
@@ -365,7 +365,8 @@ console.log("  4/6 intro une seule fois par session")
       + chargement rue, filets compris (VOL_MS+4 s puis SEUIL_MS+4 s sur
       machine gelée). */
 await sonde(`sessionStorage.clear()`)
-await va(base + "/")
+/* l'habitacle d'avant (?menu=ancien) : le menu NFS par défaut n'a ni rejeu ni dalle à piloter */
+await va(base + "/?menu=ancien")
 await attends(async () => (await etat()) === "CIEL", 8000, "retour au CIEL en session vierge")
 await sonde(`document.querySelector('[data-gt86="demarrer"]').click()`)
 /* budget MULE : la topologie de lumières constante (#31, retour de gate —
@@ -451,7 +452,7 @@ console.log("  4c/6 le rejeu rend au ciel voiture morte, et le skip rallume tout
       (le rail vole vers l'écran), le hub part au GPS, la rangée MAISON
       lance l'itinéraire (CHOIX), ?nodepart le fige, Échap rassoit. Les
       pixels sont calculés en projetant le PLAN calibré de la dalle. */
-await va(base + "/?nodepart")
+await va(base + "/?nodepart&menu=ancien")
 await attends(async () => (await etat()) === "HABITACLE", 15000, "l'habitacle sous ?nodepart")
 await attends(async () => {
   const v = await sonde(`(() => {

@@ -43,7 +43,7 @@ export type Signal =
   | { t: "va"; ou: "GPS" | "MUSIQUES" }
   | { t: "choisit"; dest: Dest }
   | { t: "confirme" }
-  | { t: "part"; dest: Dest } // le menu Need for Speed (?menu=nfs) : départ direct depuis l'habitacle
+  | { t: "part"; dest: Dest } // le menu Need for Speed : départ direct depuis l'habitacle
   | { t: "retour" } // ‹ et Échap : un seul chemin de sortie, jamais deux
   | { t: "rejoue" } // revoir la scène : l'habitacle rend la main au CIEL (4e retour de gate #31)
 

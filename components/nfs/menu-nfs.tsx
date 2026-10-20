@@ -82,6 +82,7 @@ export function MenuNfs({ surDestination, variante, surRejoue }: Props) {
           <TraitVitesse className={s.trait} />
         </h1>
         <div className={`${s.hudDroit} ${s.mono}`}>
+          <span className={s.chantier}>work in progress</span>
           <span>{PILOTE.fonction.toLowerCase()}</span>
           <span>
             <span className={`${s.pastille} ${s.pastilleActive}`}>FR</span> <span className={s.pastille}>EN</span>

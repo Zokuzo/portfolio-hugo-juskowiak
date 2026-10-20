@@ -50,7 +50,7 @@ export default function Page() {
      suivant si la machine est desktop capable, et se retire d'elle-même à
      la moindre erreur. */
   const gt86 = useGt86()
-  /* le menu Need for Speed (?menu=nfs) : sans 3D, il s'affiche quand même
+  /* le menu Need for Speed : sans 3D, il s'affiche quand même
      par-dessus la planche, ses départs se font au volet en biais */
   const nfs = useMenuNfs()
 

@@ -1,4 +1,4 @@
-/* LE TRAJET du menu Need for Speed (?menu=nfs) : la partition du départ,
+/* LE TRAJET du menu Need for Speed : la partition du départ,
    en secondes depuis la validation. Module PUR (ni React, ni three, ni
    DOM) : la voiture, la caméra, le compteur et le son lisent les mêmes
    courbes, et `tools/gt86/verifie.mjs` peut les assérer dans node.
