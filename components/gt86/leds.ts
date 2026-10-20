@@ -42,7 +42,7 @@ const FEU: [number, number, number][] = [
   [0.627, 0.748, -1.768], [0.61, 0.737, -1.784], [0.585, 0.733, -1.808], [0.56, 0.739, -1.828],
   [0.54, 0.75, -1.838], [0.515, 0.763, -1.85], [0.49, 0.772, -1.86],
 ]
-const RAYON = { avant: 0.013, arriere: 0.0045, coeur: 0.0016, reflet: 0.007 }
+const RAYON = { avant: 0.013, arriere: 0.0045, coeur: 0.0016, reflet: 0.014 }
 const SEGMENTS = 64
 const FACETTES = 8
 
@@ -61,8 +61,22 @@ export const PROJECTEUR = "#0b1a36"
 /* éteintes, les bandes restent un liseré sombre sous le verre */
 const ETEINTE = { avant: "#1c1d20", arriere: "#140808", coeur: "#1a0c0c", reflet: "#0c1220" }
 /* le boîtier et la lentille des phares, noirs comme sur la référence 11 :
-   la couleur de base, un uniforme de leur programme (la carte reste) */
-const BOITIER_SOMBRE = { HeadlightsTex: "#2a2c31", LightsFront: "#16181d" }
+   la couleur de base, un uniforme de leur programme (la carte reste) ;
+   leur poli garde les reflets des réflecteurs */
+const BOITIER_SOMBRE = { HeadlightsTex: "#050608", LightsFront: "#050608" }
+
+/* LE VERRE DES PHARES (lot 14) : le GLB n'a qu'un verre (Glass), vitres
+   et phares mêlés ; poli en miroir du couchant (ciel.tsx), il teintait
+   les phares de lavande. Ses triangles d'avant (z > PHARES_Z, devant le
+   pare-brise) passent dans un second groupe, sous un clone du verre :
+   même type, mêmes defines, donc même programme GPU ; seuls des
+   uniformes changent, pour un verre clair qui laisse voir le noir. Sous
+   scene.environment, three r169 ignore l'envMapIntensity (carrosserie.tsx) :
+   le reflet du ciel tombe par le spéculaire, le vernis et l'opacité */
+const VERRE = "Glass"
+const VERRE_PHARE = "GlassPhare"
+const PHARES_Z = 1.5
+const REGLAGE_VERRE_PHARE = { couleur: "#050608", metalness: 0, envMapIntensity: 0.25, opacity: 0.18, clearcoat: 0.05, specularIntensity: 0.15 }
 
 export function poseLeds(modele: THREE.Object3D) {
   if (modele.getObjectByName(NOM)) return
@@ -83,6 +97,7 @@ export function poseLeds(modele: THREE.Object3D) {
   }
   modele.add(bandes)
   assombritBoitiers(modele)
+  separeVerresPhares(modele)
 }
 
 function assombritBoitiers(modele: THREE.Object3D) {
@@ -91,6 +106,51 @@ function assombritBoitiers(modele: THREE.Object3D) {
     const sombre = materiau && BOITIER_SOMBRE[materiau.name as keyof typeof BOITIER_SOMBRE]
     if (sombre) materiau.color.set(sombre)
   })
+}
+
+function separeVerresPhares(modele: THREE.Object3D) {
+  modele.updateMatrixWorld(true)
+  const versModele = new THREE.Matrix4().copy(modele.matrixWorld).invert()
+  modele.traverse((o) => {
+    const mesh = o as THREE.Mesh
+    const verre = mesh.material as THREE.MeshPhysicalMaterial
+    if (!mesh.isMesh || Array.isArray(verre) || verre?.name !== VERRE) return
+    regroupeTrianglesAvant(mesh.geometry, new THREE.Matrix4().multiplyMatrices(versModele, mesh.matrixWorld))
+    mesh.material = [verre, verrePhare(verre)]
+  })
+}
+
+/* le groupe 0 garde les vitres, le groupe 1 prend les phares ; la
+   géométrie est partagée avec le clone de la rue : regroupée une fois */
+function regroupeTrianglesAvant(geometrie: THREE.BufferGeometry, versModele: THREE.Matrix4) {
+  if (geometrie.groups.length) return
+  const index = geometrie.index
+  if (!index) throw new Error("gt86 : le verre du GLB n'est plus indexé, impossible d'isoler les phares")
+  const positions = geometrie.attributes.position
+  const sommet = new THREE.Vector3()
+  const avant = (i: number) => sommet.fromBufferAttribute(positions, index.getX(i)).applyMatrix4(versModele).z > PHARES_Z
+  const vitres: number[] = []
+  const phares: number[] = []
+  for (let t = 0; t < index.count; t += 3) {
+    const cible = avant(t) && avant(t + 1) && avant(t + 2) ? phares : vitres
+    cible.push(index.getX(t), index.getX(t + 1), index.getX(t + 2))
+  }
+  geometrie.setIndex([...vitres, ...phares])
+  geometrie.addGroup(0, vitres.length, 0)
+  geometrie.addGroup(vitres.length, phares.length, 1)
+}
+
+function verrePhare(verre: THREE.MeshPhysicalMaterial) {
+  const phare = verre.clone()
+  const r = REGLAGE_VERRE_PHARE
+  phare.name = VERRE_PHARE
+  phare.color.set(r.couleur)
+  phare.metalness = r.metalness
+  phare.envMapIntensity = r.envMapIntensity
+  phare.opacity = r.opacity
+  phare.clearcoat = r.clearcoat
+  phare.specularIntensity = r.specularIntensity
+  return phare
 }
 
 function tube(points: [number, number, number][], rayon: number, miroir: boolean, materiau: THREE.Material) {
