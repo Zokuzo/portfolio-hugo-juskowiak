@@ -234,13 +234,13 @@ export function habilleInterieur(
       /* les optiques : réglages gatés du #22 posés dès maintenant, mais à
          intensité ZÉRO — le claquement du seuil n'a plus qu'à monter le son */
       if (mat.name === "LightsFront") {
-        mat.emissive?.set("#fff3dc")
+        mat.emissive?.set("#b07cff")
         mat.toneMapped = false
         mat.emissiveIntensity = 0
         cockpit.optiques.push(mat)
       }
       if (mat.name === "HeadlightsTex") {
-        mat.emissive?.set("#bcd6f0")
+        mat.emissive?.set("#9d5cff")
         mat.emissiveMap = mat.map
         mat.emissiveIntensity = 0
         cockpit.signature.push(mat)

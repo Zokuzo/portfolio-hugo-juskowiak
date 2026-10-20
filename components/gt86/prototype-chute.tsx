@@ -192,15 +192,15 @@ function pendRoues(modele: THREE.Object3D, detente: number) {
 }
 
 /* les feux, allumés pendant toute la chute (références 4, 6 et 7) : le
-   feu arrière, les phares et leur optique. La couleur et l'intensité
+   feu arrière, les phares et leur optique, en violet LED. La couleur et l'intensité
    émissives des matériaux du GLB, deux uniformes de leur programme déjà
    compilé (pas de carte émissive : elle en compilerait un autre). Hors de
    la chute ils retrouvent leurs valeurs du GLB */
 const SEGMENTS_ALLUMES: Segment[] = ["a", "b", "c", "d", "chute"]
 const FEUX = [
-  { materiau: "Taillightbody", couleur: new THREE.Color("#ff2414"), intensite: 4 },
-  { materiau: "LightsFront", couleur: new THREE.Color("#fff3dc"), intensite: 6 },
-  { materiau: "HeadlightsTex", couleur: new THREE.Color("#bcd6f0"), intensite: 0.5 },
+  { materiau: "Taillightbody", couleur: new THREE.Color("#8a2bff"), intensite: 5 },
+  { materiau: "LightsFront", couleur: new THREE.Color("#b07cff"), intensite: 7 },
+  { materiau: "HeadlightsTex", couleur: new THREE.Color("#9d5cff"), intensite: 0.8 },
 ]
 type FeuDuModele = { materiau: THREE.MeshStandardMaterial; couleur: THREE.Color; intensite: number }
 const feux: { modele: THREE.Object3D | null; materiaux: FeuDuModele[] } = { modele: null, materiaux: [] }
