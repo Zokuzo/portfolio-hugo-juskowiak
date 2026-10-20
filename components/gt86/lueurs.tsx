@@ -15,7 +15,11 @@ import { halo } from "./rue"
    avant le rideau. */
 
 export const VIOLET_LUEUR = "#9a4dff"
-const LUEUR = { avant: { taille: 1.1, opacite: 0.55 }, arriere: { taille: 1, opacite: 0.28 } }
+const LUEUR = { avant: { taille: 1, opacite: 0.4 }, arriere: { taille: 1, opacite: 0.28 } }
+/* à l'avant, la lueur part devant et sous le phare (Hugo, 2026-10-20 :
+   « halo autour ») : posée sur l'optique, le violet additif teintait en
+   lavande le noir du boîtier et noyait la barre LED */
+const SOUS_LE_PHARE = { descend: 0.3, avance: 0.35 }
 /* la part de la demi-largeur du bandeau où tombe le centre d'une optique */
 const ECART = 0.86
 /* décollée de la carrosserie : sans ça la caisse mange la moitié du sprite */
@@ -66,6 +70,8 @@ function paireDOptiques(modele: THREE.Object3D, materiau: string, cote: Optique[
   const boite = boiteDans(modele, pieces)
   const centre = boite.getCenter(new THREE.Vector3())
   const demiLargeur = (boite.max.x - boite.min.x) / 2
-  const z = cote === "avant" ? boite.max.z + DECOLLE : boite.min.z - DECOLLE
-  return [-1, 1].map((sens) => ({ position: new THREE.Vector3(centre.x + sens * demiLargeur * ECART, centre.y, z), cote }))
+  const avant = cote === "avant"
+  const y = avant ? centre.y - SOUS_LE_PHARE.descend : centre.y
+  const z = avant ? boite.max.z + DECOLLE + SOUS_LE_PHARE.avance : boite.min.z - DECOLLE
+  return [-1, 1].map((sens) => ({ position: new THREE.Vector3(centre.x + sens * demiLargeur * ECART, y, z), cote }))
 }
