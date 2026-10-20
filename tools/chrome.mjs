@@ -96,6 +96,24 @@ async function portLibre() {
   })
 }
 
+/* UN CHROME NE SURVIT PAS À SON SCRIPT. Un script tué (timeout, Ctrl+C) ne
+   passe pas par son `finally` : le Chrome restait orphelin, la page gt86
+   ouverte, et rendait en boucle sur le GPU de la machine. Trois orphelins
+   (2 h, 1 h 17, 41 min) ont partagé l'Intel Arc avec le navigateur de Hugo
+   le 2026-10-20 : 5 IPS sur sa préversion, 16,7 ms par image une fois tués.
+   Node ne quitte plus seul sur ces signaux une fois écoutés : on sort à la
+   main, et c'est la sortie qui tue les Chrome encore vivants. */
+const vivants = new Set()
+const SIGNAUX = { SIGINT: 2, SIGTERM: 15, SIGHUP: 1 }
+process.once("exit", () => { for (const proc of vivants) proc.kill() })
+for (const [signal, numero] of Object.entries(SIGNAUX)) process.once(signal, () => process.exit(128 + numero))
+
+// ponytail: un SIGKILL du script laisse encore l'orphelin ; --remote-debugging-pipe le fermerait aussi
+function meurtAvecLeScript(proc) {
+  vivants.add(proc)
+  proc.once("exit", () => vivants.delete(proc))
+}
+
 /**
  * Démarre un Chrome, s'y branche en CDP, rend `{ cdp, ferme }`.
  * `args` s'ajoute aux drapeaux communs ; `url` est la page ouverte au départ.
@@ -127,6 +145,7 @@ export async function lanceChrome({ chrome = trouveChrome(), args = [], url = "a
     ...args,
     url,
   ], { stdio: "ignore" })
+  meurtAvecLeScript(proc)
 
   const cible = await attends(async () => {
     try {
