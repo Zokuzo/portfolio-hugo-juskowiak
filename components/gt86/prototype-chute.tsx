@@ -188,48 +188,49 @@ function pendRoues(modele: THREE.Object3D, detente: number) {
   for (const { noeud, base, bas } of roues.noeuds) noeud.position.copy(base).addScaledVector(bas, detente)
 }
 
-/* le feu arrière, allumé pendant le plan c (référence 6) : la couleur et
-   l'intensité émissives du matériau du GLB, deux uniformes de son
-   programme déjà compilé (pas de carte émissive : elle en compilerait un
-   autre). Hors du plan c il retrouve ses valeurs du GLB : la rue, qui
-   partage peut-être ce matériau, le voit éteint */
-const FEU = { materiau: "Taillightbody", plan: "c" as Segment, couleur: new THREE.Color("#ff2414"), intensite: 4 }
-const feu: { modele: THREE.Object3D | null; materiau: THREE.MeshStandardMaterial | null; couleur: THREE.Color; intensite: number } = {
-  modele: null,
-  materiau: null,
-  couleur: new THREE.Color(),
-  intensite: 1,
-}
+/* les feux, allumés pendant toute la chute (références 4, 6 et 7) : le
+   feu arrière, les phares et leur optique. La couleur et l'intensité
+   émissives des matériaux du GLB, deux uniformes de leur programme déjà
+   compilé (pas de carte émissive : elle en compilerait un autre). Hors de
+   la chute ils retrouvent leurs valeurs du GLB */
+const SEGMENTS_ALLUMES: Segment[] = ["a", "b", "c", "d", "chute"]
+const FEUX = [
+  { materiau: "Taillightbody", couleur: new THREE.Color("#ff2414"), intensite: 4 },
+  { materiau: "LightsFront", couleur: new THREE.Color("#fff3dc"), intensite: 6 },
+  { materiau: "HeadlightsTex", couleur: new THREE.Color("#bcd6f0"), intensite: 0.5 },
+]
+type FeuDuModele = { materiau: THREE.MeshStandardMaterial; couleur: THREE.Color; intensite: number }
+const feux: { modele: THREE.Object3D | null; materiaux: FeuDuModele[] } = { modele: null, materiaux: [] }
 
-function materiauDuFeu(modele: THREE.Object3D) {
-  if (feu.modele !== modele) {
-    const trouves: THREE.MeshStandardMaterial[] = []
-    modele.traverse((o) => {
-      const materiau = (o as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined
-      if (materiau?.name === FEU.materiau && materiau.emissive) trouves.push(materiau)
+function materiauxDesFeux(modele: THREE.Object3D) {
+  if (feux.modele !== modele) {
+    feux.modele = modele
+    feux.materiaux = FEUX.map(({ materiau: nom }) => {
+      let trouve: THREE.MeshStandardMaterial | undefined
+      modele.traverse((o) => {
+        const materiau = (o as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined
+        if (!trouve && materiau?.name === nom && materiau.emissive) trouve = materiau
+      })
+      if (!trouve) throw new Error(`gt86 : le GLB du ciel n'a plus de matériau ${nom}`)
+      return { materiau: trouve, couleur: trouve.emissive.clone(), intensite: trouve.emissiveIntensity }
     })
-    const materiau = trouves[0]
-    if (!materiau) throw new Error(`gt86 : le GLB du ciel n'a plus de matériau ${FEU.materiau}`)
-    feu.modele = modele
-    feu.materiau = materiau
-    feu.couleur.copy(materiau.emissive)
-    feu.intensite = materiau.emissiveIntensity
   }
-  return feu.materiau!
+  return feux.materiaux
 }
 
 function allumeFeu(modele: THREE.Object3D, segment: Segment) {
-  const materiau = materiauDuFeu(modele)
-  if (segment === FEU.plan) {
-    materiau.emissive.copy(FEU.couleur)
-    materiau.emissiveIntensity = FEU.intensite
-  } else eteinsFeu(modele)
+  if (!SEGMENTS_ALLUMES.includes(segment)) return eteinsFeu(modele)
+  materiauxDesFeux(modele).forEach(({ materiau }, i) => {
+    materiau.emissive.copy(FEUX[i].couleur)
+    materiau.emissiveIntensity = FEUX[i].intensite
+  })
 }
 
 function eteinsFeu(modele: THREE.Object3D) {
-  const materiau = materiauDuFeu(modele)
-  materiau.emissive.copy(feu.couleur)
-  materiau.emissiveIntensity = feu.intensite
+  for (const { materiau, couleur, intensite } of materiauxDesFeux(modele)) {
+    materiau.emissive.copy(couleur)
+    materiau.emissiveIntensity = intensite
+  }
 }
 
 /* ---- l'état partagé ----------------------------------------------------- */

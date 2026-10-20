@@ -7,7 +7,7 @@ import * as THREE from "three"
 import MerDeNuages from "./mer-de-nuages"
 import { useChauffeEnSolo } from "./chauffe"
 import type { Trajectoire } from "./vol"
-import { LamesDuCiel, cliquableParSaBoite, mireLeCiel, peintureDuCiel } from "./carrosserie"
+import { LamesDuCiel, cliquableParSaBoite, mireLeCiel, pieceDeRobe, robeDuCiel } from "./carrosserie"
 
 /* LE CIEL — ticket #29 : le verdict « Pellicule » du gate #21, porté du
    prototype (route jetable, supprimée au #35) dans la coquille.
@@ -126,26 +126,24 @@ function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<
     cliquableParSaBoite(modele, new THREE.Box3().setFromCenterAndSize(new THREE.Vector3(), taille))
   }, [modele])
 
-  /* chrome miroir : le ciel et ses lames se découpent dans la robe.
+  /* la robe (carrosserie.tsx) : peinture vernie, jantes chrome.
      Le nom "Paint" est porteur : la voiture de la RUE (#30) se clone
      depuis ce même GLB déjà mué — son rhabillage retrouve la peinture
      par ce nom. */
-  const peinture = useMemo(peintureDuCiel, [])
+  const robe = useMemo(robeDuCiel, [])
 
   useEffect(() => {
-    /* la robe couvre la carrosserie ET la jante (étoile + lit extérieur) —
+    /* la robe couvre la carrosserie ET la jante (étoile + lit extérieur) :
        pneus, freins et visserie restent d'origine */
-    const PEINTS = ["Paint", "Stern", "Aussenbeet"]
-    mireLeCiel(peinture, scene3, gl3)
+    mireLeCiel(robe, scene3, gl3)
     modele.traverse((o) => {
       const mesh = o as THREE.Mesh
       if (!mesh.isMesh) return
       const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
-      if (mats.some((m) => PEINTS.includes(m?.name ?? ""))) {
-        mesh.material = peinture
-      }
+      const piece = pieceDeRobe(robe, mats.map((m) => m?.name ?? ""))
+      if (piece) mesh.material = piece
     })
-  }, [modele, peinture, scene3, gl3])
+  }, [modele, robe, scene3, gl3])
 
   /* la respiration — amplitude couplée au sommet du banc (-2,6) : le nez
      piqué descend à ~-2,1 au creux de la houle, plus bas le banc mange la

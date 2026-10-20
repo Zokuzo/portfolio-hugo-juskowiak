@@ -3,7 +3,7 @@
 import { Lightformer } from "@react-three/drei"
 import * as THREE from "three"
 
-/* LA CARROSSERIE DE LA GT86, ticket #53 : la robe chrome miroir que
+/* LA CARROSSERIE DE LA GT86, ticket #53 : la robe que
    portent toutes les scènes (ciel, vol, rue, seuil), jantes comprises.
    Verdict de Hugo le 2026-10-16 sur trois prototypes (« la version a est
    bcp mieux ») : le chrome poli l'emporte sur l'argent métallisé pailleté
@@ -18,38 +18,74 @@ import * as THREE from "three"
    vitrines, néons). Les jantes partagent la robe : elles restent le
    repère du silver. */
 
-/* Chrome miroir : métal pur, poli, sans vernis. Il ne vit que de son
-   environnement de reflet, d'où le reflet du ciel bas : le crépuscule
-   est clair partout, un miroir plus fort y devenait blanc plat. La nuit
-   est le seul environnement de la voiture en rue, elle porte l'éclat.
-   La couleur tire un souffle vers le bleu : la LUT rose du rendu
-   (rendu.tsx) multiplie les hautes lumières par (1,07 ; 0,95 ; 0,92),
-   un gris neutre y ressortait taupe rosé. */
-const ROBE = {
+/* Deux matériaux depuis le v7 (Hugo, 2026-10-20 : « du chrome lilas qui
+   reflète tout ») : la CAISSE porte une vraie peinture, une base nette
+   presque diélectrique sous un vernis poli qui seul mire le ciel ; les
+   JANTES gardent le chrome miroir, le métal y est réservé. Le vernis est
+   posé dès la création : passer clearcoat de 0 à plus de 0 recompile le
+   programme, à faire avant le rideau, jamais après.
+
+   La teinte de base reste le gris bleuté du chrome : la LUT rose du rendu
+   (rendu.tsx) multiplie les hautes lumières par (1,07 ; 0,95 ; 0,92), un
+   gris neutre y ressortait taupe rosé. Le reflet du ciel reste bas : le
+   crépuscule est clair partout. La nuit porte l'éclat en rue. */
+const CHROME = {
   couleur: "#e4e9ef",
   metal: 1,
   rugosite: 0.05,
+}
+const PEINTURE = {
+  couleur: "#b9bfcc",
+  metal: 0.3,
+  rugosite: 0.42,
+  vernis: 1,
+  rugositeVernis: 0.04,
+}
+const REFLET = {
   /* l'<Environment> du ciel donne 0,6 à tout le reste */
-  refletCiel: 0.28,
-  refletNuit: 2.6,
+  ciel: 0.28,
+  nuit: 2.6,
 }
 
-export function peintureDuCiel() {
-  const p = new THREE.MeshPhysicalMaterial({
-    color: ROBE.couleur,
-    metalness: ROBE.metal,
-    roughness: ROBE.rugosite,
+export type Robe = { caisse: THREE.MeshPhysicalMaterial; jantes: THREE.MeshPhysicalMaterial }
+
+/* noms porteurs : la rue retrouve la robe par les noms du GLB (ciel.tsx) */
+const PIECES_DE_CAISSE = ["Paint"]
+const PIECES_DE_JANTE = ["Stern", "Aussenbeet"]
+
+export function robeDuCiel(): Robe {
+  const caisse = new THREE.MeshPhysicalMaterial({
+    color: PEINTURE.couleur,
+    metalness: PEINTURE.metal,
+    roughness: PEINTURE.rugosite,
+    clearcoat: PEINTURE.vernis,
+    clearcoatRoughness: PEINTURE.rugositeVernis,
   })
-  /* nom porteur : la rue retrouve la peinture par ce nom (ciel.tsx) */
-  p.name = "Paint"
-  return p
+  caisse.name = PIECES_DE_CAISSE[0]
+  const jantes = new THREE.MeshPhysicalMaterial({
+    color: CHROME.couleur,
+    metalness: CHROME.metal,
+    roughness: CHROME.rugosite,
+  })
+  jantes.name = PIECES_DE_JANTE[0]
+  return { caisse, jantes }
 }
 
-export function peintureDeNuit() {
-  const p = peintureDuCiel()
-  p.envMap = envNuitCarrosserie()
-  p.envMapIntensity = ROBE.refletNuit
-  return p
+export function robeDeNuit(): Robe {
+  const robe = robeDuCiel()
+  for (const m of [robe.caisse, robe.jantes]) {
+    m.envMap = envNuitCarrosserie()
+    m.envMapIntensity = REFLET.nuit
+  }
+  return robe
+}
+
+/* le matériau de la robe pour ces noms de matériaux du GLB, ou undefined
+   si la pièce n'en porte pas (pneus, freins, visserie restent d'origine) */
+export function pieceDeRobe(robe: Robe, noms: string[]) {
+  if (noms.some((n) => PIECES_DE_CAISSE.includes(n))) return robe.caisse
+  if (noms.some((n) => PIECES_DE_JANTE.includes(n))) return robe.jantes
+  return undefined
 }
 
 /* Face à scene.environment, three r169 impose l'environmentIntensity de
@@ -70,7 +106,7 @@ export function peintureDeNuit() {
    module : un retour client sur / remonte un <Canvas> neuf, et la cible
    de l'ancien contexte, perdu, ne se ré-uploade pas (chrome charbon). */
 const cielPropre = new WeakMap<THREE.WebGLRenderer, THREE.Texture>()
-export function mireLeCiel(robe: THREE.MeshPhysicalMaterial, scene: THREE.Scene, gl: THREE.WebGLRenderer) {
+export function mireLeCiel(robe: Robe, scene: THREE.Scene, gl: THREE.WebGLRenderer) {
   if (!scene.environment) {
     console.warn("carrosserie : pas de scene.environment au montage, la robe garde le reflet de la scène")
     return
@@ -82,9 +118,11 @@ export function mireLeCiel(robe: THREE.MeshPhysicalMaterial, scene: THREE.Scene,
     generateur.dispose()
     cielPropre.set(gl, propre)
   }
-  robe.envMap = propre
-  robe.envMapRotation.copy(scene.environmentRotation)
-  robe.envMapIntensity = ROBE.refletCiel
+  for (const m of [robe.caisse, robe.jantes]) {
+    m.envMap = propre
+    m.envMapRotation.copy(scene.environmentRotation)
+    m.envMapIntensity = REFLET.ciel
+  }
 }
 
 /* ---- l'environnement de reflet du ciel --------------------------------- */

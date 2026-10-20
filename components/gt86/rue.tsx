@@ -6,7 +6,7 @@ import { useGLTF, useTexture } from "@react-three/drei"
 import * as THREE from "three"
 import type { Trajectoire } from "./vol"
 import { useChauffeEnSolo } from "./chauffe"
-import { cliquableParSaBoite, peintureDeNuit } from "./carrosserie"
+import { cliquableParSaBoite, pieceDeRobe, robeDeNuit } from "./carrosserie"
 import { fondPourLeRendu } from "./rendu"
 import {
   ASSISE,
@@ -268,10 +268,10 @@ function VoitureGaree({
        (payé : la voiture garée flottait d'un demi-mètre en capture) */
     clone.position.set(0, 0, 0)
     const env = envNuit()
-    /* MÊME chrome miroir que la voiture du ciel (9e retour : « unifie les
+    /* MÊME robe que la voiture du ciel (9e retour : « unifie les
        couleurs des deux voitures », #53) : seule son équirect de nuit,
        plus riche que celle du décor, la distingue */
-    const peinture = peintureDeNuit()
+    const robe = robeDeNuit()
     clone.traverse((o) => {
       const mesh = o as THREE.Mesh
       if (!mesh.isMesh) return
@@ -282,9 +282,8 @@ function VoitureGaree({
         : mesh.material.clone()
       const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
       if (mats.some((m) => m?.name === "Floor")) mesh.visible = false
-      if (mats.some((m) => ["Paint", "Stern", "Aussenbeet"].includes(m?.name ?? ""))) {
-        mesh.material = peinture
-      }
+      const piece = pieceDeRobe(robe, mats.map((m) => m?.name ?? ""))
+      if (piece) mesh.material = piece
       for (const m of mats) {
         const mat = m as THREE.MeshStandardMaterial
         if (!mat || !("envMapIntensity" in mat)) continue
