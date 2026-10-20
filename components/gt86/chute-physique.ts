@@ -55,12 +55,13 @@ function refuseCalage(texte: string, pourquoi: string): Calage {
 /* du clic à l'écran coupé, la voiture tombe en vitesse réelle ; dans les
    RAMPE_ECRAN dernières secondes avant l'écran coupé le temps de la
    simulation descend à RALENTI fois celui de la musique, et y reste
-   pendant les plans ; à la chute il remonte à 1 en RAMPE_CHUTE. Les
+   pendant les plans ; à la chute il remonte à 1 en RAMPE_CHUTE, moins
+   d'une seconde (v5, « la voiture doit réaccélérer »). Les
    rampes sont des smootherstep : la cadence, donc la vitesse de la
    voiture à l'écran, n'a aucune cassure */
 export const RALENTI = 0.1
 const RAMPE_ECRAN = 0.6
-const RAMPE_CHUTE = 1
+const RAMPE_CHUTE = 0.9
 
 /* smootherstep : vitesse et accélération nulles aux deux bouts */
 export const douce = (u: number) => u * u * u * (u * (6 * u - 15) + 10)
@@ -147,6 +148,17 @@ const TURBULENCE_FREQUENCES = [4.1, 9.7, 17.3]
    l'amortissement de l'air les éteint peu à peu */
 const ROTATION_DEPART = { tangage: 0.3, cap: 0.65, roulis: -0.15 }
 
+/* LA REPRISE (v5). Le retour de Hugo sur la v4 : « ça doit être assez
+   rapide, et elle doit réaccélérer pour retrouver sa vitesse de chute ».
+   À plat, la vraie traînée plafonne la voiture à 49 m/s, qu'elle
+   n'approche qu'en plusieurs secondes : au plan 5 elle ne prenait plus
+   de vitesse à l'œil. Dès « tombe », le montage triche comme au cinéma :
+   la verticale suit une loi de chute à traînée quadratique, mais sous
+   une gravité exagérée (`gravite`) et vers une vitesse limite de voiture
+   (`limite`). L'assiette, elle, reste celle de la vraie physique */
+const REPRISE = { gravite: 3.5 * G, limite: 58 }
+const accelerationReprise = (vitesse: number) => -REPRISE.gravite * (1 - (vitesse / REPRISE.limite) ** 2)
+
 /* LE CIEL. La voiture pend à l'altitude 0 au clic, 2,6 m au-dessus du
    sommet de la mer de nuages (-2,6), et tombe en vitesse réelle jusqu'à
    l'écran coupé : près de 20 m. Pour qu'elle tombe de haut sans
@@ -156,13 +168,16 @@ const ROTATION_DEPART = { tangage: 0.3, cap: 0.65, roulis: -0.15 }
    chaque coupe la voiture remonte (rien ne se voit pendant une coupe
    franche) pour finir chaque plan à Y_FIN_PLAN, haut au-dessus de la
    nappe, et la chute part de Y_CHUTE. Le plafond de nuages (sommet 8)
-   monte de HAUSSE_PLAFOND dès l'écran coupé pour laisser la place. Le
+   monte de HAUSSE_PLAFOND dès l'écran coupé pour laisser la place, et de
+   HAUSSE_PLAFOND_CHUTE à « tombe » : la reprise (v5) part de plus haut,
+   le plafond garde au-dessus de la caméra l'écart de la v4. Le
    voile blanchit l'écran avant qu'elle n'entre dans le banc ; la
    bascule vers la rue se fait quand elle est à Y_BASCULE, voile plein */
 const Y_FIN_PLAN = 28
-const Y_CHUTE = 48
+const Y_CHUTE = 92
 const Y_BASCULE = -6
 const HAUSSE_PLAFOND = 60
+const HAUSSE_PLAFOND_CHUTE = 105
 
 /* LA RUE : la même chute se poursuit à H_BASCULE au-dessus du garage.
    Elle y entre avec l'assiette et les vitesses de rotation du ciel (cap
@@ -201,13 +216,19 @@ const DUREE_MAX_S = 60
 /* ---- la caméra de la chute : un ressort sur la verticale ---------------- */
 
 /* de la marque « tombe » à la fin, la caméra suit la voiture sur un
-   ressort amorti (pulsation, amortissement) : elle la voit partir, prend
-   du retard, la rattrape ; la visée suit sur un ressort plus raide. En
+   ressort amorti (pulsation, amortissement) : elle la voit partir et
+   prend du retard (SUIVI_CIEL) ; la visée suit sur un ressort plus raide. En
    rue, la caméra freine pour s'arrêter CAMERA_FREIN.hauteur mètres plus
    bas, au-dessus de la voiture posée */
 const RESSORT_CAMERA = { pulsation: 3.2, amorti: 0.75 }
 const RESSORT_VISEE = { pulsation: 9, amorti: 1 }
 const CAMERA_FREIN = { hauteur: 16, rampe: 4 }
+/* dans le ciel (v5), le ressort de la caméra ne vise que SUIVI_CIEL fois
+   la vitesse de la voiture : son retard grandit avec la vitesse, la
+   voiture qui réaccélère s'éloigne d'elle vers les nuages au lieu de
+   rester figée dans le cadre (retard établi : 2 amorti (1 - SUIVI_CIEL)
+   v / pulsation, 9 m à 55 m/s) */
+const SUIVI_CIEL = 0.65
 
 /* ---- la partition ----------------------------------------------------------- */
 
@@ -284,7 +305,8 @@ function simuleVoiture(calage: Calage, pique: number) {
       }
     }
     if (kBascule < 0) {
-      vitesse += PAS_S * avanceCiel(attitude, omega, vitesse, s)
+      const physique = avanceCiel(attitude, omega, vitesse, s)
+      vitesse += PAS_S * (s >= sChute ? accelerationReprise(vitesse) : physique)
     } else {
       const hauteur = H_BASCULE + altitude - zBascule
       if (hauteur <= 0) break
@@ -419,17 +441,18 @@ function simuleCamera(p: Omit<Partition, "zCamera" | "zVisee">) {
     const t = calage.tombe + j * PAS_S
     zCamera[j] = camera.z
     zVisee[j] = visee.z
-    if (!enRue && t >= p.tBascule) {
-      /* la voiture passe à V_RUE sous le voile : la caméra et sa visée
-         perdent la même vitesse, sans quoi leurs ressorts plongeraient */
-      enRue = true
-      const saut = (p.vz[p.kBascule + 1] - p.vz[p.kBascule]) * cadence(t, calage)
-      camera.v += saut
-      visee.v += saut
-    }
     const voiture = voitureVerticale(p, t)
+    if (!enRue && t >= p.tBascule) {
+      /* la bascule est une coupe, voile plein : la voiture passe à V_RUE,
+         la caméra et sa visée la reprennent à sa hauteur et à sa vitesse,
+         sans le retard du ciel */
+      enRue = true
+      Object.assign(camera, voiture)
+      Object.assign(visee, voiture)
+    }
     const hauteur = H_BASCULE + camera.z - p.zBascule
-    const ressort = suitRessort(camera, voiture, RESSORT_CAMERA)
+    const suivie = enRue ? voiture : { z: voiture.z, v: SUIVI_CIEL * voiture.v }
+    const ressort = suitRessort(camera, suivie, RESSORT_CAMERA)
     if (!frein && t >= p.tBascule && hauteur <= CAMERA_FREIN.hauteur)
       frein = resousFreinage(hauteur, camera.v, ressort, 0, CAMERA_FREIN.rampe)
     camera.v = frein ? Math.min(0, camera.v + PAS_S * accelerationFreinee(frein, hauteur)) : camera.v + PAS_S * ressort
@@ -491,8 +514,9 @@ export function decalageCiel(p: Partition, t: number) {
    descend avec la voiture */
 export const nappeDuCiel = (p: Partition, t: number) => (t < p.calage.ecran ? altitudeCiel(p, t) : 0)
 
-/* le décalage vertical du plafond de nuages : il monte dès l'écran coupé */
-export const plafondDuCiel = (p: Partition, t: number) => (t < p.calage.ecran ? 0 : HAUSSE_PLAFOND)
+/* le décalage vertical du plafond de nuages : il monte dès l'écran coupé,
+   et encore à la coupe de « tombe » */
+export const plafondDuCiel = (p: Partition, t: number) => (t < p.calage.ecran ? 0 : t < p.calage.tombe ? HAUSSE_PLAFOND : HAUSSE_PLAFOND_CHUTE)
 
 /* l'assiette du ciel (sans le cap fixe de ciel.tsx), figée à la bascule */
 const avant = new THREE.Quaternion()

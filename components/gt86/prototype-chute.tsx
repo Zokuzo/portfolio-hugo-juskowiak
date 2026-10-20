@@ -57,8 +57,9 @@ import {
       obliques le cadrent en parallélogramme ;
    3. a, b, c, d : les plans de Hugo, en coupes franches ; à « ouvre »
       les obliques s'ouvrent et rendent l'écran entier ;
-   4. tombe : coupe sur le plan 5, le temps reprend sa vitesse, la caméra
-      la suit d'au-dessus sur un ressort ; voile du banc de nuages,
+   4. tombe : coupe sur le plan 5, le temps reprend sa vitesse en moins
+      d'une seconde, la voiture réaccélère jusqu'à 55 m/s, la caméra la suit
+      d'au-dessus sur un ressort, en retard ; voile du banc de nuages,
       bascule vers la rue, la brume s'ouvre sur la ville de nuit, la
       voiture se rétablit et freine dans ses derniers mètres
       (atterrissage souple de la v2) ;
@@ -151,7 +152,7 @@ function poseDuCiel(p: Partition, t: number, pose: Pose) {
   assiette.setFromQuaternion(attitudeCiel(p, tempsSimule(t, p.calage), attitude), "YXZ")
   pose.y = altitudeCiel(p, t)
   pose.lacet = assiette.y + decalage
-  pose.tangage = assiette.x - PIQUE
+  pose.tangage = assiette.x - PIQUE + tangageDuPlan(p, t)
   pose.roulis = assiette.z
   pose.toucher = -1
 }
@@ -185,6 +186,50 @@ function pendRoues(modele: THREE.Object3D, detente: number) {
   for (const { noeud, base, bas } of roues.noeuds) noeud.position.copy(base).addScaledVector(bas, detente)
 }
 
+/* le feu arrière, allumé pendant le plan c (référence 6) : la couleur et
+   l'intensité émissives du matériau du GLB, deux uniformes de son
+   programme déjà compilé (pas de carte émissive : elle en compilerait un
+   autre). Hors du plan c il retrouve ses valeurs du GLB : la rue, qui
+   partage peut-être ce matériau, le voit éteint */
+const FEU = { materiau: "Taillightbody", plan: "c" as Segment, couleur: new THREE.Color("#ff2414"), intensite: 4 }
+const feu: { modele: THREE.Object3D | null; materiau: THREE.MeshStandardMaterial | null; couleur: THREE.Color; intensite: number } = {
+  modele: null,
+  materiau: null,
+  couleur: new THREE.Color(),
+  intensite: 1,
+}
+
+function materiauDuFeu(modele: THREE.Object3D) {
+  if (feu.modele !== modele) {
+    const trouves: THREE.MeshStandardMaterial[] = []
+    modele.traverse((o) => {
+      const materiau = (o as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined
+      if (materiau?.name === FEU.materiau && materiau.emissive) trouves.push(materiau)
+    })
+    const materiau = trouves[0]
+    if (!materiau) throw new Error(`gt86 : le GLB du ciel n'a plus de matériau ${FEU.materiau}`)
+    feu.modele = modele
+    feu.materiau = materiau
+    feu.couleur.copy(materiau.emissive)
+    feu.intensite = materiau.emissiveIntensity
+  }
+  return feu.materiau!
+}
+
+function allumeFeu(modele: THREE.Object3D, segment: Segment) {
+  const materiau = materiauDuFeu(modele)
+  if (segment === FEU.plan) {
+    materiau.emissive.copy(FEU.couleur)
+    materiau.emissiveIntensity = FEU.intensite
+  } else eteinsFeu(modele)
+}
+
+function eteinsFeu(modele: THREE.Object3D) {
+  const materiau = materiauDuFeu(modele)
+  materiau.emissive.copy(feu.couleur)
+  materiau.emissiveIntensity = feu.intensite
+}
+
 /* ---- l'état partagé ----------------------------------------------------- */
 
 /* écrit par Chute (en tête de la boucle), lu par CameraChute et
@@ -211,10 +256,10 @@ const VOILE_COEUR: [THREE.Color, THREE.Color] = [new THREE.Color("#8d8a9d"), new
 const VOILE_SORTIE: [THREE.Color, THREE.Color] = [new THREE.Color("#36405a"), new THREE.Color("#1c2131")]
 /* le voile monte avec la voiture qui approche du banc (son centre, en
    altitude : plein avant que la caisse ne touche le sommet -2,6 que le
-   banc trancherait net ; venue de haut, elle arrive à 35 m/s, le voile
-   monte en un quart de seconde) ou avec la caméra qui descend vers le
-   dessus de la nappe */
-const VOILE_VOITURE: [number, number] = [8, -0.7]
+   banc trancherait net ; lancée par la reprise, elle arrive à 55 m/s,
+   le voile monte en un quart de seconde) ou avec la caméra qui descend
+   vers le dessus de la nappe */
+const VOILE_VOITURE: [number, number] = [12, -0.7]
 const VOILE_HAUTEUR: [number, number] = [-0.8, -2.45]
 /* sous le banc : il s'efface dès que la rue est montée */
 const VOILE_LEVEE_S = 0.5
@@ -267,7 +312,10 @@ export function Chute({
       v.rue = null
       v.plonge = 0
       v.chute = 1
-      if (voitureDuCiel.modele) pendRoues(voitureDuCiel.modele, 0)
+      if (voitureDuCiel.modele) {
+        pendRoues(voitureDuCiel.modele, 0)
+        eteinsFeu(voitureDuCiel.modele)
+      }
       const d = voile.current
       if (d) {
         d.style.opacity = "0"
@@ -312,7 +360,10 @@ export function Chute({
     if (v.rue) poseDeLaRue(p, t, v.rue)
     decalageNuages.sol = nappeDuCiel(p, t)
     decalageNuages.plafond = plafondDuCiel(p, t)
-    if (voitureDuCiel.modele) pendRoues(voitureDuCiel.modele, detenteRoues(tempsSimule(t, p.calage)))
+    if (voitureDuCiel.modele) {
+      pendRoues(voitureDuCiel.modele, detenteRoues(tempsSimule(t, p.calage)))
+      allumeFeu(voitureDuCiel.modele, segmentDe(p, t))
+    }
 
     if (t >= p.tBascule && !i.bascule) {
       i.bascule = true
@@ -399,6 +450,12 @@ type Plan = {
   fov: [number, number]
   nettete: number
   soleil: number
+  /* l'assiette du plan, posée à la coupe : `tangage` degrés ajoutés au
+     piqué simulé (négatif : le nez se relève) ; `suit` la part de la
+     rotation pendant le plan que le repère de la caméra accompagne (0 :
+     repère figé au milieu du plan, 1 : la voiture immobile à l'image) */
+  tangage: number
+  suit: number
 }
 type PlanDeCoupe = Exclude<Segment, "ciel" | "chute" | "rue">
 
@@ -447,20 +504,24 @@ function plansDe(r: Reperes): Record<PlanDeCoupe, Plan> {
   const calandre = r.face.clone().lerp(r.phare, 0.5)
   return {
     /* l'écran coupé : un plan large qui file autour du trois-quarts avant */
-    large: { ancre: r.centre, de: [10, 1.8, 9.5], a: [12.6, 0.8, 4.4], viseDe: r.centre, viseA: decale(r.centre, 0, 0, -0.3), fov: [30, 28], nettete: 4, soleil: 15 },
+    large: { ancre: r.centre, de: [10, 1.8, 9.5], a: [12.6, 0.8, 4.4], viseDe: r.centre, viseA: decale(r.centre, 0, 0, -0.3), fov: [30, 28], nettete: 4, soleil: 15, tangage: 0, suit: 0 },
     /* a (référence 3) : la voiture entière, nez en bas, de trois-quarts
        avant en légère contre-plongée, découpée sur le couchant */
-    a: { ancre: r.centre, de: [8, -2.6, 8], a: [7.3, -2.3, 8.7], viseDe: r.centre, viseA: decale(r.centre, 0, 0, 0.2), fov: [26, 25], nettete: 4, soleil: 30 },
+    a: { ancre: r.centre, de: [8, -2.6, 8], a: [7.3, -2.3, 8.7], viseDe: r.centre, viseA: decale(r.centre, 0, 0, 0.2), fov: [26, 25], nettete: 4, soleil: 30, tangage: 0, suit: 0 },
     /* b (référence 4) : la face avant de près, capot et calandre plein
        cadre, l'objectif bas : le soleil déborde sous le bouclier */
-    b: { ancre: calandre, de: [1.6, -1.2, 2.7], a: [1.3, -1.05, 2.95], viseDe: calandre, viseA: calandre.clone().lerp(r.phare, 0.4), fov: [30, 28], nettete: 1.2, soleil: 0 },
-    /* c (référence 6) : le trois-quarts arrière serré en contre-plongée,
-       l'aileron, le feu, les sorties d'échappement, la roue arrière en
-       premier plan */
-    c: { ancre: r.feu, de: [1.7, 0.1, -2.7], a: [1.45, 0.3, -2.9], viseDe: r.feu.clone().lerp(r.echappement, 0.3), viseA: r.feu.clone().lerp(r.aileron, 0.3), fov: [36, 34], nettete: 1.6, soleil: 20 },
+    b: { ancre: calandre, de: [1.6, -1.2, 2.7], a: [1.3, -1.05, 2.95], viseDe: calandre, viseA: calandre.clone().lerp(r.phare, 0.4), fov: [30, 28], nettete: 1.2, soleil: 0, tangage: 0, suit: 0 },
+    /* c (référence 6) : le trois-quarts arrière serré, l'objectif à
+       hauteur du feu, de côté, la roue arrière en premier plan, l'aileron
+       découpé sur le ciel, le feu allumé, les échappements. Nez en bas à
+       36°, la voiture montrait surtout son plancher noir vu d'en dessous
+       (v4) : le plan la pose plus à plat, la contre-plongée vient de son
+       assiette et non plus d'un objectif sous elle, et son repère
+       accompagne une part de sa rotation */
+    c: { ancre: r.feu, de: [1.5, 0.05, -1.3], a: [1.35, 0.12, -1.4], viseDe: r.feu.clone().lerp(r.echappement, 0.25), viseA: r.feu.clone().lerp(r.echappement, 0.2), fov: [40, 38], nettete: 1.4, soleil: 4, tangage: -20, suit: 0.6 },
     /* d (référence 7) : la face avant entière, de face et de loin, la
        voiture presque à plat dans la brume rose */
-    d: { ancre: r.centre, de: [0.5, -1.6, 10.5], a: [0.3, -1.4, 9.4], viseDe: r.centre, viseA: r.centre, fov: [21, 20], nettete: 4, soleil: 40 },
+    d: { ancre: r.centre, de: [0.5, -1.6, 10.5], a: [0.3, -1.4, 9.4], viseDe: r.centre, viseA: r.centre, fov: [21, 20], nettete: 4, soleil: 40, tangage: 0, suit: 0 },
   }
 }
 
@@ -483,8 +544,10 @@ const APPROCHE_CIEL = { avance: 0.06, fov: 35, suivi: 0.5 }
    d'ECART_CHUTE, au-dessus et à côté de la voiture entière, la mer de
    nuages sous elle ; la voiture lui présente son trois-quarts avant
    (VUE_CHUTE, la direction de la caméra dans le repère du cap de la
-   voiture). La verticale vient du ressort de chute-physique.ts (la
-   caméra voit la voiture partir, prend du retard, la rattrape) ; l'écart
+   voiture). La verticale vient du ressort de chute-physique.ts : la
+   voiture réaccélère vers sa vitesse de chute (la reprise, v5), la
+   caméra la suit avec un retard qui grandit avec la vitesse, elle file
+   vers la mer de nuages loin sous elle ; l'écart
    glisse vers celui de la rue (au-dessus, à l'est, au sud) avant la
    bascule ; sur APPROCHE_S la caméra rejoint la droite d'approche du
    travelling. */
@@ -603,13 +666,25 @@ function planDuCiel(camera: THREE.PerspectiveCamera, modele: THREE.Object3D, p: 
   cadre(camera, point, THREE.MathUtils.lerp(FOV_POSE, APPROCHE_CIEL.fov, u), NETTETE_CHUTE, 0)
 }
 
-/* le repère figé du plan : l'assiette simulée au milieu du plan, cap de
-   ciel.tsx et cap du plan compris, et son cap seul */
-function repereDuPlan(p: Partition, t: number) {
+/* le repère du plan : l'assiette simulée au milieu du plan (ou, selon
+   `suit`, plus près de l'instant t), cap de ciel.tsx, cap et tangage du
+   plan compris, et son cap seul */
+function repereDuPlan(p: Partition, t: number, plan: Plan) {
   const decalage = capDuPlan(p, t)
-  attitudeCiel(p, tempsSimule(milieuDuPlan(p, t), p.calage), repere).premultiply(cap.setFromAxisAngle(AXE_Y, CAP + decalage))
+  const instant = THREE.MathUtils.lerp(milieuDuPlan(p, t), t, plan.suit)
+  attitudeCiel(p, tempsSimule(instant, p.calage), repere).premultiply(cap.setFromAxisAngle(AXE_Y, CAP + decalage))
   assiette.setFromQuaternion(repere, "YXZ")
+  assiette.x += plan.tangage * DEGRE
+  repere.setFromEuler(assiette)
   cap.setFromAxisAngle(AXE_Y, assiette.y)
+}
+
+/* le tangage ajouté au piqué simulé pendant un plan de coupe */
+function tangageDuPlan(p: Partition, t: number): number {
+  const modele = voitureDuCiel.modele
+  const segment = segmentDe(p, t)
+  if (!modele || segment === "ciel" || segment === "chute" || segment === "rue") return 0
+  return plansPour(modele)[segment].tangage * DEGRE
 }
 
 /* la position (out) et la visée (vise) du plan à l'instant t, relatives
@@ -628,7 +703,7 @@ function cadreLePlan(camera: THREE.PerspectiveCamera, modele: THREE.Object3D, p:
   const plan = plansPour(modele)[segment]
   const debut = segment === "large" ? p.calage.ecran : p.calage[segment]
   const u = lisse(debut, finDeSegment(p, t), t)
-  repereDuPlan(p, t)
+  repereDuPlan(p, t, plan)
   centreDuCiel(modele, centre)
   positionDuPlan(modele, plan, u, camera.position, viseRelative)
   camera.position.add(centre)
