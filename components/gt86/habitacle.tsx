@@ -253,8 +253,10 @@ export function habilleInterieur(
         mat.emissiveIntensity = 0
         cockpit.optiques.push(mat)
       }
+      /* le boîtier des phares à peine éclairé de sa carte : sombre comme
+         sur la référence 11, la barre LED porte la lumière (v11) */
       if (mat.name === "HeadlightsTex") {
-        mat.emissive?.set("#dfeaff")
+        mat.emissive?.set("#3a4250")
         mat.emissiveMap = mat.map
         mat.emissiveIntensity = 0
         cockpit.signature.push(mat)

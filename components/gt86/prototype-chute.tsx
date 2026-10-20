@@ -205,11 +205,12 @@ const SEGMENTS_ALLUMES: Segment[] = ["a", "b", "c", "d", "chute"]
 const FEUX = [
   { materiau: "Taillightbody", couleur: new THREE.Color("#ff2a1a"), intensite: 0.8 },
   { materiau: "RedGlow", couleur: new THREE.Color("#ff1a0a"), intensite: 1.5 },
-  { materiau: LED.avant, couleur: EMISSIF.avant, intensite: 14 },
+  { materiau: LED.avant, couleur: EMISSIF.avant, intensite: 30 },
   { materiau: LED.arriere, couleur: EMISSIF.arriere, intensite: 8 },
   { materiau: LED.coeur, couleur: EMISSIF.coeur, intensite: 8 },
+  { materiau: LED.reflet, couleur: EMISSIF.reflet, intensite: 2.5 },
   { materiau: "LightsFront", couleur: new THREE.Color(PROJECTEUR), intensite: 4 },
-  { materiau: "HeadlightsTex", couleur: new THREE.Color("#dfeaff"), intensite: 0.8 },
+  { materiau: "HeadlightsTex", couleur: new THREE.Color("#dfeaff"), intensite: 0 },
 ]
 type FeuDuModele = { materiau: THREE.MeshStandardMaterial; couleur: THREE.Color; intensite: number }
 const feux: { modele: THREE.Object3D | null; materiaux: FeuDuModele[] } = { modele: null, materiaux: [] }
@@ -550,8 +551,9 @@ function plansDe(r: Reperes): Record<PlanDeCoupe, Plan> {
   const calandre = r.face.clone().lerp(r.phare, 0.5)
   return {
     /* a (référence 3) : la voiture entière, nez en bas, de trois-quarts
-       avant en légère contre-plongée, découpée sur le couchant */
-    a: { ancre: r.centre, de: [8, -2.6, 8], a: [7.3, -2.3, 8.7], viseDe: r.centre, viseA: decale(r.centre, 0, 0, 0.2), fov: [26, 25], nettete: 4, soleil: 30, tangage: 0, suit: 0 },
+       avant en contre-plongée (l'objectif plus bas en v11 : nez en bas,
+       la face se voit d'en dessous), découpée sur le couchant */
+    a: { ancre: r.centre, de: [7.4, -4.6, 7.4], a: [6.7, -4.3, 8.1], viseDe: r.centre, viseA: decale(r.centre, 0, 0, 0.2), fov: [26, 25], nettete: 4, soleil: 30, tangage: 0, suit: 0 },
     /* b (référence 4) : la face avant de près, capot et calandre plein
        cadre, l'objectif bas : le soleil déborde sous le bouclier */
     b: { ancre: calandre, de: [1.6, -1.2, 2.7], a: [1.3, -1.05, 2.95], viseDe: calandre, viseA: calandre.clone().lerp(r.phare, 0.4), fov: [30, 28], nettete: 1.2, soleil: 0, tangage: 0, suit: 0 },
@@ -862,6 +864,9 @@ function cadreLePlan(camera: THREE.PerspectiveCamera, modele: THREE.Object3D, p:
   positionDuPlan(modele, plan, u, camera.position, viseRelative)
   camera.position.add(centre)
   cadre(camera, viseRelative.add(centre), THREE.MathUtils.lerp(plan.fov[0], plan.fov[1], u), plan.nettete, FLOU_PLANS)
+  /* le plan a commence sous les obliques fermées : la voiture y tient
+     entière, puis la caméra avance avec leur ouverture (v11) */
+  if (segment === "a") tiensEntreLesBandes(camera, modele, viseRelative, 1 - douce(lisse(p.calage.ouvre, p.calage.ouvre + OUVERTURE_S, t)))
 }
 
 function suis(camera: THREE.PerspectiveCamera, modele: THREE.Object3D, voiture: THREE.Object3D | null, p: Partition, t: number) {
