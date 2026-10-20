@@ -10,6 +10,7 @@ import type { Trajectoire } from "./vol"
 import { posePlaque } from "./plaque"
 import { LamesDuCiel, cliquableParSaBoite, mireLeCiel, pieceDeRobe, robeDuCiel } from "./carrosserie"
 import { poseAkrapovic } from "./echappement"
+import { poseDessous } from "./dessous"
 import { poseLeds } from "./leds"
 import { LueursDuCiel } from "./lueurs"
 
@@ -129,6 +130,7 @@ function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<
     morts.forEach((o) => o.removeFromParent())
     posePlaque(scene)
     poseAkrapovic(scene)
+    poseDessous(scene)
     poseLeds(scene)
     const centre = new THREE.Box3().setFromObject(scene).getCenter(new THREE.Vector3())
     scene.position.sub(centre)
