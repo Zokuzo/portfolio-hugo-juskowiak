@@ -10,6 +10,7 @@ import { CAP, FOV_POSE, PIQUE, POSE, voitureDuCiel } from "./ciel"
 import { brume, CAM_FINALE, enMondeRepos, POSE_VOITURE } from "./rue"
 import { ASSISE, type Cockpit } from "./habitacle"
 import { allumeLueurs } from "./lueurs"
+import { EMISSIF, LED } from "./leds"
 import { CLAQUE, SEUIL_MS, VERRE_T } from "./seuil"
 import { attenueMusique, caleMusique, musiqueEnAttente, tempsMusique } from "./musique-intro"
 import { decalageNuages, fileNuages } from "./mer-de-nuages"
@@ -193,14 +194,18 @@ function pendRoues(modele: THREE.Object3D, detente: number) {
 }
 
 /* les feux, allumés pendant toute la chute (références 4, 6 et 7) : le
-   feu arrière en rouge vif, les phares et leur optique en blanc froid ; la
+   feu arrière fumé à peine rougi, ses bandes LED en rouge vif (leds.ts),
+   les phares et leur optique en blanc froid ; la
    lumière qui s'en dégage est violette (lueurs.tsx). La couleur et l'intensité
    émissives des matériaux du GLB, deux uniformes de leur programme déjà
    compilé (pas de carte émissive : elle en compilerait un autre). Hors de
    la chute ils retrouvent leurs valeurs du GLB */
 const SEGMENTS_ALLUMES: Segment[] = ["a", "b", "c", "d", "chute"]
 const FEUX = [
-  { materiau: "Taillightbody", couleur: new THREE.Color("#ff2a1a"), intensite: 6 },
+  { materiau: "Taillightbody", couleur: new THREE.Color("#ff2a1a"), intensite: 0.35 },
+  { materiau: LED.avant, couleur: EMISSIF.avant, intensite: 8 },
+  { materiau: LED.arriere, couleur: EMISSIF.arriere, intensite: 8 },
+  { materiau: LED.coeur, couleur: EMISSIF.coeur, intensite: 8 },
   { materiau: "LightsFront", couleur: new THREE.Color("#eef4ff"), intensite: 7 },
   { materiau: "HeadlightsTex", couleur: new THREE.Color("#dfeaff"), intensite: 0.8 },
 ]

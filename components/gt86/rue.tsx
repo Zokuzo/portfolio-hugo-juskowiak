@@ -7,6 +7,7 @@ import * as THREE from "three"
 import type { Trajectoire } from "./vol"
 import { useChauffeEnSolo } from "./chauffe"
 import { posePlaque } from "./plaque"
+import { poseLeds } from "./leds"
 import { cliquableParSaBoite, pieceDeRobe, robeDeNuit } from "./carrosserie"
 import { fondPourLeRendu } from "./rendu"
 import {
@@ -337,6 +338,7 @@ function VoitureGaree({
        tableaux du cockpit sont repartis de zéro dans habilleInterieur) */
     /* déjà posée si le ciel a mué la scène du cache avant ce clone */
     posePlaque(clone)
+    poseLeds(clone)
     habilleInterieur(clone, { art, lueur, compteur }, ecran.tex, gl.capabilities.getMaxAnisotropy(), cockpit)
     peinteEnPremier(clone)
     /* posée sur ses roues : le bas de la bbox affleure l'asphalte (y=0) —

@@ -34,25 +34,53 @@ const CHROME = {
   metal: 1,
   rugosite: 0.05,
 }
-/* Midnight Purple III (Nissan LV4, Hugo le 2026-10-20) : une base violet
-   très sombre, presque noire dans l'ombre, sous un vernis épais. Le flip
-   vert, bronze et or des reflets rasants vient d'un film mince
-   (iridescence) et d'un voile vert (sheen). Ces deux réglages ajoutent
-   chacun un define : posés dès la création, jamais allumés après le
-   rideau. */
-const PEINTURE = {
-  couleur: "#2c0a4a",
-  metal: 0.62,
-  rugosite: 0.34,
-  vernis: 1,
-  rugositeVernis: 0.03,
-  film: 0.6,
-  indiceFilm: 1.7,
-  epaisseursFilm: [380, 820] as [number, number],
-  voile: 0.3,
-  couleurVoile: "#2f7a46",
-  rugositeVoile: 0.4,
+/* Deux robes (Hugo, 2026-10-20, après le Midnight Purple : « repasse sur
+   un blanc glacier ou un noir métallique ») : par défaut un NOIR
+   MÉTALLIQUE profond à peine bleuté, paillettes fines sous un vernis
+   miroir ; ?robe=blanc donne un BLANC GLACIER nacré (Crystal White
+   Pearl). Les deux compilent le MÊME programme : film mince (iridescence),
+   voile (sheen) et carte de paillettes ajoutent chacun un define, ils
+   restent donc posés dès la création et jamais nuls, même quand le noir
+   n'en veut presque pas. Seules les valeurs changent. */
+const PEINTURES = {
+  noir: {
+    couleur: "#0a0c12",
+    metal: 0.6,
+    rugosite: 0.3,
+    vernis: 1,
+    rugositeVernis: 0.02,
+    film: 0.001,
+    indiceFilm: 1.3,
+    epaisseursFilm: [100, 400] as [number, number],
+    voile: 0.001,
+    couleurVoile: "#000000",
+    rugositeVoile: 0.5,
+    paillettes: 0.1,
+  },
+  blanc: {
+    couleur: "#eef2f7",
+    metal: 0.08,
+    rugosite: 0.28,
+    vernis: 1,
+    rugositeVernis: 0.03,
+    film: 0.22,
+    indiceFilm: 1.4,
+    epaisseursFilm: [220, 420] as [number, number],
+    voile: 0.12,
+    couleurVoile: "#dce6ff",
+    rugositeVoile: 0.4,
+    paillettes: 0.04,
+  },
 }
+/* lue une fois, à la création du matériau : avant le rideau */
+function peintureChoisie() {
+  const robe = typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("robe")
+  return robe === "blanc" ? PEINTURES.blanc : PEINTURES.noir
+}
+/* la carte de paillettes : une normale tirée au hasard par texel, répétée
+   fin sur l'UV de la caisse (un atlas de ~4 m) : un texel ≈ 0,25 mm. Les
+   mipmaps la lissent de loin, de près le soleil y accroche des éclats. */
+const PAILLETTES = { texels: 256, repetition: 64 }
 const REFLET = {
   /* l'<Environment> du ciel donne 0,6 à tout le reste */
   ciel: 0.28,
@@ -66,6 +94,7 @@ const PIECES_DE_CAISSE = ["Paint"]
 const PIECES_DE_JANTE = ["Stern", "Aussenbeet"]
 
 export function robeDuCiel(): Robe {
+  const PEINTURE = peintureChoisie()
   const caisse = new THREE.MeshPhysicalMaterial({
     color: PEINTURE.couleur,
     metalness: PEINTURE.metal,
@@ -78,6 +107,8 @@ export function robeDuCiel(): Robe {
     sheen: PEINTURE.voile,
     sheenColor: PEINTURE.couleurVoile,
     sheenRoughness: PEINTURE.rugositeVoile,
+    normalMap: carteDePaillettes(),
+    normalScale: new THREE.Vector2(PEINTURE.paillettes, PEINTURE.paillettes),
   })
   caisse.name = PIECES_DE_CAISSE[0]
   const jantes = new THREE.MeshPhysicalMaterial({
@@ -87,6 +118,30 @@ export function robeDuCiel(): Robe {
   })
   jantes.name = PIECES_DE_JANTE[0]
   return { caisse, jantes }
+}
+
+let paillettes: THREE.CanvasTexture | null = null
+function carteDePaillettes() {
+  if (paillettes) return paillettes
+  const { texels, repetition } = PAILLETTES
+  const toile = document.createElement("canvas")
+  toile.width = texels
+  toile.height = texels
+  const ctx = toile.getContext("2d")
+  if (!ctx) throw new Error("carrosserie : pas de contexte 2D pour les paillettes")
+  const image = ctx.createImageData(texels, texels)
+  const tire = hasard(86)
+  for (let i = 0; i < image.data.length; i += 4) {
+    image.data[i] = 128 + (tire() - 0.5) * 254
+    image.data[i + 1] = 128 + (tire() - 0.5) * 254
+    image.data[i + 2] = 255
+    image.data[i + 3] = 255
+  }
+  ctx.putImageData(image, 0, 0)
+  paillettes = new THREE.CanvasTexture(toile)
+  paillettes.wrapS = paillettes.wrapT = THREE.RepeatWrapping
+  paillettes.repeat.set(repetition, repetition)
+  return paillettes
 }
 
 export function robeDeNuit(): Robe {

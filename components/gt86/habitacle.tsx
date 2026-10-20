@@ -7,6 +7,7 @@ import * as THREE from "three"
 import { type Ecran } from "./ecran"
 import { envNuit, halo } from "./rue"
 import { VIOLET_LUEUR } from "./lueurs"
+import { LED } from "./leds"
 
 /* L'HABITACLE — ticket #31 : l'habillage gaté aux #23/#26 (combiné violet,
    rétroéclairage par glyphe, planche Haunter, alcantara, moquette, néons),
@@ -240,10 +241,15 @@ export function habilleInterieur(
         mat.emissiveIntensity = 0
         cockpit.optiques.push(mat)
       }
-      /* le feu arrière rouge vif, allumé avec les optiques (le tone
-         mapping blanchit son cœur, le bord reste rouge) */
+      /* le feu arrière fumé, à peine rougi avec les optiques : son C LED
+         (leds.ts) porte la lumière */
       if (mat.name === "Taillightbody") {
-        mat.emissive?.set("#ff2a1a")
+        mat.emissive?.set("#120302")
+        mat.emissiveIntensity = 0
+        cockpit.optiques.push(mat)
+      }
+      /* les bandes LED (leds.ts) : leur émissif est déjà posé */
+      if (Object.values(LED).includes(mat.name)) {
         mat.emissiveIntensity = 0
         cockpit.optiques.push(mat)
       }
@@ -718,8 +724,8 @@ function Phares({ cockpit }: { cockpit: Cockpit }) {
             <sprite position={[x, y, z]} scale={[0.55, 0.55, 1]}>
               <spriteMaterial map={halo()} color="#f4f8ff" transparent opacity={0.85} blending={THREE.AdditiveBlending} depthWrite={false} />
             </sprite>
-            <sprite position={[x, y, z]} scale={[2.2, 2.2, 1]}>
-              <spriteMaterial map={halo()} color={VIOLET_LUEUR} transparent opacity={0.4} blending={THREE.AdditiveBlending} depthWrite={false} />
+            <sprite position={[x, y, z]} scale={[1, 1, 1]}>
+              <spriteMaterial map={halo()} color={VIOLET_LUEUR} transparent opacity={0.16} blending={THREE.AdditiveBlending} depthWrite={false} />
             </sprite>
           </group>
         ))}

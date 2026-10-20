@@ -10,6 +10,7 @@ import type { Trajectoire } from "./vol"
 import { posePlaque } from "./plaque"
 import { LamesDuCiel, cliquableParSaBoite, mireLeCiel, pieceDeRobe, robeDuCiel } from "./carrosserie"
 import { poseAkrapovic } from "./echappement"
+import { poseLeds } from "./leds"
 import { LueursDuCiel } from "./lueurs"
 
 /* LE CIEL — ticket #29 : le verdict « Pellicule » du gate #21, porté du
@@ -114,11 +115,21 @@ function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<
           verre.opacity = 0.8
           verre.needsUpdate = true
         }
+        /* le feu arrière fumé (leds.ts) : sa livrée d'usine jetée, le C
+           LED ressort seul, comme dans la rue */
+        if (m?.name === "Taillightbody") {
+          const feu = m as THREE.MeshStandardMaterial
+          feu.map = null
+          feu.color.set("#150c0e")
+          feu.roughness = 0.35
+          feu.needsUpdate = true
+        }
       }
     })
     morts.forEach((o) => o.removeFromParent())
     posePlaque(scene)
     poseAkrapovic(scene)
+    poseLeds(scene)
     const centre = new THREE.Box3().setFromObject(scene).getCenter(new THREE.Vector3())
     scene.position.sub(centre)
     return scene
