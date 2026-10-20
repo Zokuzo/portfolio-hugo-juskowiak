@@ -9,7 +9,7 @@ import * as THREE from "three"
 import type { CSSProperties } from "react"
 import { t, type Lang } from "@/components/proto/dict"
 import { parametre } from "./capable"
-import { INTRO, RAILS, depart, marqueVue, suivant } from "./machine"
+import { INTRO, RAILS, depart, marqueVue, suivant, type Dest } from "./machine"
 import Ciel, { CIEL_4K, CIEL_HDR, VOITURE } from "./ciel"
 import Rue, { RUE_GLB, brume } from "./rue"
 import Vol, { VOL_MS, poseNeutre, type Trajectoire } from "./vol"
@@ -24,7 +24,11 @@ import { Effets } from "./rendu"
 import { ChoixDpr, DPR_DEPART } from "./dpr"
 import { BandesChute, CameraChute, Chute, dureeChuteMs, FlouChute, flouVoulu, montageVoulu, TravellingChute } from "./prototype-chute"
 import { CompteurIps, ipsVoulu } from "./compteur-ips"
-import { Demarrage, prechargeDemarrage } from "./demarrage"
+import { Demarrage, lanceTrajet, prechargeDemarrage } from "./demarrage"
+import { Poursuite, domTrajetVide } from "./poursuite"
+import { TOURS_MAX, TOURS_ROUGE, TRAJET_MS, trajet } from "./trajet"
+import { MenuNfs, type Piste } from "@/components/nfs/menu-nfs"
+import { Compteur, Lignes, ROUTES, Volet, classeCourse } from "@/components/nfs/course"
 
 /* LES ASSETS ET LEUR CASCADE — ticket #28.
 
@@ -68,6 +72,9 @@ const ENCRE = "#e8dff5"
 /* Le fondu avant la navigation — même ordre de grandeur que le départ GPS
    du prototype #26. */
 const DEPART_MS = 650
+/* le menu Need for Speed (?menu=nfs) : MAISON et WORK, puis le trajet */
+const PISTE: Record<Dest, Piste> = { "/home": "maison", "/work": "work" }
+const DEST: Record<Piste, Dest> = { maison: "/home", work: "/work" }
 /* le verre fumé gaté (#21/#24) : la couleur du voile de la plongée */
 const VERRE = "#161b21"
 
@@ -146,6 +153,16 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
      ?nodepart fige l'itinéraire à l'écran (gates visuels, recette #26) */
   const [fpsVoulu] = useState(() => new URLSearchParams(window.location.search).has("fps"))
   const [nodepart] = useState(() => new URLSearchParams(window.location.search).has("nodepart"))
+  /* le menu NFS derrière son drapeau : sans lui, rien ne change */
+  const [nfs] = useState(() => new URLSearchParams(window.location.search).get("menu") === "nfs")
+  const domTrajet = useRef(domTrajetVide()).current
+  useEffect(() => {
+    if (!nfs) return
+    /* le son du coup de gaz : une session revenante n'a pas eu le clic
+       de décollage qui le précharge */
+    prechargeDemarrage()
+    Object.assign(window as object, { __nfs: trajet })
+  }, [nfs])
   const [police] = useState(policeVoulue)
   const [ips] = useState(ipsVoulu)
   /* la chute du #56, par défaut ; ?vol=ancien rejoue l'ancien vol */
@@ -456,9 +473,21 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
      Maison va à /home (#37). */
   useEffect(() => {
     if (etat !== "DEPART" || !dest) return
+    if (nfs) {
+      /* le trajet : son horloge part ici, la navigation reste une
+         horloge (setTimeout), jamais la boucle d'image ; ?nodepart le
+         laisse rouler sans quitter la page (captures) */
+      const route = ROUTES[PISTE[dest]]
+      router.prefetch(route)
+      trajet.t0 = performance.now()
+      lanceTrajet()
+      if (nodepart) return
+      const h = setTimeout(() => router.push(route), TRAJET_MS)
+      return () => clearTimeout(h)
+    }
     const h = setTimeout(() => router.push(dest), DEPART_MS)
     return () => clearTimeout(h)
-  }, [etat, dest, router])
+  }, [etat, dest, router, nfs, nodepart])
 
   /* Échap rassoit — UN SEUL chemin de sortie, le même que le ‹ de l'overlay.
      Le prototype #26 en avait deux, et ils ont divergé. */
@@ -546,7 +575,9 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
               visible={enRue || (etat !== "CIEL" && etat !== "ATTERRISSAGE")}
               vol={vol}
               pose={
-                etat === "SEUIL"
+                etat === "DEPART" && nfs
+                  ? null
+                  : etat === "SEUIL"
                   ? "rue"
                   : etat === "HABITACLE"
                     ? zoome
@@ -569,6 +600,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
         {/* après le ciel et la rue (CameraChute par sa priorité) : elles visent les voitures déjà posées */}
         {montage && <CameraChute etat={etat} cockpit={cockpit} />}
         {montage && <TravellingChute etat={etat} cockpit={cockpit} voile={voileVerre} />}
+        <Poursuite actif={nfs && etat === "DEPART"} dom={domTrajet} />
         <Effets surPret={surEffetsPrets} enTete={flouVoulu() && <FlouChute />} />
         {/* mesurée sous le voile du CIEL, une fois la rue chaude : ses
             décodages et compilations fausseraient la cadence. Une session
@@ -694,7 +726,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
         {/* revoir la scène (4e retour de gate) : l'habitacle rend la main
             au CIEL, toute la boucle se rejoue — la place du ‹ est libre à
             l'habitacle, le geste y vit */}
-        {etat === "HABITACLE" && (
+        {etat === "HABITACLE" && !nfs && (
           <button
             type="button"
             style={{ ...discret, position: "absolute", left: 20, bottom: 18, pointerEvents: "auto" }}
@@ -708,6 +740,32 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
           </button>
         )}
       </div>
+
+      {nfs && etat === "HABITACLE" && !zoome && (
+        <MenuNfs
+          variante="scene"
+          surDestination={(piste) => envoie({ t: "part", dest: DEST[piste] })}
+          surRejoue={() => {
+            setRideauRejeu(true)
+            envoie({ t: "rejoue" })
+          }}
+        />
+      )}
+      {nfs && etat === "DEPART" && dest && (
+        <div className={classeCourse}>
+          <Lignes ref={(e) => void (domTrajet.lignes = e)} />
+          <Compteur
+            rouge={TOURS_ROUGE / TOURS_MAX}
+            refs={{
+              arc: (e) => void (domTrajet.arc = e),
+              vitesse: (e) => void (domTrajet.vitesse = e),
+              rapport: (e) => void (domTrajet.rapport = e),
+              nitro: (e) => void (domTrajet.nitro = e),
+            }}
+          />
+          <Volet vers={PISTE[dest]} ref={(e) => void (domTrajet.volet = e)} />
+        </div>
+      )}
 
       {/* le MOTEUR du player (#33, 7e retour) : plus d'iframe du tout —
           un <audio> maison sur les préversions du CDN, gain (molette) et
@@ -802,7 +860,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
           position: "absolute",
           inset: 0,
           background: "#050408",
-          opacity: etat === "DEPART" ? 1 : 0,
+          opacity: etat === "DEPART" && !nfs ? 1 : 0,
           transition: "opacity 600ms ease",
           pointerEvents: "none",
         }}

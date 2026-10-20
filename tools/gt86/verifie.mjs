@@ -83,6 +83,13 @@ assert.deepEqual(g, S("CHOIX", "/work"), "le choix retient la destination")
 g = suivant(g, { t: "confirme" })
 assert.deepEqual(g, S("DEPART", "/work"), "le départ garde la destination")
 
+// Le menu Need for Speed (?menu=nfs) part de l'habitacle, et de lui seul.
+assert.deepEqual(suivant(S("HABITACLE"), { t: "part", dest: "/home" }), S("DEPART", "/home"), "le menu part avec sa destination")
+for (const etat of ETATS.filter((e) => e !== "HABITACLE")) {
+  const avant = S(etat)
+  assert.equal(suivant(avant, { t: "part", dest: "/work" }), avant, `partir est inerte depuis ${etat}`)
+}
+
 // Le retour est un seul chemin, et DÉPART est terminal.
 for (const etat of ["GPS", "CHOIX", "MUSIQUES", "SPOTIFY", "SEUIL"])
   assert.equal(suivant(S(etat), { t: "retour" }).etat, "HABITACLE", `retour depuis ${etat}`)
@@ -109,6 +116,7 @@ const SIGNAUX = [
   { t: "confirme" },
   { t: "retour" },
   { t: "rejoue" },
+  { t: "part", dest: "/home" },
 ]
 for (const etat of ETATS)
   for (const sig of SIGNAUX) {
@@ -142,6 +150,22 @@ for (const f of ["components/gt86/capable.ts", "components/gt86/surcouche.tsx", 
   const fautif = src.match(/^\s*import[^\n]*from\s+["'](three|@react-three\/[\w-]+)["']/m)
   assert.equal(fautif, null, `${f} importe ${fautif?.[1]} statiquement — la 3D doit rester derrière le dynamic`)
 }
+
+/* LE TRAJET DU MENU NFS (?menu=nfs) : la partition pure que lisent la
+   voiture, la caméra, le compteur et le son. La voiture doit rester dans
+   la partie éclairée de la rue (~50 m devant elle) jusqu'au volet, et le
+   régime dans le cadran. Ses deux pages d'arrivée existent. */
+const T = await import(path.join(RACINE, "components/gt86/trajet.ts"))
+assert.ok(T.distance(T.VOLET.debut) < 45, `la GT86 sort de la zone éclairée avant le volet (${T.distance(T.VOLET.debut)} m)`)
+assert.ok(T.VOLET.fin * 1000 < T.TRAJET_MS, "le volet couvre l'écran avant la navigation")
+for (let t = 0; t <= T.TRAJET_MS / 1000; t += 0.05) {
+  const tours = T.regime(t)
+  assert.ok(tours > 0 && tours <= T.TOURS_MAX, `régime hors cadran à t=${t.toFixed(2)} : ${tours}`)
+  assert.ok(T.vitesse(t + 0.05) >= T.vitesse(t), "la vitesse ne redescend jamais")
+}
+assert.deepEqual([0.2, 1, 1.8, 2.6].map(T.rapport), [0, 1, 2, 3], "N puis trois rapports")
+for (const route of ["da/a/maison", "da/a/work"])
+  assert.ok(existsSync(path.join(RACINE, "app", route, "page.tsx")), `le menu NFS mène à /${route}, qui n'existe pas`)
 
 /* LE RÉGIME DES ASSETS — ticket #28. Deux régressions passent inaperçues
    sans ces gardes : un asset qui REGROSSIT (un ré-export qui oublie

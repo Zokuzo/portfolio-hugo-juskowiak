@@ -5,7 +5,8 @@ import { ALLUME, TOURS_BUTEE, TOURS_RALENTI, VITESSE_BUTEE, allumeHabitacle, pos
 import type { Etat } from "./machine"
 import { lisse } from "./chute-physique"
 import { musiqueCoupee } from "./musique-intro"
-import { contexteAudio } from "./spotify"
+import { contexteAudio } from "./audio"
+import { TOURS_MAX, TRAJET_MS, regime as regimeTrajet } from "./trajet"
 
 /* LE DÉMARRAGE (#42) : en entrant dans la voiture, la GT86 démarre. Le
    seuil (seuil.tsx) a éteint le tableau de bord sous la traversée du
@@ -97,6 +98,45 @@ function joueSon(): number | null {
     if (source === joue) source = null
   }
   return debut
+}
+
+/* LE COUP DE GAZ du menu NFS (?menu=nfs) : le même enregistrement,
+   rejoué depuis la prise, avec le ralenti stable en boucle ; la vitesse
+   de lecture suit le régime du trajet (trajet.ts), la courbe que lit
+   aussi le compteur. Muet si le son n'est pas là ou la musique coupée. */
+const BOUCLE = { debut: 1.2, fin: 3.4 }
+const LECTURE = { ralenti: 0.55, plage: 1.55 }
+const PAS_COURBE_S = 0.02
+const FONDU_S = 0.4
+const VOLUME_TRAJET = 0.9
+
+export function lanceTrajet() {
+  const ctx = contexteAudio()
+  void ctx.resume()
+  if (!tampon || musiqueCoupee()) return
+  const duree = TRAJET_MS / 1000
+  const joue = ctx.createBufferSource()
+  const gain = ctx.createGain()
+  joue.buffer = tampon
+  joue.loop = true
+  joue.loopStart = BOUCLE.debut
+  joue.loopEnd = BOUCLE.fin
+  const courbe = new Float32Array(Math.ceil(duree / PAS_COURBE_S))
+  for (let i = 0; i < courbe.length; i++) {
+    courbe[i] = LECTURE.ralenti + (LECTURE.plage * regimeTrajet(i * PAS_COURBE_S)) / TOURS_MAX
+  }
+  const debut = ctx.currentTime + AVANCE_S
+  joue.playbackRate.setValueCurveAtTime(courbe, debut, duree)
+  gain.gain.setValueAtTime(VOLUME_TRAJET, debut)
+  gain.gain.setValueAtTime(VOLUME_TRAJET, debut + duree - FONDU_S)
+  gain.gain.linearRampToValueAtTime(0, debut + duree)
+  joue.connect(gain).connect(ctx.destination)
+  joue.start(debut, SON.prise)
+  joue.stop(debut + duree + 0.05)
+  joue.onended = () => {
+    joue.disconnect()
+    gain.disconnect()
+  }
 }
 
 export function Demarrage({ etat, cockpit }: { etat: Etat; cockpit: Cockpit }) {

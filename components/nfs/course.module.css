@@ -1,0 +1,128 @@
+/* LA COURSE : ce qui passe par-dessus l'écran pendant un départ (lignes
+   de vitesse, compteur, volet en biais) et à l'arrivée. N'anime que
+   transform, opacity et clip-path. */
+.course {
+  --nuit: #08070f;
+  --lueur: #9a4dff;
+  --rose: #e561d3;
+  --cyan: #6fe3ff;
+  --acier: #eef4ff;
+  --acier-bleu: #8fb0ff;
+  --bleu-nuit: #0c1430;
+  --chrome: linear-gradient(180deg, #ffffff 0%, #b4c6ee 30%, #ffffff 47%, #1b2754 50%, #3c5aa8 60%, #8fb0ff 82%, #e4eeff 100%);
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 60;
+  font-family: var(--f-vitesse), system-ui, sans-serif;
+  color: var(--acier);
+}
+
+/* rayures radiales (recette 5) : un seul calque, piloté en opacité et en
+   échelle */
+.lignes {
+  position: absolute;
+  inset: -20%;
+  background: repeating-conic-gradient(from 0deg at 50% 50%, rgba(255, 255, 255, 0.3) 0 0.5deg, transparent 0.5deg 4deg);
+  -webkit-mask: radial-gradient(circle, transparent 22%, #000 68%);
+  mask: radial-gradient(circle, transparent 22%, #000 68%);
+  opacity: 0;
+}
+
+/* le compteur (recette 7) : arc en SVG, chiffres en tabular-nums */
+.hud {
+  position: absolute;
+  right: 56px;
+  bottom: 44px;
+  width: 230px;
+  height: 230px;
+}
+.hud svg { position: absolute; inset: 0; overflow: visible; }
+.arcFond { fill: none; stroke: rgba(238, 244, 255, 0.14); stroke-width: 10; }
+.arc { fill: none; stroke: var(--acier); stroke-width: 10; filter: drop-shadow(0 0 8px rgba(154, 77, 255, 0.9)); }
+.arcRouge { stroke: var(--rose); animation: rupteur 0.1s steps(2) infinite; }
+@keyframes rupteur { 50% { opacity: 0.4; } }
+.zoneRouge { fill: none; stroke: var(--rose); stroke-width: 10; opacity: 0.55; }
+.vitesse {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-style: italic;
+  font-weight: 800;
+  font-stretch: 125%;
+  font-size: 64px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 18px rgba(154, 77, 255, 0.8);
+}
+.unite { font-family: var(--f-mono), monospace; font-style: normal; font-weight: 400; font-size: 11px; letter-spacing: 0.2em; opacity: 0.7; margin-top: 6px; }
+.rapport {
+  position: absolute;
+  right: -6px;
+  bottom: 18px;
+  width: 44px;
+  padding: 4px 0;
+  text-align: center;
+  font-style: italic;
+  font-weight: 800;
+  font-size: 26px;
+  color: var(--bleu-nuit);
+  background: var(--chrome);
+  clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+}
+.nitro {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: -14px;
+  height: 6px;
+  background: rgba(111, 227, 255, 0.18);
+  transform: skewX(-20deg);
+}
+.nitro span { display: block; height: 100%; background: var(--cyan); box-shadow: 0 0 10px var(--cyan); transform-origin: left; transform: scaleX(1); }
+
+/* le volet en biais (recette 4) : bandeau d'accent incliné, la carte de
+   destination en chrome dessus */
+.volet {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(100deg, #1a0a2c 0%, #4b1d73 45%, var(--lueur) 78%, var(--rose) 100%);
+  clip-path: polygon(0 0, 0 0, -20% 100%, -20% 100%);
+}
+.voletEntre { animation: voletEntre 0.42s cubic-bezier(0.7, 0, 0.84, 0) forwards; }
+.voletSort { clip-path: polygon(0 0, 140% 0, 120% 100%, -20% 100%); animation: voletSort 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.18s forwards; }
+@keyframes voletEntre { to { clip-path: polygon(0 0, 140% 0, 120% 100%, -20% 100%); } }
+@keyframes voletSort { to { clip-path: polygon(140% 0, 140% 0, 120% 100%, 120% 100%); } }
+
+.carte { text-align: center; transform: skewX(-8deg); }
+.carteNom {
+  display: block;
+  font-style: italic;
+  font-weight: 800;
+  font-stretch: 125%;
+  font-size: 128px;
+  line-height: 0.9;
+  text-transform: uppercase;
+  background: var(--chrome);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 0 var(--bleu-nuit)) drop-shadow(0 0 30px rgba(96, 140, 255, 0.5));
+}
+.carteJp { display: block; margin-top: 18px; font-family: var(--f-jp), sans-serif; font-size: 18px; letter-spacing: 0.6em; color: #f3daff; }
+.carteMono { display: block; margin-top: 14px; font-family: var(--f-mono), monospace; font-size: 11px; letter-spacing: 0.3em; color: rgba(238, 244, 255, 0.7); }
+
+/* le départ sans 3D : les rayures montent seules sous le volet */
+.lignesSeules { animation: lignesSeules 1.1s cubic-bezier(0.5, 0, 0.75, 0) forwards; }
+@keyframes lignesSeules { from { opacity: 0; transform: scale(1); } to { opacity: 1; transform: scale(1.6); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .voletEntre, .voletSort, .lignesSeules, .arcRouge { animation: none; }
+  .voletSort { display: none; }
+}
+.voletTard { animation-delay: 0.4s; }

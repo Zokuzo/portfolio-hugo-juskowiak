@@ -51,6 +51,13 @@ export function fondPourLeRendu(fragment: string): string {
 const BLOOM = { intensite: 1.0, seuil: 1.0, niveaux: 5 }
 /* décalage de l'aberration, en fraction d'écran, modulé vers les bords */
 const ABERRATION = new THREE.Vector2(0.0016, 0.0011)
+const ABERRATION_REPOS = ABERRATION.clone()
+/* le trajet du menu NFS monte l'aberration avec la vitesse : le vecteur
+   EST l'uniforme de l'effet (postprocessing le garde par référence),
+   le muter en place ne compile rien */
+export function regleAberration(facteur: number) {
+  ABERRATION.copy(ABERRATION_REPOS).multiplyScalar(facteur)
+}
 const GRAIN = 0.18
 const VIGNETTE = { decalage: 0.32, obscurite: 0.42 }
 const MSAA = 4

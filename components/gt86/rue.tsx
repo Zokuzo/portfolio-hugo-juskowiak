@@ -7,6 +7,7 @@ import * as THREE from "three"
 import type { Trajectoire } from "./vol"
 import { useChauffeEnSolo } from "./chauffe"
 import { posePlaque } from "./plaque"
+import { avance } from "./trajet"
 import { poseLeds } from "./leds"
 import { cliquableParSaBoite, pieceDeRobe, robeDeNuit } from "./carrosserie"
 import { fondPourLeRendu } from "./rendu"
@@ -428,6 +429,12 @@ function VoitureGaree({
         if (assiette.current) assiette.current.rotation.x = 0
       }
     }
+    /* le trajet du menu NFS (poursuite.tsx) : zéro hors départ */
+    if (porteur.current) {
+      porteur.current.position.z = avance.z
+      porteur.current.position.y += avance.y
+    }
+    if (assiette.current) assiette.current.rotation.x += avance.tangage
     if (impact.current) animeImpact(impact.current, pilotee && !vivant ? r.tau : -1)
     /* la poussière de l'impact : ouverte par le même ressort (l'ancienne
        chute seule, la nouvelle a son impact) */

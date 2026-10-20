@@ -3,6 +3,7 @@
 import { useEffect, useRef, type MutableRefObject } from "react"
 import { useFrame } from "@react-three/fiber"
 import { PLAYLISTS, type Ecran } from "./ecran"
+import { contexteAudio } from "./audio"
 
 /* LE MOTEUR DU HJ·AMP — ticket #33, 7e retour de gate (« tourner la
    molette pour baisser le son »). L'iframe officielle de l'embed est
@@ -39,13 +40,9 @@ export type CommandesSpotify = {
 
 /* le volume survit aux allers-retours hub ↔ player (module, pas d'état React) */
 let volumeMemorise = 0.8
-/* UN SEUL AudioContext pour la session (revue adversariale : un contexte
-   par visite fuyait — jamais fermé, chacun retenant son <audio> ; et
-   Safari plafonne les contextes simultanés). Les nœuds, eux, vivent par
-   montage et se déconnectent au démontage. */
-let ctxAudio: AudioContext | null = null
-/* le même contexte, prêté à la musique de l'intro (#58) */
-export const contexteAudio = () => (ctxAudio ??= new AudioContext())
+/* le contexte unique de la session vit dans audio.ts ; ré-exporté pour
+   la musique de l'intro (#58) et le démarrage */
+export { contexteAudio }
 
 export function MoteurSpotify({
   ecran,
@@ -87,11 +84,11 @@ export function MoteurSpotify({
          c'est là que Safari accepte de sortir un contexte de 'suspended'
          (revue : le resume unique à la création laissait le son mort) */
       if (gain) {
-        void ctxAudio?.resume()
+        void contexteAudio().resume()
         return
       }
       try {
-        ctxAudio ??= new AudioContext()
+        const ctxAudio = contexteAudio()
         const source = ctxAudio.createMediaElementSource(audio)
         gain = ctxAudio.createGain()
         analyseur = ctxAudio.createAnalyser()

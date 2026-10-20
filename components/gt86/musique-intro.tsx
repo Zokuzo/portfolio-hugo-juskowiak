@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import type { Lang } from "@/components/proto/dict"
 import type { Etat } from "./machine"
-import { contexteAudio } from "./spotify"
+import { contexteAudio } from "./audio"
 
 /* LA MUSIQUE DE L'INTRO (#58) : « VISION (Slowed) » (UdieNnx, HXVSAGE,
    Duduzinho), le choix de Hugo pour la chute. Depuis le #56, l'extrait

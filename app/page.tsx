@@ -18,6 +18,8 @@ import { Voiture } from "@/components/proto/voiture"
 import type { Lang } from "@/components/proto/dict"
 import { useGt86 } from "@/components/gt86/capable"
 import Surcouche from "@/components/gt86/surcouche"
+import { useMenuNfs } from "@/components/nfs/drapeau"
+import { MenuSeul } from "@/components/nfs/menu-seul"
 
 /* LE JEU DE PLANS COMPLET — dix feuilles, numérotées sans trou.
 
@@ -48,6 +50,9 @@ export default function Page() {
      suivant si la machine est desktop capable, et se retire d'elle-même à
      la moindre erreur. */
   const gt86 = useGt86()
+  /* le menu Need for Speed (?menu=nfs) : sans 3D, il s'affiche quand même
+     par-dessus la planche, ses départs se font au volet en biais */
+  const nfs = useMenuNfs()
 
   /* Le retour d'une fiche atterrit sur /#carte-<slug> : le défilement est
      rendu par l'ancre, le FOCUS ne l'est par personne — sans ça, un lecteur
@@ -91,6 +96,7 @@ export default function Page() {
           et la voiture : un ancêtre portant transform, filter ou will-change
           deviendrait le bloc conteneur des `position: fixed` de la page. */}
       {gt86.actif && <Surcouche lang={lang} surRepli={gt86.abandonne} />}
+      {nfs && !gt86.actif && <MenuSeul />}
       <div className="frame" aria-hidden="true">
         <span className="tick tl" />
         <span className="tick tr" />
