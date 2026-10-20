@@ -148,7 +148,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
   const [nodepart] = useState(() => new URLSearchParams(window.location.search).has("nodepart"))
   const [police] = useState(policeVoulue)
   const [ips] = useState(ipsVoulu)
-  /* la nouvelle chute du prototype #56 (?montage=obliques, ?montage) */
+  /* la chute du #56, par défaut ; ?vol=ancien rejoue l'ancien vol */
   const [montage] = useState(montageVoulu)
   /* le composer du rendu (#46, #59), dont la chauffe retient le rideau
      comme celle de la rue */

@@ -48,11 +48,11 @@ import {
    arrière, la face avant de loin presque à plat), et un cinquième : la
    voiture entière qui tombe vers le sol. Le calage, il le fait lui-même.
 
-   ?montage (ou ?montage=obliques) l'allume ; &dof=0 coupe la profondeur
-   de champ ; &calage=ecran:2.29,ouvre:5.74,a:4.12,... règle les instants
+   C'est la chute par défaut depuis le 2026-10-20 (Hugo : « chute par
+   défaut + prod ») ; ?vol=ancien rejoue l'ancien vol de vol.tsx et
+   seuil.tsx. &dof=0 coupe la profondeur de champ ;
+   &calage=ecran:2.29,ouvre:5.74,a:4.12,... règle les instants
    (chute-physique.ts, lisCalage) et affiche un bandeau du temps musical.
-   Sans ?montage, rien ne change : vol.tsx et seuil.tsx jouent la chute
-   de toujours.
 
    LE DÉROULÉ, en secondes depuis le clic (= temps dans l'extrait) :
    1. clic : la lévitation lâche, la voiture tombe en vitesse réelle ; la
@@ -86,7 +86,7 @@ import {
    champ est montée en tête du composer dès le départ (rendu.tsx). */
 
 export function montageVoulu(): boolean {
-  return typeof location !== "undefined" && new URLSearchParams(location.search).has("montage")
+  return typeof location !== "undefined" && new URLSearchParams(location.search).get("vol") !== "ancien"
 }
 
 export function flouVoulu(): boolean {
