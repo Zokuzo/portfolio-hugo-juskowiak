@@ -11,6 +11,7 @@
     "gt86": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON tools/gt86/verifie.mjs"
   },
   "dependencies": {
+    "@lucasmarkes/hairline": "^0.5.1",
     "@react-three/drei": "10.7.8",
     "@react-three/fiber": "9.7.0",
     "@react-three/postprocessing": "3.2.0",
@@ -22,6 +23,7 @@
     "postprocessing": "6.39.5",
     "react": "19.2.0",
     "react-dom": "19.2.0",
+    "reicon-react": "^1.2.6",
     "tailwind-merge": "^3.6.0",
     "three": "0.169.0"
   },
