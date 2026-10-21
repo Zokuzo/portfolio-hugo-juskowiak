@@ -25,6 +25,70 @@ const HOULE_AMPLEUR = 0.55
 const PAS_ORIGINE = 20
 const PAS = 14
 
+/* LE BRUIT TEXTURÉ (#47) : le réseau de hash du value noise est tiré une
+   fois dans une texture 256², partagée par les deux nappes. Un bruit coûte
+   une lecture filtrée au lieu de 4 sin. Le tirage est à graine fixe : la
+   même graine redonne les mêmes masses ; changer la graine redistribue
+   les masses, c'est le bouton du cadrage. La période (256 unités, ~8 km au
+   plancher) est loin au-delà du fondu */
+const GRAINE_BRUIT = 47
+const COTE_BRUIT = 256
+/* moyenne des octaves 3 et 4 (billow) omises par fbmGrossier, mesurée sur
+   1e5 points par un script node : 0,1875 x E[1 - |2u - 1|] = 0,1875 x 0,642 */
+const MOYENNE_OCTAVES_OMISES = 0.12
+
+/* LA LUMIÈRE (#47) : Beer-Lambert vers le soleil, effet poudre, phase
+   Henyey-Greenstein à deux lobes. Les boutons à caler à l'œil : */
+const EXTINCTION = 3.0 // atténuation de la lumière à travers la sonde
+const POUDRE = 5.0 // vitesse à laquelle une frange fine se « remplit »
+const POUDRE_PART = 0.6 // 0 : pas de poudre, 1 : poudre pleine
+const LOBE_AVANT = 0.6 // g du lobe avant (liseré argenté du contre-jour)
+const LOBE_ARRIERE = -0.25 // g du lobe arrière (rétrodiffusion)
+const PART_AVANT = 0.7
+/* bornes : la phase vers le soleil monte à ~7, le plafond vu de dessous
+   brûlerait ; au-dessus de 1, l'éclat dépasse un peu la crête (ACES) */
+const PHASE_MIN = 0.75
+const PHASE_MAX = 1.6
+const ECLAT_MAX = 1.3
+
+/* LE FONDU vers l'horizon (mètres) : au-delà de FONDU_FIN l'alpha est nul,
+   le fragment sort avant le raymarch */
+const FONDU_DEBUT = 90
+const FONDU_FIN = 300
+
+/* LE CISAILLEMENT (#47) : le haut de la nappe file plus vite que le bas,
+   les masses se déforment au lieu de glisser d'un bloc. Vitesse à t = 0
+   (unités de bruit par seconde au sommet), puis oscillation bornée de
+   cette période (s) : amplitude = vitesse x période / 2π, ~0,36 unité */
+const CISAILLEMENT = "vec2(0.03, 0.012)"
+const CISAILLEMENT_PERIODE = 70
+
+const flottant = (n: number) => n.toFixed(4)
+
+/* Mulberry32 : un PRNG à graine, pour que le tirage soit rejouable */
+function tirageAGraine(graine: number) {
+  let a = graine
+  return () => {
+    a = (a + 0x6d2b79f5) | 0
+    let t = Math.imul(a ^ (a >>> 15), 1 | a)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+function texturerBruit() {
+  const tirage = tirageAGraine(GRAINE_BRUIT)
+  const valeurs = new Uint8Array(COTE_BRUIT * COTE_BRUIT)
+  for (let i = 0; i < valeurs.length; i++) valeurs[i] = Math.floor(tirage() * 256)
+  const texture = new THREE.DataTexture(valeurs, COTE_BRUIT, COTE_BRUIT, THREE.RedFormat, THREE.UnsignedByteType)
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping
+  texture.minFilter = texture.magFilter = THREE.LinearFilter
+  texture.generateMipmaps = false
+  texture.needsUpdate = true
+  return texture
+}
+const bruitTexture = texturerBruit()
+
 /* le décalage vertical de chaque nappe, en mètres : la nouvelle chute
    (#56) descend la mer de nuages avec la voiture, puis monte le plafond.
    Un uniforme et une matrice : aucun programme ne se recompile */
@@ -79,6 +143,7 @@ export default function MerDeNuages({
           uAxeFile: { value: new THREE.Vector2(0, -1) },
           uEtirement: { value: 0 },
           uDefile: { value: 0 },
+          uBruit: { value: bruitTexture },
         },
         vertexShader: /* glsl */ `
           varying vec3 vMonde;
@@ -94,43 +159,52 @@ export default function MerDeNuages({
           uniform float uSommet; uniform float uFond;
           uniform float uSens; uniform float uCouverture; uniform float uEchelle;
           uniform vec2 uAxeFile; uniform float uEtirement; uniform float uDefile;
+          uniform sampler2D uBruit;
           varying vec3 vMonde;
 
           float hash(vec2 p) {
             return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
           }
+          /* value noise par la technique d'iq : le filtrage bilinéaire
+             du GPU interpole les 4 voisins, on lui passe la fraction déjà
+             lissée. mod garde la précision loin de l'origine et pour les
+             coordonnées négatives, + 0,5 vise le centre du texel ;
+             textureLod et pas texture : pas de dérivées sous le discard */
           float bruit(vec2 p) {
-            vec2 i = floor(p), f = fract(p);
+            vec2 i = mod(floor(p), ${COTE_BRUIT}.0), f = fract(p);
             vec2 u = f * f * (3.0 - 2.0 * f);
-            return mix(
-              mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),
-              mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
-              u.y
-            );
+            return textureLod(uBruit, (i + u + 0.5) / ${COTE_BRUIT}.0, 0.0).r;
           }
           /* 4 octaves : le 5e coûtait ~20 % du raymarch pour un détail
-             que le dither noie, fluidité d'abord (gate #21) */
+             que le dither noie, fluidité d'abord (gate #21). Les octaves
+             3 et 4 sont « gonflées » (billow) : des bords en choux-fleurs */
           float fbm(vec2 p) {
             float v = 0.0, a = 0.5;
             for (int k = 0; k < 4; k++) {
-              v += a * bruit(p);
+              float o = bruit(p);
+              v += a * (k < 2 ? o : 1.0 - abs(2.0 * o - 1.0));
               p = p * 2.03 + vec2(17.0, 31.0);
               a *= 0.5;
             }
             return v;
           }
-          /* fbm sans ses octaves 3 et 4, remplacées par leur moyenne
-             (0,125 x 0,5 + 0,0625 x 0,5) : sans elle, la sonde solaire
-             dériverait par rapport à fbm */
-          const float MOYENNE_OCTAVES_OMISES = 0.094;
+          /* fbm sans ses octaves 3 et 4, remplacées par leur moyenne :
+             sans elle, la sonde solaire dériverait par rapport à fbm */
           float fbmGrossier(vec2 p) {
-            return 0.5 * bruit(p) + 0.25 * bruit(p * 2.03 + vec2(17.0, 31.0)) + MOYENNE_OCTAVES_OMISES;
+            return 0.5 * bruit(p) + 0.25 * bruit(p * 2.03 + vec2(17.0, 31.0)) + ${flottant(MOYENNE_OCTAVES_OMISES)};
+          }
+          /* Henyey-Greenstein, normalisée à 1 pour une diffusion isotrope */
+          float hg(float cosT, float g) {
+            return (1.0 - g * g) / pow(1.0 + g * g - 2.0 * g * cosT, 1.5);
           }
           /* le vent : calculé UNE fois par fragment, au point d'entrée sur
              la nappe, puis appliqué à tous les pas. La tranche traversée
              par un rayon est courte devant une masse, l'erreur ne se voit
              pas et le vent ne coûte que 2 bruits par pixel. */
           vec2 gVent;
+          /* le cisaillement du sommet, calculé une fois par fragment ;
+             chaque pas en prend la part de son altitude */
+          vec2 gCisaillement;
           /* l'épaisseur pour un FBM donné : seuillée par la couverture (des
              masses, pas un tapis), niveau interpolé entre fond et sommet */
           float epaisseur(float n, vec3 p) {
@@ -146,19 +220,33 @@ export default function MerDeNuages({
             float le_long = dot(xz - cameraPosition.xz, uAxeFile);
             return xz - uAxeFile * (le_long * uEtirement / (1.0 + uEtirement) - uDefile);
           }
+          /* le point de bruit d'un point du monde : traînées, vent, et
+             cisaillement selon l'altitude dans la nappe (0 en bas, 1 en
+             haut, quel que soit le sens) */
+          vec2 lu(vec3 p) {
+            float h = clamp((p.y - min(uFond, uSommet)) / abs(uSommet - uFond), 0.0, 1.0);
+            return file(p.xz) * uEchelle + gVent + gCisaillement * h;
+          }
           float densite(vec3 p) {
-            return epaisseur(fbm(file(p.xz) * uEchelle + gVent), p);
+            return epaisseur(fbm(lu(p)), p);
           }
           /* la sonde solaire n'a pas besoin du détail fin */
           float densiteGrossiere(vec3 p) {
-            return epaisseur(fbmGrossier(file(p.xz) * uEchelle + gVent), p);
+            return epaisseur(fbmGrossier(lu(p)), p);
           }
           void main() {
+            /* au-delà du fondu l'alpha est nul : rien à marcher */
+            float dist = length(vMonde.xz - cameraPosition.xz);
+            if (dist >= ${flottant(FONDU_FIN)}) discard;
             vec2 q = vMonde.xz * uEchelle * 0.6;
             gVent = uTemps * ${DERIVE} + ${HOULE_AMPLEUR.toFixed(2)} * (vec2(
               bruit(q + uTemps * ${HOULE_VITESSE.toFixed(3)}),
               bruit(q + vec2(5.2, 1.3) - uTemps * ${HOULE_VITESSE.toFixed(3)})
             ) - 0.5);
+            /* sin borne le décalage : nul à t = 0, jamais plus de
+               l'amplitude, la forme en colonne ne se dissout pas */
+            float pulsation = ${flottant((2 * Math.PI) / CISAILLEMENT_PERIODE)};
+            gCisaillement = ${CISAILLEMENT} * sin(uTemps * pulsation) / pulsation;
             vec3 dir = normalize(vMonde - cameraPosition);
             if (dir.y * uSens > -0.005) discard;
             vec3 p = vMonde;
@@ -167,14 +255,23 @@ export default function MerDeNuages({
             /* départ dithéré : casse les stries en escalier du raymarch */
             p += dir * pas * hash(gl_FragCoord.xy);
             vec3 soleil = normalize(uSoleil);
+            float cosT = dot(dir, soleil);
+            float phase = clamp(
+              mix(hg(cosT, ${flottant(LOBE_ARRIERE)}), hg(cosT, ${flottant(LOBE_AVANT)}), ${flottant(PART_AVANT)}),
+              ${flottant(PHASE_MIN)}, ${flottant(PHASE_MAX)}
+            );
             float transmis = 1.0;
             vec3 acc = vec3(0.0);
             for (int k = 0; k < ${PAS}; k++) {
               float d = densite(p);
               if (d > 0.01) {
                 float versSoleil = densiteGrossiere(p + soleil * 1.6);
-                float eclat = clamp(d - versSoleil, 0.0, 1.0);
-                vec3 c = mix(uOmbre, uCrete, eclat * 2.2 + 0.12);
+                /* Beer-Lambert : la lumière qui traverse la sonde ; la
+                   poudre assombrit les franges trop fines pour diffuser */
+                float lumiere = exp(-versSoleil * ${flottant(EXTINCTION)});
+                float poudre = 1.0 - exp(-d * ${flottant(POUDRE)});
+                float eclat = lumiere * mix(1.0, poudre, ${flottant(POUDRE_PART)}) * phase;
+                vec3 c = mix(uOmbre, uCrete, clamp(eclat * 1.3 + 0.12, 0.0, ${flottant(ECLAT_MAX)}));
                 float a = 1.0 - pow(1.0 - d * 0.38, ${(PAS_ORIGINE / PAS).toFixed(3)});
                 acc += c * a * transmis;
                 transmis *= 1.0 - a;
@@ -185,8 +282,7 @@ export default function MerDeNuages({
             }
             float alpha = 1.0 - transmis;
             /* fondu vers l'horizon : la nappe se dissout dans le ciel */
-            float dist = length(vMonde.xz - cameraPosition.xz);
-            float brume = smoothstep(90.0, 300.0, dist);
+            float brume = smoothstep(${flottant(FONDU_DEBUT)}, ${flottant(FONDU_FIN)}, dist);
             vec3 c = mix(acc / max(alpha, 0.001), uLoin, brume);
             /* mort complète avant le bord du plan : aucune couture visible */
             alpha *= 1.0 - brume;

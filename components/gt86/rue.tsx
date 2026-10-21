@@ -22,7 +22,7 @@ import {
   type Cockpit,
 } from "./habitacle"
 import { ECRAN_NATIF, VUE_ECRAN, zoneDuClic, type Ecran, type Zone } from "./ecran"
-import { mouilleLaChaussee } from "./chaussee-mouillee"
+import { mouilleLaChaussee, sourceDeReflet, type SourceDeReflet } from "./chaussee-mouillee"
 
 /* LA RUE NOCTURNE (ticket #30) : le décor gaté au #22, porté du prototype
    (route jetable, supprimée au #35) dans la coquille. City procédurale
@@ -199,7 +199,7 @@ function Decor() {
         mat.envMapIntensity = (mat.metalness ?? 0) > 0.5 ? 0.35 : 0.15
         mat.needsUpdate = true
         if (mat.name === "CityGenGlass.001") vitreSansTransmission(mat as THREE.MeshPhysicalMaterial)
-        mouilleLaChaussee(mat, LAMPES)
+        mouilleLaChaussee(mat, LAMPES, REFLETS_FEUX)
         /* les fenêtres de ce décor sont PEINTES dans les textures (24
            sommets pour un mur entier) : les pixels sombres eux-mêmes
            s'allument : inversion de luminance en émissif, cellule ~1
@@ -712,20 +712,34 @@ const FEUX: [number, number, number][] = [
   [9.59, 3.11, -53.51],
   [10.06, 3.18, -5.92],
 ]
+const ECART_LENTILLES = 0.37
+/* la lentille allumée de chaque feu laisse sa colonne rouge, orange ou
+   verte sur la chaussée mouillée (#47) ; éclat à caler à l'œil */
+const ECLAT_REFLET_FEU = 0.6
+const COULEURS_FEU = TEINTES.map((c) => new THREE.Color(c))
+const REFLETS_FEUX = FEUX.map(() => sourceDeReflet(new THREE.Vector3(), new THREE.Color(), 0))
 
-function TeteDeFeu({ pos, phase }: { pos: [number, number, number]; phase: number }) {
+/* 0 rouge, 1 orange, 2 vert */
+function etatDuFeu(temps: number, phase: number) {
+  const local = (temps + phase * (CYCLE / 2)) % CYCLE
+  return local < 7 ? 2 : local < 8.5 ? 1 : 0
+}
+
+function TeteDeFeu({ pos, phase, reflet }: { pos: [number, number, number]; phase: number; reflet: SourceDeReflet }) {
   const refs = useRef<(THREE.SpriteMaterial | null)[]>([])
   useFrame((etat) => {
-    const local = (etat.clock.elapsedTime + phase * (CYCLE / 2)) % CYCLE
-    const etatFeu = local < 7 ? 2 : local < 8.5 ? 1 : 0
+    const etatFeu = etatDuFeu(etat.clock.elapsedTime, phase)
     refs.current.forEach((m, i) => {
       if (m) m.opacity = i === etatFeu ? 0.95 : 0.05
     })
+    reflet.position.set(pos[0], pos[1] + ECART_LENTILLES * (1 - etatFeu), pos[2])
+    reflet.teinte.copy(COULEURS_FEU[etatFeu])
+    reflet.eclat = ECLAT_REFLET_FEU
   })
   return (
     <group position={pos}>
       {TEINTES.map((c, i) => (
-        <sprite key={c} position={[0, 0.37 - i * 0.37, 0]} scale={[0.26, 0.26, 1]}>
+        <sprite key={c} position={[0, ECART_LENTILLES * (1 - i), 0]} scale={[0.26, 0.26, 1]}>
           <spriteMaterial
             ref={(m) => { refs.current[i] = m }}
             map={halo()}
@@ -754,7 +768,7 @@ export function VieNocturne({ autour }: { autour?: [number, number, number] }) {
         <Lampe key={i} x={x} z={z} y={y} vrai={vrai} />
       ))}
       {FEUX.map((pos, i) => (
-        <TeteDeFeu key={i} pos={pos} phase={i} />
+        <TeteDeFeu key={i} pos={pos} phase={i} reflet={REFLETS_FEUX[i]} />
       ))}
     </group>
   )
