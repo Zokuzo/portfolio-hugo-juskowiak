@@ -1,79 +1,203 @@
-/* FUSION A + B DU MOBILE
-   La navigation de A (dock, grille d'apps, feuille) dans le langage de
-   B : italique chromée, katakana discrets, aplat rose biseauté, filets
-   nets. Aucun dégradé d'ambiance, aucun verre fumé : des surfaces
-   pleines. Tout est en px : la racine du site monte à 19 px
-   (planche.css) et des rem feraient gonfler la maquette. */
+/* FUSION A + B DU MOBILE, en une seule DA (règles : ./DA.md).
+   Toutes les couleurs passent par les tokens de .racine. Tout est en
+   px : la racine du site monte à 19 px (planche.css) et des rem
+   feraient gonfler la maquette. */
 
 .racine {
-  /* NUIT : l'écran de bord la nuit, acier et rose */
-  --fond: #08070f;
-  --panneau: #13111f;
-  --encre: #eef4ff;
-  --texte-2: rgba(238, 244, 255, 0.66);
-  --texte-3: rgba(238, 244, 255, 0.58);
-  --filet: rgba(238, 244, 255, 0.12);
-  --bord-carte: rgba(238, 244, 255, 0.12);
-  --ombre-carte: none;
-  --rose: #e561d3;
-  --rose-texte: #e561d3;
-  --sur-rose: #08070f;
-  --jp: #8fb0ff;
-  --chrome: linear-gradient(180deg, #ffffff 0%, #b4c6ee 30%, #ffffff 47%, #1b2754 50%, #3c5aa8 60%, #8fb0ff 82%, #e4eeff 100%);
-  --lueur-nom: drop-shadow(0 0 18px rgba(96, 140, 255, 0.35));
-  --voile: rgba(4, 3, 10, 0.62);
-  --hairline-plate: #13111f;
-  --hairline-hi: #e561d3;
-  --hairline-edge: #8fb0ff;
-  --hairline-mid: #4a3f7a;
-  --hairline-lo: #231d3d;
+  /* le sticker garde un contour sombre et un liseré clair dans les deux thèmes */
+  --sticker-contour: var(--fond);
+  --sticker-lisere: var(--encre);
+
+  /* Hairline lit ses couleurs dans --hairline-* : la figure devient un trait d'encre */
+  --hairline-plate: var(--surface);
+  --hairline-hi: var(--encre);
+  --hairline-edge: var(--encre);
+  --hairline-mid: var(--encre-2);
+  --hairline-lo: var(--filet);
 
   --gouttiere: 16px;
   --hauteur-dock: 68px;
+  --largeur-app: 440px;
+  /* bord gauche (et droit) de la colonne quand l'écran est plus large qu'elle */
+  --marge-app: max(0px, calc((100% - var(--largeur-app)) / 2));
 
   position: relative;
+  max-width: var(--largeur-app);
   min-height: 100svh;
+  margin-inline: auto;
   overflow-x: clip;
   padding-bottom: calc(var(--hauteur-dock) + env(safe-area-inset-bottom) + 36px);
   background: var(--fond);
+  /* peint le hors-cadre sur toute la fenêtre sans élargir la page */
+  box-shadow: 0 0 0 100vmax var(--hors-cadre);
   color: var(--encre);
   font-family: var(--f-display), system-ui, sans-serif;
   font-size: 16px;
   line-height: 1.45;
   -webkit-tap-highlight-color: transparent;
-  /* les icônes d'apps choisissent leurs teintes par light-dark() */
   color-scheme: dark;
   /* .proto-root pose un halo d'encre sur tout texte (planche.css) : ici il floute */
   text-shadow: none;
 }
 
-/* PAPIER : pas une inversion. Le papier chaud d'une jaquette de
-   cassette, l'encre nuit, des cartes cernées d'un trait avec une ombre
-   pleine décalée, comme une étiquette imprimée. Le rose reste en
-   aplat ; en texte il fonce pour tenir le contraste. */
 :global(html.clair) .racine {
-  --fond: #f2ede3;
-  --panneau: #fbf8f2;
-  --encre: #15131d;
-  --texte-2: rgba(21, 19, 29, 0.7);
-  --texte-3: rgba(21, 19, 29, 0.64);
-  --filet: rgba(21, 19, 29, 0.14);
-  --bord-carte: #15131d;
-  --ombre-carte: 3px 3px 0 #15131d;
-  --rose: #e561d3;
-  --rose-texte: #b02f9a;
-  --sur-rose: #15131d;
-  --jp: #3550a0;
-  --chrome: linear-gradient(180deg, #15131d 0%, #4b5677 36%, #15131d 49%, #1b2754 51%, #3c5aa8 76%, #15131d 100%);
-  --lueur-nom: none;
-  --voile: rgba(21, 19, 29, 0.38);
-  --hairline-plate: #fbf8f2;
-  --hairline-hi: #d14cbf;
-  --hairline-edge: #1b2754;
-  --hairline-mid: #8c879c;
-  --hairline-lo: #ddd6c8;
-  --asphalte: radial-gradient(120% 90% at 30% 15%, #fbf8f2, #ddd7cb);
+  --sticker-contour: var(--encre);
+  --sticker-lisere: var(--surface);
   color-scheme: light;
+}
+
+/* ---------- palettes (?palette=, liste dans palettes.ts) ----------
+   Une palette ne pose QUE des couleurs, en sombre puis en clair. Chacune
+   tient l'AA : --encre et --encre-2 sur --fond et --surface, --accent-encre
+   sur --accent (texte du dock à 10 px compris). */
+
+/* nuit-rose : la référence, violet nuit et rose néon. */
+.racine[data-palette="nuit-rose"] {
+  --fond: #08070f;
+  --surface: #13111f;
+  --encre: #eef4ff;
+  --encre-2: rgba(238, 244, 255, 0.66);
+  --filet: rgba(238, 244, 255, 0.14);
+  --accent: #e561d3;
+  --accent-encre: #08070f;
+  --voile: rgba(4, 3, 10, 0.62);
+  --hors-cadre: #000000;
+  --sticker-papier: #f4f1ea;
+  --sticker-fonce: #2a2a31;
+  --sticker-metal: #c9ccd6;
+  --sticker-signal: #ffd23f;
+}
+
+:global(html.clair) .racine[data-palette="nuit-rose"] {
+  --fond: #f2ede3;
+  --surface: #fbf8f2;
+  --encre: #15131d;
+  --encre-2: rgba(21, 19, 29, 0.68);
+  --filet: rgba(21, 19, 29, 0.16);
+  --accent: #e561d3;
+  --accent-encre: #15131d;
+  --voile: rgba(21, 19, 29, 0.38);
+  --hors-cadre: #dcd8cf;
+}
+
+/* silver-s13 : la carrosserie argent de la GT86, gris acier, bleu électrique. */
+.racine[data-palette="silver-s13"] {
+  --fond: #0f1114;
+  --surface: #1a1d22;
+  --encre: #e8ecf1;
+  --encre-2: rgba(232, 236, 241, 0.66);
+  --filet: rgba(232, 236, 241, 0.14);
+  --accent: #3d7bff;
+  --accent-encre: #0f1114;
+  --voile: rgba(6, 7, 9, 0.62);
+  --hors-cadre: #000000;
+  --sticker-papier: #f1f3f6;
+  --sticker-fonce: #2a2e35;
+  --sticker-metal: #b9c0ca;
+  --sticker-signal: var(--sticker-papier);
+}
+
+:global(html.clair) .racine[data-palette="silver-s13"] {
+  --fond: #dfe3e8;
+  --surface: #f1f3f6;
+  --encre: #11151b;
+  --encre-2: rgba(17, 21, 27, 0.72);
+  --filet: rgba(17, 21, 27, 0.16);
+  --accent: #1f5bff;
+  --accent-encre: #ffffff;
+  --voile: rgba(17, 21, 27, 0.38);
+  --hors-cadre: #c9ced6;
+}
+
+/* papier-encre : noir et blanc de magazine, un seul rouge signal. */
+.racine[data-palette="papier-encre"] {
+  --fond: #0d0d0d;
+  --surface: #181818;
+  --encre: #f2efe9;
+  --encre-2: rgba(242, 239, 233, 0.66);
+  --filet: rgba(242, 239, 233, 0.14);
+  --accent: #e8361c;
+  --accent-encre: #0d0d0d;
+  --voile: rgba(0, 0, 0, 0.62);
+  --hors-cadre: #000000;
+  --sticker-papier: #f2efe9;
+  --sticker-fonce: #262626;
+  --sticker-metal: #bdbdbd;
+  --sticker-signal: #f2efe9;
+}
+
+:global(html.clair) .racine[data-palette="papier-encre"] {
+  --fond: #f5f3ef;
+  --surface: #ffffff;
+  --encre: #111111;
+  --encre-2: rgba(17, 17, 17, 0.7);
+  --filet: rgba(17, 17, 17, 0.16);
+  --accent: #d42e14;
+  --accent-encre: #ffffff;
+  --voile: rgba(17, 17, 17, 0.38);
+  --hors-cadre: #e2dfd9;
+  --sticker-papier: #ffffff;
+}
+
+/* nfsu-orange : l'asphalte de nuit sous les lampadaires au sodium. */
+.racine[data-palette="nfsu-orange"] {
+  --fond: #0b0d11;
+  --surface: #161a21;
+  --encre: #f3ece2;
+  --encre-2: rgba(243, 236, 226, 0.66);
+  --filet: rgba(243, 236, 226, 0.14);
+  --accent: #ff8a1f;
+  --accent-encre: #0b0d11;
+  --voile: rgba(4, 5, 8, 0.62);
+  --hors-cadre: #000000;
+  --sticker-papier: #f3ece2;
+  --sticker-fonce: #262a32;
+  --sticker-metal: #b7bcc4;
+  --sticker-signal: var(--sticker-papier);
+}
+
+/* de jour, le sodium se fonce en orange brûlé : texte blanc AA, et l'aplat
+   se détache encore du béton (3:1) */
+:global(html.clair) .racine[data-palette="nfsu-orange"] {
+  --fond: #e7e4df;
+  --surface: #f5f3ef;
+  --encre: #15171c;
+  --encre-2: rgba(21, 23, 28, 0.72);
+  --filet: rgba(21, 23, 28, 0.16);
+  --accent: #c25400;
+  --accent-encre: #ffffff;
+  --voile: rgba(21, 23, 28, 0.38);
+  --hors-cadre: #d3cfc8;
+}
+
+/* menthe-y2k : violet profond et menthe glacée ; de jour, les rôles
+   s'échangent, la menthe devient le papier et le violet l'accent. */
+.racine[data-palette="menthe-y2k"] {
+  --fond: #130b26;
+  --surface: #1f1439;
+  --encre: #eefff8;
+  --encre-2: rgba(238, 255, 248, 0.68);
+  --filet: rgba(238, 255, 248, 0.14);
+  --accent: #5ef0c3;
+  --accent-encre: #130b26;
+  --voile: rgba(8, 4, 18, 0.62);
+  --hors-cadre: #07040f;
+  --sticker-papier: #f5fffb;
+  --sticker-fonce: #2a1f45;
+  --sticker-metal: #c4c0dc;
+  --sticker-signal: var(--sticker-papier);
+}
+
+:global(html.clair) .racine[data-palette="menthe-y2k"] {
+  --fond: #e4f7f0;
+  --surface: #f5fffb;
+  --encre: #1d0f3d;
+  --encre-2: rgba(29, 15, 61, 0.72);
+  --filet: rgba(29, 15, 61, 0.16);
+  --accent: #6a2cf0;
+  --accent-encre: #ffffff;
+  --voile: rgba(29, 15, 61, 0.38);
+  --hors-cadre: #cdebe0;
 }
 
 .mono {
@@ -81,14 +205,15 @@
   font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--texte-2);
+  color: var(--encre-2);
 }
 
+/* le seul katakana de l'app : le nom de Hugo au-dessus du titre */
 .jp {
   font-family: var(--f-jp), sans-serif;
   font-size: 12px;
   letter-spacing: 0.3em;
-  color: var(--jp);
+  color: var(--encre-2);
 }
 
 /* tout ce qui parle en italique de vitesse partage la même voix */
@@ -113,10 +238,7 @@
 .ficheNom {
   margin: 0;
   font-weight: 800;
-  background: var(--chrome);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--encre);
   overflow-wrap: anywhere;
 }
 
@@ -147,22 +269,22 @@
   height: 44px;
   border: 1px solid var(--filet);
   border-radius: 12px;
-  background: var(--panneau);
+  background: var(--surface);
   color: var(--encre);
   cursor: pointer;
 }
 
-/* la plaque de la GT86 : blanche dans les deux thèmes, c'est un objet, pas une surface */
+/* la plaque de la GT86 : la police de la plaque 3D (son seul écart typographique,
+   c'est un logo), mais tracée à l'encre et badge à l'accent, comme le reste */
 .plaque {
   justify-self: start;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 3px 8px 3px 5px;
-  border: 1.5px solid #15131d;
+  padding: 3px 8px 3px 4px;
+  border: 1.5px solid currentColor;
   border-radius: 4px;
-  background: linear-gradient(180deg, #ffffff, #e2e4ea);
-  color: #15131d;
+  color: var(--encre);
   font-family: var(--f-etendue), var(--f-mono), monospace;
   font-size: 11px;
   letter-spacing: 0.12em;
@@ -173,8 +295,8 @@
 .plaque i {
   padding: 2px 3px;
   border-radius: 2px;
-  background: #1d4ed8;
-  color: #ffffff;
+  background: var(--accent);
+  color: var(--accent-encre);
   font-family: var(--f-mono), monospace;
   font-size: 7px;
   font-style: normal;
@@ -183,7 +305,9 @@
 
 /* ---------- page ---------- */
 
+/* conteneur de requête : le titre se règle sur la colonne, pas sur la fenêtre */
 .page {
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -200,11 +324,10 @@
 }
 
 .nom {
-  /* 13,4vw : JUSKOWIAK tient sur une ligne à 390 px, sans césure */
-  font-size: clamp(40px, 13.4vw, 64px);
+  /* 14,6 % de la colonne : JUSKOWIAK tient sur une ligne, sans césure */
+  font-size: clamp(40px, 14.6cqi, 64px);
   line-height: 0.88;
   letter-spacing: -0.01em;
-  filter: var(--lueur-nom);
 }
 
 .fonction {
@@ -212,14 +335,14 @@
   font-weight: 700;
   font-size: 19px;
   letter-spacing: 0.04em;
-  color: var(--rose-texte);
+  color: var(--encre);
 }
 
 .chapo {
   margin: 0;
   max-width: 34ch;
   font-size: 16px;
-  color: var(--texte-2);
+  color: var(--encre-2);
 }
 
 /* ---------- menu de jeu ---------- */
@@ -233,7 +356,7 @@
 
 .ligne {
   display: grid;
-  grid-template-columns: 30px 1fr auto 20px;
+  grid-template-columns: 30px 1fr 20px;
   align-items: center;
   gap: 10px;
   width: 100%;
@@ -249,11 +372,10 @@
   transition: background 0.18s, color 0.18s;
 }
 
-/* la ligne active : l'aplat rose biseauté du menu, net, sans halo */
+/* la ligne active : l'aplat d'accent, net, sans halo */
 .ligne[data-active] {
-  background: var(--rose);
-  clip-path: polygon(0 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
-  color: var(--sur-rose);
+  background: var(--accent);
+  color: var(--accent-encre);
 }
 
 .ligneNumero {
@@ -279,12 +401,6 @@
   opacity: 0.75;
 }
 
-.ligneJp {
-  font-family: var(--f-jp), sans-serif;
-  font-size: 12px;
-  letter-spacing: 0.2em;
-  opacity: 0.6;
-}
 
 .ligneFleche {
   opacity: 0;
@@ -295,6 +411,13 @@
 .ligne[data-active] .ligneFleche {
   opacity: 1;
   transform: none;
+  color: inherit;
+}
+
+/* sur l'aplat, un texte estompé tombe sous l'AA : tout passe à --accent-encre plein */
+.ligne[data-active] .ligneNumero,
+.ligne[data-active] .ligneTexte {
+  opacity: 1;
 }
 
 /* ---------- grille d'apps ---------- */
@@ -306,10 +429,9 @@
   margin: 0 0 14px;
   font-family: var(--f-mono), monospace;
   font-size: 12px;
-  font-weight: 500;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--jp);
+  color: var(--encre-2);
 }
 
 .titreSection::after {
@@ -320,12 +442,6 @@
   background: var(--filet);
 }
 
-.titreSection span {
-  order: 2;
-  font-family: var(--f-jp), sans-serif;
-  letter-spacing: 0.2em;
-  color: var(--texte-3);
-}
 
 .apps {
   display: grid;
@@ -351,7 +467,7 @@
   transform: scale(0.94);
 }
 
-/* la tuile porte son propre fond (familles de ./icones) : ici, seul l'appui */
+/* le sticker se pose sans tuile : ici, seul l'appui */
 .tuile {
   display: grid;
   border-radius: 14px;
@@ -361,7 +477,7 @@
 /* Mail, LinkedIn, CV quittent le site : la flèche le dit avant l'appui */
 .app[href] .tuileNom::after {
   content: " \2197";
-  color: var(--rose-texte);
+  color: var(--encre-2);
 }
 
 .tuileNom {
@@ -369,28 +485,29 @@
   font-size: 10.5px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--texte-2);
+  color: var(--encre-2);
 }
 
 .pied {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
   padding-top: 8px;
   text-align: center;
 }
 
 .pied .mono {
   font-size: 10px;
-  color: var(--texte-3);
+}
+
+/* devant un ordinateur, la phrase se contredit */
+@media (hover: hover) and (pointer: fine) {
+  .pied {
+    display: none;
+  }
 }
 
 /* ---------- rubriques WORK / MAISON / CONTACT ---------- */
 
 .rubrique {
   display: grid;
-  grid-template-columns: 1fr auto;
   align-items: end;
   gap: 6px 12px;
   padding-top: 24px;
@@ -401,16 +518,7 @@
   line-height: 0.9;
 }
 
-.rubriqueJp {
-  font-family: var(--f-jp), sans-serif;
-  font-size: 28px;
-  color: var(--jp);
-  opacity: 0.4;
-}
 
-.rubrique .mono {
-  grid-column: 1 / -1;
-}
 
 .onglets {
   display: flex;
@@ -423,7 +531,7 @@
   min-height: 48px;
   border: 0;
   background: none;
-  color: var(--texte-3);
+  color: var(--encre-2);
   font-family: var(--f-mono), monospace;
   font-size: 12px;
   letter-spacing: 0.16em;
@@ -441,7 +549,7 @@
   right: 0;
   bottom: -1px;
   height: 3px;
-  background: var(--rose);
+  background: var(--accent);
 }
 
 /* ---------- liste de fiches ---------- */
@@ -462,21 +570,19 @@
   align-items: center;
   width: 100%;
   padding: 10px 14px 10px 10px;
-  border: 1px solid var(--bord-carte);
+  border: 1px solid var(--filet);
   border-radius: 18px;
-  background: var(--panneau);
-  box-shadow: var(--ombre-carte);
+  background: var(--surface);
   color: inherit;
   font: inherit;
   text-align: left;
   cursor: pointer;
-  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+  transition: transform 0.12s ease, border-color 0.12s ease;
 }
 
 .carte:active {
-  transform: translate(2px, 2px);
-  box-shadow: none;
-  border-color: var(--rose);
+  transform: scale(0.98);
+  border-color: var(--accent);
 }
 
 .carteFigure {
@@ -501,7 +607,7 @@
 
 .carteCorps .mono {
   font-size: 10px;
-  color: var(--texte-3);
+  color: var(--encre-2);
 }
 
 .carteNom {
@@ -518,7 +624,7 @@
   overflow: hidden;
   font-size: 13.5px;
   line-height: 1.35;
-  color: var(--texte-2);
+  color: var(--encre-2);
 }
 
 .pastille {
@@ -530,7 +636,7 @@
   font-size: 10px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--texte-2);
+  color: var(--encre-2);
 }
 
 .pastille::before {
@@ -540,10 +646,10 @@
   border: 1px solid currentColor;
 }
 
-/* en service : le carré se remplit de rose, pas de LED verte qui brille */
+/* en service : le carré se remplit d'accent, pas de LED verte qui brille */
 .pastille[data-vivant]::before {
-  border-color: var(--rose);
-  background: var(--rose);
+  border-color: var(--accent);
+  background: var(--accent);
 }
 
 /* ---------- classement (le parcours) ---------- */
@@ -566,11 +672,16 @@
   font-weight: 800;
   font-size: 24px;
   line-height: 1;
-  color: var(--texte-3);
+  color: var(--encre-2);
 }
 
+/* P1, le poste actuel : la même pastille d'accent que la sélection */
 .tour[data-courant] .position {
-  color: var(--rose-texte);
+  justify-self: start;
+  padding: 4px 6px;
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--accent-encre);
 }
 
 .tourCorps {
@@ -592,7 +703,7 @@
 
 .tourTexte {
   font-size: 14px;
-  color: var(--texte-2);
+  color: var(--encre-2);
 }
 
 /* ---------- contact ---------- */
@@ -613,18 +724,16 @@
   gap: 14px;
   min-height: 76px;
   padding: 12px 16px 12px 12px;
-  border: 1px solid var(--bord-carte);
+  border: 1px solid var(--filet);
   border-radius: 18px;
-  background: var(--panneau);
-  box-shadow: var(--ombre-carte);
+  background: var(--surface);
   color: inherit;
   text-decoration: none;
 }
 
 .appel:active {
-  transform: translate(2px, 2px);
-  box-shadow: none;
-  border-color: var(--rose);
+  transform: scale(0.98);
+  border-color: var(--accent);
 }
 
 .appelCorps {
@@ -649,6 +758,7 @@
   padding: 16px;
   border: 1px solid var(--filet);
   border-radius: 18px;
+  background: var(--surface);
 }
 
 .specs > div:first-child {
@@ -666,17 +776,16 @@
 .dock {
   position: fixed;
   z-index: 30;
-  left: 12px;
-  right: 12px;
+  left: calc(var(--marge-app) + 12px);
+  right: calc(var(--marge-app) + 12px);
   bottom: calc(env(safe-area-inset-bottom) + 10px);
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   height: var(--hauteur-dock);
   padding: 6px;
-  border: 1px solid var(--bord-carte);
+  border: 1px solid var(--filet);
   border-radius: 22px;
-  background: var(--panneau);
-  box-shadow: var(--ombre-carte), 0 12px 30px -12px rgba(0, 0, 0, 0.6);
+  background: var(--surface);
 }
 
 .onglet {
@@ -689,7 +798,7 @@
   min-height: 44px;
   border: 0;
   background: none;
-  color: var(--texte-3);
+  color: var(--encre-2);
   font-family: var(--f-mono), monospace;
   font-size: 10px;
   letter-spacing: 0.1em;
@@ -701,7 +810,7 @@
 }
 
 .onglet[aria-current="page"] {
-  color: var(--sur-rose);
+  color: var(--accent-encre);
 }
 
 .onglet > svg,
@@ -709,13 +818,12 @@
   position: relative;
 }
 
-/* l'onglet actif reprend l'aplat biseauté du menu : la même sélection partout */
+/* l'onglet actif reprend l'aplat du menu : la même sélection partout */
 .ongletFond {
   position: absolute;
   inset: 0;
-  border-radius: 16px 16px 16px 16px;
-  background: var(--rose);
-  clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+  border-radius: 16px;
+  background: var(--accent);
 }
 
 /* ---------- feuille de fiche ---------- */
@@ -730,13 +838,14 @@
 .feuille {
   position: fixed;
   z-index: 41;
-  left: 0;
-  right: 0;
+  left: var(--marge-app);
+  right: var(--marge-app);
   bottom: 0;
   display: flex;
   flex-direction: column;
   height: calc(100svh - env(safe-area-inset-top) - 24px);
-  border-top: 1px solid var(--bord-carte);
+  border: 1px solid var(--filet);
+  border-bottom: 0;
   border-radius: 26px 26px 0 0;
   background: var(--fond);
   color: var(--encre);
@@ -763,7 +872,7 @@
   height: 4px;
   margin-left: -20px;
   border-radius: 2px;
-  background: var(--texte-3);
+  background: var(--encre-2);
 }
 
 .fermer {
@@ -773,7 +882,7 @@
   height: 44px;
   border: 1px solid var(--filet);
   border-radius: 50%;
-  background: var(--panneau);
+  background: var(--surface);
   color: var(--encre);
   cursor: pointer;
 }
@@ -786,31 +895,18 @@
 }
 
 .feuilleFigure {
-  position: relative;
   display: grid;
   place-items: center;
   margin-bottom: 20px;
   aspect-ratio: 16 / 9;
   overflow: hidden;
-  border: 1px solid var(--bord-carte);
+  border: 1px solid var(--filet);
   border-radius: 20px;
   background: var(--hairline-plate);
-  box-shadow: var(--ombre-carte);
 }
 
 .feuilleFigure > div {
   width: 70%;
-}
-
-.carteJp {
-  position: absolute;
-  top: 12px;
-  right: 14px;
-  font-family: var(--f-jp), sans-serif;
-  font-size: 11px;
-  letter-spacing: 0.24em;
-  color: var(--jp);
-  writing-mode: vertical-rl;
 }
 
 .ficheNom {
@@ -821,7 +917,7 @@
 .ficheSous {
   margin: 10px 0 22px;
   font-size: 17px;
-  color: var(--texte-2);
+  color: var(--encre-2);
 }
 
 .bloc {
@@ -837,7 +933,6 @@
   margin: 0 0 12px;
   font-weight: 800;
   font-size: 22px;
-  color: var(--rose-texte);
 }
 
 .puces {
@@ -853,7 +948,7 @@
   position: relative;
   padding-left: 18px;
   font-size: 15px;
-  color: var(--texte-2);
+  color: var(--encre-2);
 }
 
 .puces li::before {
@@ -863,7 +958,7 @@
   top: 0.6em;
   width: 8px;
   height: 2px;
-  background: var(--rose);
+  background: var(--accent);
 }
 
 .decisions {
@@ -880,7 +975,7 @@
   padding: 14px 0;
   border-bottom: 1px solid var(--filet);
   font-size: 15px;
-  color: var(--texte-2);
+  color: var(--encre-2);
 }
 
 .decisions b {
@@ -894,7 +989,7 @@
   padding-top: 3px;
   font-family: var(--f-mono), monospace;
   font-size: 12px;
-  color: var(--rose-texte);
+  color: var(--encre-2);
 }
 
 .outils {
@@ -921,11 +1016,10 @@
   gap: 8px;
   min-height: 52px;
   margin-top: 32px;
-  border: 1px solid var(--sur-rose);
+  border: 0;
   border-radius: 14px;
-  background: var(--rose);
-  box-shadow: var(--ombre-carte);
-  color: var(--sur-rose);
+  background: var(--accent);
+  color: var(--accent-encre);
   font-weight: 700;
   font-size: 15px;
   letter-spacing: 0.06em;

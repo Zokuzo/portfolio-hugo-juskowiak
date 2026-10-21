@@ -7,17 +7,18 @@ import { Accueil, Plaque, VueContact, VueMaison, VueWork } from "./vues"
 import { Fiche } from "./fiche"
 import { BasculeTheme } from "./bascule-theme"
 import { FamilleIcones, IconeApp, type CleIcone } from "./icone-app"
+import { PALETTES, PALETTE_PAR_DEFAUT, type Palette } from "./palettes"
 import s from "./ab.module.css"
 
 export type Vue = "accueil" | "work" | "maison" | "contact"
 export type Aller = (vue: Vue, onglet?: string) => void
 export type Ouvrir = (projet: Projet) => void
 
-const DOCK: { vue: Vue; nom: string; jp: string; icone: CleIcone }[] = [
-  { vue: "accueil", nom: "Accueil", jp: "ホーム", icone: "accueil" },
-  { vue: "work", nom: "Work", jp: "仕事", icone: "work" },
-  { vue: "maison", nom: "Maison", jp: "家", icone: "maison" },
-  { vue: "contact", nom: "Contact", jp: "無線", icone: "contact" },
+const DOCK: { vue: Vue; nom: string; icone: CleIcone }[] = [
+  { vue: "accueil", nom: "Accueil", icone: "accueil" },
+  { vue: "work", nom: "Work", icone: "work" },
+  { vue: "maison", nom: "Maison", icone: "maison" },
+  { vue: "contact", nom: "Contact", icone: "contact" },
 ]
 
 const TAILLE_ICONE_DOCK = 34
@@ -27,7 +28,7 @@ const VUES = DOCK.map((d) => d.vue)
 const adresseDe = (vue: Vue) => (vue === "accueil" ? location.pathname : `#${vue}`)
 
 /* La navigation de la piste A (dock, grille d'apps, feuille qui monte)
-   habillée par la piste B. L'adresse porte l'écran : #work, et
+   dans une seule DA (./DA.md). L'adresse porte l'écran : #work, et
    #work/reach-up pour une fiche ouverte. Ouvrir une fiche empile une
    entrée d'historique : le bouton retour du téléphone range la feuille
    au lieu de quitter la vue. */
@@ -35,6 +36,7 @@ export function Fusion({ travail, maison }: { travail: Projet[]; maison: Projet[
   const [vue, setVue] = useState<Vue>("accueil")
   const [onglets, setOnglets] = useState(ONGLETS_PAR_DEFAUT)
   const [ouverte, setOuverte] = useState<Projet | null>(null)
+  const palette = usePalette()
 
   useEffect(() => {
     const lireAdresse = () => {
@@ -68,7 +70,7 @@ export function Fusion({ travail, maison }: { travail: Projet[]; maison: Projet[
 
   return (
     <FamilleIcones>
-      <main className={s.racine}>
+      <main className={s.racine} data-palette={palette}>
         <BarreEtat vue={vue} />
         <AnimatePresence mode="wait" initial={false}>
           <motion.div key={vue} initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -18 }} transition={{ duration: 0.2, ease: "easeOut" }}>
@@ -85,14 +87,22 @@ export function Fusion({ travail, maison }: { travail: Projet[]; maison: Projet[
   )
 }
 
+/* ?palette=<nom> choisit la palette (revue : /da/m/palettes) ; un nom inconnu garde la défaut */
+function usePalette() {
+  const [palette, setPalette] = useState<Palette>(PALETTE_PAR_DEFAUT)
+  useEffect(() => {
+    const demandee = new URLSearchParams(location.search).get("palette")
+    if (PALETTES.includes(demandee as Palette)) setPalette(demandee as Palette)
+  }, [])
+  return palette
+}
+
 function BarreEtat({ vue }: { vue: Vue }) {
   const onglet = DOCK.find((d) => d.vue === vue)!
   return (
     <header className={s.etat}>
       <Plaque />
-      <span className={s.mono}>
-        {onglet.nom} · {onglet.jp}
-      </span>
+      <span className={s.mono}>{onglet.nom}</span>
       <BasculeTheme />
     </header>
   )

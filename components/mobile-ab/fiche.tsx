@@ -72,7 +72,6 @@ function CorpsFiche({ projet: p }: { projet: Projet }) {
     <div className={s.feuilleCorps}>
       <div className={s.feuilleFigure}>
         <Figure play intensity={0.8} label={`Figure ${p.nom}`} />
-        <span className={s.carteJp}>{p.jp}</span>
       </div>
 
       <h2 className={s.ficheNom}>{p.nom}</h2>

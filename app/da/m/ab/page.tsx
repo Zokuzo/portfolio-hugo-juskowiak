@@ -6,8 +6,8 @@ import { Fusion } from "@/components/mobile-ab/fusion"
 export const metadata: Metadata = { title: "Mobile AB · Fusion" }
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f2ede3" },
-    { media: "(prefers-color-scheme: dark)", color: "#08070f" },
+    { media: "(prefers-color-scheme: light)", color: "#f5f3ef" },
+    { media: "(prefers-color-scheme: dark)", color: "#0d0d0d" },
   ],
   viewportFit: "cover",
   width: "device-width",

@@ -53,13 +53,13 @@ export function Accueil({ aller, travail, maison }: { aller: Aller; travail: Pro
 
       <MenuJeu
         lignes={[
-          { cle: "work", jp: "仕事", titre: "Work", texte: `${travail.length} projets pro, le parcours`, agir: () => aller("work") },
-          { cle: "maison", jp: "家", titre: "Maison", texte: `${maison.length} fiches perso, l'atelier, les cursus`, agir: () => aller("maison") },
+          { cle: "work", titre: "Work", texte: `${travail.length} projets pro, le parcours`, agir: () => aller("work") },
+          { cle: "maison", titre: "Maison", texte: `${maison.length} fiches perso, l'atelier, les cursus`, agir: () => aller("maison") },
         ]}
       />
 
       <section>
-        <TitreSection titre="Apps" detail="アプリ" />
+        <h2 className={s.titreSection}>Apps</h2>
         <div className={s.apps}>
           {APPS.map((app) => (
             <TuileApp key={app.nom} app={app} aller={aller} />
@@ -68,7 +68,6 @@ export function Accueil({ aller, travail, maison }: { aller: Aller; travail: Pro
       </section>
 
       <footer className={s.pied}>
-        <Plaque />
         <span className={s.mono}>La chute de la GT86 en 3D se joue sur ordinateur</span>
       </footer>
     </div>
@@ -98,7 +97,7 @@ function TuileApp({ app, aller }: { app: App; aller: Aller }) {
   )
 }
 
-type LigneMenu = { cle: string; jp: string; titre: string; texte: string; agir: () => void }
+type LigneMenu = { cle: string; titre: string; texte: string; agir: () => void }
 
 /* La sélection façon menu de jeu (piste B) : une seule ligne allumée,
    elle suit le doigt et le clavier. */
@@ -122,21 +121,11 @@ function MenuJeu({ lignes }: { lignes: LigneMenu[] }) {
               <span className={s.ligneTitre}>{ligne.titre}</span>
               <span className={s.ligneTexte}>{ligne.texte}</span>
             </span>
-            <span className={s.ligneJp}>{ligne.jp}</span>
             <ArrowRight size={20} className={s.ligneFleche} />
           </button>
         </li>
       ))}
     </ol>
-  )
-}
-
-function TitreSection({ titre, detail }: { titre: string; detail: string }) {
-  return (
-    <h2 className={s.titreSection}>
-      {titre}
-      <span>{detail}</span>
-    </h2>
   )
 }
 
@@ -147,7 +136,7 @@ type VueAOnglets = { projets: Projet[]; onglet: string; choisir: (onglet: string
 export function VueWork({ projets, onglet, choisir, ouvrir }: VueAOnglets) {
   return (
     <div className={s.page}>
-      <Rubrique titre="Work" jp="仕事" compte={`${projets.length} projets · en poste chez ${EN_POSTE.nom}`} />
+      <Rubrique titre="Work" compte={`${projets.length} projets · en poste chez ${EN_POSTE.nom}`} />
       <Onglets nom="work" options={["Projets", "Parcours"]} actif={onglet} choisir={choisir} />
       {onglet === "Projets" ? <ListeProjets projets={projets} ouvrir={ouvrir} /> : <Classement />}
     </div>
@@ -158,24 +147,23 @@ export function VueMaison({ projets, onglet, choisir, ouvrir }: VueAOnglets) {
   const filtres = projets.filter((p) => (onglet === "Cursus") === (p.genre === "formation"))
   return (
     <div className={s.page}>
-      <Rubrique titre="Maison" jp="家" compte="L'atelier du soir et les écoles" />
+      <Rubrique titre="Maison" compte="L'atelier du soir et les écoles" />
       <Onglets nom="maison" options={["Atelier", "Cursus"]} actif={onglet} choisir={choisir} />
       <ListeProjets projets={filtres} ouvrir={ouvrir} />
     </div>
   )
 }
 
-function Rubrique({ titre, jp, compte }: { titre: string; jp: string; compte: string }) {
+function Rubrique({ titre, compte }: { titre: string; compte: string }) {
   return (
     <header className={s.rubrique}>
       <h1 className={s.rubriqueTitre}>{titre}</h1>
-      <span className={s.rubriqueJp}>{jp}</span>
       <span className={s.mono}>{compte}</span>
     </header>
   )
 }
 
-/* Deux onglets au pouce : 44 px de haut, le trait rose glisse de l'un à l'autre. */
+/* Deux onglets au pouce : 48 px de haut, le trait d'accent glisse de l'un à l'autre. */
 function Onglets({ nom, options, actif, choisir }: { nom: string; options: string[]; actif: string; choisir: (option: string) => void }) {
   return (
     <div className={s.onglets} role="tablist">
@@ -237,7 +225,7 @@ function Classement() {
   )
 }
 
-// la plaque de la GT86, en petit : le seul objet qui vient tout droit de la 3D
+// la plaque de la GT86, en petit : le seul objet qui vient tout droit de la 3D, posé une fois (barre du haut)
 export function Plaque() {
   return (
     <span className={s.plaque} aria-label="Plaque HUGOJSK">
@@ -253,7 +241,7 @@ const ICONES_CONTACT: Record<string, CleIcone> = { "E-mail": "mail", LinkedIn: "
 export function VueContact() {
   return (
     <div className={s.page}>
-      <Rubrique titre="Contact" jp="無線" compte={`${CONTACT.length} canaux · ligne ouverte`} />
+      <Rubrique titre="Contact" compte={`${CONTACT.length} canaux · ligne ouverte`} />
       <p className={s.chapo}>{insecable("Un poste, un projet, une question technique : la ligne est ouverte.")}</p>
       <ul className={s.appels}>
         {CONTACT.map((c) => {
