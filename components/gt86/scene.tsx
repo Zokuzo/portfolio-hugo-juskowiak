@@ -294,8 +294,9 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
       return
     }
     if (etat === "HABITACLE" && mode === "hub") {
-      if (zone.u < 0.48) versEcran("gps")
-      else if (zone.u > 0.52) versEcran("musiques", true)
+      const app = ecran.clicHub(zone.u, zone.v)
+      if (app === "gps") versEcran("gps")
+      else if (app === "musiques") versEcran("musiques", true)
       return
     }
     if (etat === "SPOTIFY") {

@@ -145,6 +145,7 @@ export type Ecran = {
   eteint: () => void
   surDepart: (fn: (dest: DestEcran) => void) => void
   clicGps: (u: number, v: number) => "retour" | "go" | DestEcran | null
+  clicHub: (u: number, v: number) => "gps" | "musiques" | null
   go: () => void
   tic: () => void
   choisit: (dest: DestEcran) => void
@@ -428,40 +429,67 @@ export function creeEcran(lang: Lang): Ecran {
     g.drawImage(fondCalque, 0, 0)
   }
 
-  const tuile = (x: number, titre: string, sous: string, teinte: string, glyphe: (cx: number, cy: number, r: number) => void) => {
-    /* une FENÊTRE Y2K : biseau saillant, puits sombre, icône pixel,
-       libellé + sous-libellé façon explorateur de fichiers (planche) */
-    const y = 26
-    const la = l / 2 - 20
-    const ha = h - y - 22
-    const grad = g.createLinearGradient(0, y, 0, y + ha)
-    grad.addColorStop(0, "#b47ad2")
-    grad.addColorStop(1, "#7a3fa2")
-    g.fillStyle = grad
-    g.fillRect(x, y, la, ha)
-    g.fillStyle = "#f0d4fc"
-    g.fillRect(x, y, la, 2)
-    g.fillRect(x, y, 2, ha)
-    g.fillStyle = "#3a1450"
-    g.fillRect(x, y + ha - 2, la, 2)
-    g.fillRect(x + la - 2, y, 2, ha)
-    g.fillStyle = "#150a20"
-    g.fillRect(x + 6, y + 6, la - 12, ha - 44)
-    const cx = x + la / 2
-    const cy = y + (ha - 44) / 2 + 8
+  /* L'ACCUEIL CARPLAY (#63) : deux cartes de verre fumé à droite de la
+     barre latérale, une icône d'app arrondie, le libellé dessous ; la
+     carte GPS porte le liseré blanc et le halo rose de la tuile active,
+     comme ナビ sur l'écran GPS. clicHub lit ces MÊMES cotes. */
+  const HUB = { x: [48, 282], y: 28, la: 222, ha: 196 }
+  const carteHub = (x: number, titre: string, sous: string, teinte: string, active: boolean, icone: HTMLCanvasElement | null) => {
+    const { y, la, ha } = HUB
+    const vitre = g.createLinearGradient(0, y, 0, y + ha)
+    vitre.addColorStop(0, "#261642")
+    vitre.addColorStop(1, "#110820")
+    g.save()
+    if (active) {
+      g.shadowColor = "#e561d3"
+      g.shadowBlur = 14
+    }
+    g.beginPath()
+    g.roundRect(x, y, la, ha, 16)
+    g.fillStyle = vitre
+    g.fill()
+    g.restore()
+    g.beginPath()
+    g.roundRect(x, y, la, ha * 0.42, [16, 16, 0, 0])
+    g.fillStyle = "rgba(255, 255, 255, 0.05)"
+    g.fill()
+    g.beginPath()
+    g.roundRect(x + 0.5, y + 0.5, la - 1, ha - 1, 16)
+    g.strokeStyle = active ? "#f4ecff" : "#3b2466"
+    g.lineWidth = active ? 1.5 : 1
+    g.stroke()
+    /* l'icône d'app : un carré arrondi nuit, une lueur teintée au cœur
+       et un liseré de la teinte (sur un fond teinté plein, le globe
+       violet et la note rose s'y fondaient) */
+    const cote = 100
+    const ix = x + (la - cote) / 2
+    const iy = y + 18
+    const lueur = g.createRadialGradient(ix + cote / 2, iy + cote * 0.6, 4, ix + cote / 2, iy + cote * 0.6, cote * 0.7)
+    lueur.addColorStop(0, teinte + "66")
+    lueur.addColorStop(1, "#0e0619")
+    g.beginPath()
+    g.roundRect(ix, iy, cote, cote, 24)
+    g.fillStyle = lueur
+    g.fill()
     g.strokeStyle = teinte
-    g.fillStyle = teinte
-    glyphe(cx, cy, (ha - 44) * 0.3)
+    g.lineWidth = 1.5
+    g.stroke()
+    g.beginPath()
+    g.roundRect(ix, iy, cote, cote / 2, [24, 24, 0, 0])
+    g.fillStyle = "rgba(255, 255, 255, 0.1)"
+    g.fill()
+    if (icone) {
+      const li = cote * 0.86
+      const hi = (icone.height / icone.width) * li
+      g.drawImage(icone, ix + (cote - li) / 2, iy + (cote - hi) / 2, li, hi)
+    }
     g.textAlign = "center"
-    g.font = "bold 12px monospace"
-    g.fillStyle = "#f6ecff"
-    g.shadowColor = teinte
-    g.shadowBlur = 4
-    g.fillText(titre, cx, y + ha - 27)
-    g.shadowBlur = 0
-    g.font = "bold 7px monospace"
-    g.fillStyle = "#2b1040"
-    g.fillText(sous, cx, y + ha - 12)
+    g.font = "bold 15px monospace"
+    g.fillStyle = "#f4ecff"
+    g.fillText(titre, x + la / 2, iy + cote + 26)
+    g.font = "bold 8px monospace"
+    g.fillStyle = "#a58fd0"
+    g.fillText(sous, x + la / 2, iy + cote + 44)
     g.textAlign = "left"
   }
 
@@ -571,8 +599,11 @@ export function creeEcran(lang: Lang): Ecran {
   }
 
   /* la barre latérale CarPlay (lot 20) : trois tuiles chromées côté
-     conducteur, NAV allumée : décor seul, hors des zones de clicGps */
-  const barreCarplay = () => {
+     conducteur ; sur le GPS, NAV allumée et décor seul (hors des zones
+     de clicGps) ; sur l'accueil, aucune allumée et ナビ/音楽 cliquables
+     (clicHub) */
+  const BARRE = { x: 6, y: 24, pas: 52, cote: 28 }
+  const barreCarplay = (allumee: number | null) => {
     const bl = 40
     g.fillStyle = "#0d0718"
     g.fillRect(0, 16, bl, h - 16)
@@ -599,14 +630,13 @@ export function creeEcran(lang: Lang): Ecran {
       }],
     ]
     tuiles.forEach(([nom, icone], i) => {
-      const x = 6
-      const y = 24 + i * 52
-      const cote = 28
+      const { x, cote } = BARRE
+      const y = BARRE.y + i * BARRE.pas
       const fond = g.createLinearGradient(0, y, 0, y + cote)
       fond.addColorStop(0, "#2a1a48")
       fond.addColorStop(1, "#140a24")
       g.save()
-      if (i === 0) {
+      if (i === allumee) {
         g.shadowColor = "#e561d3"
         g.shadowBlur = 8
       }
@@ -621,10 +651,10 @@ export function creeEcran(lang: Lang): Ecran {
       g.fill()
       g.beginPath()
       g.roundRect(x, y, cote, cote, 7)
-      g.strokeStyle = i === 0 ? "#f4ecff" : "#3b2466"
+      g.strokeStyle = i === allumee ? "#f4ecff" : "#3b2466"
       g.lineWidth = 1
       g.stroke()
-      g.fillStyle = i === 0 ? "#e561d3" : "#a58fd0"
+      g.fillStyle = i === allumee ? "#e561d3" : "#a58fd0"
       g.strokeStyle = g.fillStyle
       g.beginPath()
       icone(x + cote / 2, y + cote / 2)
@@ -639,6 +669,20 @@ export function creeEcran(lang: Lang): Ecran {
     g.fillStyle = "#f4ecff"
     g.fillText("23:42", bl / 2, h - 12)
     g.textAlign = "left"
+  }
+
+  const peintHub = () => {
+    barreCarplay(null)
+    carteHub(HUB.x[0], t(langue, "gt86Gps").toUpperCase(), "NAV · MAP", "#8f5cff", true, iconeGps)
+    carteHub(HUB.x[1], t(langue, "gt86Musiques").toUpperCase(), "SPOTIFY · AMP", "#e561d3", false, iconeMusiques)
+    /* les points de page de l'accueil CarPlay : une seule page */
+    const milieu = (HUB.x[0] + HUB.x[1] + HUB.la) / 2
+    for (const [k, teinte] of [[-1, "#e561d3"], [1, "#4a3370"]] as const) {
+      g.beginPath()
+      g.arc(milieu + k * 6, HUB.y + HUB.ha + 13, 2.5, 0, Math.PI * 2)
+      g.fillStyle = teinte
+      g.fill()
+    }
   }
 
   const peintGpsStatique = () => {
@@ -759,7 +803,7 @@ export function creeEcran(lang: Lang): Ecran {
       rangee(py0 + h * 0.115, MAISON(), "#8f5cff", glypheMaison)
       rangee(py0 + h * 0.3, TRAVAIL(), "#e561d3", glypheTravail)
     }
-    barreCarplay()
+    barreCarplay(0)
     /* le bandeau HJ·NAV (9e retour : le GPS rejoint le langage de l'AMP)
        — la zone retour u<0,22 × v<0,26 couvre le ‹ inchangée */
     const bandeauNav = g.createLinearGradient(0, 0, l, 0)
@@ -1419,16 +1463,7 @@ export function creeEcran(lang: Lang): Ecran {
         g.textAlign = "left"
       }
     } else if (etat.mode === "hub") {
-      const dessine = (img: HTMLCanvasElement | null) => (cx: number, cy: number, r: number) => {
-        if (!img) return
-        const la = r * 2.6
-        const ha = (img.height / img.width) * la
-        g.imageSmoothingEnabled = false
-        g.drawImage(img, cx - la / 2, cy - ha / 2, la, ha)
-        g.imageSmoothingEnabled = true
-      }
-      tuile(12, t(langue, "gt86Gps").toUpperCase(), "NAV · MAP", "#b57aff", dessine(iconeGps))
-      tuile(l / 2 + 8, t(langue, "gt86Musiques").toUpperCase(), "SPOTIFY · AMP", "#f473e8", dessine(iconeMusiques))
+      peintHub()
     }
     tex.needsUpdate = true
   }
@@ -1559,6 +1594,20 @@ export function creeEcran(lang: Lang): Ecran {
     eteint: () => passeEn("eteint"),
     surDepart(fn: (dest: DestEcran) => void) {
       quandDepart = fn
+    },
+    /* zones CALQUÉES sur peintHub : les deux cartes, et les tuiles
+       ナビ/音楽 de la barre (bande de la barre, une rangée par tuile) */
+    clicHub(uv: number, vv: number): "gps" | "musiques" | null {
+      const x = uv * l
+      const y = vv * h
+      if (x < BARRE.x * 2 + BARRE.cote) {
+        const rang = Math.floor((y - BARRE.y + 8) / BARRE.pas)
+        return rang === 0 ? "gps" : rang === 1 ? "musiques" : null
+      }
+      if (y < HUB.y || y > HUB.y + HUB.ha) return null
+      if (x >= HUB.x[0] && x <= HUB.x[0] + HUB.la) return "gps"
+      if (x >= HUB.x[1] && x <= HUB.x[1] + HUB.la) return "musiques"
+      return null
     },
     /* zones CALQUÉES sur le dessin (panneau x ∈ [0,2 ; 0,8], rangée
        MAISON y ∈ [0,535 ; 0,69], TRAVAIL [0,72 ; 0,875]) */
