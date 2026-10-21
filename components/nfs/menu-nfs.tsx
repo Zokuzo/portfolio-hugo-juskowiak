@@ -83,7 +83,6 @@ export function MenuNfs({ surDestination, variante, surRejoue }: Props) {
         </h1>
         <div className={`${s.hudDroit} ${s.mono}`}>
           <span className={s.chantier}>work in progress</span>
-          <span>{PILOTE.fonction.toLowerCase()}</span>
           <span>
             <span className={`${s.pastille} ${s.pastilleActive}`}>FR</span> <span className={s.pastille}>EN</span>
           </span>
@@ -127,7 +126,10 @@ export function MenuNfs({ surDestination, variante, surRejoue }: Props) {
           <span><span className={s.touche}>↑↓</span>choisir</span>
           <span><span className={s.touche}>⏎</span>valider</span>
         </span>
-        <span>ref. gt86 · nuit · 2026</span>
+        <span className={s.indice}>
+          <span className={s.indicePastille} aria-hidden />
+          un easter egg dort dans l&apos;écran CarPlay : touche-le
+        </span>
       </footer>
       {flash > 0 && <div key={flash} className={s.flash} aria-hidden />}
     </main>

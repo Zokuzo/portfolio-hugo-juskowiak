@@ -713,7 +713,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
         {passer && (
           <button
             type="button"
-            style={{ ...discret, position: "absolute", right: 20, bottom: 18, pointerEvents: "auto" }}
+            style={{ ...discret, ...police.bouton, fontSize: 11, position: "absolute", right: 20, bottom: 18, pointerEvents: "auto" }}
             data-gt86="passer" onClick={() => envoie({ t: "passer" })}
           >
             {t(lang, "gt86Passer")}

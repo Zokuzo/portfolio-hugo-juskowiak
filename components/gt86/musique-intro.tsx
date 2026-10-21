@@ -146,30 +146,49 @@ export function MusiqueIntro({ etat, ampVivant, lang }: { etat: Etat; ampVivant:
   }, [muet, enCours])
 
   if (!enCours) return null
-  /* bouton bascule : le libellé visible est le nom accessible (WCAG
-     2.5.3), l'état passe par aria-pressed, enfoncé quand le son joue */
+  /* bouton bascule à icône seule (Hugo, 2026-10-21) : le nom accessible
+     passe par aria-label, l'état par aria-pressed, enfoncé quand le son joue */
   return (
     <button
       type="button"
       aria-pressed={!muet}
+      aria-label={lang === "fr" ? "Musique" : "Music"}
+      title={lang === "fr" ? (muet ? "Remettre la musique" : "Couper la musique") : muet ? "Music on" : "Music off"}
       onClick={() => setMuet((m) => !m)}
       style={{
         position: "absolute",
-        top: 16,
-        right: 18,
-        font: "500 11px/1 var(--f-mono)",
-        letterSpacing: "0.14em",
+        top: 12,
+        right: 14,
+        display: "grid",
+        placeItems: "center",
+        width: 40,
+        height: 40,
         /* encre pleine et halo sombre : lisible sur le voile crème */
         color: "#e8dff5",
-        textShadow: "0 0 3px rgba(40, 20, 40, 0.8), 0 0 10px rgba(40, 20, 40, 0.45)",
+        filter: "drop-shadow(0 0 3px rgba(40, 20, 40, 0.8)) drop-shadow(0 0 8px rgba(40, 20, 40, 0.45))",
         background: "transparent",
         border: "none",
-        padding: "8px 10px",
+        padding: 0,
         cursor: "pointer",
       }}
     >
-      <span aria-hidden="true">♪ </span>
-      {lang === "fr" ? "MUSIQUE" : "MUSIC"}
+      <IconeSon muet={muet} />
     </button>
+  )
+}
+
+function IconeSon({ muet }: { muet: boolean }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor" />
+      {muet ? (
+        <path d="M16 9.5l5 5m0-5l-5 5" />
+      ) : (
+        <>
+          <path d="M15.5 9a4 4 0 0 1 0 6" />
+          <path d="M18.5 6.5a7.5 7.5 0 0 1 0 11" />
+        </>
+      )}
+    </svg>
   )
 }

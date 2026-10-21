@@ -24,17 +24,21 @@
 }
 
 /* ---------- Primitives partagées ---------- */
+/* Le chrome NOIR (Hugo, 2026-10-21 : « noir sur noir, j'aime le rendu »).
+   Né d'un accident : background-clip:text sous un filter échoue dans
+   Chrome, le texte sortait transparent et seules ses ombres se voyaient.
+   Rendu volontaire ici : encre de nuit, liseré acier net, halo bleu. Pas
+   de filter : un text-shadow ne crée pas de couche à recomposer. */
 .chrome {
   font-style: italic;
   font-weight: 800;
   font-stretch: 125%;
   text-transform: uppercase;
   line-height: 0.92;
-  background: var(--chrome);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  filter: drop-shadow(0 1px 0 var(--bleu-nuit)) drop-shadow(0 0 22px rgba(96, 140, 255, 0.45));
+  color: #0e1533;
+  -webkit-text-stroke: 1.2px #b4c6ee;
+  paint-order: stroke fill;
+  text-shadow: 0 1px 0 #3c5aa8, 0 0 18px rgba(96, 140, 255, 0.55);
 }
 .tm { font-size: 0.28em; vertical-align: super; margin-left: 0.1em; }
 .jp { font-family: var(--f-jp), sans-serif; font-weight: 500; letter-spacing: 0.32em; color: var(--acier-bleu); }
@@ -103,7 +107,19 @@
   align-items: flex-start;
 }
 .marque { font-size: 44px; }
-.marque .jp { display: block; font-size: 12px; margin-top: 10px; filter: none; }
+/* le katakana sous le nom : lisible d'un coup d'œil, rose LCD sur halo
+   néon, plus gras et plus large que l'ancienne ligne bleu acier */
+.marque .jp {
+  display: block;
+  margin-top: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  font-style: normal;
+  letter-spacing: 0.42em;
+  color: var(--lcd);
+  -webkit-text-stroke: 0;
+  text-shadow: 0 0 10px rgba(168, 107, 255, 0.85);
+}
 .trait { display: block; width: 300px; height: 8px; margin-top: 10px; }
 .hudDroit { display: flex; gap: 24px; align-items: center; }
 .chantier { padding: 4px 10px; border: 1px solid var(--rose); color: var(--rose); text-transform: uppercase; letter-spacing: 0.12em; }
@@ -182,7 +198,9 @@
    garde le menu lisible, seuls les blocs actifs prennent les clics */
 .enScene { background: transparent; pointer-events: none; }
 .enScene .menu, .enScene .panneau, .enScene .hud { pointer-events: auto; }
-.enScene .panneau { width: 600px; top: 196px; bottom: auto; max-height: calc(100% - 300px); overflow: auto; background: linear-gradient(160deg, rgba(43, 16, 64, 0.72), rgba(14, 10, 29, 0.78)); }
+/* sans backdrop-filter sur la 3D : un flou sous une toile qui bouge se
+   recalcule à chaque image ; un fond plus dense le remplace */
+.enScene .panneau { width: 600px; top: 196px; bottom: auto; max-height: calc(100% - 300px); overflow: auto; background: linear-gradient(160deg, rgba(43, 16, 64, 0.88), rgba(14, 10, 29, 0.92)); backdrop-filter: none; }
 .voileGauche {
   position: absolute;
   inset: 0;
@@ -319,6 +337,10 @@
   align-items: center;
 }
 .touches { display: flex; gap: 22px; }
+/* l'indice de l'easter egg : il pousse au clic sur la dalle CarPlay */
+.indice { display: inline-flex; align-items: center; gap: 10px; padding: 6px 14px; font-size: 11px; color: var(--lcd); border: 1px solid color-mix(in srgb, var(--rose) 55%, transparent); background: rgba(8, 7, 15, 0.6); }
+.indicePastille { width: 8px; height: 8px; border-radius: 50%; background: var(--rose); box-shadow: 0 0 10px var(--rose); animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: 0.25; transform: scale(0.7); } }
 .touche { display: inline-block; min-width: 20px; padding: 2px 6px; margin-right: 6px; border: 1px solid rgba(143, 176, 255, 0.5); text-align: center; color: var(--acier); }
 
 /* ---------- MOBILE ---------- */
@@ -448,4 +470,5 @@
   .commencer { animation: none; }
   .entree, .hud, .menu, .panneau, .pied, .bouton { transition: none; }
   .entreeActive::after, .demarrer:hover::after, .bouton:hover::after, .flash { animation: none; display: none; }
+  .indicePastille { animation: none; }
 }
