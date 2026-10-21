@@ -46,7 +46,7 @@ const ABERRATION_MAX = 6
 const VIBRATION = { amplitude: 0.008, hz: 31 }
 /* la caisse : cabrage au lancement, tenu tant qu'on accélère, et plongée
    du nez à chaque passage (ressort sous-amorti, ~1,9 Hz) */
-const CABRE = { angle: -0.035, duree: 0.5, tenu: -0.012 }
+const CABRE = { angle: -0.025, duree: 0.5, tenu: -0.009 }
 const PLONGE = { angle: 0.028, frein: 0.22, hz: 1.9 }
 const ECRASE = { lance: -0.018, passage: -0.01 }
 /* au-delà d'un demi-radian par image, une jante à cinq branches semble

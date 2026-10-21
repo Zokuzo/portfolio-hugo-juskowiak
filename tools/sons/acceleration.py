@@ -1,24 +1,22 @@
 # Bande-son du trajet NFS (public/sons/acceleration-gt86.m4a) : synthèse par grains indexée sur le régime,
-# depuis la pleine charge du banc dezoris (Freesound 191194, CC-BY 4.0).
-import numpy as np, sys
+# depuis la pleine charge du banc dezoris (Freesound 191194, CC-BY 4.0). À relancer depuis la racine du dépôt :
+#   ffmpeg -i ressources/191194__dezoris__*.mp3 -f f32le -ac 1 -ar 44100 /tmp/banc.f32
+#   python3 tools/sons/acceleration.py /tmp/banc.f32 /tmp/trajet.f32
+#   ffmpeg -f f32le -ar 44100 -ac 1 -i /tmp/trajet.f32 -c:a aac -b:a 96k public/sons/acceleration-gt86.m4a
+import json, subprocess, sys
+import numpy as np
 SR = 44100
 x = np.fromfile(sys.argv[1], dtype=np.float32)
 sortie = sys.argv[2]
 
-# partition du trajet (copie de components/gt86/trajet.ts)
-LANCE, ACCEL, RALENTI, GAZ = 0.5, 13, 900, 6600
-RAPPORTS = [0, 12, 22, 34, 50]; BAS, HAUT = 3600, 7300
-def vitesse(t): return ACCEL * max(0, t - LANCE)
-def rapport(t):
-    if t < LANCE: return 0
-    v = vitesse(t)
-    for i, b in enumerate(RAPPORTS):
-        if v < b: return i
-    return len(RAPPORTS) - 1
-def regime(t):
-    if t < LANCE: return RALENTI + (GAZ - RALENTI) * (1 - np.exp(-t / 0.12))
-    g = rapport(t); b, h = RAPPORTS[g-1], RAPPORTS[g]
-    return BAS + (HAUT - BAS) * (vitesse(t) - b) / (h - b)
+# la partition vient de components/gt86/trajet.ts elle-même, lue par node : régime échantillonné, instants des passages
+PARTITION = """import('./components/gt86/trajet.ts').then((T) => {
+  const temps = Array.from({ length: Math.ceil(T.TRAJET_MS / 5) + 60 }, (_, i) => i * 0.005)
+  const passages = [...new Set(temps.filter((t) => T.passage(t) >= 0).map((t) => +(t - T.passage(t)).toFixed(4)))]
+  console.log(JSON.stringify({ duree: T.TRAJET_MS / 1000, temps, tours: temps.map(T.regime), passages }))
+})"""
+P = json.loads(subprocess.run(["node", "-e", PARTITION], capture_output=True, text=True, check=True).stdout)
+def regime(t): return float(np.interp(t, P["temps"], P["tours"]))
 
 # la pleine charge : 26,0 s = 132 Hz, +13,4 Hz/s ; allumage = tr/min / 30
 T0, F0, PENTE, TFIN = 26.0, 132.0, 13.4, 34.5
@@ -28,7 +26,7 @@ def source(r):
     rf = 30 * (F0 + PENTE * (tc - T0))
     return tc, max(0.8, r / rf)   # sous 3960 tr/min, on ralentit un peu le grain
 
-DUREE, GRAIN, PAS = 3.75, 0.11, 0.0275
+DUREE, GRAIN, PAS = P["duree"] + 0.15, 0.11, 0.0275
 n = int(DUREE * SR); y = np.zeros(n + SR); poids = np.zeros(n + SR)
 L = int(GRAIN * SR); fen = np.hanning(L)
 rng = np.random.default_rng(7)
@@ -41,13 +39,12 @@ for k in range(int(DUREE / PAS)):
     o = int(to * SR); y[o:o+L] += g; poids[o:o+L] += fen
 y = y[:n] / np.maximum(poids[:n], 1e-3)
 
-# enveloppe : montée au coup de gaz, coupure de 70 ms à chaque passage, fondu final
+# enveloppe : montée au coup de gaz, pied levé pendant chaque passage (0,3 s), fondu final
 t = np.arange(n) / SR
 env = np.clip(t / 0.06, 0, 1) * np.clip((DUREE - t) / 0.45, 0, 1)
-for g in range(1, 4):
-    v = RAPPORTS[g]; tp = LANCE + v / ACCEL
-    env *= 1 - 0.7 * np.exp(-((t - tp - 0.03) / 0.035) ** 2)
+for tp in P["passages"]:
+    env *= 1 - 0.75 * np.clip((t - tp) / 0.03, 0, 1) * np.clip((tp + 0.3 - t) / 0.08, 0, 1)
 y *= env
 y *= 0.89 / np.max(np.abs(y))
 y.astype(np.float32).tofile(sortie)
-print("passages à", [round(LANCE + RAPPORTS[g] / ACCEL, 2) for g in range(1, 4)])
+print("durée", round(DUREE, 2), "s, passages à", P["passages"])

@@ -155,7 +155,8 @@ for (let t = 0; t <= T.TRAJET_MS / 1000; t += 0.05) {
   assert.ok(tours > 0 && tours <= T.TOURS_MAX, `régime hors cadran à t=${t.toFixed(2)} : ${tours}`)
   assert.ok(T.vitesse(t + 0.05) >= T.vitesse(t), "la vitesse ne redescend jamais")
 }
-assert.deepEqual([0.2, 1, 1.8, 2.6].map(T.rapport), [0, 1, 2, 3], "N puis trois rapports")
+assert.deepEqual([0.2, 1, 4.5].map(T.rapport), [0, 1, 2], "N puis deux rapports")
+assert.ok(T.vitesse(T.LANCE_S + 2.5) * 3.6 < 50, "la 1re tire plus fort qu'une GT86 : 50 km/h avant 2,5 s")
 for (const route of ["da/a/maison", "da/a/work"])
   assert.ok(existsSync(path.join(RACINE, "app", route, "page.tsx")), `le menu NFS mène à /${route}, qui n'existe pas`)
 
