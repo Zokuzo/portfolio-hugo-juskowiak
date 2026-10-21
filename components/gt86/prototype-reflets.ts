@@ -25,26 +25,31 @@ type Reglage = {
 }
 type Cle = "a" | "b" | "c" | "d"
 
+/* 1er tour écarté : vernis et verre à 0,6 ou 1 délavaient tout, le
+   crépuscule est clair partout, la voiture blanche virait laiteuse. Le
+   2e tour garde le vernis de la prod (0,28) et assombrit les vitres : en
+   photo, une vitre est sombre parce qu'elle mire le bas et l'habitacle,
+   le ciel n'y passe qu'en éclat net. */
 const REGLAGES: Record<Cle, Reglage> = {
-  /* a, physique strict : tout à 0,6 comme la scène */
+  /* a, vitre noire diélectrique, éclat du ciel dosé */
   a: {
-    verre: { couleur: "#161b21", metal: 0, rugosite: 0, reflet: 0.6, opacite: 0.85 },
-    vernis: { reflet: 0.6, rugosite: 0.01 },
+    verre: { couleur: "#050608", metal: 0, rugosite: 0, reflet: 0.5, opacite: 0.92 },
+    vernis: { reflet: 0.28, rugosite: 0.03 },
   },
-  /* b, physique au ciel plein : le reflet à la radiance de la HDR */
+  /* b, a avec un éclat plus franc */
   b: {
-    verre: { couleur: "#161b21", metal: 0, rugosite: 0, reflet: 1, opacite: 0.85 },
-    vernis: { reflet: 1, rugosite: 0.01 },
+    verre: { couleur: "#050608", metal: 0, rugosite: 0, reflet: 0.85, opacite: 0.92 },
+    vernis: { reflet: 0.28, rugosite: 0.03 },
   },
-  /* c, vitres teintées privacy : le noir fait ressortir le ciel net */
+  /* c, a et un vernis plus net, à peine plus mirant */
   c: {
-    verre: { couleur: "#080a0d", metal: 0, rugosite: 0, reflet: 1, opacite: 0.93 },
-    vernis: { reflet: 1, rugosite: 0.005 },
+    verre: { couleur: "#050608", metal: 0, rugosite: 0, reflet: 0.5, opacite: 0.92 },
+    vernis: { reflet: 0.35, rugosite: 0.008 },
   },
-  /* d, photo de studio : c poussé, comme sous softbox */
+  /* d, c avec des vitres fumé bleu acier, l'habitacle s'y devine */
   d: {
-    verre: { couleur: "#080a0d", metal: 0, rugosite: 0, reflet: 1.6, opacite: 0.93 },
-    vernis: { reflet: 1.4, rugosite: 0.003 },
+    verre: { couleur: "#0c1118", metal: 0, rugosite: 0, reflet: 0.7, opacite: 0.86 },
+    vernis: { reflet: 0.35, rugosite: 0.008 },
   },
 }
 
