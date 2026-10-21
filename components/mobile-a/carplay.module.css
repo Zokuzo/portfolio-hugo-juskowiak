@@ -30,7 +30,7 @@
     var(--nuit);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
   -webkit-tap-highlight-color: transparent;
-  /* la planche pose un halo sur tout le texte : l'écran de bord n'en veut pas */
+  /* le socle (app/globals.css) pose un halo sur tout le texte : l'écran de bord n'en veut pas */
   text-shadow: none;
   font-size: 16px;
   padding-bottom: calc(var(--hauteur-dock) + env(safe-area-inset-bottom) + 32px);

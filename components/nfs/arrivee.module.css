@@ -21,7 +21,7 @@
   font-family: var(--f-vitesse), system-ui, sans-serif;
   overflow-x: clip;
 }
-/* le thème clair de la planche peint html en crème : la nuit couvre
+/* le thème clair du socle (app/globals.css) peint html en crème : la nuit couvre
    tout le document sous une page d'arrivée */
 html:has(.page),
 html:has(.page) body { background: #08070f; }

@@ -1,12 +1,13 @@
-import { Planche } from "@/components/proto/planche"
-import { DeuxCorps } from "@/components/mobile-ab/deux-corps"
+import { FusionDuSite } from "@/components/mobile-ab/deux-corps"
+import { Intro3d } from "@/components/gt86/intro-3d"
 
-/* La racine : la planche (et la 3D par-dessus) sur desktop, le hub de la
-   fusion sur téléphone (#42). */
+/* La racine : la fusion à toute largeur (téléphone, et desktop sans 3D),
+   l'intro GT86 posée par-dessus quand la machine en est capable (#42). */
 export default function Page() {
   return (
-    <DeuxCorps>
-      <Planche />
-    </DeuxCorps>
+    <>
+      <FusionDuSite pleineLargeur />
+      <Intro3d />
+    </>
   )
 }

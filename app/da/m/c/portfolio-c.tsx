@@ -92,7 +92,7 @@ export function PortfolioC() {
 
   return (
     <div className={s.racine}>
-      {/* Le fond du document suit la page : sans ça, le rebond iOS montre le noir de la planche. */}
+      {/* Le fond du document suit la page : sans ça, le rebond iOS montre le noir du socle. */}
       <style>{`html,body{background:#f2f2f7}`}</style>
       <main className={s.vue}>
         <BarreHaute chercher={() => setRecherche(true)} />

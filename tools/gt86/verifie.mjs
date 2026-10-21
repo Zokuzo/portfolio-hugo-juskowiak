@@ -137,7 +137,7 @@ for (const dest of DESTS) {
    Un import statique enverrait les 139 Ko (mesurés au #17) à tous les
    visiteurs — mobiles et `prefers-reduced-motion` compris. C'est invisible à
    l'œil et ça ne casse aucun test : d'où cette garde. */
-for (const f of ["components/gt86/capable.ts", "components/gt86/surcouche.tsx", "app/page.tsx", "components/proto/planche.tsx"]) {
+for (const f of ["components/gt86/capable.ts", "components/gt86/surcouche.tsx", "components/gt86/intro-3d.tsx", "app/page.tsx"]) {
   const src = readFileSync(path.join(RACINE, f), "utf8")
   const fautif = src.match(/^\s*import[^\n]*from\s+["'](three|@react-three\/[\w-]+)["']/m)
   assert.equal(fautif, null, `${f} importe ${fautif?.[1]} statiquement — la 3D doit rester derrière le dynamic`)
@@ -274,12 +274,15 @@ await attends(async () => {
   }
 }, 40000, "démarrage de next start")
 
-/* 1. Le HTML du SERVEUR : la version simple entière, et zéro trace de 3D.
-      C'est ce que voit un robot d'indexation — et un visiteur mobile. */
+/* 1. Le HTML du SERVEUR : la fusion entière, seule (la planche n'existe
+      plus, #63), et zéro trace de 3D. C'est ce que voit un robot
+      d'indexation, un visiteur mobile et un desktop incapable. */
 const html = await (await fetch(base + "/")).text()
-assert.ok(html.includes("Juskowiak"), "le HTML serveur ne contient pas la version simple")
+assert.ok(html.includes("Juskowiak") && html.includes("data-palette"), "le HTML serveur ne contient pas la fusion")
+assert.ok(!html.includes("seul-desktop"), "la racine porte encore un corps desktop")
 assert.ok(!html.includes("data-etat"), "la surcouche a fuité dans le HTML serveur")
-console.log("  1/6 SSR intact, zéro 3D au serveur")
+assert.ok(!html.includes("<canvas"), "une toile a fuité dans le HTML serveur")
+console.log("  1/6 SSR : la fusion seule, zéro 3D au serveur")
 
 /* Le pointeur fin doit être DÉCLARÉ : un Chrome piloté en CDP se dit sans
    souris, `Emulation.setEmulatedMedia` ne couvre pas hover/pointer, et toute
@@ -302,11 +305,10 @@ const sonde = (expr) => cdp.evalue(expr)
 const compte = (sel) => sonde(`document.querySelectorAll(${JSON.stringify(sel)}).length`)
 const etat = () => sonde(`document.querySelector("[data-etat]")?.dataset.etat ?? null`)
 
-/* 2. La surcouche monte, et elle a bien DÉMONTÉ le WebGL vanille de la home :
-      un seul canvas vivant, donc jamais deux contextes. */
+/* 2. La surcouche monte, et c'est le SEUL contexte WebGL de la page : la
+      fusion dessous n'en porte aucun. */
 await va(base + "/")
 await attends(async () => await etat(), 8000, "montage de la surcouche")
-assert.equal(await compte(".voiture"), 0, "la voiture vanille est restée montée sous la surcouche")
 assert.equal(await compte("canvas"), 1, "il devrait rester exactement un canvas (celui de R3F)")
 console.log("  2/6 surcouche montée, un seul contexte WebGL")
 
@@ -570,28 +572,26 @@ await clicPoste(0.03, 0.05)
 await attends(async () => (await etat()) === "HABITACLE", 15000, "le ‹ du player revient au hub")
 console.log("  4e/6 Spotify direct : zéro octet avant le clic de tuile, l'AMP en texture, la molette, le ‹ revient au hub")
 
-/* 5. La version simple n'est JAMAIS cassée : incapable → rien ne se monte,
-      le décor et la voiture sont à leur place. */
+/* 5. Le desktop incapable reçoit la fusion (#63) : rien ne se monte, la
+      fusion est VISIBLE en colonne, et aucune toile n'existe. */
+const fusionVisible = () => sonde(`document.querySelector("main[data-palette]")?.offsetParent != null`)
 await va(base + "/?gt86=off")
-/* depuis le #42 le décor et la voiture ne sont plus dans le HTML serveur :
-   ils se montent au rendu qui suit l'hydratation, une fois l'écran lu large */
-await attends(async () => (await compte(".voiture")) === 1, 6000, "montage de la version simple")
+await attends(fusionVisible, 6000, "la fusion visible sous ?gt86=off")
 assert.equal(await etat(), null, "la surcouche s'est montée malgré ?gt86=off")
-assert.equal(await compte(".voiture"), 1, "la voiture vanille manque à la version simple")
-assert.ok((await compte("canvas")) >= 2, "les toiles de la version simple manquent")
-console.log("  5/6 version simple intacte quand la machine est incapable")
+assert.equal(await compte("canvas"), 0, "une toile s'est montée sur le repli")
+console.log("  5/6 desktop incapable : la fusion visible, zéro toile")
 
 /* 6. Le repli démonte : la scène jette au montage, la boundary la retire, et
-      la version simple reprend la main d'elle-même. */
+      la fusion reprend la main d'elle-même. */
 await va(base + "/?gt86=boom")
-await attends(async () => (await compte(".voiture")) === 1, 6000, "retour de la version simple")
-assert.equal(await etat(), null, "la surcouche est restée après l'échec")
+await attends(async () => (await etat()) === null && (await compte("canvas")) === 0, 6000, "retour de la fusion")
+assert.ok(await fusionVisible(), "la fusion n'est pas revenue après l'échec")
 assert.equal(
   await sonde(`document.documentElement.style.overflow`),
   "",
   "le défilement est resté gelé après le repli",
 )
-console.log("  6/6 le repli démonte proprement et rend le défilement")
+console.log("  6/6 le repli démonte proprement : la fusion, zéro toile, le défilement rendu")
 
 /* 7. AUCUN OCTET NE PART CHEZ UN TIERS (#28). Grepper le bundle ne prouve
       rien — l'URL gstatic vit dans le module drei, override ou pas. La seule
@@ -630,7 +630,7 @@ for (const asset of [
 console.log("  7/7 zéro requête externe, et la cascade tire voiture + ciel + rue + habitacle")
 
 /* 8. LE TÉLÉPHONE (#42) : sous 768 px, chaque route montre la fusion
-      mobile dans la vue de son URL, la planche est masquée et AUCUNE toile
+      mobile dans la vue de son URL, la page desktop est masquée et AUCUNE toile
       ne se monte (ni décor, ni voiture, ni 3D) ; une fiche ouverte par son
       lien partagé arrive feuille levée. */
 await cdp.envoie("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 2, mobile: true })
@@ -639,15 +639,15 @@ for (const [route, vue, feuille] of [["/", "Accueil", 0], ["/work", "Work", 0], 
   await pause(1500)
   const lu = JSON.parse(
     await sonde(`JSON.stringify({
-      vue: document.querySelector(".seul-mobile header")?.textContent ?? "",
-      visible: document.querySelector(".seul-mobile main")?.offsetParent !== null,
-      planche: getComputedStyle(document.querySelector(".seul-desktop")).display,
+      vue: document.querySelector("main[data-palette] header")?.textContent ?? "",
+      visible: document.querySelector("main[data-palette]")?.offsetParent != null,
+      desktop: [...document.querySelectorAll(".seul-desktop")].map((e) => getComputedStyle(e).display),
       toiles: document.querySelectorAll("canvas").length,
-      feuille: document.querySelectorAll(".seul-mobile [role=dialog]").length,
+      feuille: document.querySelectorAll("main[data-palette] [role=dialog]").length,
     })`),
   )
   assert.ok(lu.visible && lu.vue.includes(vue), `${route} au téléphone : la fusion devrait montrer ${vue} (${JSON.stringify(lu)})`)
-  assert.equal(lu.planche, "none", `${route} au téléphone : la version desktop est restée visible`)
+  assert.ok(lu.desktop.every((d) => d === "none"), `${route} au téléphone : la version desktop est restée visible`)
   assert.equal(lu.toiles, 0, `${route} au téléphone : ${lu.toiles} toile(s) montée(s)`)
   assert.equal(lu.feuille, feuille, `${route} au téléphone : feuille de fiche attendue ${feuille}, lue ${lu.feuille}`)
 }

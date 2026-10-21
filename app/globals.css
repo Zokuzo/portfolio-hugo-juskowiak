@@ -1,13 +1,11 @@
 /* ============================================================
-   TAILWIND — le socle des composants importés, et RIEN d'autre.
-   ------------------------------------------------------------
-   Le système visuel du document est `app/planche.css`, écrit à la
-   main et hors couche : une classe utilitaire ne peut pas l'écraser.
-   Ce fichier-ci n'existe que pour que les composants pris au
-   catalogue 21st.dev compilent (ils écrivent en Tailwind et
+   TAILWIND, le socle des composants importés, puis LE SOCLE DU
+   DOCUMENT (plus bas, hors couche : une classe utilitaire ne peut
+   pas l'écraser). Tailwind n'est là que pour que les composants pris
+   au catalogue 21st.dev compilent (ils écrivent en Tailwind et
    importent `cn` depuis `@/lib/utils`).
 
-   CE FICHIER NE DÉCLARE AUCUNE COULEUR, AUCUN RAYON, AUCUNE POLICE.
+   TAILWIND NE REÇOIT AUCUNE COULEUR, AUCUN RAYON, AUCUNE POLICE.
    Il en déclarait : une palette shadcn complète héritée du scaffold
    v0 — `--primary`/`--accent`/`--ring` à #0097ff, `--secondary` à
    #00a3ad, un second rouge `--destructive` #e7000b, `--radius: 1rem`,
@@ -21,8 +19,8 @@
 
    La règle qui remplace tout ça : un composant mal rethemé doit
    ÉCHOUER BRUYAMMENT — pas de jeton de secours, donc pas de couleur.
-   N'AJOUTE PAS DE PALETTE ICI. Les jetons du système sont dans
-   `app/planche.css`, sur `.proto-root`.
+   N'AJOUTE PAS DE PALETTE TAILWIND. Les quelques jetons du document
+   sont dans le socle ci-dessous, sur `.proto-root`.
    ============================================================ */
 @import "tailwindcss";
 
@@ -47,8 +45,8 @@
 /* LES DEUX CORPS DU SITE (#42, components/mobile-ab/deux-corps.tsx) :
    chaque route porte sa page desktop et la fusion mobile, le seuil de
    768 px n'en garde qu'une avant la première peinture. `display: contents`
-   pour la version gardée : l'enveloppe ne crée aucune boîte, la planche
-   et son décor en position:fixed ne voient aucun ancêtre de plus. */
+   pour la version gardée : l'enveloppe ne crée aucune boîte, les
+   position:fixed de la page ne voient aucun ancêtre de plus. */
 .seul-desktop,
 .seul-mobile {
   display: contents;
@@ -61,5 +59,119 @@
 @media (width >= 768px) {
   .seul-mobile {
     display: none;
+  }
+}
+
+/* ============================================================
+   LE SOCLE DU DOCUMENT, ce qui reste de l'ancienne planche
+   (app/planche.css, supprimée au #63) et que toutes les routes
+   héritent par `.proto-root` (app/layout.tsx) : l'encre et le
+   papier, le corps à 19 px, le halo d'écriture, le focus et la
+   sélection. Le Y2K, le menu NFS et la fusion ont été réglés AVEC
+   ces valeurs : les retirer déplacerait leurs pixels.
+   ATTENTION : `.proto-root` ne doit JAMAIS recevoir transform,
+   filter, perspective, will-change ni contain:paint (ses
+   descendants en position:fixed prendraient cet ancêtre pour bloc
+   conteneur).
+   ============================================================ */
+.proto-root {
+  --ink: #07080b;
+  --paper: #f2f0ec;
+  --sig: #c8102e; /* la sélection : 5,169:1 sous --paper */
+  --focus: var(--paper);
+  --rail-w: 2px; /* l'épaisseur de l'anneau de focus */
+
+  /* `relative` donne aux cibles de useScroll un offsetParent
+     positionné ; il ne capture PAS le position:fixed (seuls
+     transform, filter, perspective, contain et will-change le font). */
+  position: relative;
+  background: var(--ink);
+  color: var(--paper);
+  /* le halo qui détache l'écriture du décor, une couche courte
+     (3 px : au-delà, le budget de frame se détache) ; les mondes qui
+     n'en veulent pas s'en exemptent (y2k.css) */
+  text-shadow: 0 0 3px var(--ink);
+  font-family: var(--f-display), ui-sans-serif, system-ui, sans-serif;
+  font-synthesis-weight: none;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+html,
+body {
+  background: #07080b;
+}
+
+/* le corps à 19 px : tout le site est en rem/em, chaque taille suit */
+html {
+  font-size: 118.75%;
+}
+
+.proto-root :focus-visible {
+  outline: var(--rail-w) solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 1px;
+}
+.proto-root :focus:not(:focus-visible) {
+  outline: none;
+}
+.proto-root ::selection {
+  background: var(--sig);
+  color: var(--paper);
+}
+
+/* Sous reduce, les animations et transitions CSS se posent d'un coup ;
+   les animations JS (motion) portent leur propre coupure. */
+@media (prefers-reduced-motion: reduce) {
+  .proto-root *,
+  .proto-root *::before,
+  .proto-root *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* LE THÈME CLAIR : l'inversion pure des neutres (le couple écriture
+   et fond garde ses 17,596:1), le bleu à la place du rouge.
+   :where() : spécificité 0,1,0, pour que prefers-contrast et
+   forced-colors, plus bas, gardent le dernier mot par ordre. */
+:where(html.clair) .proto-root {
+  --ink: #f2f0ec;
+  --paper: #07080b;
+  --sig: #0066b7; /* 5,148:1 sur papier */
+}
+html.clair,
+html.clair body {
+  background: #f2f0ec;
+}
+/* sans elle, carbone sur bleu foncé : 3,297, échec ; avec : 5,148 */
+:where(html.clair) .proto-root ::selection {
+  color: var(--ink);
+}
+
+@media (prefers-contrast: more) {
+  .proto-root {
+    --rail-w: 3px;
+  }
+}
+@media (forced-colors: active) {
+  .proto-root {
+    --sig: CanvasText;
+    --focus: Highlight;
+  }
+}
+
+/* L'overlay de transition de vue gobe les clics pendant l'animation :
+   on le rend transparent aux événements, la page reste vivante. */
+::view-transition {
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
   }
 }

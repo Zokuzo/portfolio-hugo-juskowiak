@@ -4,9 +4,8 @@ import { Archivo, JetBrains_Mono, Michroma, Noto_Sans_JP, Saira } from "next/fon
 import { Analytics } from "@vercel/analytics/next"
 import FiltreCrt from "@/components/filtre-crt"
 import "./globals.css"
-import "./planche.css"
 
-/* Archivo est chargée avec son axe `wdth` : la planche s'en sert pour
+/* Archivo est chargée avec son axe `wdth` : le menu NFS et la fusion s'en servent pour
    condenser les titres. Sans l'axe, `font-stretch` n'a aucun effet et
    toute la typographie s'élargit d'un coup. */
 const display = Archivo({
@@ -43,7 +42,7 @@ const policesSeuil = [vitesse, etendue].map((police) => police.variable).join(" 
 export const metadata: Metadata = {
   title: "Hugo Juskowiak | Ingénieur Full Stack & IA",
   description:
-    "Planche technique d'un ingénieur full stack et IA : Reach-Up, routage multi-modèle, prédiction mémoire par machine learning.",
+    "Portfolio d'un ingénieur full stack et IA au Mans : Reach-Up, Octo, UYB Store, prédiction mémoire par machine learning.",
   /* La mire porte son propre fond d'encre : elle tient sur une barre
      d'onglets claire comme sombre, donc plus de variantes par
      `prefers-color-scheme` — deux fichiers identiques qui prétendaient
@@ -71,11 +70,11 @@ export const viewport: Viewport = {
 }
 
 /* `.proto-root` porte les tokens du système et vit ICI, à la racine :
-   toutes les routes de la planche en héritent, y compris /work.
+   toutes les routes en héritent (le socle, app/globals.css).
    ATTENTION — ce div ne doit JAMAIS recevoir transform, filter,
-   perspective, will-change ni contain:paint. Le décor est en
-   position:fixed et prendrait cet ancêtre pour bloc conteneur ; il se
-   mettrait alors à scroller avec la page. */
+   perspective, will-change ni contain:paint : les position:fixed des
+   pages (surcouche 3D, menu, feuilles) prendraient cet ancêtre pour
+   bloc conteneur et se mettraient à scroller avec la page. */
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -99,10 +98,10 @@ export default function RootLayout({
             __html: `var t=null;try{localStorage.removeItem("theme");t=sessionStorage.getItem("theme")}catch(e){}try{if(t?t==="clair":matchMedia("(prefers-color-scheme: light)").matches)document.documentElement.classList.add("clair")}catch(e){}`,
           }}
         />
-        {/* LE MASQUE D'ATTENTE (#54) : la planche est dans le HTML serveur
+        {/* LE MASQUE D'ATTENTE (#54) : la fusion est dans le HTML serveur
             (indexation, repli) mais `useGt86` ne répond oui qu'APRÈS
             l'hydratation ; sans ce masque, un desktop capable voyait la
-            planche ~300 ms avant le voile CHARGEMENT. Ce script refait les
+            fusion ~300 ms avant le voile CHARGEMENT. Ce script refait les
             critères de `components/gt86/capable.ts` SAUF WebGL (une sonde
             GPU ici bloquerait la première peinture de tout le monde) et pose
             `data-gt86` sur <html> ; la règle peint alors la nuit du voile par-
@@ -110,9 +109,9 @@ export default function RootLayout({
             `useGt86` dès que la capacité réelle dit non (WebGL absent,
             abandon). Le délai est le garde-fou : un chunk qui n'arrive jamais
             ne laisse personne devant un écran vide plus de 5 s. Sans JS, rien
-            ne tourne et la planche reste visible. Seule `/` porte la 3D.
+            ne tourne et la fusion reste visible. Seule `/` porte la 3D.
             `overflow: hidden` dès le masque : sinon la barre de défilement
-            de la planche reste peinte en blanc au bord du noir, puis saute
+            de la fusion reste peinte en blanc au bord du noir, puis saute
             quand la surcouche gèle le défilement. */}
         <script
           dangerouslySetInnerHTML={{

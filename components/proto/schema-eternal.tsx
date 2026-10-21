@@ -38,7 +38,7 @@ import { Planche, type Plan } from "./schema"
    (`recherches/02-eternal.md` E23).
 
    PIÈGE MAISON. Préfixe `etn-`, et aucune règle `.etn-*` de
-   `planche.css` ne déclare width, height, x, y ni r.
+   `fiche-y2k.css` ne déclare width, height, x, y ni r.
    ================================================================== */
 
 export function SchemaEternal({ lang }: { lang: Lang }) {

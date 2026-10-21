@@ -20,9 +20,12 @@ export function DeuxCorps({ children }: { children: ReactNode }) {
   )
 }
 
-/* Les fiches se trient côté serveur : le client ne reçoit que le FR. */
-export function FusionDuSite() {
+/* Les fiches se trient côté serveur : le client ne reçoit que le FR.
+   `pleineLargeur` : la fusion est seule à l'écran à toute largeur (la
+   racine, où le desktop sans 3D la reçoit aussi), pas masquée au-dessus
+   de 768 px. */
+export function FusionDuSite({ pleineLargeur = false }: { pleineLargeur?: boolean }) {
   const toutes = projets("fr")
   const estMaison = (slug: string) => SLUGS_MAISON.includes(slug)
-  return <Fusion travail={toutes.filter((p) => !estMaison(p.slug))} maison={toutes.filter((p) => estMaison(p.slug))} />
+  return <Fusion pleineLargeur={pleineLargeur} travail={toutes.filter((p) => !estMaison(p.slug))} maison={toutes.filter((p) => estMaison(p.slug))} />
 }

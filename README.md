@@ -49,14 +49,15 @@ Node 24 or newer is needed for `npm run gt86`, which imports `.ts` files directl
 
 ### How the site is put together
 
-The server always renders a complete page that works without JavaScript and without 3D. That
+The server always renders a complete page that works without JavaScript and without 3D: at `/`,
+the mobile "fusion" (`components/mobile-ab/`), a centred 440 px column on wide screens. That
 page gets indexed. If the 3D can't run, visitors get this page and nothing else. The 3D
 experience is then laid over it on the client. It only mounts when the visitor's device can
 run it. It removes itself on any error.
 
 - **Capability gate**: `components/gt86/capable.ts`. The 3D mounts only if the viewport is at
-  least 768 px wide, WebGL2 can be created and `prefers-reduced-motion` is not set. Phones and
-  browsers without WebGL get a lighter version with no 3D. This file never imports three or
+  least 768 px wide, WebGL2 can be created and `prefers-reduced-motion` is not set. Phones,
+  `?gt86=off`, `prefers-reduced-motion` and browsers without WebGL get the fusion with no 3D. This file never imports three or
   R3F, so the 3D bundle stays behind a `dynamic(ssr: false)` in `components/gt86/surcouche.tsx`.
 - **State machine**: `components/gt86/machine.ts`. The scenes run in this order: sky → landing
   → threshold → cabin → GPS / music → departure to `/work` or `/home`. The file is pure (no
@@ -80,7 +81,7 @@ The architecture spec explains the design choices behind all of this:
 
 ```
 app/
-  page.tsx             entry: server-rendered page + the 3D overlay
+  page.tsx             entry: the server-rendered fusion + the 3D overlay
   work/                the office hub
   work/[slug]/         one page per job project (3 static paths)
   home/                the bedroom hub
@@ -88,6 +89,7 @@ app/
   api/gt86/mix/[id]/   track previews for the in-car player
 components/gt86/       the 3D experience: state machine, capability gate, scenes, player
 components/y2k/        the Y2K world: hubs, poster template, pixel art, y2k.css
+components/mobile-ab/  the phone site ("fusion"), also the desktop fallback at /
 components/proto/      shared data
   dict.ts              every visible label, FR and EN
   projets.ts           project records

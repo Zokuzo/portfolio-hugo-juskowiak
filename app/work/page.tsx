@@ -9,7 +9,7 @@ import "@/components/y2k/y2k.css"
    site) mais elle est PRÉRENDUE : le serveur sert le hub complet en FR.
 
    Les deux fontes du monde Y2K se chargent ICI et pas au layout racine :
-   la home et les fiches planche n'ont pas à payer le chrome du hub.
+   la racine et la fusion n'ont pas à payer le chrome du hub.
    next/font les auto-héberge au build — zéro requête externe à
    l'exécution, la passe 7 du harnais reste vraie. */
 

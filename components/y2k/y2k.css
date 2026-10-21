@@ -10,8 +10,8 @@
 
    CE FICHIER EST LE SYSTÈME DE TOKENS DU MONDE Y2K ENTIER — les hubs
    /work et /home (#36, #37) et les gabarits fiche (#38, #39) puisent
-   ici. Tout est scopé sous `.y2k` : la planche (`planche.css`) et ce
-   monde cohabitent sans se voir.
+   ici. Tout est scopé sous `.y2k` : le socle du document
+   (app/globals.css) et ce monde cohabitent sans se voir.
 
    PAS DE VARIANTE JOUR : un écran système est auto-éclairé, comme la
    scène 3D. La classe `clair` de <html> ne touche rien ici — c'est un
@@ -53,15 +53,14 @@
   color: var(--y2k-encre);
   font-family: var(--f-display), Arial, sans-serif;
   min-height: 100vh;
-  /* L'EXEMPTION DU MONDE : la planche pose `text-shadow: 0 0 3px
+  /* L'EXEMPTION DU MONDE : le socle pose `text-shadow: 0 0 3px
      var(--ink)` sur .proto-root, HÉRITÉ par tout le document
-     (planche.css). Sur un texte à remplissage clippé
+     (app/globals.css). Sur un texte à remplissage clippé
      (background-clip: text), cette ombre ENCRE se peint par-dessus le
      remplissage selon le chemin de rasterisation — le wordmark et les
      noms de fiche viraient au noir, PAR INTERMITTENCE (le « néon
      noir » du re-gate, reproduit puis bissecté au navigateur : 11
-     rondes, X1/bis11). La planche s'exempte cartouche par cartouche
-     (.chrome, .ref) ; le monde Y2K s'exempte EN BLOC — ses éléments
+     rondes, X1/bis11). Le monde Y2K s'exempte EN BLOC, ses éléments
      qui veulent une ombre la déclarent eux-mêmes (h2 gravés, doubles
      du wordmark et des noms). */
   text-shadow: none;
@@ -133,7 +132,7 @@
   outline-color: #b3005e;
 }
 
-/* sans ça, la sélection resterait le bleu bureautique de la planche
+/* sans ça, la sélection resterait celle du socle
    (`.proto-root ::selection` gagne depuis le layout racine) */
 .y2k ::selection {
   background: var(--y2k-rose);
@@ -237,7 +236,7 @@
   background-clip: text;
   color: transparent;
   /* NI text-shadow NI filter sur un texte-dégradé : l'ombre héritée de
-     la planche écrasait le remplissage clippé (cause racine du « néon
+     `.proto-root` écrasait le remplissage clippé (cause racine du « néon
      noir » — voir l'exemption sur .y2k), et le filter qui vivait ici
      ne faisait que MASQUER le bug par une couche isolée, au hasard du
      rasteriseur. Le halo vit sur le ::after (texte plein, sûr) ; le

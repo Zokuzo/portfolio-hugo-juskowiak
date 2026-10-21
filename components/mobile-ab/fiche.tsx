@@ -7,7 +7,6 @@ import type { Projet } from "@/components/proto/projets"
 import { t } from "@/components/proto/dict"
 import { figureDe } from "@/components/mobile-a/figures"
 import { insecable, Spec } from "./vues"
-import { useTelephone } from "./ecran"
 import s from "./ab.module.css"
 
 // au-delà de ce glissé (px) ou de cette vitesse (px/s), la feuille se range
@@ -18,10 +17,10 @@ const VITESSE_FERMETURE = 600
    se range au retour du téléphone) avec le corps éditorial de la
    piste B. On ne la tire que par la poignée : sinon le glissé se
    battrait avec le défilement du contenu. */
-export function Fiche({ projet, fermer }: { projet: Projet | null; fermer: () => void }) {
+export function Fiche({ projet, fermer, affichee }: { projet: Projet | null; fermer: () => void; affichee: boolean }) {
   const controles = useDragControls()
   // masquée sur desktop, la feuille ne doit ni geler le défilement ni écouter Échap
-  const active = useTelephone() && projet !== null
+  const active = affichee && projet !== null
   useVerrouDefilement(active)
   useEchapFerme(active, fermer)
 

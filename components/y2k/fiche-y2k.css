@@ -170,7 +170,7 @@
    trait et l'ombre portée dure. Plafonné 104px. */
 /* le porteur du nom : le SKEW seul — les drop-shadows qui vivaient sur
    le h1 clippé ne faisaient que masquer, au hasard du rasteriseur, la
-   cause racine du « néon noir » (l'ombre héritée de la planche, voir
+   cause racine du « néon noir » (le halo hérité de `.proto-root`, voir
    y2k.css) ; l'ombre dure et le halo vivent sur le ::after plein */
 .fy-nom-halo {
   transform: skewX(-6deg);
@@ -428,24 +428,22 @@
 .fy-retour:hover { color: var(--y2k-rose-encre); }
 
 /* ==================================================================
-   LES BLOCS EMPRUNTÉS À LA PLANCHE (#39) — schéma d'architecture,
+   LES BLOCS HÉRITÉS DE LA PLANCHE (#39), schéma d'architecture,
    code annoté, tableau de cotes. Seule la fiche Eternal les porte.
+   Leurs règles (`.etn-*`, `.fp-cotes*`, `.fp-code*`, plus bas) ont
+   quitté `planche.css` avec elle, au #63.
 
-   POURQUOI UN REPOINTAGE DE TOKENS ET PAS UNE RÉÉCRITURE. Les règles
-   `.etn-*` et `.fp-cotes*` / `.fp-code*` de `planche.css` ne codent
-   AUCUNE couleur en dur : elles lisent toutes `--ink-2`, `--paper`,
-   `--g-*`, `--line*`. Redéclarer ces variables ici suffit à faire
+   POURQUOI UN REPOINTAGE DE TOKENS ET PAS UNE RÉÉCRITURE. Ces règles
+   ne codent AUCUNE couleur en dur : elles lisent toutes `--ink-2`,
+   `--paper`, `--g-*`, `--line*`. Les déclarer ici suffit à faire
    passer 101 nœuds de SVG, un tableau et un extrait de code dans la
-   palette du monde Y2K — sans toucher une seule de leurs règles, donc
-   sans risquer la planche.
+   palette du monde Y2K.
 
    POURQUOI `.y2k.fy .fy-etn` ET PAS `.fy-etn`. `.proto-root` vit au
-   layout RACINE : la fiche Y2K en hérite tous les tokens de la
-   planche, y compris leur bascule de thème `:where(html.clair)
-   .proto-root` (spécificité 0,1,0). Un `.fy-etn` nu (0,1,0) perdrait
-   ou gagnerait selon l'ordre des feuilles dans le bundle — et un
-   visiteur en thème CLAIR verrait le schéma passer en clair sur clair.
-   Le monde Y2K n'a pas de variante jour : ces valeurs sont PINÉES.
+   layout RACINE et bascule `--paper` en thème clair
+   (`:where(html.clair) .proto-root`, app/globals.css). Le monde Y2K
+   n'a pas de variante jour : ces valeurs sont PINÉES, à une
+   spécificité qui ne dépend pas de l'ordre des feuilles.
 
    POURQUOI SUR `.fy-etn` ET PAS SUR `.fy`. Le gabarit du #38 est gaté
    au pixel ; `.fy-resultat` et `.fy-parc` lisent `--f-mono`, et le
@@ -458,14 +456,14 @@
   gap: 14px;
 
   /* le LIT — le même panneau que les contraintes et les décisions :
-     sur le sol violet, le presque-noir de la planche se lirait comme un
+     sur le sol violet, un presque-noir se lirait comme un
      trou découpé, pas comme une carte (leçon du 4e retour du #37) */
   --ink-2: var(--fy-panneau);
   /* RATIOS MESURÉS au navigateur contre le panneau #211a40 (et contre
      le sol #342b66 pour ce qui peut s'y poser), pas estimés — la loi du
      dépôt vaut aussi pour les chiffres qu'on écrit en commentaire.
      Chaque token est annoté de ce qu'il PORTE VRAIMENT ici, relevé par
-     extraction des règles de planche.css : les blocs empruntés ne
+     extraction de leurs règles (plus bas) : les blocs empruntés ne
      rendent ni .dim-2 ni .jp, les nommer serait un faux repère. */
   --paper: #f4efff; /* 14,49:1 — .fp-cote-val, .fp-code-m (l'encre du corps, à l'identique) */
   --g-100: #e9e4ff; /* 13,22:1 — .etn-bus, .etn-t-titre, .fp-code code */
@@ -476,8 +474,10 @@
   --line-2: rgba(205 201 230 / 0.28);
   --line-3: rgba(205 201 230 / 0.44);
   --rule: 1px;
+  --f-nano: 0.625rem; /* ~12px, .mono-xs */
+  --f-micro: 0.6875rem; /* ~13px, .mono-sm et .fp-code code */
 
-  /* --sig-* : dans la planche, l'accent. Ici c'est celui de LA fiche —
+  /* --sig-* : l'accent de LA fiche :
      `--sig-hot` ne porte jamais de texte (composant non textuel, WCAG
      1.4.11), `--sig-ember` est un lit de chaleur sans couleur. */
   --sig-hot: var(--acc);
@@ -485,15 +485,14 @@
 }
 
 /* CE QU'ON PINE, ON LE DOIT AUSSI EN CONTRASTE FORCÉ ET RENFORCÉ.
-   Piège payé à la revue adversariale du #39 : `.proto-root` porte les
-   parades d'accessibilité de la planche (planche.css:1831 et :1860),
-   mais une déclaration posée SUR l'élément bat toujours une valeur
-   HÉRITÉE d'un ancêtre — la spécificité n'entre même pas en jeu. Nos
-   tokens pinés sur `.fy-etn` masquaient donc les deux parades.
+   Piège payé à la revue adversariale du #39 : une déclaration posée
+   SUR l'élément bat toujours une valeur HÉRITÉE d'un ancêtre, et nos
+   tokens pinés sur `.fy-etn` masquaient les parades d'accessibilité
+   de l'ancêtre.
 
    POURQUOI C'EST GRAVE ET PAS COSMÉTIQUE : `forced-colors` force
    `color`, `background-color` et `border-color`, mais PAS `stroke` ni
-   `fill` (c'est écrit à planche.css:1872). Le lit du bloc passait donc
+   `fill`. Le lit du bloc passait donc
    au Canvas BLANC du système pendant que le bus, les 28 arêtes, leurs
    pointes, les trois cadres de bande et la cote gardaient leur rgba
    lavande — mesuré : trait rgba(205,201,230,0.44) sur blanc, 1,22:1.
@@ -512,9 +511,8 @@
     --g-100: CanvasText;
     --g-300: CanvasText;
     --g-500: CanvasText;
-    --g-700: GrayText; /* FILET, jamais un glyphe — comme la planche */
-    /* les trois filets, aux valeurs EXACTES de planche.css:1878-1880 :
-       --line reste atténué (le non-bâti du tracé est encore du
+    --g-700: GrayText; /* FILET, jamais un glyphe */
+    /* les trois filets : --line reste atténué (le non-bâti du tracé est encore du
        non-bâti), les deux autres deviennent du trait */
     --line: GrayText;
     --line-2: CanvasText;
@@ -531,9 +529,8 @@
   }
 }
 
-/* CONTRASTE RENFORCÉ — même masquage, même devoir. La planche épaissit
-   ses neutres (planche.css:1831) ; on épaissit les nôtres, sur NOTRE
-   panneau. Valeurs mesurées au navigateur, pas estimées. */
+/* CONTRASTE RENFORCÉ, même masquage, même devoir : on épaissit nos
+   neutres, sur NOTRE panneau. Valeurs mesurées au navigateur, pas estimées. */
 @media (prefers-contrast: more) {
   .y2k.fy .fy-etn {
     --g-500: #c9c3e8; /* 9,68:1 sur le panneau, mesuré (contre 6,41 au repos) */
@@ -561,8 +558,7 @@
 /* LA SEULE RÈGLE DE LARGEUR DE CE BLOC, et elle est porteuse — les
    trois autres qu'on avait posées par réflexe sont tombées à la mesure.
    Ce qui déborde n'est PAS le cadre de défilement : `.fp-code-cadre` et
-   `.fp-cotes-cadre` portent `overflow-x: auto` (planche.css:2770 et
-   :2844), et la taille minimale automatique ne s'applique pas à un
+   `.fp-cotes-cadre` portent `overflow-x: auto` (plus bas), et la taille minimale automatique ne s'applique pas à un
    conteneur de défilement — ils se contiennent seuls. C'est leur PARENT
    qui déborde : `figure.fp-code` est un enfant de grille ordinaire, il
    prend donc la largeur intrinsèque du code (1035px), pousse la colonne,
@@ -576,8 +572,8 @@
   min-width: 0;
 }
 /* le code et les cotes n'ont plus de lit à eux : ils sont POSÉS sur
-   celui du bloc (le schéma, lui, ne porte plus `.fp-schema` du tout —
-   c'était le lit de la planche, `.fy-etn-lit` le remplace) */
+   celui du bloc (le schéma n'a pas de lit à lui, `.fy-etn-lit` le
+   porte) */
 .y2k.fy .fy-etn .fp-code-cadre,
 .y2k.fy .fy-etn .fp-cotes-cadre {
   border: none;
@@ -589,8 +585,288 @@
    testé au navigateur (390 et 1440, avec et sans), il ne déplace pas un
    pixel. La raison est dans la spécification : la taille minimale
    automatique ne s'applique PAS à un conteneur de défilement, et
-   `.fp-code-cadre` / `.fp-cotes-cadre` en sont — planche.css leur pose
-   `overflow-x: auto` (:2770 et :2844). Le défilement se contient donc
+   `.fp-code-cadre` / `.fp-cotes-cadre` en sont (`overflow-x: auto`,
+   plus bas). Le défilement se contient donc
    tout seul, et la sonde le vérifie par le test « rogné » à neuf
    largeurs. Une règle qui ne fait rien mais se lit comme une décision
    coûte plus cher que son absence. */
+
+/* ==================================================================
+   LES RÈGLES DES BLOCS HÉRITÉS, venues de l'ancienne planche.css
+   (#63), inchangées. Elles lisent les tokens pinés sur `.fy-etn`
+   ci-dessus ; `.mono*`, `.dim` et `.sr-only` sont les primitives
+   typo de `fiche-blocs.tsx`.
+   ================================================================== */
+.mono {
+  font-family: var(--f-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  line-height: 1.35;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+.mono-sm {
+  font-size: var(--f-micro);
+  letter-spacing: 0.18em;
+}
+
+.mono-xs {
+  font-size: var(--f-nano);
+  letter-spacing: 0.22em;
+}
+
+.dim {
+  color: var(--g-500);
+}
+
+/* Texte réservé aux lecteurs d'écran : il porte une information que le
+   dessin porte GÉOMÉTRIQUEMENT et qu'aucune restitution vocale ne peut
+   deviner. Premier emploi : la ligne « ⋯ » d'un extrait de code, dont
+   le marqueur vit dans la colonne des numéros, colonne aria-hidden,
+   sinon chaque ligne se ferait annoncer son numéro. Sans ce relais,
+   l'extrait s'entend comme un bloc contigu et l'élision disparaît.
+   Pas de `display: none` ni de `visibility: hidden` : les deux
+   retireraient aussi le texte de l'arbre d'accessibilité. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Le tableau des cotes. La COMMANDE est une colonne et pas une note
+   de bas de page : un chiffre sans son geste de reproduction est une
+   affirmation. Elle défile toute seule plutôt que de se replier :
+   une commande coupée n'est plus une commande. */
+.fp-cotes-cadre {
+  overflow-x: auto;
+}
+.fp-cotes {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+.fp-cotes th,
+.fp-cotes td {
+  padding: 0.62rem 1.4rem 0.62rem 0;
+  border-bottom: var(--rule) solid var(--line);
+  vertical-align: baseline;
+  font-weight: 400;
+}
+.fp-cotes thead th {
+  border-bottom-color: var(--line-2);
+}
+/* PIÈGE : `.mono` met le texte en CAPITALES. Sur une valeur ou une
+   commande, c'est un mensonge, `ls` n'est pas `LS`, et « 5 784 o »
+   n'est pas « 5 784 O ». Les trois cellules le désactivent. */
+/* Un nom de cote ne se replie pas sur deux lignes : c'est une
+   étiquette, pas une phrase. Quand la table dépasse, c'est la table
+   qui défile, d'où `.fp-cotes-cadre`. */
+.fp-cote-nom {
+  color: var(--g-300);
+  text-transform: none;
+  letter-spacing: 0.035em;
+  white-space: nowrap;
+}
+.fp-cote-val {
+  color: var(--paper);
+  text-transform: none;
+  letter-spacing: 0.035em;
+  white-space: nowrap;
+}
+.fp-cote-cmd {
+  width: 100%;
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+.fp-cote-cmd code {
+  font-family: inherit;
+  white-space: pre;
+}
+.fp-cotes-note {
+  margin: 0.9rem 0 0;
+  text-transform: none;
+  letter-spacing: 0.035em;
+}
+
+/* EXTRAIT DE CODE, le §10 du filtre de retheming, appliqué.
+   R-10.1 : un thème de coloration syntaxique est une palette de six à
+   dix teintes, et ce système en interdit une. Aucun n'entre.
+   R-10.3 : aucun moteur de coloration n'est installé, ce bloc n'est
+   que des <span> de classe.
+   R-10.2 : la différenciation passe par le gris et la graisse. Trois
+   niveaux, et trois seulement : corps sur --g-100, commentaire sur
+   --g-500, mise en évidence sur --paper.
+   R-10.4 : la mise en évidence passe par le RAIL géométrique, jamais
+   par un fond coloré. */
+.fp-code {
+  margin: 0;
+}
+.fp-code-src,
+.fp-code-note {
+  text-transform: none;
+  letter-spacing: 0.035em;
+}
+.fp-code-src {
+  margin: 0 0 0.6rem;
+}
+.fp-code-cadre {
+  overflow-x: auto;
+  padding: clamp(0.9rem, 2vw, 1.4rem) 0;
+  border: var(--rule) solid var(--line-2);
+  background: var(--ink-2);
+}
+.fp-code pre {
+  margin: 0;
+}
+.fp-code code {
+  display: block;
+  font-family: var(--f-mono), ui-monospace, monospace;
+  font-size: var(--f-micro);
+  line-height: 1.75;
+  color: var(--g-100);
+}
+.fp-code-l {
+  display: block;
+  padding-inline: clamp(0.9rem, 2vw, 1.4rem);
+  white-space: pre;
+}
+.fp-code-n {
+  display: inline-block;
+  width: 5ch;
+  color: var(--g-500);
+  user-select: none;
+}
+.fp-code-c {
+  color: var(--g-500);
+}
+/* ponytail: le rail est posé sur la ligne, donc il défile avec elle
+   quand l'extrait dépasse en largeur. Un rail collant demanderait une
+   seconde couche en position:sticky, à faire si un extrait large
+   devient la règle plutôt que l'exception. */
+.fp-code-m {
+  color: var(--paper);
+  font-weight: 700;
+  box-shadow: inset 2px 0 0 var(--sig-hot);
+}
+.fp-code-note {
+  margin: 0.9rem 0 0;
+  max-width: 74ch;
+  color: var(--g-300);
+  line-height: 1.7;
+}
+
+/* ------------------------------------------------------------
+   SCHÉMAS CALCULÉS, l'habillage des primitives de `schema.tsx`
+
+   Le module ne produit que de la GÉOMÉTRIE ; tout ce qui se voit se
+   décide ici, et rien de ce qui se voit ici ne peut déplacer un trait.
+
+   L'INTERDICTION, et elle est absolue : aucune règle ci-dessous ne
+   déclare width, height, x, y ni r. En SVG2 ces propriétés CSS battent
+   les attributs de présentation et réécriraient la géométrie calculée.
+   Seule exception : la racine `<svg>` est un élément HTML remplacé,
+   son dimensionnement EST le travail du CSS.
+
+   CHAQUE SCHÉMA GARDE SON PRÉFIXE. `etn-` est celui d'Eternal. Un
+   second schéma ajoute son préfixe à ces sélecteurs, il n'en hérite
+   pas : deux schémas qui partagent une classe partagent aussi leurs
+   régressions.
+
+   AUCUNE TEINTE NOUVELLE : le nœud accentué est braise + trait clair,
+   et rien d'autre n'est coloré. Un schéma d'architecture n'a pas à
+   s'allumer.
+   ------------------------------------------------------------ */
+
+.etn-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.etn-boite {
+  fill: var(--ink-2);
+  stroke: var(--g-500);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+/* Les deux pièces qui portent une décision : le rédacteur et le
+   moteur. Le reste du schéma est du mobilier. */
+.etn-accent {
+  fill: var(--sig-ember);
+  stroke: var(--g-100);
+}
+.etn-fil {
+  fill: none;
+  stroke: var(--line-3);
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+}
+.etn-tete {
+  fill: var(--line-3);
+  stroke: none;
+}
+/* Le bus est plus épais que les fils : ce n'est pas un flux de plus,
+   c'est la pièce sur laquelle tous les autres se raccordent. */
+.etn-bus {
+  stroke: var(--g-100);
+  stroke-width: 2.4;
+  vector-effect: non-scaling-stroke;
+}
+/* Le cadre de bande n'a pas à concurrencer les boîtes : il délimite,
+   il ne dessine pas. D'où le tireté au filet le plus faible. */
+.etn-groupe {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+  vector-effect: non-scaling-stroke;
+}
+.etn-puce {
+  fill: none;
+  stroke: var(--g-700);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.etn-attache,
+.etn-cote {
+  fill: none;
+  stroke: var(--g-700);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.etn-cote-f {
+  fill: var(--g-700);
+  stroke: none;
+}
+.etn-t {
+  font-family: var(--f-mono), monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  fill: var(--g-300);
+}
+.etn-t-titre {
+  fill: var(--g-100);
+}
+.etn-t-sous,
+.etn-t-etq,
+.etn-t-leg {
+  fill: var(--g-500);
+}
+/* Pas d'interlettrage particulier ici, et c'est délibéré : la largeur
+   d'un libellé est CALCULÉE dans `schema.tsx` à partir d'une avance
+   unique. Une classe qui tracerait plus large mentirait au calcul de
+   non-chevauchement sans rien casser de visible tout de suite. */
+.etn-t-num,
+.etn-t-groupe {
+  fill: var(--g-500);
+  text-transform: uppercase;
+}
+.etn-t-cote {
+  fill: var(--g-300);
+}

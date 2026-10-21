@@ -1,5 +1,5 @@
 /* PISTE C : « Clair, iOS d'abord ».
-   Tout est en px : la planche pose `html { font-size: 19px }`, et un
+   Tout est en px : le socle (app/globals.css) pose `html { font-size: 19px }`, et un
    système iOS se pense en points, pas en rem gonflés. Pour la même
    raison `--spacing` est ramené à 4 px : les composants ObsidianUI
    copiés écrivent en Tailwind, dont l'espacement suit cette variable. */
@@ -42,7 +42,7 @@
   overflow-x: clip;
 }
 
-/* L'anneau de focus de la planche est papier sur noir : invisible ici.
+/* L'anneau de focus du socle est papier sur noir : invisible ici.
    Double classe pour passer devant `.proto-root :focus-visible`. */
 .racine.racine :focus-visible {
   outline: 2px solid var(--rose);

@@ -122,7 +122,7 @@ export function useGt86(): { actif: boolean; abandonne: () => void } {
   const capable = useDesktopCapable()
   const [perdu, setPerdu] = useState(false)
   const abandonne = useCallback(() => setPerdu(true), [])
-  /* La planche revient dès que la réponse est NON. On interroge `instantane()`
+  /* La fusion se découvre dès que la réponse est NON. On interroge `instantane()`
      et pas `capable` : l'effet de la passe d'hydratation voit encore le
      `false` du serveur, et lever le masque sur cette valeur rouvrirait le
      flash chez tous les visiteurs capables. */

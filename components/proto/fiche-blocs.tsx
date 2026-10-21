@@ -71,7 +71,7 @@ export function Cotes({ lang, lignes, note }: { lang: Lang; lignes: string[][]; 
    copier. Le filtre du ticket 06 tranche le point :
 
      R-10.1 — un thème de coloration est une palette (six à dix
-       teintes) ; `planche.css` en interdit UNE. Refusé.
+       teintes) ; le système des blocs en interdit UNE. Refusé.
      R-10.2 — le code se différencie par la graisse et par le gris.
        Trois niveaux : mise en évidence sur --paper, corps sur
        --g-100, commentaire sur --g-500.

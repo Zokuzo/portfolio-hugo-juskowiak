@@ -62,7 +62,7 @@ const titreDe = (vue: Vue, fiche: Projet | null) => (fiche ? `${fiche.nom} | ${M
    (Next l'accepte et garde l'arbre rendu), le retour du téléphone la
    relit. Ouvrir une fiche empile une entrée : le retour range la feuille
    au lieu de quitter la vue, et le lien partagé rouvre la fiche. */
-export function Fusion({ travail, maison }: { travail: Projet[]; maison: Projet[] }) {
+export function Fusion({ travail, maison, pleineLargeur }: { travail: Projet[]; maison: Projet[]; pleineLargeur: boolean }) {
   const chemin = usePathname()
   const [adresse, setAdresse] = useState(() => lireAdresse(chemin))
   // une fiche de cursus ouverte par lien direct : la liste derrière la feuille est celle des cursus
@@ -70,17 +70,17 @@ export function Fusion({ travail, maison }: { travail: Projet[]; maison: Projet[
     maison.some((p) => p.slug === adresse.slug && p.genre === "formation") ? { ...ONGLETS_PAR_DEFAUT, maison: "Cursus" } : ONGLETS_PAR_DEFAUT,
   )
   const palette = usePalette()
-  const telephone = useTelephone()
+  const affichee = useTelephone() || pleineLargeur
   const { vue } = adresse
-  const large = useEcranLarge()
+  const masquee = useEcranLarge() && !pleineLargeur
   /* La feuille d'un lien direct est dans le HTML serveur (pas de liste
      qui clignote avant elle) ; sur desktop, masquée, elle se retire dès
      l'hydratation pour ne pas animer sa figure dans le vide. */
-  const ouverte = large ? null : ([...travail, ...maison].find((p) => p.slug === adresse.slug) ?? null)
+  const ouverte = masquee ? null : ([...travail, ...maison].find((p) => p.slug === adresse.slug) ?? null)
 
   useEffect(() => {
-    if (telephone) document.title = titreDe(vue, ouverte)
-  }, [telephone, vue, ouverte])
+    if (affichee) document.title = titreDe(vue, ouverte)
+  }, [affichee, vue, ouverte])
 
   useEffect(() => {
     const suivreAdresse = () => setAdresse(lireAdresse(location.pathname, location.hash))
@@ -121,7 +121,7 @@ export function Fusion({ travail, maison }: { travail: Projet[]; maison: Projet[
           </motion.div>
         </AnimatePresence>
         <Dock actif={vue} aller={aller} />
-        <Fiche projet={ouverte} fermer={fermer} />
+        <Fiche projet={ouverte} fermer={fermer} affichee={affichee} />
       </main>
     </FamilleIcones>
   )

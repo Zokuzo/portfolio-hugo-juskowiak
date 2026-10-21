@@ -21,7 +21,7 @@ const NUIT = "#08070f"
 
 /* Le voile est opaque DÈS le premier tick : sans lui, la version simple se
    verrait le temps que le chunk arrive, et l'expérience s'ouvrirait sur un
-   fondu depuis une planche technique. */
+   fondu depuis la fusion. */
 function Voile() {
   return (
     <div
@@ -59,16 +59,15 @@ class Filet extends Component<{ children: ReactNode; surRepli: () => void }, { m
 }
 
 export default function Surcouche({ lang, surRepli }: { lang: Lang; surRepli: () => void }) {
-  /* GEL DU DÉFILEMENT. `overflow: hidden` sur <html> plutôt que `lenis.stop()`
-     (components/proto/smooth.tsx) : le natif couvre aussi Espace, PagSuiv et
-     les flèches, que Lenis n'intercepte pas. Restauré au démontage — c'est le
+  /* GEL DU DÉFILEMENT. `overflow: hidden` sur <html> : il couvre aussi
+     Espace, PagSuiv et les flèches. Restauré au démontage, c'est le
      seul effet de bord que la surcouche laisse sur la page. */
   useEffect(() => {
     const html = document.documentElement
     const avant = html.style.overflow
     html.style.overflow = "hidden"
     /* le voile de chargement est commité : il prend le relais du masque
-       d'attente (#54), même nuit, donc aucune image de planche entre eux */
+       d'attente (#54), même nuit, donc aucune image de la fusion entre eux */
     leveMasque()
     return () => {
       html.style.overflow = avant
