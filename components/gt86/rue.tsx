@@ -454,8 +454,8 @@ function VoitureGaree({
     }
     /* le trajet du menu NFS (poursuite.tsx) : zéro hors départ */
     if (porteur.current) {
-      porteur.current.position.z = avance.z
-      porteur.current.position.y += avance.y
+      porteur.current.position.set(avance.x, porteur.current.position.y + avance.y, avance.z)
+      porteur.current.rotation.y = avance.cap
     }
     if (assiette.current) assiette.current.rotation.x += avance.tangage
     roulePendantLeTrajet()

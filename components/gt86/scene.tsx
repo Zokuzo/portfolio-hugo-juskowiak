@@ -215,6 +215,11 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
     else if (etat === "CIEL" || etat === "DEPART") setAmpVivant(false)
   }, [etat])
 
+  /* MAISON ou WORK validés au menu NFS : la planification et le trajet
+     se jouent seuls, sans ‹ RETOUR (Échap rend l'habitacle et le menu) */
+  const [trajetNfs, setTrajetNfs] = useState(false)
+  if (trajetNfs && etat === "HABITACLE") setTrajetNfs(false)
+
   const zoomeRef = useRef(zoome)
   zoomeRef.current = zoome
 
@@ -715,7 +720,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
           </button>
         )}
 
-        {etat !== "HABITACLE" && !passer && etat !== "DEPART" && (
+        {etat !== "HABITACLE" && !passer && etat !== "DEPART" && !trajetNfs && (
           <button
             type="button"
             style={{ ...discret, ...police.bouton, position: "absolute", left: 20, bottom: 18, pointerEvents: "auto" }}
@@ -751,6 +756,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
                planification Waze s'y joue, puis le trajet part. gps()
                d'abord : les deux envois se fondent en un rendu (CHOIX
                direct), l'effet de peinture ne verrait jamais GPS */
+            setTrajetNfs(true)
             ecran.gps()
             envoie({ t: "va", ou: "GPS" })
             envoie({ t: "choisit", dest: DEST[piste] })

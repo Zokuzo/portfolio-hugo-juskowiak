@@ -621,6 +621,8 @@ function Retro() {
    boucle disparaît de chaque shader éclairé — et les spots sous caisse
    passent de 4 à 2 (avant/arrière), la nappe additive porte la flaque. */
 const NAPPE_OPACITE = 0.55
+/* les mètres roulés au bout desquels la nappe a pris sa forme de route */
+const NAPPE_ETIREE_M = 1.5
 
 /* le dégradé de la nappe : décroissance douce sans coude (le cran à 0,4
    de halo() dessinait un bord d'ellipse sur un plan aussi grand) */
@@ -657,11 +659,15 @@ function Neons({ cockpit }: { cockpit: Cockpit }) {
   useLayoutEffect(() => {
     cockpit.neonLums = lums.current.filter((e): e is NonNullable<typeof e> => e !== null)
   }, [cockpit])
-  /* en roulant, la caméra basse voit la nappe à plat : elle s'efface avec
-     la vitesse, sinon elle trace un ovale net sur l'asphalte */
+  /* en roulant, la caméra basse voit la nappe à plat : dès les premiers
+     mètres elle s'allonge, s'affine et pâlit (sinon elle
+     dessine une bulle autour de la caisse), puis s'efface avec la vitesse */
   const nappe = useRef<THREE.MeshBasicMaterial>(null)
+  const plan = useRef<THREE.Mesh>(null)
   useFrame(() => {
-    if (nappe.current) nappe.current.opacity = NAPPE_OPACITE * (1 - 0.65 * avance.elan)
+    const roule = Math.min(1, avance.z / NAPPE_ETIREE_M)
+    if (nappe.current) nappe.current.opacity = NAPPE_OPACITE * (1 - 0.5 * roule) * (1 - 0.65 * avance.elan)
+    plan.current?.scale.set(1 - 0.3 * roule, 1 + 0.6 * roule, 1)
   })
   return (
     <group>
@@ -675,7 +681,7 @@ function Neons({ cockpit }: { cockpit: Cockpit }) {
         </group>
       ))}
       <group visible={false} ref={(g) => { cockpit.neons = g }}>
-        <mesh position={[-0.075, 0.045, 0.05]} rotation-x={-Math.PI / 2}>
+        <mesh ref={plan} position={[-0.075, 0.045, 0.05]} rotation-x={-Math.PI / 2}>
           <planeGeometry args={[2.6, 5.2]} />
           <meshBasicMaterial ref={nappe} map={haloDoux()} color="#7a2cf0" transparent opacity={NAPPE_OPACITE} blending={THREE.AdditiveBlending} depthWrite={false} />
         </mesh>
@@ -760,9 +766,11 @@ function Phares({ cockpit }: { cockpit: Cockpit }) {
             </sprite>
           </group>
         ))}
+        {/* le dégradé doux : le cran de halo() traçait, en poursuite, un
+            disque net autour de la poupe */}
         {feuxArriere.map(([x, y, z], i) => (
-          <sprite key={i} position={[x, y, z]} scale={[1.1, 1.1, 1]}>
-            <spriteMaterial map={halo()} color={VIOLET_LUEUR} transparent opacity={0.3} blending={THREE.AdditiveBlending} depthWrite={false} />
+          <sprite key={i} position={[x, y, z]} scale={[1.3, 1.1, 1]}>
+            <spriteMaterial map={haloDoux()} color={VIOLET_LUEUR} transparent opacity={0.42} blending={THREE.AdditiveBlending} depthWrite={false} />
           </sprite>
         ))}
       </group>

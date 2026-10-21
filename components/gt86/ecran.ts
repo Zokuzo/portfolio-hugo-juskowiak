@@ -566,6 +566,9 @@ export function creeEcran(lang: Lang): Ecran {
      morceaux du boulevard, sur son axe exact (avant, elles le longeaient
      à quelques pixels : deux rubans superposés) */
   const CARREFOUR = { x: 276, y: 102 }
+  /* le réseau de rues : largeurs en unités de dalle, teintes nuit lisibles
+     sur les bâtiments sans rivaliser avec le violet de l'itinéraire */
+  const RESEAU = { rue: 3.4, boulevard: 5.4, bordure: "#0b0916", coeurRue: "#564b8c", coeurBoulevard: "#6f61ad" }
   const B_TRONC: Bezier = [256, 246, 254, 200, CARREFOUR.x, 160, CARREFOUR.x, CARREFOUR.y]
   const B_GAUCHE: Bezier = [CARREFOUR.x, CARREFOUR.y, 222, CARREFOUR.y, 170, CARREFOUR.y, 116, CARREFOUR.y]
   const B_DROITE: Bezier = [CARREFOUR.x, CARREFOUR.y, 330, CARREFOUR.y, 382, CARREFOUR.y, 436, CARREFOUR.y]
@@ -692,27 +695,43 @@ export function creeEcran(lang: Lang): Ecran {
     g.fillStyle = "#16132a"
     g.fillRect(0, 0, l, h)
     if (quartier) g.drawImage(quartier, 0, 0, l, h)
-    /* le réseau suit les vraies rues, en hiérarchie Waze : rues
-       secondaires étroites d'abord, puis le boulevard plus large par-dessus
-       (il couvre proprement les carrefours), puis l'itinéraire seul */
-    const morte = (chemin: () => void, large = 1) => ruban(chemin, "#100d1f", u * 1.6, "#2a2447", u * (3.2 * large))
-    morte(() => {
-      g.moveTo(CARREFOUR.x, CARREFOUR.y)
-      g.bezierCurveTo(CARREFOUR.x, 70, 282, 30, 280, -8)
-    })
-    morte(() => {
-      g.moveTo(54, 256)
-      g.bezierCurveTo(58, 180, 46, 100, 52, 30)
-    })
-    morte(() => {
-      g.moveTo(494, 256)
-      g.bezierCurveTo(490, 190, 502, 120, 496, 60)
-    })
-    morte(tronc)
-    ruban(() => {
+    /* le réseau suit les vraies rues, en hiérarchie Waze, peint en DEUX
+       passes : toutes les bordures sombres, puis tous les cœurs (rues
+       secondaires étroites, boulevard plus large et plus clair). Aucune
+       bordure ne coupe un carrefour : les rues s'y fondent en une seule
+       chaussée, le T se lit net ; puis l'itinéraire seul */
+    const secondaires = [
+      () => {
+        g.moveTo(CARREFOUR.x, CARREFOUR.y)
+        g.bezierCurveTo(CARREFOUR.x, 70, 282, 30, 280, -8)
+      },
+      () => {
+        g.moveTo(54, 256)
+        g.bezierCurveTo(58, 180, 46, 100, 52, 30)
+      },
+      () => {
+        g.moveTo(494, 256)
+        g.bezierCurveTo(490, 190, 502, 120, 496, 60)
+      },
+      tronc,
+    ]
+    const boulevard = () => {
       g.moveTo(0, CARREFOUR.y)
       g.lineTo(l, CARREFOUR.y)
-    }, "#100d1f", u * 1.6, "#3a3263", u * 5)
+    }
+    const trait = (chemin: () => void, couleur: string, largeur: number) => {
+      g.lineCap = "round"
+      g.lineJoin = "round"
+      g.beginPath()
+      chemin()
+      g.strokeStyle = couleur
+      g.lineWidth = largeur
+      g.stroke()
+    }
+    for (const rue of secondaires) trait(rue, RESEAU.bordure, u * (RESEAU.rue + 1.6))
+    trait(boulevard, RESEAU.bordure, u * (RESEAU.boulevard + 1.6))
+    for (const rue of secondaires) trait(rue, RESEAU.coeurRue, u * RESEAU.rue)
+    trait(boulevard, RESEAU.coeurBoulevard, u * RESEAU.boulevard)
     /* l'itinéraire, qui n'existe qu'après le choix (façon Waze) : ruban
        VIOLET, tronc et branche en UN chemin (deux rubans se croisaient au
        carrefour) ; les points qui avancent vivent dans la couche DYNAMIQUE */

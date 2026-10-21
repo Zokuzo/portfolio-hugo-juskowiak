@@ -71,8 +71,9 @@ export function tempsTrajet(): number {
 
 /* ce que la voiture garée applique à son porteur (rue.tsx) : zéro hors
    trajet. `caisse` ne soulève que la carrosserie (les roues restent au
-   sol), `roue` est l'angle des roues, `elan` la part de vitesse atteinte */
-export const avance = { z: 0, y: 0, tangage: 0, caisse: 0, roue: 0, elan: 0 }
+   sol), `roue` est l'angle des roues, `elan` la part de vitesse atteinte,
+   `x` et `cap` le recentrage dans la voie (repère voiture, + à gauche) */
+export const avance = { z: 0, y: 0, x: 0, cap: 0, tangage: 0, caisse: 0, roue: 0, elan: 0 }
 
 export function distance(t: number): number {
   if (t < LANCE_S) return 0

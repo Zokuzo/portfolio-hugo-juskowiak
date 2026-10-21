@@ -49,6 +49,11 @@ const VIBRATION = { amplitude: 0.008, hz: 31 }
 const CABRE = { angle: -0.025, duree: 0.5, tenu: -0.009 }
 const PLONGE = { angle: 0.028, frein: 0.22, hz: 1.9 }
 const ECRASE = { lance: -0.018, passage: -0.01 }
+/* LA VOIE : garée au bas-côté, la GT86 chevauche le pointillé de sa voie
+   (chaussée de -7,6 à 7,6 m, voies de 3,8 m : pointillé à -3,8, milieu à
+   -5,7). Elle se recentre en partant, 1,3 m vers sa gauche, le nez braqué
+   d'autant, et tient le milieu de la voie avant les 45 km/h */
+const VOIE = { ecart: 1.3, debut: 0.6, duree: 2.2 }
 /* au-delà d'un demi-radian par image, une jante à cinq branches semble
    tourner à l'envers (stroboscope) : le pas visible est plafonné */
 const PAS_ROUE_MAX = 0.5
@@ -67,7 +72,7 @@ export function Poursuite({ actif, dom }: { actif: boolean; dom: DomTrajet }) {
     const k = elan(t)
     poseVoiture(t, k)
     const cam = camera as THREE.PerspectiveCamera
-    const x = POSE_VOITURE[0]
+    const x = POSE_VOITURE[0] - avance.x
     const z = POSE_VOITURE[2] - avance.z
     const pivot = 1 - adoucit(Math.min(1, t / CAMERA.pivotS))
     const s = passage(t)
@@ -111,6 +116,7 @@ function poseVoiture(t: number, k: number) {
   dernierZ = z
   avance.z = z
   avance.elan = k
+  recentreDansLaVoie(t)
   avance.y = t < LANCE_S ? VIBRATION.amplitude * Math.sin(t * 2 * Math.PI * VIBRATION.hz) : 0
   if (t < LANCE_S) {
     avance.tangage = 0
@@ -124,8 +130,19 @@ function poseVoiture(t: number, k: number) {
   avance.caisse = ECRASE.lance * Math.exp(-u / 0.4) + ECRASE.passage * plonge + 0.003 * k * Math.sin(t * 16)
 }
 
+/* le déport suit une courbe douce ; le cap est la pente de la
+   trajectoire, déport latéral sur avance */
+function recentreDansLaVoie(t: number) {
+  const k = Math.min(1, Math.max(0, (t - VOIE.debut) / VOIE.duree))
+  avance.x = VOIE.ecart * adoucit(k)
+  const lateral = (VOIE.ecart * 6 * k * (1 - k)) / VOIE.duree
+  avance.cap = Math.atan2(lateral, Math.max(vitesse(t), 1))
+}
+
 function rangeVoiture() {
   avance.z = 0
+  avance.x = 0
+  avance.cap = 0
   avance.y = 0
   avance.tangage = 0
   avance.caisse = 0
