@@ -201,7 +201,7 @@
 }
 
 .mono {
-  font-family: var(--f-mono), monospace;
+  font-family: var(--f-vitesse), system-ui, sans-serif;
   font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -284,7 +284,7 @@
   border: 1.5px solid currentColor;
   border-radius: 4px;
   color: var(--encre);
-  font-family: var(--f-etendue), var(--f-mono), monospace;
+  font-family: var(--f-etendue), var(--f-vitesse), sans-serif;
   font-size: 11px;
   letter-spacing: 0.12em;
   line-height: 1;
@@ -296,7 +296,7 @@
   border-radius: 2px;
   background: var(--accent);
   color: var(--accent-encre);
-  font-family: var(--f-mono), monospace;
+  font-family: var(--f-vitesse), system-ui, sans-serif;
   font-size: 7px;
   font-style: normal;
   letter-spacing: 0.05em;
@@ -378,7 +378,7 @@
 }
 
 .ligneNumero {
-  font-family: var(--f-mono), monospace;
+  font-family: var(--f-vitesse), system-ui, sans-serif;
   font-size: 12px;
   opacity: 0.7;
 }
@@ -426,7 +426,7 @@
   align-items: center;
   gap: 10px;
   margin: 0 0 14px;
-  font-family: var(--f-mono), monospace;
+  font-family: var(--f-vitesse), system-ui, sans-serif;
   font-size: 12px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -480,7 +480,7 @@
 }
 
 .tuileNom {
-  font-family: var(--f-mono), monospace;
+  font-family: var(--f-vitesse), system-ui, sans-serif;
   font-size: 10.5px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -531,7 +531,7 @@
   border: 0;
   background: none;
   color: var(--encre-2);
-  font-family: var(--f-mono), monospace;
+  font-family: var(--f-vitesse), system-ui, sans-serif;
   font-size: 12px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -631,7 +631,7 @@
   align-items: center;
   gap: 6px;
   margin-top: 2px;
-  font-family: var(--f-mono), monospace;
+  font-family: var(--f-vitesse), system-ui, sans-serif;
   font-size: 10px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -798,7 +798,7 @@
   border: 0;
   background: none;
   color: var(--encre-2);
-  font-family: var(--f-mono), monospace;
+  font-family: var(--f-vitesse), system-ui, sans-serif;
   font-size: 10px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -986,7 +986,7 @@
 
 .decisionNumero {
   padding-top: 3px;
-  font-family: var(--f-mono), monospace;
+  font-family: var(--f-vitesse), system-ui, sans-serif;
   font-size: 12px;
   color: var(--encre-2);
 }
@@ -1004,7 +1004,7 @@
   padding: 6px 12px;
   border: 1px solid var(--filet);
   border-radius: 999px;
-  font-family: var(--f-mono), monospace;
+  font-family: var(--f-vitesse), system-ui, sans-serif;
   font-size: 12px;
 }
 

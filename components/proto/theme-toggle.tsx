@@ -14,12 +14,12 @@ export function ThemeToggle({ lang }: { lang: Lang }) {
   useEffect(() => {
     setClair(document.documentElement.classList.contains("clair"))
     /* Décision (c) : tant que la main n'a pas choisi, l'OS décide —
-       Y COMPRIS en cours de session. Dès qu'un choix est mémorisé,
-       ce suiveur se tait. */
+       Y COMPRIS en cours de session. Dès qu'un choix est fait dans
+       la session, ce suiveur se tait. */
     const mq = window.matchMedia("(prefers-color-scheme: light)")
     const suit = (e: MediaQueryListEvent) => {
       try {
-        if (localStorage.getItem("theme")) return
+        if (sessionStorage.getItem("theme")) return
       } catch {}
       setClair(e.matches)
       document.documentElement.classList.toggle("clair", e.matches)
@@ -34,10 +34,10 @@ export function ThemeToggle({ lang }: { lang: Lang }) {
     if (v === clair) return
     setClair(v)
     document.documentElement.classList.toggle("clair", v)
-    /* localStorage et pas un cookie : le site est statique, seul le
-       navigateur du visiteur connaît son choix. */
+    /* sessionStorage : le choix vaut pour la visite, le réglage système
+       reprend la main à la suivante (layout.tsx) */
     try {
-      localStorage.setItem("theme", v ? "clair" : "sombre")
+      sessionStorage.setItem("theme", v ? "clair" : "sombre")
     } catch {}
     /* la voiture remonte sa séquence sur cet événement (voiture.tsx) */
     window.dispatchEvent(new Event("themechange"))

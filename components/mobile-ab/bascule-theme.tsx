@@ -9,8 +9,9 @@ const CLASSE_CLAIR = "clair"
 
 /* Le thème réutilise celui du site : la classe `clair` sur <html>,
    posée avant la première peinture par le script de app/layout.tsx,
-   et le même choix mémorisé ("clair" | "sombre"). Tant que la main
-   n'a rien choisi, l'OS décide, même en cours de session.
+   et le même choix de session ("clair" | "sombre"). Le réglage système
+   décide à chaque visite et en cours de session tant que la main n'a
+   rien choisi ; la bascule ne survit pas à la fermeture de l'onglet.
    ?theme=light|dark force un thème sans le mémoriser (captures). */
 export function BasculeTheme() {
   const [clair, setClair] = useState<boolean | null>(null)
@@ -63,7 +64,7 @@ function poserClair(clair: boolean) {
 // navigation privée ou stockage bloqué : le choix vaut pour la session, sans plus
 function lireChoix() {
   try {
-    return localStorage.getItem(CLE_THEME)
+    return sessionStorage.getItem(CLE_THEME)
   } catch {
     return null
   }
@@ -71,7 +72,7 @@ function lireChoix() {
 
 function memoriserChoix(clair: boolean) {
   try {
-    localStorage.setItem(CLE_THEME, clair ? "clair" : "sombre")
+    sessionStorage.setItem(CLE_THEME, clair ? "clair" : "sombre")
   } catch {
     /* stockage refusé : le thème est déjà posé sur la page, il ne survivra pas au rechargement */
   }

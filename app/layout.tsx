@@ -86,15 +86,17 @@ export default function RootLayout({
       <head>
         {/* AVANT LA PREMIÈRE PEINTURE (#13) : le site est statique, le
             serveur ne connaît pas le choix de thème — sans ce script,
-            chaque chargement en clair flasherait sombre d'abord. Choix
-            mémorisé d'abord, l'OS sinon. `suppressHydrationWarning` sur
-            <html> : la classe posée ici diffère du HTML serveur, et
-            c'est voulu. La classe `dark` reste : elle ne pilote que la
+            chaque chargement en clair flasherait sombre d'abord. Le réglage
+            système décide à chaque visite (demande de Hugo, 2026-10-21) ;
+            la bascule ne vaut que pour la session (sessionStorage), et
+            l'ancien choix mémorisé en localStorage est effacé.
+            `suppressHydrationWarning` sur <html> : la classe posée ici
+            diffère du HTML serveur, et c'est voulu. La classe `dark` reste : elle ne pilote que la
             @custom-variant Tailwind des composants importés (aucun site
             aujourd'hui) — le thème vit sur `clair`. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `var t=null;try{t=localStorage.getItem("theme")}catch(e){}try{if(t?t==="clair":matchMedia("(prefers-color-scheme: light)").matches)document.documentElement.classList.add("clair")}catch(e){}`,
+            __html: `var t=null;try{localStorage.removeItem("theme");t=sessionStorage.getItem("theme")}catch(e){}try{if(t?t==="clair":matchMedia("(prefers-color-scheme: light)").matches)document.documentElement.classList.add("clair")}catch(e){}`,
           }}
         />
         {/* LE MASQUE D'ATTENTE (#54) : la planche est dans le HTML serveur

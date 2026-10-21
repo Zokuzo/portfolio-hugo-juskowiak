@@ -10,7 +10,6 @@ import { IconeApp, type CleIcone } from "./icone-app"
 import type { Aller, Ouvrir } from "./fusion"
 import s from "./ab.module.css"
 
-const EN_POSTE = CARRIERE[0]
 const lienContact = (role: string) => CONTACT.find((c) => c.role === role)?.href ?? "#"
 const attributsLien = (href: string) => (href.startsWith("http") ? { target: "_blank", rel: "noreferrer" } : {})
 const TAILLE_TUILE = 60
@@ -46,9 +45,6 @@ export function Accueil({ aller, travail, maison }: { aller: Aller; travail: Pro
           Juskowiak
         </h1>
         <p className={s.fonction}>{PILOTE.fonction}</p>
-        <p className={s.chapo}>
-          {insecable(`En poste chez ${EN_POSTE.nom} : ${EN_POSTE.texte}`)}
-        </p>
       </section>
 
       <MenuJeu
@@ -136,7 +132,7 @@ type VueAOnglets = { projets: Projet[]; onglet: string; choisir: (onglet: string
 export function VueWork({ projets, onglet, choisir, ouvrir }: VueAOnglets) {
   return (
     <div className={s.page}>
-      <Rubrique titre="Work" compte={`${projets.length} projets · en poste chez ${EN_POSTE.nom}`} />
+      <Rubrique titre="Work" />
       <Onglets nom="work" options={["Projets", "Parcours"]} actif={onglet} choisir={choisir} />
       {onglet === "Projets" ? <ListeProjets projets={projets} ouvrir={ouvrir} /> : <Classement />}
     </div>
@@ -147,18 +143,17 @@ export function VueMaison({ projets, onglet, choisir, ouvrir }: VueAOnglets) {
   const filtres = projets.filter((p) => (onglet === "Cursus") === (p.genre === "formation"))
   return (
     <div className={s.page}>
-      <Rubrique titre="Maison" compte="L'atelier du soir et les écoles" />
+      <Rubrique titre="Maison" />
       <Onglets nom="maison" options={["Atelier", "Cursus"]} actif={onglet} choisir={choisir} />
       <ListeProjets projets={filtres} ouvrir={ouvrir} />
     </div>
   )
 }
 
-function Rubrique({ titre, compte }: { titre: string; compte: string }) {
+function Rubrique({ titre }: { titre: string }) {
   return (
     <header className={s.rubrique}>
       <h1 className={s.rubriqueTitre}>{titre}</h1>
-      <span className={s.mono}>{compte}</span>
     </header>
   )
 }
@@ -241,7 +236,7 @@ const ICONES_CONTACT: Record<string, CleIcone> = { "E-mail": "mail", LinkedIn: "
 export function VueContact() {
   return (
     <div className={s.page}>
-      <Rubrique titre="Contact" compte={`${CONTACT.length} canaux · ligne ouverte`} />
+      <Rubrique titre="Contact" />
       <p className={s.chapo}>{insecable("Un poste, un projet, une question technique : la ligne est ouverte.")}</p>
       <ul className={s.appels}>
         {CONTACT.map((c) => {
