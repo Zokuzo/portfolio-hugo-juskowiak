@@ -40,13 +40,13 @@ const etendue = Michroma({ weight: "400", subsets: ["latin"], variable: "--f-ete
 const policesSeuil = [vitesse, etendue].map((police) => police.variable).join(" ")
 
 export const metadata: Metadata = {
-  title: "Hugo Juskowiak | Ingénieur Full Stack & IA",
+  title: "Hugo Juskowiak | Portfolio",
   description:
     "Portfolio d'un ingénieur full stack et IA au Mans : Reach-Up, Octo, UYB Store, prédiction mémoire par machine learning.",
-  /* La mire porte son propre fond d'encre : elle tient sur une barre
-     d'onglets claire comme sombre, donc plus de variantes par
-     `prefers-color-scheme` : deux fichiers identiques qui prétendaient
-     être différents. Le SVG passe en premier, les PNG sont le repli. */
+  /* Le monogramme HJ (#51, choisi par Hugo le 2026-10-21) porte sa
+     propre tuile d'encre : il tient sur une barre d'onglets claire comme
+     sombre, sans variante par `prefers-color-scheme`. Le SVG passe en
+     premier, les PNG (rendus depuis lui par sharp) sont le repli. */
   icons: {
     icon: [
       { url: "/icon.svg", type: "image/svg+xml" },

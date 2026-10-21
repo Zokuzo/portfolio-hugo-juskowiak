@@ -47,13 +47,12 @@ const urlDeVue = (vue: Vue) => CHEMIN_DE[vue] + location.search + (vue === "cont
    metadata de Next. Les mêmes titres que les routes (app/layout.tsx,
    app/work, app/home et leurs [slug]), à tenir alignés. */
 const TITRE_DE: Record<Vue, string> = {
-  accueil: "Hugo Juskowiak | Ingénieur Full Stack & IA",
-  contact: "Hugo Juskowiak | Ingénieur Full Stack & IA",
+  accueil: "Hugo Juskowiak | Portfolio",
+  contact: "Hugo Juskowiak | Portfolio",
   work: "Travail | Hugo Juskowiak",
   maison: "Maison | Hugo Juskowiak",
 }
-const MONDE_DE: Partial<Record<Vue, string>> = { work: "Travail", maison: "Maison" }
-const titreDe = (vue: Vue, fiche: Projet | null) => (fiche ? `${fiche.nom} | ${MONDE_DE[vue]} | Hugo Juskowiak` : TITRE_DE[vue])
+const titreDe = (vue: Vue, fiche: Projet | null) => (fiche ? `${fiche.nom} | Hugo Juskowiak` : TITRE_DE[vue])
 
 /* La navigation de la piste A (dock, grille d'apps, feuille qui monte)
    dans une seule DA (./DA.md). Chaque route du site la rend sous 768 px
