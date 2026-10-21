@@ -245,7 +245,7 @@ function Carriere() {
 function Pilote() {
   return (
     <div className={s.pilote}>
-      <div className={s.piloteImage} role="img" aria-label="Le cockpit de la GT86, de nuit" />
+      <div className={s.piloteImage} role="img" aria-label="Portrait de Hugo Juskowiak, façon néon à Night City" />
       <dl className={s.licence}>
         <dt className={s.mono}>pilote</dt>
         <dd>{PILOTE.nom}</dd>

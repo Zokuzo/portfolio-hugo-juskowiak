@@ -313,7 +313,7 @@
 .tableauRole { font-size: 13px; color: rgba(243, 218, 255, 0.7); }
 
 .pilote { display: grid; grid-template-columns: 300px 1fr; gap: 28px; }
-.piloteImage { height: 360px; background: url(/da/a/4-habitacle.jpg) 62% 70% / 260% auto; border: 1px solid rgba(168, 107, 255, 0.5); clip-path: polygon(24px 0, 100% 0, calc(100% - 24px) 100%, 0 100%); }
+.piloteImage { height: 360px; background: url(/da/a/pilote.webp) 50% 22% / cover; border: 1px solid rgba(168, 107, 255, 0.5); clip-path: polygon(24px 0, 100% 0, calc(100% - 24px) 100%, 0 100%); }
 .licence dt { margin-top: 14px; }
 .licence dd { margin: 4px 0 0; font-style: italic; font-weight: 700; font-stretch: 115%; font-size: 22px; text-transform: uppercase; }
 
