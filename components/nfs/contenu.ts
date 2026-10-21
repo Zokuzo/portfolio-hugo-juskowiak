@@ -23,10 +23,10 @@ export const COURSES: Course[] = [
 export type Etape = { periode: string; nom: string; role: string; texte: string }
 
 export const CARRIERE: Etape[] = [
-  { periode: "2026.05 → présent", nom: "UpYourBizz", role: "Ingénieur Full Stack & IA", texte: "Reach-Up, Octo, UYB360, UpYourAds." },
+  { periode: "2026.05 → présent", nom: "UpYourBizz", role: "Développeur Full Stack & Ingénieur IA", texte: "Reach-Up, Octo (8 h vers 15 min), UYB360, UpYourAds." },
   { periode: "2025.04 → 2025.09", nom: "Sophia Genetics", role: "Stagiaire ingénieur logiciel", texte: "Prédiction d'usage mémoire par machine learning." },
   { periode: "2024.09 → 2025.10", nom: "MBDS", role: "Master Data Science", texte: "Mené en parallèle du cycle ingénieur." },
-  { periode: "2024.03 → 2024.07", nom: "Hokkaido", role: "Semestre d'échange", texte: "Information & Ingénierie, au Japon." },
+  { periode: "2024.03 → 2024.08", nom: "Hokkaido", role: "Semestre d'échange", texte: "Information & Ingénierie, au Japon." },
   { periode: "2023.02 → 2023.07", nom: "The Guill Corp", role: "Stagiaire ingénieur logiciel", texte: "Aéronautique. Filtrage de données d'aviation." },
   { periode: "2022.09 → 2025.10", nom: "ESTIA", role: "Master d'ingénieur trilingue", texte: "Le rail principal du parcours. Diplômé." },
   { periode: "2020.09 → 2022.06", nom: "CPGE TSI", role: "Classe préparatoire", texte: "Deux ans de fondations avant le code." },
@@ -42,6 +42,6 @@ export const PILOTE = {
   nom: "Hugo Juskowiak",
   jp: "ユゴー・ユスコヴィアク",
   fonction: "Ingénieur Full Stack & IA",
-  base: "France",
-  langues: "FR / EN / ES",
+  base: "Le Mans, France",
+  langues: "FR / EN / ES / JP",
 }

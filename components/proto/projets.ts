@@ -154,7 +154,7 @@ const FR: Projet[] = [
     periode: "2026.05 → présent",
     etat: "En service",
     contexte:
-      "Un concessionnaire dispose d'un DMS qui sait tout de ses clients et ne sait rien en dire. Octo prend ses exports bruts et les rend lisibles.",
+      "Un concessionnaire dispose d'un DMS qui sait tout de ses clients et ne sait rien en dire. Octo prend ses exports bruts et les rend lisibles. L'application était restée un an à l'état de maquette : elle a été reprise, son périmètre refondu, et mise en production en deux mois.",
     contraintes: [
       "L'entrée est un export, pas une API : le format varie d'un concessionnaire à l'autre.",
       "Le lecteur n'est pas analyste : la sortie doit être un rapport, pas un tableau croisé.",
@@ -172,6 +172,8 @@ const FR: Projet[] = [
       },
     ],
     parc: ["TypeScript", "Traitement d'exports DMS"],
+    resultat:
+      "Le traitement passe de 8 h de travail manuel à 15 min automatisées. L'outil est aujourd'hui utilisé en interne et par les clients.",
   },
   /* RÉÉCRITE AU TICKET 14 (issue GitHub #2), depuis le support du tech
      talk de fin de stage fourni par le propriétaire le 2026-08-10. Le
@@ -419,7 +421,7 @@ const FR: Projet[] = [
     sousTitre: "Semestre d'échange : Information & Ingénierie",
     jp: "北海道",
     cadre: "Imperial University of Hokkaido, Japon",
-    periode: "2024.03 → 2024.07",
+    periode: "2024.03 → 2024.08",
     etat: "Validé",
     contexte:
       "Un semestre à travailler dans une autre norme, une autre langue et un autre rapport au détail. C'est une excursion : le parcours quitte son rail principal et y revient, et on ne revient pas identique d'un pays qui documente autrement.",
@@ -560,7 +562,7 @@ const EN: Projet[] = [
     periode: "2026.05 → present",
     etat: "In service",
     contexte:
-      "A dealership has a DMS that knows everything about its customers and can say nothing about them. Octo takes the raw exports and makes them readable.",
+      "A dealership has a DMS that knows everything about its customers and can say nothing about them. Octo takes the raw exports and makes them readable. The application had sat as a mock-up for a year: it was taken over, its scope rebuilt, and shipped to production in two months.",
     contraintes: [
       "The input is an export, not an API: the format varies between dealerships.",
       "The reader is not an analyst: the output must be a report, not a pivot table.",
@@ -578,6 +580,8 @@ const EN: Projet[] = [
       },
     ],
     parc: ["TypeScript", "DMS export processing"],
+    resultat:
+      "Processing goes from 8 hours of manual work to 15 automated minutes. The tool is now used internally and by clients.",
   },
   /* Voir le commentaire de la fiche FR : réécrite au ticket 14
      (issue GitHub #2) depuis le support du tech talk — agrégats seuls,
@@ -801,7 +805,7 @@ const EN: Projet[] = [
     sousTitre: "Exchange semester: Information & Engineering",
     jp: "北海道",
     cadre: "Imperial University of Hokkaido, Japan",
-    periode: "2024.03 → 2024.07",
+    periode: "2024.03 → 2024.08",
     etat: "Completed",
     contexte:
       "A semester working to another standard, another language and another relationship with detail. It is an excursion: the path leaves its main rail and comes back, and you do not come back the same from a country that documents differently.",

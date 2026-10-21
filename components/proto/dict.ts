@@ -91,7 +91,7 @@ const DICT = {
     fr: [
       ["Désignation", "Hugo Juskowiak"],
       ["Fonction", "Ingénieur Full Stack & IA"],
-      ["Base", "France"],
+      ["Base", "Le Mans, France"],
       ["En service", "Depuis 2022"],
       ["Domaines", "ML · Data · Systèmes distribués"],
       ["Langues", "FR · EN · ES · JP"],
@@ -99,7 +99,7 @@ const DICT = {
     en: [
       ["Designation", "Hugo Juskowiak"],
       ["Function", "Full Stack & AI Engineer"],
-      ["Base", "France"],
+      ["Base", "Le Mans, France"],
       ["In service", "Since 2022"],
       ["Domains", "ML · Data · Distributed systems"],
       ["Languages", "FR · EN · ES · JP"],
@@ -520,16 +520,20 @@ const DICT = {
       ]],
       ["Frameworks & outils", [
         ["React", ""], ["React Native", ""], ["Node.js", ""], ["Flask", ""],
-        ["Pandas", ""], ["Git", ""], ["GitLab CI/CD", ""],
+        ["Three.js", ""], ["Pandas", ""], ["Git", ""], ["GitLab CI/CD", ""],
       ]],
       ["ML, IA & data", [
         ["XGBoost", ""], ["LightGBM", ""], ["CatBoost", ""], ["Random Forest", ""],
         ["Intégration de LLM & prompt engineering", "OpenRouter"],
-        ["Pipelines ETL", ""], ["Web scraping", "Scrapy"],
+        ["Pipelines ETL", ""], ["Web scraping", "Scrapy · Playwright"],
       ]],
       ["Cloud & bases de données", [
         ["AWS", ""], ["Azure", ""], ["Supabase / PostgreSQL", ""],
-        ["MongoDB", ""], ["ElasticSearch", ""], ["Systèmes distribués", ""],
+        ["MongoDB", ""], ["ElasticSearch", ""], ["Vercel", ""],
+        ["API REST & OAuth", ""], ["Microservices & systèmes distribués", ""],
+      ]],
+      ["Méthodes & outils", [
+        ["Scrum", ""], ["Jira", ""], ["Figma", ""], ["Claude Code", ""],
       ]],
       /* Ce groupe ne vient pas du CV : déclaré par le propriétaire et
          relevé sur sa machine le 2026-08-10 (issue #3). La colonne
@@ -552,16 +556,20 @@ const DICT = {
       ]],
       ["Frameworks & tools", [
         ["React", ""], ["React Native", ""], ["Node.js", ""], ["Flask", ""],
-        ["Pandas", ""], ["Git", ""], ["GitLab CI/CD", ""],
+        ["Three.js", ""], ["Pandas", ""], ["Git", ""], ["GitLab CI/CD", ""],
       ]],
       ["ML, AI & data", [
         ["XGBoost", ""], ["LightGBM", ""], ["CatBoost", ""], ["Random Forest", ""],
         ["LLM integration & prompt engineering", "OpenRouter"],
-        ["ETL pipelines", ""], ["Web scraping", "Scrapy"],
+        ["ETL pipelines", ""], ["Web scraping", "Scrapy · Playwright"],
       ]],
       ["Cloud & databases", [
         ["AWS", ""], ["Azure", ""], ["Supabase / PostgreSQL", ""],
-        ["MongoDB", ""], ["ElasticSearch", ""], ["Distributed systems", ""],
+        ["MongoDB", ""], ["ElasticSearch", ""], ["Vercel", ""],
+        ["REST APIs & OAuth", ""], ["Microservices & distributed systems", ""],
+      ]],
+      ["Methods & tools", [
+        ["Scrum", ""], ["Jira", ""], ["Figma", ""], ["Claude Code", ""],
       ]],
       ["Systems & environment", [
         ["Linux", "Ubuntu"], ["Terminal & shell", "kitty · bash"],
@@ -645,7 +653,7 @@ const DICT = {
       ["Titre", "Portfolio, planche technique"],
       ["Dessiné par", "Hugo Juskowiak"],
       ["Fonction", "Ingénieur Full Stack & IA"],
-      ["Base", "France"],
+      ["Base", "Le Mans, France"],
       ["Échelle", "1:1"],
       ["Référence", "REF.0043-B / REV.2"],
       ["Date", "2026"],
@@ -655,7 +663,7 @@ const DICT = {
       ["Title", "Portfolio, technical plate"],
       ["Drawn by", "Hugo Juskowiak"],
       ["Function", "Full Stack & AI Engineer"],
-      ["Base", "France"],
+      ["Base", "Le Mans, France"],
       ["Scale", "1:1"],
       ["Reference", "REF.0043-B / REV.2"],
       ["Date", "2026"],

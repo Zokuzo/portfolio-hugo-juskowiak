@@ -10,8 +10,9 @@ import type { Lang } from "./dict"
      stage Guill Corp, les projets personnels récents) ;
    — GitHub, pour les liens : seuls les dépôts PUBLICS sont liés.
 
-   CE QUI EST MARQUÉ « À CONFIRMER » : UYB360 et UpYourAds ont été
-   nommés sans description, et le bot de candidature aussi. Les libellés
+   CE QUI EST MARQUÉ « À CONFIRMER » : UpYourAds a été nommé sans
+   description, et le bot de candidature aussi. UYB360 ne l'est plus :
+   le CV d'octobre 2026 le décrit (une marketplace de l'offre maison). Les libellés
    ci-dessous sont volontairement courts et factuels plutôt que
    plausibles — inventer une description crédible serait pire que d'en
    écrire une pauvre, parce qu'elle passerait inaperçue.
@@ -84,8 +85,8 @@ const EMPLOYEURS_FR: Employeur[] = [
   {
     slug: "upyourbizz",
     nom: "UpYourBizz",
-    fonction: "Ingénieur Full Stack & IA",
-    lieu: "France",
+    fonction: "Développeur Full Stack & Ingénieur IA",
+    lieu: "Le Mans",
     periode: "2026.05 → présent",
     courant: true,
     /* La thèse « une même base technique » a été confrontée aux dépôts
@@ -108,13 +109,12 @@ const EMPLOYEURS_FR: Employeur[] = [
         nom: "Octo",
         fiche: "octo",
         texte:
-          "Segmentation d'exports DMS pour concessionnaires automobiles. Trois populations lues séparément (clients, leads, après-vente) et une sortie en rapport plutôt qu'en tableau de bord.",
+          "Segmentation d'exports DMS pour concessionnaires automobiles. Reprise d'une maquette restée un an et mise en production en deux mois : trois populations lues séparément (clients, leads, après-vente), une sortie en rapport plutôt qu'en tableau de bord, et 8 h de travail manuel ramenées à 15 min automatisées.",
       },
       {
         code: "P3",
         nom: "UYB360",
-        texte: "Produit de la suite UpYourBizz.",
-        aConfirmer: true,
+        texte: "Marketplace qui regroupe l'offre de produits UpYourBizz.",
       },
       {
         code: "P4",
@@ -139,10 +139,10 @@ const EMPLOYEURS_FR: Employeur[] = [
         nom: "Prédiction d'usage mémoire",
         fiche: "prediction-memoire",
         texte:
-          "Modèle prédisant la RAM consommée par tâche : l'ancien système sur-allouait ~1200 To en trois mois. XGBoost, CatBoost et LightGBM comparés sous une perte asymétrique qui pénalise la sous-prédiction ; features reconstruites depuis les journaux d'exécution en Python et Pandas.",
+          "Modèle prédisant la RAM consommée par tâche : l'ancien système sur-allouait ~1200 To en trois mois. XGBoost, CatBoost et LightGBM comparés sous une perte asymétrique qui pénalise la sous-prédiction ; features reconstruites depuis les journaux d'exécution par des pipelines ETL (Python, Pandas, ElasticSearch, Azure Blob Storage).",
       },
     ],
-    parc: ["Python", "Pandas", "scikit-learn", "XGBoost", "LightGBM", "CatBoost", "SHAP", "Azure", "GitLab CI/CD"],
+    parc: ["Python", "Pandas", "ElasticSearch", "scikit-learn", "XGBoost", "LightGBM", "CatBoost", "SHAP", "Azure", "GitLab CI/CD", "Scrum / Jira"],
   },
   {
     slug: "the-guill-corp",
@@ -184,8 +184,8 @@ const EMPLOYEURS_EN: Employeur[] = [
   {
     slug: "upyourbizz",
     nom: "UpYourBizz",
-    fonction: "Full Stack & AI Engineer",
-    lieu: "France",
+    fonction: "Full Stack Developer & AI Engineer",
+    lieu: "Le Mans",
     periode: "2026.05 → present",
     courant: true,
     /* Voir le commentaire FR : la thèse du socle commun est morte
@@ -206,9 +206,9 @@ const EMPLOYEURS_EN: Employeur[] = [
         nom: "Octo",
         fiche: "octo",
         texte:
-          "DMS export segmentation for car dealerships. Three populations read separately (customers, leads, after-sales) and a report as output rather than a dashboard.",
+          "DMS export segmentation for car dealerships. Taken over from a year-old mock-up and shipped to production in two months: three populations read separately (customers, leads, after-sales), a report as output rather than a dashboard, and 8 hours of manual work brought down to 15 automated minutes.",
       },
-      { code: "P3", nom: "UYB360", texte: "Product in the UpYourBizz suite.", aConfirmer: true },
+      { code: "P3", nom: "UYB360", texte: "Marketplace bringing together the UpYourBizz product range." },
       { code: "P4", nom: "UpYourAds", texte: "Advertising side of the UpYourBizz suite.", aConfirmer: true },
     ],
     parc: ["TypeScript", "React", "Vite", "Hono", "Supabase", "PostgreSQL", "OpenRouter", "Lemlist", "Vercel"],
@@ -227,10 +227,10 @@ const EMPLOYEURS_EN: Employeur[] = [
         nom: "Memory usage prediction",
         fiche: "prediction-memoire",
         texte:
-          "Model predicting RAM consumed per task: the incumbent system over-allocated ~1200 TB in three months. XGBoost, CatBoost and LightGBM compared under an asymmetric loss penalising under-prediction; features rebuilt from execution logs in Python and Pandas.",
+          "Model predicting RAM consumed per task: the incumbent system over-allocated ~1200 TB in three months. XGBoost, CatBoost and LightGBM compared under an asymmetric loss penalising under-prediction; features rebuilt from execution logs by ETL pipelines (Python, Pandas, ElasticSearch, Azure Blob Storage).",
       },
     ],
-    parc: ["Python", "Pandas", "scikit-learn", "XGBoost", "LightGBM", "CatBoost", "SHAP", "Azure", "GitLab CI/CD"],
+    parc: ["Python", "Pandas", "ElasticSearch", "scikit-learn", "XGBoost", "LightGBM", "CatBoost", "SHAP", "Azure", "GitLab CI/CD", "Scrum / Jira"],
   },
   {
     slug: "the-guill-corp",
