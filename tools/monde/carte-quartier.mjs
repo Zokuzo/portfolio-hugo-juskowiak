@@ -1,7 +1,7 @@
 /* Génère la couche « bâtiments réels » de la carte GPS (#26) : projection
    du dessus du GLB brut dans le repère de la voiture garée (pose de la rue
    #22 : (-4,4, -19), cap sud, sud = haut d'écran), rastérisée en masques
-   PGM — l'arrondi façon Waze se fait ensuite en morphologie ImageMagick.
+   PGM: l'arrondi façon Waze se fait ensuite en morphologie ImageMagick.
    Usage: node tools/monde/carte-quartier.mjs <in.glb> <dossier-sortie> */
 import { readFileSync, writeFileSync } from "node:fs"
 

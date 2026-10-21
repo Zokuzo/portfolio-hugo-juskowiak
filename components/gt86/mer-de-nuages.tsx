@@ -109,7 +109,7 @@ export default function MerDeNuages({
             );
           }
           /* 4 octaves : le 5e coûtait ~20 % du raymarch pour un détail
-             que le dither noie — fluidité d'abord (gate #21) */
+             que le dither noie, fluidité d'abord (gate #21) */
           float fbm(vec2 p) {
             float v = 0.0, a = 0.5;
             for (int k = 0; k < 4; k++) {

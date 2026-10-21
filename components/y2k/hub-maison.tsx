@@ -9,36 +9,36 @@ import { LienFiche } from "@/components/proto/lien-fiche"
 import { HeroFenetre } from "./hero-fenetre"
 
 /* ==================================================================
-   LE HUB /home (#37) — la partition MAISON : la CHAMBRE au crépuscule,
+   LE HUB /home (#37): la partition MAISON : la CHAMBRE au crépuscule,
    miroir du bureau de nuit de /work.
 
    Cinq sections dans l'ordre gravé au ticket : la CHAMBRE en en-tête
    (verdict du 3e retour de gate : « j'aime beaucoup la deuxième version
-   avec la fenêtre » — l'essai « boot » plein cadre a perdu et est
+   avec la fenêtre »: l'essai « boot » plein cadre a perdu et est
    supprimé, l'historique git le garde), atelier en BOÎTE À DISQUETTES,
    qualifications en PLAYLIST HJ·AMP, hors travail en PROFIL.INI,
    contact en MESSAGERIE. Le CONTENU vient des feuilles existantes
-   (dict.ts, parcours.ts) repris tels quels — ce fichier ne fait que le
+   (dict.ts, parcours.ts) repris tels quels: ce fichier ne fait que le
    mettre en chambre.
 
    Les six fiches liées d'ici vivent sous /home/<slug> depuis le #39 :
-   l'adresse ne s'écrit plus à la main, elle vient de `LienFiche` —
+   l'adresse ne s'écrit plus à la main, elle vient de `LienFiche`:
    déménager une fiche ne peut plus laisser un lien mort ici. Et depuis
    le #40 ce même lien dit à la fiche d'où on part, pour qu'elle sache
    où ramener.
    ================================================================== */
 
-/* Un accent par disquette, posé en variable CSS sur la carte — le CSS
+/* Un accent par disquette, posé en variable CSS sur la carte: le CSS
    ne connaît que `--acc`, comme partout dans le monde Y2K. */
 const ACCENTS_ATELIER: Record<string, string> = {
-  A1: "#a06bff", // Eternal — le violet du monde (pixel HD, Evangelion)
-  A2: "#9be05a", // Trading Agent — le vert acide (celui d'Octo)
-  A3: "#ff9ec7", // La Provence — le rose sakura de la moisson
-  A4: "#f2a63b", // bot de candidature — l'ambre atelier
+  A1: "#a06bff", // Eternal, le violet du monde (pixel HD, Evangelion)
+  A2: "#9be05a", // Trading Agent, le vert acide (celui d'Octo)
+  A3: "#ff9ec7", // La Provence, le rose sakura de la moisson
+  A4: "#f2a63b", // bot de candidature, l'ambre atelier
 }
 const accVars = (c: string) => ({ "--acc": c }) as React.CSSProperties
 
-/* la durée d'une piste : les années entières de debut/fin — « 2020 →
+/* la durée d'une piste : les années entières de debut/fin, « 2020 →
    2022 » ; une excursion qui tient dans l'année n'affiche qu'elle */
 const duree = (debut: number, fin: number) => {
   const a = Math.floor(debut)
@@ -46,7 +46,7 @@ const duree = (debut: number, fin: number) => {
   return a === b ? `${a}` : `${a} → ${b}`
 }
 
-/* la tranche d'une piste sur l'axe commun, en pourcentages — le CSS ne
+/* la tranche d'une piste sur l'axe commun, en pourcentages: le CSS ne
    connaît que --d (départ) et --w (largeur) */
 const rail = (debut: number, fin: number, t0: number, t1: number) =>
   ({
@@ -61,7 +61,7 @@ export default function HubMaison() {
   const liens = t(lang, "ctLiens")
   const champs = t(lang, "opChamps")
   /* l'axe commun des pistes : la première année ouverte, la dernière
-     fermée — il sert au readout de tête ET aux barres de rail */
+     fermée: il sert au readout de tête ET aux barres de rail */
   const t0 = Math.min(...pistes.map((e) => e.debut))
   const t1 = Math.max(...pistes.map((e) => e.fin))
 
@@ -90,7 +90,7 @@ export default function HubMaison() {
       </div>
 
       <div className="y2k-colonne m-colonne">
-        {/* — A:\ATELIER : la boîte à disquettes — */}
+        {/* A:\ATELIER : la boîte à disquettes */}
         <section className="m-pan" aria-labelledby="m-at" style={accVars("#ff9ec7")}>
           <span className="m-pan-tab">
             {t(lang, "hubMaisonAtelier")} <i aria-hidden="true">✦</i>
@@ -135,7 +135,7 @@ export default function HubMaison() {
           </div>
         </section>
 
-        {/* — QUALIF.M3U : la playlist HJ·AMP — */}
+        {/* QUALIF.M3U : la playlist HJ·AMP */}
         <section className="m-pan" aria-labelledby="m-etu" style={accVars("#a06bff")}>
           <span className="m-pan-tab">
             {t(lang, "hubMaisonQualif")} <i aria-hidden="true">✦</i>
@@ -173,7 +173,7 @@ export default function HubMaison() {
                       <p className="dit">{e.texte}</p>
                     </div>
                     <span className="duree">{duree(e.debut, e.fin)}</span>
-                    {/* LA BARRE DE RAIL — etuNote dit qu'écrit en liste, le
+                    {/* LA BARRE DE RAIL: etuNote dit qu'écrit en liste, le
                         parallélisme DISPARAÎT : la barre le remet à l'œil.
                         Chaque piste occupe sa tranche de l'axe commun, et
                         celles qui se chevauchent se voient se chevaucher
@@ -195,7 +195,7 @@ export default function HubMaison() {
           </div>
         </section>
 
-        {/* — PROFIL.INI : le hors-travail en fichier de config — */}
+        {/* PROFIL.INI : le hors-travail en fichier de config */}
         <section className="m-pan" aria-labelledby="m-op" style={accVars("#8fd0ff")}>
           <span className="m-pan-tab">
             {t(lang, "hubMaisonPerso")} <i aria-hidden="true">✦</i>
@@ -228,7 +228,7 @@ export default function HubMaison() {
           </div>
         </section>
 
-        {/* — MSGR.EXE : la messagerie — */}
+        {/* MSGR.EXE : la messagerie */}
         <section className="m-pan m-msgr" aria-labelledby="m-ct" style={accVars("#ff3ea5")}>
           <span className="m-pan-tab">
             {t(lang, "hubMaisonContact")} <i aria-hidden="true">✦</i>

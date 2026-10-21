@@ -24,7 +24,7 @@ import {
 import { ECRAN_NATIF, VUE_ECRAN, zoneDuClic, type Ecran, type Zone } from "./ecran"
 import { mouilleLaChaussee } from "./chaussee-mouillee"
 
-/* LA RUE NOCTURNE — ticket #30 : le décor gaté au #22, porté du prototype
+/* LA RUE NOCTURNE (ticket #30) : le décor gaté au #22, porté du prototype
    (route jetable, supprimée au #35) dans la coquille. City procédurale
    à l'échelle métrique native, GT86 rangée au bas-côté ouest de la rue
    N-S, ~90 luminaires ancrés à la géométrie, feux tricolores, fenêtres
@@ -34,9 +34,9 @@ import { mouilleLaChaussee } from "./chaussee-mouillee"
    `<Environment>` crépuscule monté à vie (piège dispose, voir ciel.tsx) et
    `scene.environment` lui appartient. La rue s'en isole par la PRIORITÉ
    STRICTE de `material.envMap` sur `scene.environment` (three r169,
-   WebGLRenderer.js:1791) : CHAQUE matériau de rue — décor comme voiture —
+   WebGLRenderer.js:1791) : CHAQUE matériau de rue, décor comme voiture,
    reçoit en propre une petite équirect de nuit peinte au canvas (bande
-   chaude des lampadaires au zénith, fills froids — le portrait des trois
+   chaude des lampadaires au zénith, fills froids : le portrait des trois
    Lightformer du prototype). `envMapIntensity` par matériau ne redevient
    actif QUE grâce à cet envMap posé (inerte face à scene.environment,
    piège payé au #22). */
@@ -47,7 +47,7 @@ export const RUE_GLB = "/prototype/decor-procedural.glb"
    le mât d'en face (-15,5) la borde de lumière */
 export const POSE_VOITURE: [number, number, number] = [-4.4, -0.05, -19]
 export const CAP_VOITURE = Math.PI
-/* la vue d'arrivée du vol — la caméra gatée du prototype */
+/* la vue d'arrivée du vol : la caméra gatée du prototype */
 export const CAM_FINALE: [number, number, number] = [-1.2, 2.0, -12.5]
 export const CIBLE_FINALE: [number, number, number] = [-4.4, 1, -19]
 /* La brume de la variante e : sa couleur EST le NUIT de la coquille.
@@ -61,7 +61,7 @@ const BRUME: [string, number, number] = ["#08070f", 25, 180]
 export const brume = () => new THREE.Fog(BRUME[0], BRUME[1], BRUME[2])
 
 /* altitude d'où la voiture tombe vers son garage pendant la phase rue du
-   vol, et assiette cabrée tenue jusqu'au toucher — montée à 45 m au 3e
+   vol, et assiette cabrée tenue jusqu'au toucher : montée à 45 m au 3e
    retour de gate (« une chute d'encore plus haut ») */
 export const CHUTE_ALTITUDE = 45
 /* un tour complet de l'équirect de nuit tous les PAS_LAMPADAIRES mètres :
@@ -69,7 +69,7 @@ export const CHUTE_ALTITUDE = 45
 const PAS_LAMPADAIRES = 16
 const CHUTE_CABRE = -0.22
 /* le TASSEMENT du toucher (retour de gate #31 : l'adoucissement en sortie
-   posait la voiture en plume — une chute, ça ACCÉLÈRE) : ressort amorti,
+   posait la voiture en plume ; une chute, ça ACCÉLÈRE) : ressort amorti,
    la caisse s'enfonce et le nez se refait en une oscillation courte */
 const TASSE_Y = 0.07
 const TASSE_FREIN = 5.5
@@ -104,7 +104,7 @@ const GRAVITE = 9.81
 
 /* ---- textures partagées, peintes une fois (module client) ------------ */
 
-/* un sprite sans map est un CARRÉ — tous les halos partagent ce dégradé
+/* un sprite sans map est un CARRÉ : tous les halos partagent ce dégradé
    radial (porté du prototype). `createElement` sans append : la passe
    « un seul canvas » du bloc B ne le voit pas. */
 let haloPartage: THREE.CanvasTexture | null = null
@@ -127,7 +127,7 @@ export function halo() {
 /* l'équirect de nuit : le portrait des trois Lightformer du prototype #22
    (bande chaude #ffb46b au zénith = les lampadaires, deux fills froids),
    sur un dégradé bleu nuit. Le renderer la PMREM-ise tout seul au premier
-   usage (WebGLCubeUVMaps met en cache par texture — une seule conversion
+   usage (WebGLCubeUVMaps met en cache par texture : une seule conversion
    pour toute la rue). */
 let nuitPartagee: THREE.CanvasTexture | null = null
 export function envNuit() {
@@ -192,7 +192,7 @@ function Decor() {
       for (const m of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
         const mat = m as THREE.MeshStandardMaterial
         if (!mat || !("envMapIntensity" in mat)) continue
-        /* la nuit du #22 : envMap PROPRE à dose faible — sans lui,
+        /* la nuit du #22 : envMap PROPRE à dose faible : sans lui,
            scene.environment (le crépuscule du ciel) repeindrait la ville
            en fin d'après-midi (84 % de la lumière au sol, mesuré) */
         mat.envMap = env
@@ -202,7 +202,7 @@ function Decor() {
         mouilleLaChaussee(mat, LAMPES)
         /* les fenêtres de ce décor sont PEINTES dans les textures (24
            sommets pour un mur entier) : les pixels sombres eux-mêmes
-           s'allument — inversion de luminance en émissif, cellule ~1
+           s'allument : inversion de luminance en émissif, cellule ~1
            fenêtre, ~10 % vivantes, rez-de-chaussée éteint (gate #22).
            C'est pour ce shader que regime.mjs recopie le baseColor des
            façades octet pour octet. */
@@ -249,12 +249,12 @@ function Decor() {
 
 /* ---- la voiture garée -------------------------------------------------- */
 
-/* La robe de nuit du #22 (habilleNuit du prototype) — appliquée à un CLONE :
+/* La robe de nuit du #22 (habilleNuit du prototype) : appliquée à un CLONE :
    le GLB du cache est déjà porté par le ciel (#29), qui a mué ses matériaux
    pour le crépuscule ; deux <primitive> ne peuvent pas partager le même
    objet de toute façon. Depuis le #31 la même voiture porte AUSSI
    l'habitacle gaté (#23/#26, habitacle.tsx) : tout naît éteint, la cascade
-   du seuil réveille — et `vivant` (skip, session revenante) allume d'un
+   du seuil réveille, et `vivant` (skip, session revenante) allume d'un
    coup. */
 function VoitureGaree({
   vol,
@@ -286,7 +286,7 @@ function VoitureGaree({
 
   const voiture = useMemo(() => {
     const clone = scene.clone(true)
-    /* le clone hérite du CENTRAGE du ciel dans sa position — le laisser
+    /* le clone hérite du CENTRAGE du ciel dans sa position : le laisser
        fausserait la mesure d'assise ci-dessous d'exactement cet offset
        (payé : la voiture garée flottait d'un demi-mètre en capture) */
     clone.position.set(0, 0, 0)
@@ -299,7 +299,7 @@ function VoitureGaree({
     clone.traverse((o) => {
       const mesh = o as THREE.Mesh
       if (!mesh.isMesh) return
-      /* matériaux À NOUS : le clone partage encore ceux du cache — les
+      /* matériaux À NOUS : le clone partage encore ceux du cache : les
          muter éteindrait aussi la voiture flottante du ciel */
       mesh.material = Array.isArray(mesh.material)
         ? mesh.material.map((m) => m.clone())
@@ -325,7 +325,7 @@ function VoitureGaree({
           verre.opacity = 0.8
           reflets.push(verre)
         }
-        /* la livrée d'usine rougeoie magenta la nuit — neutralisée,
+        /* la livrée d'usine rougeoie magenta la nuit : neutralisée,
            verdict robe unique du #21 */
         if (mat.name === "Taillightbody") {
           mat.map = null
@@ -340,7 +340,7 @@ function VoitureGaree({
         mat.needsUpdate = true
       }
     })
-    /* l'habitacle gaté et les optiques préparées à zéro — remplit le
+    /* l'habitacle gaté et les optiques préparées à zéro : remplit le
        cockpit (StrictMode/HMR rejouent ce memo sur un clone NEUF : les
        tableaux du cockpit sont repartis de zéro dans habilleInterieur) */
     /* déjà posée si le ciel a mué la scène du cache avant ce clone */
@@ -348,7 +348,7 @@ function VoitureGaree({
     poseLeds(clone)
     habilleInterieur(clone, { art, lueur, compteur }, ecran.tex, gl.capabilities.getMaxAnisotropy(), cockpit)
     peinteEnPremier(clone)
-    /* posée sur ses roues : le bas de la bbox affleure l'asphalte (y=0) —
+    /* posée sur ses roues : le bas de la bbox affleure l'asphalte (y=0) :
        recalculé sur le clone, qui hérite du centrage fait par le ciel */
     const boite = new THREE.Box3().setFromObject(clone)
     clone.position.set(
@@ -363,14 +363,14 @@ function VoitureGaree({
   const { clone: modele, roues, reflets } = voiture
 
   /* le chemin sans cascade (skip, session revenante) : l'état final d'un
-     coup — et son INVERSE au rejeu de la scène (HABITACLE → CIEL, 4e
+     coup, et son INVERSE au rejeu de la scène (HABITACLE → CIEL, 4e
      retour de gate) : la voiture redevient morte, l'écran repasse en
      veille, la cascade repartira de zéro. Idempotents tous les deux ; la
      bascule ne survient qu'aux transitions vivant ⇄ intro (le passage
      ATTERRISSAGE → SEUIL ne change pas `vivant`, la cascade en cours
      n'est jamais raturée). En layout, comme la pose caméra : uniforms et
      `visible` seulement (topologie de lumières constante, aucune
-     recompilation — voir habitacle.tsx). */
+     recompilation, voir habitacle.tsx). */
   useLayoutEffect(() => {
     if (vivant) {
       allumeHabitacle(cockpit)
@@ -382,15 +382,15 @@ function VoitureGaree({
   }, [vivant, cockpit, ecran, invalide])
 
   /* la chute : le canal `chute` du vol (0 = en l'air, 1 = posée). La
-     gravité est FRANCHE — la vitesse croît jusqu'au toucher, l'assiette
-     reste cabrée — puis le ressort amorti assied la voiture : la caisse
+     gravité est FRANCHE : la vitesse croît jusqu'au toucher, l'assiette
+     reste cabrée, puis le ressort amorti assied la voiture : la caisse
      s'enfonce d'un souffle, le nez bascule au-delà de l'horizontale et
      tout se pose (« elle s'assied au toucher », storyboard #24, que la
      version plume trahissait). Le ressort est armé par la chute observée :
-     jamais sur le chemin vivant (skip, session revenante — la caméra y
+     jamais sur le chemin vivant (skip, session revenante : la caméra y
      est déjà assise DANS la voiture). */
   /* les feux de détresse (gate #26) : cadence 2,4 Hz, ambre hors tone
-     mapping — les répétiteurs Indicator se voient dedans ET dehors */
+     mapping : les répétiteurs Indicator se voient dedans ET dehors */
   useFrame(({ clock }) => {
     const allume = warning && Math.floor(clock.elapsedTime * 2.4) % 2 === 0
     for (const m of cockpit.clignotants) {
@@ -483,7 +483,7 @@ function VoitureGaree({
       <group ref={porteur}>
         <group ref={assiette}>
           {/* le clic sur le POSTE (#32) : le raycast R3F de la coquille
-              marche (#29) — le rayon est reprojeté sur le PLAN de la dalle
+              marche (#29) : le rayon est reprojeté sur le PLAN de la dalle
               en repère voiture (zones calibrées par Hugo au ?edit du
               prototype : dalle 13×7 cm, boutons de façade, frange neutre,
               dehors) */}
@@ -500,14 +500,14 @@ function VoitureGaree({
             }}
             onWheel={(e: ThreeEvent<WheelEvent>) => {
               /* TOURNER la molette (7e retour de gate #33) : la roulette
-                 au-dessus du bouton rotatif — même reprojection plan que
+                 au-dessus du bouton rotatif : même reprojection plan que
                  le clic, un cran de volume par geste */
               if (!surMolette) return
               const origine = modele.worldToLocal(e.ray.origin.clone())
               const point = modele.worldToLocal(e.point.clone())
               const zone = zoneDuClic(origine, point)
               /* le bouton power EST le bouton rotatif : son rectangle vit au
-                 centre de la zone molette et gagne au clic — à la roulette,
+                 centre de la zone molette et gagne au clic : à la roulette,
                  les deux tournent le volume (revue : le centre était mort) */
               if (zone?.type !== "molette" && !(zone?.type === "bouton" && zone.nom === "power")) return
               e.stopPropagation()
@@ -515,14 +515,14 @@ function VoitureGaree({
             }}
           />
           {/* rétro, néons, phares volumétriques : même repère brut que le
-              GLB — le groupe copie l'offset d'assise du clone */}
+              GLB : le groupe copie l'offset d'assise du clone */}
           <group position={[modele.position.x, modele.position.y, modele.position.z]}>
             <VieVoiture cockpit={cockpit} />
           </group>
         </group>
         <primitive ref={rouesPosees} object={roues.groupe} />
       </group>
-      {/* la poussière de l'impact — au sol, hors des groupes qui tombent */}
+      {/* la poussière de l'impact : au sol, hors des groupes qui tombent */}
       <group ref={poussiere} visible={false}>
         {POUSSIERE.map(([x, z], i) => (
           <sprite key={i} position={[x, 0.1, z]} scale={[0.6, 0.36, 1]}>
@@ -632,10 +632,10 @@ function peinteEnPremier(voiture: THREE.Object3D) {
 
 /* ---- la vie nocturne (luminaires + feux), portée du #22 ---------------- */
 
-/* brouillon partagé du recul des halos — zéro allocation par frame */
+/* brouillon partagé du recul des halos : zéro allocation par frame */
 const direction = new THREE.Vector3()
 
-/* [x, z, y de la tête, vrai spot ?] — positions ancrées à la géométrie
+/* [x, z, y de la tête, vrai spot ?] : positions ancrées à la géométrie
    (analyse des sommets du GLB, gate #22) ; cinq vrais spots près de la
    mise en scène, halo + flaque peinte au-delà (doctrine fluidité) */
 const LAMPES: [number, number, number, boolean?][] = [
@@ -672,7 +672,7 @@ function Lampe({ x, z, y, vrai }: { x: number; z: number; y: number; vrai?: bool
   const cible = useMemo(() => new THREE.Object3D(), [])
   const halos = useRef<THREE.Group>(null)
   /* le sprite au centre de la tête se fait avaler par sa géométrie (depth
-     test) : tiré de 0,9 m vers la caméra — hors du boîtier sous tous les
+     test) : tiré de 0,9 m vers la caméra : hors du boîtier sous tous les
      angles, occlusion par les bâtiments intacte (gate #22) */
   useFrame(({ camera }) => {
     if (!halos.current) return
@@ -705,7 +705,7 @@ function Lampe({ x, z, y, vrai }: { x: number; z: number; y: number; vrai?: bool
 }
 
 /* boîtier de feux analysé au #22 ; positions des lentilles posées par Hugo
-   au gizmo — cycle 17 s, deux carrefours en opposition de phase */
+   au gizmo : cycle 17 s, deux carrefours en opposition de phase */
 const CYCLE = 17
 const TEINTES = ["#ff3b30", "#ffab2e", "#3bd06b"] as const
 const FEUX: [number, number, number][] = [
@@ -741,7 +741,7 @@ function TeteDeFeu({ pos, phase }: { pos: [number, number, number]; phase: numbe
   )
 }
 
-/* `autour` [x, z, rayon] : ne monte que les luminaires du quartier —
+/* `autour` [x, z, rayon] : ne monte que les luminaires du quartier :
    servira à l'habitacle (#31), qui vit dans une ville coupée au même rayon */
 export function VieNocturne({ autour }: { autour?: [number, number, number] }) {
   const lampes = useMemo(
@@ -851,7 +851,7 @@ function Fond() {
 /* ---- la rue entière ---------------------------------------------------- */
 
 /* Du repère brut du GLB au monde, VOITURE AU REPOS : pose de rue × offset
-   d'assise du clone. Jamais localToWorld — les groupes porteur/assiette
+   d'assise du clone. Jamais localToWorld : les groupes porteur/assiette
    sont animés par la chute, et un filet qui coupe le vol en plein ciel
    laisse leur transform à 22 m d'altitude jusqu'à la frame suivante
    (payé : le glissé du seuil visait une voiture en l'air, sondé au CDP). */
@@ -880,7 +880,7 @@ export default function Rue({
   visible: boolean
   vol: MutableRefObject<Trajectoire>
   /* hors vol : "rue" = la vue d'arrivée gatée (le SEUIL en part),
-     "assis" = le poste de conduite, "ecran" = le nez sur la dalle — et le
+     "assis" = le poste de conduite, "ecran" = le nez sur la dalle, et le
      RAIL vole entre assis ⇄ ecran (1,1 s, recette #26), tout autre
      changement se pose net */
   pose: "rue" | "assis" | "ecran" | null
@@ -903,7 +903,7 @@ export default function Rue({
   const groupe = useRef<THREE.Group>(null)
   useChauffeEnSolo(groupe, surChaude)
 
-  /* LE RAIL (recette #26, portée au #32) : les poses se posent NET —
+  /* LE RAIL (recette #26, portée au #32) : les poses se posent NET :
      sauf assis ⇄ ecran, le seul trajet volé (1,1 s, courbe douce, delta
      plafonné). En LAYOUT : au skip en plein seuil, un effet passif
      laissait peindre une frame de boutons sur un canvas figé en plein
@@ -932,7 +932,7 @@ export default function Rue({
       r.but = null
     } else {
       /* assis et écran vivent dans le repère brut du GLB : convertis par
-         la pose de repos — la mesure d'assise et la pose de rue y sont */
+         la pose de repos : la mesure d'assise et la pose de rue y sont */
       const voiture = cockpit.voiture
       if (!voiture) return
       const locale = pose === "assis" ? ASSISE : VUE_ECRAN
@@ -971,7 +971,7 @@ export default function Rue({
   return (
     <group ref={groupe} visible={visible}>
       <hemisphereLight args={["#232038", "#0a080e", 0.22]} />
-      {/* ambiante de nuit froide (clair de lune) — assez pour lire les
+      {/* ambiante de nuit froide (clair de lune) : assez pour lire les
           volumes, plus assez pour ressembler à un crépuscule (gate #22) */}
       <ambientLight intensity={0.21} color="#a9b4d4" />
       <Decor />

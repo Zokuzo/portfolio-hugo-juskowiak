@@ -1,6 +1,6 @@
 @AGENTS.md
 
-# Coding rules — Clean Code principles
+# Coding rules: Clean Code principles
 
 Apply these principles to all code you write or modify. When a choice is ambiguous, prefer readability over cleverness.
 
@@ -79,4 +79,4 @@ Apply these principles to all code you write or modify. When a choice is ambiguo
 ## Expected behavior from Claude Code
 - Before coding: read the surrounding existing code, respect its conventions.
 - After coding: reread, look for the smells above, run lint and tests.
-- If a request pushes toward dirty code (hack, duplication), say so and propose the clean alternative — then do what the user decides.
+- If a request pushes toward dirty code (hack, duplication), say so and propose the clean alternative, then do what the user decides.

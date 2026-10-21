@@ -9,25 +9,25 @@ import { FENETRE } from "./pixel-art"
    totalement différente de la hero section »).
 
    LE CONCEPT, et ce qui le rend VRAIMENT différent : le hero « boot »
-   est un ÉCRAN — le système occupe toute la page, comme un démarrage
+   est un ÉCRAN : le système occupe toute la page, comme un démarrage
    plein cadre. Celui-ci est une SCÈNE. On est dans la chambre, au
    crépuscule ; le système ne remplit plus l'écran, il tourne sur un
    MONITEUR posé sur le bureau, devant la fenêtre ouverte sur la ville.
    Ce n'est pas le même ornement sur la même structure : c'est un
-   changement de point de vue — l'un vous met DANS la machine, l'autre
+   changement de point de vue : l'un vous met DANS la machine, l'autre
    vous met dans la pièce d'où on la regarde.
 
    Le récit s'y raccroche : la GT86 vous a déposé DANS cette rue ; ici
    vous êtes rentré, et la ville est derrière la vitre.
 
    TOUT LE TEXTE RESTE DU DOM : le moniteur est une boîte CSS, pas une
-   image — l'audit AA le mesure, le dictionnaire le traduit, un lecteur
+   image : l'audit AA le mesure, le dictionnaire le traduit, un lecteur
    d'écran le lit. La fenêtre, elle, est du pixel art muet.
    ================================================================== */
 
 export function HeroFenetre({ lang }: { lang: Lang }) {
   return (
-    /* LE MUR ET LE BUREAU vivent sur la SECTION — ils traversent toute
+    /* LE MUR ET LE BUREAU vivent sur la SECTION : ils traversent toute
        la largeur, comme un mur ; seuls les meubles sont plafonnés dans
        le cadre. Sans ça, le ciel de la page reparaît de part et d'autre
        de la chambre et la scène se lit comme une vignette collée. */
@@ -72,7 +72,7 @@ export function HeroFenetre({ lang }: { lang: Lang }) {
         </div>
         </div>
 
-        {/* les objets du bureau — décor pur, ils disent la pièce */}
+        {/* les objets du bureau : décor pur, ils disent la pièce */}
         <div className="hf-objets" aria-hidden="true">
           <span className="hf-disquettes">
             <i />

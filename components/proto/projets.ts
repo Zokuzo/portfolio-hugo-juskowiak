@@ -2,14 +2,14 @@ import type { Lang } from "./dict"
 import { SLUGS_MAISON } from "./mondes"
 
 /* ==================================================================
-   LES FICHES — le contenu des pages /work/[slug] ET /home/[slug].
+   LES FICHES : le contenu des pages /work/[slug] ET /home/[slug].
    Depuis le #39, six des dix fiches (les deux projets d'atelier et
    les quatre cursus) vivent sous la chambre ; la scission des routes
    est dans `mondes.ts`.
 
    POURQUOI CE FICHIER ET PAS dict.ts : le dictionnaire porte des
    CHAÎNES traduites, indexées par clé plate. Une fiche projet est un
-   ENREGISTREMENT — un slug, un état, des listes imbriquées. L'y
+   ENREGISTREMENT : un slug, un état, des listes imbriquées. L'y
    enfoncer sous forme de tuples anonymes rendrait les deux illisibles.
    Le contrat reste le même : aucune chaîne visible en dur dans les
    composants, et FR/EN systématiquement.
@@ -20,7 +20,7 @@ import { SLUGS_MAISON } from "./mondes"
    LES CHIFFRES ONT UNE SOURCE, OU N'EXISTENT PAS. Une fiche technique
    qui invente ses cotes n'est plus une fiche. Les chiffres de la fiche
    prédiction-mémoire viennent du support du tech talk de fin de stage,
-   fourni par le propriétaire le 2026-08-10 — le code est resté chez
+   fourni par le propriétaire le 2026-08-10 : le code est resté chez
    Sophia Genetics, et la fiche dit sa source plutôt que de faire
    passer un souvenir pour une mesure.
    ================================================================== */
@@ -40,7 +40,7 @@ export type Projet = {
   /* Une fiche formation partage le gabarit des fiches projet mais
      pas leur grille de lecture : un cursus n'a ni contraintes ni
      décisions techniques, il a un programme et des travaux. Le
-     genre choisit les libellés — absent = projet. */
+     genre choisit les libellés : absent = projet. */
   genre?: "formation"
   contexte: string
   contraintes: string[]
@@ -55,7 +55,7 @@ export type Projet = {
      clients pixelisés à la source. `src` pointe sous public/ ; alt et
      légende vivent dans l'enregistrement pour être traduits comme le
      reste de la fiche. CONTRAT DE COTES : toutes les captures font
-     1600×900 — le gabarit fige ces dimensions dans le balisage pour
+     1600×900 : le gabarit fige ces dimensions dans le balisage pour
      réserver la place ; une capture d'un autre ratio devra d'abord
      porter ses cotes ici. */
   captures?: { src: string; alt: string; legende: string }[]
@@ -64,7 +64,7 @@ export type Projet = {
 const FR: Projet[] = [
   /* RÉÉCRITE AU TICKET 20 (issue GitHub #7), contre le code et les
      réponses du propriétaire du 2026-08-10. Le produit s'appelle
-     Reach-Up depuis le 2026-07-15 — le travail a commencé sous le nom
+     Reach-Up depuis le 2026-07-15 : le travail a commencé sous le nom
      Prospector, l'ancienne URL /work/prospector redirige ici. Le parc
      précédent annonçait OAuth Office 365 (les boîtes sont en réalité
      connectées chez l'exécutant d'envoi) et Scrapy (la collecte est
@@ -252,8 +252,8 @@ const FR: Projet[] = [
   /* RÉÉCRITE AU TICKET 14 (issue GitHub #2), depuis le support du tech
      talk de fin de stage fourni par le propriétaire le 2026-08-10. Le
      code est resté chez Sophia Genetics : la fiche ne publie que les
-     agrégats du support — jamais un nom de pipeline, de cluster ou de
-     collègue — et dit sa source. L'ancienne version surdéclarait :
+     agrégats du support : jamais un nom de pipeline, de cluster ou de
+     collègue, et dit sa source. L'ancienne version surdéclarait :
      « en production » (le stage livre une étude et une baseline, le
      microservice est dessiné, pas déployé) et « Random Forest comparé »
      (écarté dès la pré-analyse). */
@@ -380,9 +380,9 @@ const FR: Projet[] = [
     cadre: "Projet personnel",
     periode: "En cours",
     etat: "Paper trading",
-    /* ENRICHIE AU TICKET 20 (issue GitHub #7) : IBKR sort du parc —
+    /* ENRICHIE AU TICKET 20 (issue GitHub #7) : IBKR sort du parc,
        le mot n'apparaît dans aucun fichier de code du bot, seulement
-       dans des ADR au futur — et rejoint la rubrique « prévu ». Les
+       dans des ADR au futur, et rejoint la rubrique « prévu ». Les
        quatre morceaux d'architecture ajoutés sont prouvés par la
        recherche sur le dépôt du bot, consignée à l'issue #7. */
     contexte:
@@ -549,7 +549,7 @@ const FR: Projet[] = [
 
 const EN: Projet[] = [
   /* Voir le commentaire de la fiche FR : réécrite au ticket 20
-     (issue GitHub #7) — nom Reach-Up, boîtes connectées chez
+     (issue GitHub #7) : nom Reach-Up, boîtes connectées chez
      l'exécutant, collecte Scrapy dans un dépôt séparé, parc relevé
      sur le dépôt réel. */
   {
@@ -720,7 +720,7 @@ const EN: Projet[] = [
       "The store is in production. Quote signing has been live since 19 October 2026: a quote signed in the store is legally binding. Coach booking stays closed to client accounts until the production platform has delivered its part: the UpYourBizz team books for them.",
   },
   /* Voir le commentaire de la fiche FR : réécrite au ticket 14
-     (issue GitHub #2) depuis le support du tech talk — agrégats seuls,
+     (issue GitHub #2) depuis le support du tech talk : agrégats seuls,
      source dite, plus de « en production ». */
   {
     slug: "prediction-memoire",
@@ -775,7 +775,7 @@ const EN: Projet[] = [
     etat: "Ongoing",
     /* Voir le commentaire de la fiche FR : réécrite au ticket 11
        contre le code, le parc corrigé, et la dépendance de `monde.html`
-       rétablie — la version précédente écrivait « no dependency » des
+       rétablie : la version précédente écrivait « no dependency » des
        DEUX pages, ce qui était faux de celle qui charge three.js. */
     contexte:
       "Code written with an AI ships faster than it is understood. Eternal is not an application but a production chain: at the end of a significant piece of work, an agent reads the project's real diff, writes an interactive lesson and pushes it into a git repository. Two HTML pages with no build read it back in the browser: the 2D interface holds every rule of the game and zero dependencies; the 3D world holds no rule and exactly one dependency, three.js loaded from a CDN.",
@@ -999,7 +999,7 @@ export function projets(lang: Lang): Projet[] {
   return PAR_LANGUE[lang]
 }
 
-/* Les slugs sont identiques dans les deux langues — une URL ne se
+/* Les slugs sont identiques dans les deux langues : une URL ne se
    traduit pas, sinon changer de langue changerait d'adresse. */
 export function projet(lang: Lang, slug: string): Projet | undefined {
   return PAR_LANGUE[lang].find((p) => p.slug === slug)
@@ -1010,7 +1010,7 @@ export function projet(lang: Lang, slug: string): Projet | undefined {
    SLUGS_MAISON, et un export sans appelant est une API qui ment. */
 const SLUGS = FR.map((p) => p.slug)
 
-/* La scission des deux mondes vit dans `mondes.ts` — un module SANS
+/* La scission des deux mondes vit dans `mondes.ts` : un module SANS
    données, pour que les hubs client qui n'ont besoin que d'écrire une
    adresse n'embarquent pas les dix fiches bilingues avec. Seul
    SLUGS_TRAVAIL reste ici : il se DÉDUIT du catalogue. */

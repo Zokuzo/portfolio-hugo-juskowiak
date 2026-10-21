@@ -1,4 +1,4 @@
-/* ENGENDRÉ par `node tools/pixel/dessine.mjs` — NE PAS ÉDITER À LA MAIN.
+/* ENGENDRÉ par `node tools/pixel/dessine.mjs` : NE PAS ÉDITER À LA MAIN.
    Le geste qui dessine ces grilles (polylignes, sprites, semis de
    fenêtres) vit dans l'outil ; ici ne vit que son résultat, figé et
    déterministe. Un caractère = un pixel, '.' = transparent.
@@ -8,7 +8,7 @@
 
 /* la palette : un caractère → une couleur. La ville et le ciel ont été
    REMONTÉS d'un cran au 3e gate (« faut que ce soit un peu plus clair,
-   l'ensemble ») — la vue reste une nuit, mais une nuit éclairée. */
+   l'ensemble ») : la vue reste une nuit, mais une nuit éclairée. */
 export const PALETTE: Record<string, string> = {
   b: "#2f2740", // branche
   B: "#5a4c74", // arête claire de la branche
@@ -16,12 +16,12 @@ export const PALETTE: Record<string, string> = {
   P: "#ffc2dc", // pétale clair
   y: "#ffe27a", // cœur
   s: "#fff3c4", // étincelle
-  "0": "#f4b2ca", // ciel — l'horizon chaud
+  "0": "#f4b2ca", // ciel, l'horizon chaud
   "1": "#e294be",
   "2": "#c082c0",
   "3": "#946eba",
   "4": "#7566b2",
-  "5": "#4a4084", // ciel — le zénith
+  "5": "#4a4084", // ciel, le zénith
   n: "#241c46", // la nuit sous l'horizon
   m: "#fff6d6", // la lune
   c: "#463a70", // ville, plan lointain

@@ -28,7 +28,7 @@
           "components/y2k/pub.css"
         ],
         "createdAt": "2026-08-26T11:09:34.719Z",
-        "reason": "Lettrage chrome du monde Y2K — direction validée par Hugo au gate #36, même exception que y2k.css/affiche.css"
+        "reason": "Lettrage chrome du monde Y2K : direction validée par Hugo au gate #36, même exception que y2k.css/affiche.css"
       },
       {
         "rule": "gradient-text",
@@ -46,7 +46,7 @@
           "components/y2k/hero-fenetre.css"
         ],
         "createdAt": "2026-08-27T12:20:00.000Z",
-        "reason": "Même wordmark chrome que les quatre exceptions ci-dessus, sur l'essai de hero du #37 — Hugo a confirmé explicitement au 2e retour de gate : « j'adore le design, y compris la hero section avec maison écrit ou home »"
+        "reason": "Même wordmark chrome que les quatre exceptions ci-dessus, sur l'essai de hero du #37 : Hugo a confirmé explicitement au 2e retour de gate : « j'adore le design, y compris la hero section avec maison écrit ou home »"
       }
     ]
   }

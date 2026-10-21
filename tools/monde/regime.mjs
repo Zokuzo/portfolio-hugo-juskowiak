@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* LE RÉGIME DES DÉCORS — ticket #28 de la carte #15.
+/* LE RÉGIME DES DÉCORS: ticket #28 de la carte #15.
  *
  *   node tools/monde/regime.mjs public/prototype/decor-procedural.glb -4.4 -19
  *
@@ -10,14 +10,14 @@
  *
  * Le gate #22 demande 16 → ~8 Mo sur la ville. Mesuré : ces fichiers sont DÉJÀ
  * meshopt + WebP (c'est la recette du #16), et leur poids est presque tout en
- * TEXTURES — 63 % pour la ville, 90 % pour l'habitacle. Le levier est donc la
+ * TEXTURES: 63 % pour la ville, 90 % pour l'habitacle. Le levier est donc la
  * DÉFINITION des textures, et un plafond uniforme est le mauvais outil : les
  * mêmes 2048² servent une bordure de trottoir à 3 m et un marbre à 70 m.
  *
  * Ici le budget de chaque texture est déduit de la DISTANCE MINIMALE, mesurée
  * sommet par sommet, entre le matériau qui la porte et le point de vue. La
  * distance est recalculée DANS CHAQUE FICHIER : depuis le siège les arbres
- * sont à 9,5 m, depuis la rue à 26 m — une liste de noms figée se tromperait
+ * sont à 9,5 m, depuis la rue à 26 m: une liste de noms figée se tromperait
  * sur l'un des deux.
  *
  *     < 15 m   baseColor/émissif natif (≤ 2048)   normal/MR/AO ≤ 512
@@ -33,11 +33,11 @@
  * défaut d'`optimize` a l'air inoffensive et rabote 9 % des triangles en
  * silence (`--simplify` est à `true`) ; `--prune-solid-textures` ferait, lui,
  * DISPARAÎTRE des textures unies. Le code du décor s'appuie sur des noms de
- * matériaux — `tools/gt86/verifie.mjs` les compte après coup.
+ * matériaux: `tools/gt86/verifie.mjs` les compte après coup.
  *
  * Pas de Draco non plus : il exigerait un décodeur au chargement (drei le tire
  * de gstatic.com par défaut), il décode plus lentement que meshopt sur 350 000
- * triangles, et il SOUDE la géométrie — mesuré, −5,5 % de triangles. La
+ * triangles, et il SOUDE la géométrie: mesuré, −5,5 % de triangles. La
  * fluidité vaut mieux que les 3 Mo qu'il ferait gagner.
  */
 
@@ -48,10 +48,10 @@ import { MeshoptDecoder, MeshoptEncoder } from "meshoptimizer"
 import sharp from "sharp"
 
 /* LES INTOUCHABLES. Le shader des façades (`Decor` dans `components/gt86/rue.tsx`)
-   allume les fenêtres en lisant la LUMINANCE des pixels de la texture — les
+   allume les fenêtres en lisant la LUMINANCE des pixels de la texture: les
    murs n'ont aucune géométrie de fenêtre, tout est peint. Redimensionner ou
    ré-encoder ce baseColor DÉPLACE ces valeurs autour du seuil de 0,055 : des
-   vitres s'éteignent, ou des linteaux sombres s'allument — l'aberration en
+   vitres s'éteignent, ou des linteaux sombres s'allument: l'aberration en
    blocs crème que Hugo a déjà fait corriger une fois.
    Ces baseColor sont donc recopiés octet pour octet. Le reste de leurs cartes
    (normal, metallicRoughness) suit le régime : le shader ne les lit pas. */
@@ -125,7 +125,7 @@ for (const scene of racine.listScenes()) for (const n of scene.listChildren()) p
    Une texture peut servir plusieurs matériaux et plusieurs emplacements : on
    retient la distance la PLUS COURTE (le plus exigeant gagne) et on la traite
    en « couleur » dès qu'un seul de ses emplacements est un baseColor ou un
-   émissif — un aplat trop petit se voit, une normale trop petite non. */
+   émissif: un aplat trop petit se voit, une normale trop petite non. */
 const ROLES = [
   ["BaseColorTexture", true],
   ["EmissiveTexture", true],
@@ -144,7 +144,7 @@ for (const mat of racine.listMaterials())
     u.couleur ||= estCouleur
     u.distance = Math.min(u.distance, distance.get(mat) ?? Infinity)
     u.mats.add(mat.getName())
-    /* seul le baseColor d'un matériau intouchable l'est — voir INTOUCHABLES */
+    /* seul le baseColor d'un matériau intouchable l'est: voir INTOUCHABLES */
     if (role === "BaseColorTexture" && INTOUCHABLES.has(mat.getName())) u.intouchable = true
   }
 
@@ -206,13 +206,13 @@ function fmt(u, l0, h0, l1, h1, o0, o1, note) {
 
    Le provisoire DOIT finir en `.glb` : NodeIO choisit son format d'après
    l'extension du chemin, et tout autre suffixe produit un `.gltf` JSON qui
-   éparpille ses 70 binaires à côté (payé une fois — 71 fichiers à ramasser
+   éparpille ses 70 binaires à côté (payé une fois: 71 fichiers à ramasser
    dans public/). Garde-fou en plus du nom : le binaire commence par `glTF`. */
 const provisoire = `${fichier}.regime.glb`
 await io.write(provisoire, doc)
 const entete = statSync(provisoire).size >= 4 && readFileSync(provisoire).subarray(0, 4).toString() === "glTF"
 if (!entete) {
-  console.error(`écriture non binaire (${provisoire} ne commence pas par glTF) — fichier d'origine intact`)
+  console.error(`écriture non binaire (${provisoire} ne commence pas par glTF), fichier d'origine intact`)
   process.exit(1)
 }
 renameSync(provisoire, fichier)

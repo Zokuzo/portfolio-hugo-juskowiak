@@ -2,7 +2,7 @@ export type Lang = "fr" | "en"
 
 /* LE CODE NE SE TRADUIT PAS. Cet extrait est du source : il n'en
    existe qu'une version, donc les deux langues rendent le MÊME
-   tableau — dupliquer les lignes serait ouvrir la porte à deux codes
+   tableau : dupliquer les lignes serait ouvrir la porte à deux codes
    qui divergent. Seules la source et la note changent de langue.
    [numéro de ligne, texte, marque] ; marque « c » = commentaire
    (--g-500), « ! » = ligne mise en évidence (rail + --paper).
@@ -10,7 +10,7 @@ export type Lang = "fr" | "en"
    HEAD `acfe5b8` ; aucune ligne montrée n'est tronquée, la ligne « ⋯ »
    est une ÉLISION. Elle est déclarée aux DEUX publics : « ⋯ » pour
    l'œil, et un relais `sr-only` posé par `CodeAnnote` pour le lecteur
-   d'écran — le marqueur vit dans la colonne des numéros, qui est
+   d'écran : le marqueur vit dans la colonne des numéros, qui est
    aria-hidden, donc sans ce relais l'extrait s'entendrait contigu. */
 const CODE_PONT = [
   ["3729", "/* Pont lecture seule pour le monde 3D (monde.html, même origine) :", "c"],
@@ -23,7 +23,7 @@ const CODE_PONT = [
   ["3758", "};", "!"],
 ] as const
 
-/* Contenu bilingue du prototype. Tout le texte visible passe par ici —
+/* Contenu bilingue du prototype. Tout le texte visible passe par ici :
    pas de chaîne en dur dans les composants.
    Règle de contenu : rien d'inventé. Chaque chiffre, date et techno
    vient du CV. Le mobilier purement graphique (code-barres, mire,
@@ -33,7 +33,7 @@ const DICT = {
     fr: "Ingénieur Full Stack & IA",
     en: "Full Stack & AI Engineer",
   },
-  /* L'expérience GT86 (#27) — aucune chaîne en dur dans la surcouche, la
+  /* L'expérience GT86 (#27) : aucune chaîne en dur dans la surcouche, la
      doctrine de la spec veut que TOUT le texte de l'expérience soit du DOM
      bilingue en overlay, jamais porté par la 3D. */
   gt86Demarrer: {
@@ -101,7 +101,7 @@ const DICT = {
   },
   /* Il n'y a PAS de légende d'états ici, et c'est délibéré : elle
      faisait doublon avec l'axe gradué pour trois marques colorées de
-     plus. Décision prise avec le propriétaire — ne pas la réintroduire
+     plus. Décision prise avec le propriétaire : ne pas la réintroduire
      sans lui. Récupérable au commit f444a5b. */
   nodes: {
     fr: [
@@ -133,7 +133,7 @@ const DICT = {
     en: ["profiling", "tests", "logs"],
   },
   xpTitle: { fr: "Là où j'ai travaillé", en: "Where I have worked" },
-  /* La thèse précédente — « une même base technique » — est morte
+  /* La thèse précédente (« une même base technique ») est morte
      contre le code (issue #7) : zéro fichier commun entre les dépôts
      comparés. Ce qui est vrai, et plus intéressant : une manière de
      faire commune, et la contrainte que les produits se parlent. */
@@ -182,7 +182,7 @@ const DICT = {
       /* Ce groupe ne vient pas du CV : déclaré par le propriétaire et
          relevé sur sa machine le 2026-08-10 (issue #3). La colonne
          Classe porte le nom de l'outil, comme « OpenRouter » plus
-         haut — jamais un niveau inventé. Hyprland n'y est pas : c'est
+         haut : jamais un niveau inventé. Hyprland n'y est pas : c'est
          un projet, pas un fait. */
       ["Systèmes & environnement", [
         ["Linux", "Ubuntu"], ["Terminal & shell", "kitty · bash"],
@@ -235,7 +235,7 @@ const DICT = {
     en: "Three strength programmes written for intermediate lifters. A training programme is a specification: a load, a progression, a tolerance, and someone who has to run it without you.",
   },
   /* Le second goût déclaré (issue #3) : le réglage de l'environnement.
-     Sans chute vers le métier — celle du bloc force existe déjà, la
+     Sans chute vers le métier : celle du bloc force existe déjà, la
      répéter ferait une redite de procédé. */
   opDesign: {
     fr: "L'autre goût est celui du réglage : un environnement de travail se choisit, puis s'ajuste (couleurs, typographie, chaque outil à sa place) jusqu'à ce que l'ensemble soit cohérent.",
@@ -273,17 +273,17 @@ const DICT = {
     ],
   },
 
-  /* — libellés des fiches, les deux mondes (/work/[slug] et
-     /home/[slug] depuis le #39) —
+  /* libellés des fiches, les deux mondes (/work/[slug] et
+     /home/[slug] depuis le #39) :
      Le contenu des fiches vit dans projets.ts : ce sont des
      enregistrements, pas des chaînes. Ici ne restent que les
-     étiquettes du gabarit — et RIEN QUE celles qui sont rendues :
+     étiquettes du gabarit, et RIEN QUE celles qui sont rendues :
      `fpRetour`, `fpRetourDocument` et `fpCaptures` sont parties avec la
      coque planche qui les portait (#39). Une clé sans appelant est une
      étiquette qu'on retraduira pour rien, exactement le motif qui a
      fait dé-exporter `SLUGS` au même commit. (Le #40 rend le RETOUR
      vers la planche, donc son mot : il revient en une seule clé,
-     `fpDocumentSys`, et avec un appelant — pas deux comme avant.) */
+     `fpDocumentSys`, et avec un appelant : pas deux comme avant.) */
   fpFiche: { fr: "Fiche projet", en: "Project file" },
   fpCadre: { fr: "Cadre", en: "Context" },
   fpPeriode: { fr: "Période", en: "Period" },
@@ -297,7 +297,7 @@ const DICT = {
      jamais en présent (issue #7). */
   fpPrevu: { fr: "Prévu", en: "Planned" },
 
-  /* — blocs des fiches sur mesure —
+  /* Blocs des fiches sur mesure :
      Titres du vocabulaire de `fiche-blocs.tsx`. Ils sont ici et non
      dans la fiche qui les emploie : deux fiches qui montrent une
      architecture doivent l'appeler pareil. */
@@ -317,7 +317,7 @@ const DICT = {
   },
   /* Le mot que le glyphe « ⋯ » ne prononce pas. Il est précédé du
      nombre de lignes sautées, que `CodeAnnote` DÉDUIT des numéros
-     voisins — donc pas de nombre à tenir à jour ici. */
+     voisins : donc pas de nombre à tenir à jour ici. */
   fpCodeElision: { fr: "lignes omises", en: "lines omitted" },
 
   /* Les fiches formation partagent le gabarit des fiches projet
@@ -328,7 +328,7 @@ const DICT = {
   fpTravaux: { fr: "Travaux marquants", en: "Notable work" },
   fpCompetences: { fr: "Compétences & outils", en: "Skills & tools" },
 
-  /* — schéma d'architecture d'Eternal —
+  /* Schéma d'architecture d'Eternal :
        Chaque chiffre affiché ici a été relevé dans le dépôt Eternal et
        porte sa commande dans `.scratch/planche-profonde/recherches/02-eternal.md`
        §6 : 11 fragments (`ls lecons/lecon-*.html | wc -l`), 5 784 octets de
@@ -336,8 +336,8 @@ const DICT = {
        zéro URL externe pour la même page, zéro `setItem` dans `monde.html`,
        `actif: false` dans `state.json:2`, 8 thèmes fermés (`FORMAT.md:44-53`).
        Les noms de fichier ne se traduisent pas : les deux langues portent
-       les mêmes, et c'est exact — le dépôt n'en a qu'un jeu.
-       [id, titre, précision…] — la géométrie vit dans schema-eternal.tsx,
+       les mêmes, et c'est exact : le dépôt n'en a qu'un jeu.
+       [id, titre, précision…] : la géométrie vit dans schema-eternal.tsx,
        ce dictionnaire ne porte que des mots. */
   etnNoeuds: {
     fr: [
@@ -403,7 +403,7 @@ const DICT = {
 
   /* L'extrait de code de la fiche U-05.
        Le pont : la seule surface par laquelle le monde 3D touche le
-       moteur. 15 méthodes au total, 3 montrées — compté par
+       moteur. 15 méthodes au total, 3 montrées : compté par
        `awk 'NR>=3732 && NR<=3757' index.html | grep -cE "^  [a-zA-Z]+: *"`
        → 15. La recherche 02 §2 en annonçait 14 : c'est elle qui se
        trompe, et le chiffre publié ici est celui de la commande. */
@@ -420,7 +420,7 @@ const DICT = {
   /* Les cotes de la fiche U-05.
        [cote, valeur, commande]. Chaque ligne a été RELEVÉE le
        2026-08-06 à la racine de `/home/hjuskowiak/PP/Eternal`, HEAD
-       `acfe5b8`, par la commande qu'elle affiche — pas recopiée d'une
+       `acfe5b8`, par la commande qu'elle affiche : pas recopiée d'une
        recherche. La ligne « Fichiers TypeScript » est celle qui corrige
        le `parc: ["TypeScript"]` que la fiche annonçait : la fiche
        publie désormais sa propre preuve. */
@@ -446,9 +446,9 @@ const DICT = {
       ["Publishing window", "2026-07-08 → 2026-07-15", "git log --date=short --pretty=%ad | sort -u"],
     ],
   },
-  /* — le hub TRAVAIL (#36) — le monde 2D passe Y2K Brutalist (décision
+  /* Le hub TRAVAIL (#36) : le monde 2D passe Y2K Brutalist (décision
      Hugo du 2026-08-26 sur #34) : la page se présente comme un bureau
-     système an-2000 — fenêtres à biseau, noms de fichiers, readouts LCD.
+     système an-2000 : fenêtres à biseau, noms de fichiers, readouts LCD.
      Le CONTENU reste celui des feuilles (xp*, tel*, trace*, spec*, ct* et
      parcours.ts, repris tels quels) ; ici ne vivent que les chromes de la
      coquille. Les noms de fichiers ne se traduisent pas tous : .EXE est
@@ -471,7 +471,7 @@ const DICT = {
   hubEjecter: { fr: "⏏ Éjecter : retour à l'expérience", en: "⏏ Eject: back to the experience" },
   hubFenXp: { fr: "EXPERIENCE.EXE", en: "EXPERIENCE.EXE" },
   /* TELEMETRIE.EXE a vécu une vague : « enlève le routage multimodèle
-     c'est useless » (gate #36, 2026-08-26) — la décision « Télémétrie en
+     c'est useless » (gate #36, 2026-08-26) : la décision « Télémétrie en
      vitrine » du #20 est ENTERRÉE par le propriétaire. */
   hubFenMethode: { fr: "METHODE.EXE", en: "METHOD.EXE" },
   hubFenSpec: { fr: "SPECS.SYS", en: "SPECS.SYS" },
@@ -484,11 +484,11 @@ const DICT = {
     fr: "© 2026 Hugo Juskowiak · session TRAVAIL",
     en: "© 2026 Hugo Juskowiak · WORK session",
   },
-  /* — le hub MAISON (#37) — la CHAMBRE au crépuscule, le miroir du
+  /* Le hub MAISON (#37) : la CHAMBRE au crépuscule, le miroir du
      bureau de nuit : l'OS du foyer qui démarre (boot sakura façon
      « Cherry Windows 97 » de la moisson), disquettes d'atelier,
      playlist HJ·AMP, PROFIL.INI, messagerie. Ici ne vivent que les
-     chromes de la coquille — le contenu vient de parcours.ts et des
+     chromes de la coquille : le contenu vient de parcours.ts et des
      clés at·, etu·, op· et ct·, repris tels quels (doctrine #20). */
   hubMaisonSys: { fr: "MAISON.SYS", en: "HOME.SYS" },
   hubMaisonBoot: {
@@ -497,7 +497,7 @@ const DICT = {
   },
   hubMaisonCharge: { fr: "foyer monté : 100 %", en: "home mounted: 100%" },
   /* « cursus », JAMAIS « diplômes » : la playlist rend les quatre
-     entrées de etudes() — CPGE est une classe préparatoire et Hokkaido
+     entrées de etudes() : CPGE est une classe préparatoire et Hokkaido
      un semestre d'échange, seuls ESTIA et MBDS sont des diplômes
      (revue adversariale du #37 ; la loi « rien d'inventé » vaut aussi
      pour les chromes de la coquille). */
@@ -508,7 +508,7 @@ const DICT = {
   /* le kanji du foyer, décoratif, mais il passe par le dict */
   hubMaisonJp: { fr: "家", en: "家" },
   /* les noms de sections suivent la métaphore de chacune : le lecteur
-     de disquettes, la playlist, le fichier de config, le messager —
+     de disquettes, la playlist, le fichier de config, le messager :
      comme .EXE/.SYS côté travail, l'extension est l'esthétique */
   hubMaisonAtelier: { fr: "A:\\ATELIER", en: "A:\\WORKSHOP" },
   hubMaisonAtNote: {
@@ -517,7 +517,7 @@ const DICT = {
   },
   /* la racine suit la langue quand elle est un mot (loi du #36) :
      « QUALIF » est une troncation française qu'un anglophone ne lit
-     pas — l'anglais reprend le mot de la feuille 03 (etuIndex) */
+     pas : l'anglais reprend le mot de la feuille 03 (etuIndex) */
   hubMaisonQualif: { fr: "QUALIF.M3U", en: "STUDIES.M3U" },
   hubMaisonAmp: { fr: "HJ·AMP", en: "HJ·AMP" },
   hubMaisonPistes: { fr: "pistes", en: "tracks" },

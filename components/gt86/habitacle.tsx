@@ -10,25 +10,25 @@ import { VIOLET_LUEUR } from "./lueurs"
 import { avance } from "./trajet"
 import { LED, PROJECTEUR } from "./leds"
 
-/* L'HABITACLE — ticket #31 : l'habillage gaté aux #23/#26 (combiné violet,
+/* L'HABITACLE, ticket #31 : l'habillage gaté aux #23/#26 (combiné violet,
    rétroéclairage par glyphe, planche Haunter, alcantara, moquette, néons),
    porté du prototype écran (route jetable, supprimée au #35) sur LA voiture de la rue.
 
    UNE SEULE VOITURE : le clone de rue.tsx reçoit l'intérieur en plus de sa
-   robe — quand la caméra plonge dans le verre fumé (#24), l'habitacle qui
+   robe, quand la caméra plonge dans le verre fumé (#24), l'habitacle qui
    « luisait à travers » est littéralement le même objet. Le prototype
    montait pour ça une ville coupée à 50 m : la
    coquille n'en a plus besoin, la rue entière est déjà montée et payée.
 
    TOUT NAÎT ÉTEINT. La voiture est morte depuis l'atterrissage (#30) ;
    `habilleInterieur` prépare chaque émissif à sa valeur gatée mais à
-   INTENSITÉ ZÉRO, et range les matériaux dans le `Cockpit` — c'est le
+   INTENSITÉ ZÉRO, et range les matériaux dans le `Cockpit`, c'est le
    chorégraphe du seuil (seuil.tsx) qui les réveille en cascade, et
    `allumeHabitacle` qui pose l'état final d'un coup (skip, session
    revenante) : idempotent, appelable après la cascade sans rien changer.
 
    L'ENVIRONNEMENT : le prototype vivait de ses trois Lightformer via
-   `scene.environment` — ici c'est le crépuscule du ciel qui y règne, et
+   `scene.environment`, ici c'est le crépuscule du ciel qui y règne, et
    tout matériau touché reçoit donc l'équirect de nuit de rue.tsx en envMap
    PROPRE (priorité stricte, three r169) aux doses du prototype. */
 
@@ -40,7 +40,7 @@ export const TEXTURES_HABITACLE = {
   fondEcran: "/prototype/ecran-fond.jpg",
 }
 
-/* les valeurs gatées (#22 pour les optiques, #23/#26 pour l'intérieur) —
+/* les valeurs gatées (#22 pour les optiques, #23/#26 pour l'intérieur),
    la cible des rampes du seuil ET de l'allumage direct */
 export const ALLUME = {
   aiguille: 1.0,
@@ -58,16 +58,16 @@ export const ALLUME = {
 /* ---- le cockpit : les poignées de la cascade ---------------------------- */
 
 /* Les matériaux du clone sont clonés PAR MESH (rue.tsx) : un même nom peut
-   vivre en plusieurs exemplaires — tout est rangé en tableaux.
+   vivre en plusieurs exemplaires, tout est rangé en tableaux.
 
    TOPOLOGIE DE LUMIÈRES CONSTANTE (retour de gate #31) : la clé de cache
    des programmes de three r169 inclut le NOMBRE de lumières, et un
-   sous-arbre `visible=false` n'est pas collecté — basculer `visible` sur
+   sous-arbre `visible=false` n'est pas collecté, basculer `visible` sur
    un groupe qui CONTIENT des lumières recompilait donc tous les matériaux
    éclairés en pleine cascade, gel synchrone pile sur le claquement
    (confirmé par revue three, invisible sur SwiftShader). Les vraies
    lumières (`neonLums`, `phareLums`) vivent DONC toujours dans le graphe à
-   intensité 0 — la cascade et l'allumage ne pilotent que des UNIFORMS —
+   intensité 0 (la cascade et l'allumage ne pilotent que des UNIFORMS)
    et seuls les visuels non éclairés (`neons` : nappe + éclats ; `phares` :
    éclats d'optiques ; `phareCones` : cônes volumétriques de drei)
    basculent en `visible`. */
@@ -119,7 +119,7 @@ export function cockpitVide(): Cockpit {
 }
 
 /* la pose assise conducteur (conduite à droite, relevé #16) et la visée
-   route — dans le repère BRUT du GLB, celui où le prototype écran a calé
+   route, dans le repère BRUT du GLB, celui où le prototype écran a calé
    toutes ses vues (il montait la primitive sans recentrage) */
 export const ASSISE = {
   cam: new THREE.Vector3(0.3, 1.05, -0.42),
@@ -157,7 +157,7 @@ export function habilleInterieur(
     t.colorSpace = THREE.SRGBColorSpace
   }
   /* même piège que le quad Display : les UV du combiné débordent de
-     [0,1] — sans Repeat, le clamp rend le cadran noir */
+     [0,1], sans Repeat, le clamp rend le cadran noir */
   compteur.wrapS = THREE.RepeatWrapping
   compteur.wrapT = THREE.RepeatWrapping
 
@@ -209,7 +209,7 @@ export function habilleInterieur(
         planche = mesh
       }
       /* rétroéclairage concentré PAR BOUTON (gate #26) : InteriorStuff
-         porte toutes les faces de boutons — sa propre texture en carte
+         porte toutes les faces de boutons, sa propre texture en carte
          émissive violette, sérigraphies claires brillantes */
       if (mat.name === "InteriorStuff") {
         mat.emissiveMap = mat.map
@@ -235,7 +235,7 @@ export function habilleInterieur(
         cockpit.ecran.push(mat)
       }
       /* les optiques : réglages gatés du #22 posés dès maintenant, mais à
-         intensité ZÉRO — le claquement du seuil n'a plus qu'à monter le son */
+         intensité ZÉRO, le claquement du seuil n'a plus qu'à monter le son */
       if (mat.name === "LightsFront") {
         mat.emissive?.set(PROJECTEUR)
         mat.toneMapped = false
@@ -264,7 +264,7 @@ export function habilleInterieur(
       }
       if (mat.name === "RedGlow") cockpit.braises.push(mat)
       /* les répétiteurs (gate #26) : hors tone mapping, collectés pour le
-         clignotement des warnings — éteints au repos */
+         clignotement des warnings, éteints au repos */
       if (mat.name === "Indicator") {
         mat.toneMapped = false
         cockpit.clignotants.push(mat)
@@ -279,7 +279,7 @@ export function habilleInterieur(
           tex.needsUpdate = true
         }
       }
-      /* l'intérieur mire la nuit en propre, à dose de veille — et sa
+      /* l'intérieur mire la nuit en propre, à dose de veille, et sa
          teinte descend d'un cran (réglages gatés #26, calés alors sur les
          Lightformer que l'équirect portraiture) */
       if (INTERIEUR.has(mat.name)) {
@@ -295,7 +295,7 @@ export function habilleInterieur(
 
   if (aiguilles && cadran) cockpit.aiguilles = pivoteAiguilles(aiguilles as THREE.Mesh, cadran as THREE.Mesh)
 
-  /* L'ALCANTARA du haut de planche (gate #26) — taillé dans la GÉOMÉTRIE
+  /* L'ALCANTARA du haut de planche (gate #26), taillé dans la GÉOMÉTRIE
      (le masque shader ne se déclenchait pas au prototype) : triangles
      au-dessus de 86 cm et à plat, sheen natif de MeshPhysicalMaterial.
      Le clone n'est pas encore posé (position zéro) : matrixWorld = repère
@@ -329,7 +329,7 @@ export function habilleInterieur(
       /* haut et à plat : l'alcantara (les contre-portes montent aussi
          haut mais restent verticales) */
       if (my >= 0.86 && Math.abs(n.y) >= 0.5) gardes.push(i0, i1, i2)
-      /* bas et à plat : les tapis de sol — au-dessus de 36 cm on mordait
+      /* bas et à plat : les tapis de sol, au-dessus de 36 cm on mordait
          sur l'assise des sièges et le tunnel (vu en capture #26) */
       if (my <= 0.36 && Math.abs(n.y) >= 0.55) {
         for (const v of [a, b, c]) {
@@ -489,7 +489,7 @@ export function poseAiguilles(cockpit: Cockpit, tours: number, vitesse: number) 
   }
 }
 
-/* l'état FINAL, d'un coup — le chemin du skip et des sessions revenantes,
+/* l'état FINAL, d'un coup, le chemin du skip et des sessions revenantes,
    et le filet après la cascade (idempotent) */
 export function allumeHabitacle(cockpit: Cockpit) {
   for (const m of cockpit.aiguille) m.emissiveIntensity = ALLUME.aiguille
@@ -505,12 +505,12 @@ export function allumeHabitacle(cockpit: Cockpit) {
   for (const m of cockpit.signature) m.emissiveIntensity = ALLUME.signature
   for (const m of cockpit.braises) m.emissiveIntensity = ALLUME.braises
   /* assis dedans, le verre s'éclaircit pour laisser voir la rue (réglage
-     habitacle du #23 — dehors il gardait le fumé 0,8 de la plongée) */
+     habitacle du #23, dehors il gardait le fumé 0,8 de la plongée) */
   for (const v of cockpit.verre) {
     v.opacity = 0.4
     v.color.set("#1a2027")
   }
-  /* les lumières par leurs intensités, les visuels par `visible` —
+  /* les lumières par leurs intensités, les visuels par `visible`,
      topologie constante, aucune recompilation (voir Cockpit) */
   for (const l of cockpit.phareLums) l.intensity = ALLUME.faisceau
   for (const n of cockpit.neonLums) n.lum.intensity = n.plein
@@ -519,7 +519,7 @@ export function allumeHabitacle(cockpit: Cockpit) {
   if (cockpit.phares) cockpit.phares.visible = true
 }
 
-/* l'inverse EXACT — le rejeu de la scène (4e retour de gate) rend la
+/* l'inverse EXACT, le rejeu de la scène (4e retour de gate) rend la
    voiture à son état d'avant la mise sous contact : morte, verre fumé
    extérieur, faisceaux éteints. Idempotent comme l'allumage. */
 export function eteindreHabitacle(cockpit: Cockpit) {
@@ -599,7 +599,7 @@ function textureMoquette(taille = 512) {
 /* ---- la vie autour de la voiture (repère BRUT du GLB) ------------------- */
 
 /* Le rétroviseur : POV assis fixe → le reflet est une vraie capture de la
-   vue arrière plaquée sur la glace (gate #26). Toujours visible — un
+   vue arrière plaquée sur la glace (gate #26). Toujours visible : un
    miroir n'a pas besoin de contact. */
 function Retro() {
   const tex = useTexture(TEXTURES_HABITACLE.retro)
@@ -614,11 +614,11 @@ function Retro() {
 
 /* les néons violets gatés (#23) : nappe additive au sol + spots plongeants
    sous caisse + accents d'habitacle. Les LUMIÈRES vivent toujours dans le
-   graphe à intensité 0 (topologie constante, voir Cockpit) — seuls la
+   graphe à intensité 0 (topologie constante, voir Cockpit) : seuls la
    nappe et les éclats naissent invisibles. RÉGIME du 3e retour de gate
    (« au moins 100 fps ») : les 4 pointLight d'accents deviennent des
-   sprites seuls — NUM_POINT_LIGHTS tombe à ZÉRO pour toute la scène, la
-   boucle disparaît de chaque shader éclairé — et les spots sous caisse
+   sprites seuls (NUM_POINT_LIGHTS tombe à ZÉRO pour toute la scène, la
+   boucle disparaît de chaque shader éclairé) et les spots sous caisse
    passent de 4 à 2 (avant/arrière), la nappe additive porte la flaque. */
 const NAPPE_OPACITE = 0.55
 /* les mètres roulés au bout desquels la nappe a pris sa forme de route */
@@ -655,7 +655,7 @@ function Neons({ cockpit }: { cockpit: Cockpit }) {
     [-0.28, 0.48, -0.12],
   ]
   /* en LAYOUT : l'allumage direct (rue.tsx, layout aussi) court au même
-     montage sur le chemin vivant — les enfants collectent d'abord */
+     montage sur le chemin vivant, les enfants collectent d'abord */
   useLayoutEffect(() => {
     cockpit.neonLums = lums.current.filter((e): e is NonNullable<typeof e> => e !== null)
   }, [cockpit])
@@ -696,7 +696,7 @@ function Neons({ cockpit }: { cockpit: Cockpit }) {
 }
 
 /* les phares qui MORDENT la rue (réglage Hugo au gizmo, #22) : deux spots
-   volumétriques aux optiques, cibles 9 m devant sur l'asphalte — en repère
+   volumétriques aux optiques, cibles 9 m devant sur l'asphalte, en repère
    voiture, ils héritent de la pose de la rue. Les LUMIÈRES sont montées à
    demeure à intensité 0 ; leurs cônes (mesh enfant du SpotLight de drei,
    dont l'éclat ne dépend PAS de l'intensité) et les éclats d'optiques
@@ -805,7 +805,7 @@ export function VieVoiture({ cockpit }: { cockpit: Cockpit }) {
     <group>
       {/* le triangle des warnings CLIGNOTE lui-même (dette #32 payée au
           6e retour : à la vue zoomée, les répétiteurs des ailes sont hors
-          champ — le seul retour visible du bouton est ici). Halo additif
+          champ, le seul retour visible du bouton est ici). Halo additif
           seul, PAS de pointLight : la topologie de lumières reste
           constante. Position : le triangle de la console (plan de la
           dalle, dy 0,0704, léger retrait). */}
@@ -830,7 +830,7 @@ export function VieVoiture({ cockpit }: { cockpit: Cockpit }) {
 /* ---- le pouls de la veille ---------------------------------------------- */
 
 /* Le « CLICK HERE » clignote à 650 ms (gate #23). La boucle tourne en
-   continu depuis le 3e retour de gate (frameloop "always") — l'invalidate
+   continu depuis le 3e retour de gate (frameloop "always") : l'invalidate
    du battement est devenu un no-op inoffensif, gardé pour le jour où un
    régime "demand" reviendrait. */
 export function Pouls({ actif, ecran }: { actif: boolean; ecran: Ecran }) {
@@ -847,6 +847,6 @@ export function Pouls({ actif, ecran }: { actif: boolean; ecran: Ecran }) {
 }
 
 /* la cascade #28 : ces textures habillent la voiture, même rang que le GLB
-   voiture — préchargées au chargement du module */
+   voiture, préchargées au chargement du module */
 useTexture.preload([TEXTURES_HABITACLE.art, TEXTURES_HABITACLE.lueur, TEXTURES_HABITACLE.compteur])
 useTexture.preload(TEXTURES_HABITACLE.retro)

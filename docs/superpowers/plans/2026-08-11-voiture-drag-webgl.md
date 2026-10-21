@@ -1,33 +1,33 @@
-# La voiture manipulable à la souris — plan d'implémentation
+# La voiture manipulable à la souris: plan d'implémentation
 
 > **État au 2026-08-11 soir** : Tâches 1–11 EXÉCUTÉES (les écarts au plan
-> sont consignés sur l'issue #12 : Draco au lieu de meshopt — 5,8 Mo contre
+> sont consignés sur l'issue #12 : Draco au lieu de meshopt, 5,8 Mo contre
 > 11, `--palette false` obligatoire, gate bundle re-défini en somme des
-> scripts du HTML — Next 16.3 n'imprime plus First Load JS, banc corrigé
+> scripts du HTML: Next 16.3 n'imprime plus First Load JS, banc corrigé
 > du travail par-événement). Gates réseau/reduce/bundle verts ; scroll
 > 2,09 % sans drag, 7,13 % après drag ; **gate 1 (drag) non prononçable en
-> CDP** — le compositeur décroît à 60 Hz sans entrée réelle : il attend le
+> CDP**: le compositeur décroît à 60 Hz sans entrée réelle : il attend le
 > test d'une minute de Hugo à la vraie souris. Tâche 12 : issue commentée,
 > **rien n'est poussé** (le push déploie).
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**But :** rendre la voiture de l'accueil saisissable à la souris sur desktop — WebGL au drag, séquence partout ailleurs — selon le spec `docs/superpowers/specs/2026-08-10-voiture-drag-webgl-design.md` (chantier GitHub #12).
+**But :** rendre la voiture de l'accueil saisissable à la souris sur desktop (WebGL au drag, séquence partout ailleurs) selon le spec `docs/superpowers/specs/2026-08-10-voiture-drag-webgl-design.md` (chantier GitHub #12).
 
-**Architecture :** phase pipeline d'abord (studio extrait en module partagé, `.glb` optimisé et VÉRIFIÉ par re-rendu des 160 vues contre la production — avant d'écrire une ligne de client), puis phase client (module drag chargé dynamiquement au premier geste avéré, réconciliation par offset persistant), puis phase gates (banc drag, réseau, bundle). Trois gates au banc + un gate humain au raccord ; si un seul échoue, `DRAG_LIVRE = false` et le site reste ce qu'il est.
+**Architecture :** phase pipeline d'abord (studio extrait en module partagé, `.glb` optimisé et VÉRIFIÉ par re-rendu des 160 vues contre la production: avant d'écrire une ligne de client), puis phase client (module drag chargé dynamiquement au premier geste avéré, réconciliation par offset persistant), puis phase gates (banc drag, réseau, bundle). Trois gates au banc + un gate humain au raccord ; si un seul échoue, `DRAG_LIVRE = false` et le site reste ce qu'il est.
 
-**Stack :** three 0.169.0 (épinglé exact), gltf-transform CLI 4.4.2 (via `npx -y`, jamais en dépendance), pipeline CDP existant (`tools/chrome.mjs`), ImageMagick pour les diffs, ffmpeg (libwebp) pour l'encodage — les deux sont présents sur la machine (vérifié le 2026-08-11).
+**Stack :** three 0.169.0 (épinglé exact), gltf-transform CLI 4.4.2 (via `npx -y`, jamais en dépendance), pipeline CDP existant (`tools/chrome.mjs`), ImageMagick pour les diffs, ffmpeg (libwebp) pour l'encodage: les deux sont présents sur la machine (vérifié le 2026-08-11).
 
 ## Contraintes globales
 
-- **three est épinglé à `0.169.0` exact des deux côtés** — la version de l'importmap `scene.html:13`. Pas de caret : three change sa gestion de la couleur d'une version à l'autre.
+- **three est épinglé à `0.169.0` exact des deux côtés**: la version de l'importmap `scene.html:13`. Pas de caret : three change sa gestion de la couleur d'une version à l'autre.
 - **Zéro octet avant le geste** : ni le chunk three ni le `.glb` ne partent vers un visiteur qui ne drague pas. First Load JS de l'accueil identique avant/après (`next build`).
 - **`pointer-events: none` de `.voiture` ne bouge pas** (`planche.css`, section voiture). La saisie s'écoute au document.
 - **Budget** : gates en **% de frames > 8,3 ms à plancher de cadence égal**, seuil d'alerte 10 % (`tools/banc/SEUIL.md`), `--tete` obligatoire. Jamais des millisecondes brutes entre planchers inégaux.
 - **Mobile/tactile exclus** : tout le régime drag est derrière `matchMedia("(hover: hover) and (pointer: fine)")`.
 - **Aucun texte nouveau** : l'affordance est le curseur `grab`/`grabbing` seul tant que Hugo n'a pas tranché la décision n°4 du spec. Si un indice écrit arrive un jour : `dict.ts`, FR **et** EN.
 - **Paramètres de la séquence en production** (CREDIT.txt) : `--nb=160 --rendu=2000 --elevation=30 --poids=30000 --encodeur=ffmpeg`, modèle source `~/PP/modeles-3d/free_-_mclaren_p1_mso.glb` (70 471 356 octets).
-- **Jamais `git add -A`** — fichier par fichier. `*.glb binary` est déjà dans `.gitattributes` (vérifié) : rien à y ajouter.
+- **Jamais `git add -A`**: fichier par fichier. `*.glb binary` est déjà dans `.gitattributes` (vérifié) : rien à y ajouter.
 - **Messages de commit** : français, style narratif du dépôt, avec `Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>`.
 - `$SCRATCH` désigne le scratchpad de session (hors dépôt). Les rendus témoins y vivent, jamais dans l'arbre git.
 
@@ -35,14 +35,14 @@
 
 | Fichier | Rôle |
 |---|---|
-| `tools/voiture/studio.mjs` (nouveau) | studio 9 bandes, retouches, réglages moteur, normalisation modèle, caméra — partagé outil/client, THREE en paramètre |
+| `tools/voiture/studio.mjs` (nouveau) | studio 9 bandes, retouches, réglages moteur, normalisation modèle, caméra: partagé outil/client, THREE en paramètre |
 | `tools/voiture/scene.html` (modifié) | consomme `/studio.mjs` au lieu de ses copies ; décodeur meshopt |
 | `tools/voiture/rendu.mjs` (modifié) | alias `/studio.mjs`, MIME `.mjs`, mode `--cadre` |
 | `tools/voiture/compare.mjs` (nouveau) | diff chiffré (RMSE) de deux séquences + planche des pires paires |
 | `tools/voiture/reseau.mjs` (nouveau) | gate réseau : zéro chunk/glb sans drag ; une image sous reduce |
 | `tools/voiture/geste.test.mjs` (nouveau) | `node --test` de l'arithmétique du geste |
-| `components/proto/geste.mjs` (nouveau) | modulo, aimantation au cran, offset au relâchement — pur, testable |
-| `components/proto/voiture-drag.ts` (nouveau) | régime WebGL : scène, rendu à la demande, cadre consigné — chargé dynamiquement |
+| `components/proto/geste.mjs` (nouveau) | modulo, aimantation au cran, offset au relâchement: pur, testable |
+| `components/proto/voiture-drag.ts` (nouveau) | régime WebGL : scène, rendu à la demande, cadre consigné: chargé dynamiquement |
 | `components/proto/voiture.tsx` (modifié) | écoute du geste, drag séquence, bascule, réconciliation, interrupteur |
 | `app/planche.css` (modifié) | seconde toile, curseurs, suspension de sélection |
 | `tools/banc/frame.mjs` (modifié) | scénario `--drag` : gates 1 et 3 |
@@ -60,26 +60,26 @@
 - Modify: `tools/voiture/rendu.mjs:105-109` (MIME), `:146-149` (alias), `:138` (encodeur), après `:189` (mode `--cadre`)
 
 **Interfaces:**
-- Produces: `studio(THREE)`, `retouches({carrosserie?, rugosite?})`, `regleRenderer(THREE, renderer)`, `prepareModele(THREE, modele) → rayon`, `appliqueRetouches(modele, table) → [{mesh, mat, type}]`, `placeCamera(THREE, camera, rayon, elevationDeg)`, constantes `FOV = 22`, `ELEVATION = 30`, `FLOU_PMREM = 0.02`, `INTENSITE_ENV = 1`, `CARROSSERIE = "0b0e14"`, `RUGOSITE = 0.08` — consommées par scene.html (Tâche 1) et voiture-drag.ts (Tâche 8).
+- Produces: `studio(THREE)`, `retouches({carrosserie?, rugosite?})`, `regleRenderer(THREE, renderer)`, `prepareModele(THREE, modele) → rayon`, `appliqueRetouches(modele, table) → [{mesh, mat, type}]`, `placeCamera(THREE, camera, rayon, elevationDeg)`, constantes `FOV = 22`, `ELEVATION = 30`, `FLOU_PMREM = 0.02`, `INTENSITE_ENV = 1`, `CARROSSERIE = "0b0e14"`, `RUGOSITE = 0.08`: consommées par scene.html (Tâche 1) et voiture-drag.ts (Tâche 8).
 
 - [ ] **Step 1 : écrire `tools/voiture/studio.mjs`**
 
-Contenu complet — les corps de `studio()` et des retouches sont **copiés à l'identique** de `scene.html:57-121` et `:196-246`, seuls les emballages changent :
+Contenu complet: les corps de `studio()` et des retouches sont **copiés à l'identique** de `scene.html:57-121` et `:196-246`, seuls les emballages changent :
 
 ```js
 /* ==================================================================
-   STUDIO PARTAGÉ — la scène d'éclairage, les retouches matériaux, les
+   STUDIO PARTAGÉ: la scène d'éclairage, les retouches matériaux, les
    réglages du moteur et la mise en place du modèle, extraits de
    scene.html pour être consommés par l'outil de rendu ET par le régime
    drag du client (chantier #12).
 
    Le risque central du drag est un écart visible au raccord. La parade
    n'est pas de « reproduire » le studio côté client, c'est de NE PLUS
-   AVOIR DEUX STUDIOS — deux copies, c'est une copie qui pourrit, la
+   AVOIR DEUX STUDIOS: deux copies, c'est une copie qui pourrit, la
    règle que rendu.mjs s'applique déjà à trouveChrome.
 
    THREE ARRIVE EN PARAMÈTRE, jamais importé ici : l'outil le tire du
-   CDN (importmap de scene.html), le client de node_modules — importer
+   CDN (importmap de scene.html), le client de node_modules: importer
    ici figerait une des deux sources et dédoublerait le moteur. La
    version est ÉPINGLÉE À 0.169.0 DES DEUX CÔTÉS : three change sa
    gestion de la couleur d'une version à l'autre, et un pipeline en
@@ -88,7 +88,7 @@ Contenu complet — les corps de `studio()` et des retouches sont **copiés à l
    ================================================================== */
 
 /* Les réglages solidaires du raccord : en changer un invalide à la
-   fois la séquence rendue et le rendu client — jamais l'un sans
+   fois la séquence rendue et le rendu client: jamais l'un sans
    l'autre. ELEVATION est celle de la séquence en production
    (CREDIT.txt) ; scene.html garde son défaut d'URL à 13 pour ne pas
    changer le comportement de l'outil, la production passe --elevation=30. */
@@ -104,7 +104,7 @@ export const RUGOSITE = 0.08
    TEXTURÉ (34 textures) : on ne recolore que les matériaux de couleur
    pure qui portent la livrée. La carrosserie blanche et l'accent bleu
    MSO passent au carbone sombre parce que le système du site est
-   mono-accent. Aucun des trois matériaux ne porte de texture — les 34
+   mono-accent. Aucun des trois matériaux ne porte de texture: les 34
    textures du modèle restent intactes. Si on change de modèle, on
    réécrit ce tableau, c'est le seul endroit. */
 export function retouches({ carrosserie = CARROSSERIE, rugosite = RUGOSITE } = {}) {
@@ -153,7 +153,7 @@ export function studio(THREE) {
 }
 
 /* Normalisation du modèle : échelle à 4 unités D'ABORD, recentrage
-   ENSUITE (l'ordre compte — scale s'applique à la géométrie, position
+   ENSUITE (l'ordre compte: scale s'applique à la géométrie, position
    dans l'espace du parent). Rend le rayon de la sphère englobante,
    dont le placement caméra a besoin. */
 export function prepareModele(THREE, m) {
@@ -212,7 +212,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js"
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js"
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js"
 /* Le studio, les retouches et la mise en place viennent du module
-   PARTAGÉ avec le client (chantier #12) — servi par l'alias de
+   PARTAGÉ avec le client (chantier #12): servi par l'alias de
    rendu.mjs. Il n'y a plus qu'un studio. */
 import { studio, retouches, regleRenderer, prepareModele, appliqueRetouches, placeCamera,
          FOV as FOV_DEFAUT, FLOU_PMREM, CARROSSERIE, RUGOSITE } from "/studio.mjs"
@@ -279,9 +279,9 @@ loader.load(MODELE, (gltf) => {
 }, undefined, (e) => { window.erreur = String(e && e.message || e) })
 ```
 
-Les gros commentaires de doctrine qui vivaient sur `studio()` et `RETOUCHES` ont déménagé avec le code dans `studio.mjs` — ne pas les dupliquer ici.
+Les gros commentaires de doctrine qui vivaient sur `studio()` et `RETOUCHES` ont déménagé avec le code dans `studio.mjs`: ne pas les dupliquer ici.
 
-- [ ] **Step 3 : `rendu.mjs` — MIME, alias, `--cadre`**
+- [ ] **Step 3 : `rendu.mjs`, MIME, alias, `--cadre`**
 
 Dans `MIME`, ajouter :
 
@@ -307,7 +307,7 @@ if (!opt.materiaux && !opt.cadre) { ENCODEUR = await trouveEncodeur(); console.l
 Juste après `console.log("cadrage commun :", cadre)` :
 
 ```js
-/* --cadre : consignation seule. Le cadre vient d'être imprimé — c'est
+/* --cadre : consignation seule. Le cadre vient d'être imprimé: c'est
    l'union des pixels opaques sur les NB vues, irrejouable au client
    (spec #12, décision 4) : ce mode le relève sans payer le rendu. */
 if (opt.cadre) return
@@ -331,12 +331,12 @@ Attendu : `cadrage commun : {"x":…,"y":…,"c":…}` puis sortie propre, en ~1
 
 ```bash
 git add tools/voiture/studio.mjs tools/voiture/scene.html tools/voiture/rendu.mjs
-git commit -m "Le studio ne s'écrit plus qu'une fois — scene.html et le futur client liront le même module"
+git commit -m "Le studio ne s'écrit plus qu'une fois: scene.html et le futur client liront le même module"
 ```
 
 ---
 
-### Tâche 2 : la séquence se re-prouve — plancher de bruit et cadre consignés
+### Tâche 2 : la séquence se re-prouve, plancher de bruit et cadre consignés
 
 **Files:**
 - Create: `tools/voiture/compare.mjs`
@@ -344,23 +344,23 @@ git commit -m "Le studio ne s'écrit plus qu'une fois — scene.html et le futur
 
 **Interfaces:**
 - Consumes: la chaîne `rendu.mjs` de la Tâche 1.
-- Produces: le **plancher de bruit** (RMSE moyen/max entre un re-rendu depuis la SOURCE et la production) et le **cadre** — les deux chiffres dont les Tâches 4, 5 et 8 ont besoin.
+- Produces: le **plancher de bruit** (RMSE moyen/max entre un re-rendu depuis la SOURCE et la production) et le **cadre**: les deux chiffres dont les Tâches 4, 5 et 8 ont besoin.
 
 - [ ] **Step 1 : écrire `tools/voiture/compare.mjs`**
 
 ```js
 /* ==================================================================
-   COMPARAISON DE SÉQUENCES — le contrôle qui ne pardonne pas (#12).
+   COMPARAISON DE SÉQUENCES: le contrôle qui ne pardonne pas (#12).
    Compare image à image deux dossiers de vues homonymes (000 → NB-1)
    et chiffre l'écart en RMSE normalisé (magick compare). Sert deux fois :
    1) PLANCHER DE BRUIT : re-rendu depuis le .glb SOURCE contre la
-      production — l'écart que le pipeline produit tout seul (encodeur,
+      production: l'écart que le pipeline produit tout seul (encodeur,
       SwiftShader, plateforme du rendu d'origine) ;
-   2) VERDICT : re-rendu depuis le .glb OPTIMISÉ contre la production —
+   2) VERDICT : re-rendu depuis le .glb OPTIMISÉ contre la production:
       doit rester dans la bande du plancher, sinon l'optimisation a
       mangé quelque chose que l'œil pourrait voir.
    Le chiffre dit QU'IL y a un écart ; la planche des pires paires dit
-   s'il SE VOIT — les deux contrôles du spec, dans cet ordre.
+   s'il SE VOIT: les deux contrôles du spec, dans cet ordre.
    usage : node tools/voiture/compare.mjs <référence> <candidat>
              [--nb=160] [--planche=pires.png]
    ================================================================== */
@@ -392,8 +392,8 @@ const trouve = (dossier, i) => {
   throw new Error(`image manquante : ${n} dans ${dossier}`)
 }
 
-/* magick compare écrit le RMSE sur stderr — « 123.4 (0.00188) », la
-   parenthèse est la valeur normalisée [0..1] — et rend un code 1 quand
+/* magick compare écrit le RMSE sur stderr: « 123.4 (0.00188) », la
+   parenthèse est la valeur normalisée [0..1]: et rend un code 1 quand
    les images diffèrent : différer est ici le cas NORMAL, pas une erreur. */
 async function rmse(a, b) {
   try { await pexec("magick", ["compare", "-metric", "RMSE", a, b, "null:"]); return 0 }
@@ -412,11 +412,11 @@ for (let i = 0; i < NB; i++) {
 console.log("")
 const tri = [...notes].sort((a, b) => b.v - a.v)
 const moy = notes.reduce((s, n) => s + n.v, 0) / NB
-console.log(`RMSE normalisé — moyenne ${moy.toFixed(5)}, max ${tri[0].v.toFixed(5)} (image ${String(tri[0].i).padStart(3, "0")})`)
+console.log(`RMSE normalisé: moyenne ${moy.toFixed(5)}, max ${tri[0].v.toFixed(5)} (image ${String(tri[0].i).padStart(3, "0")})`)
 console.log(`pires : ${tri.slice(0, 8).map((n) => `${String(n.i).padStart(3, "0")}=${n.v.toFixed(4)}`).join("  ")}`)
 
 if (opt.planche) {
-  /* Huit pires paires — rangée du haut : référence, rangée du bas :
+  /* Huit pires paires: rangée du haut : référence, rangée du bas :
      candidat, colonnes alignées par image. */
   await pexec("magick", ["montage", "-tile", "8x2", "-geometry", "+2+2", "-background", "#222",
     ...tri.slice(0, 8).map((n) => trouve(REF, n.i)),
@@ -426,7 +426,7 @@ if (opt.planche) {
 }
 ```
 
-- [ ] **Step 2 : re-rendre les 160 vues depuis le `.glb` SOURCE** (long — ~40 min, à lancer en arrière-plan)
+- [ ] **Step 2 : re-rendre les 160 vues depuis le `.glb` SOURCE** (long: ~40 min, à lancer en arrière-plan)
 
 ```bash
 node tools/voiture/rendu.mjs ~/PP/modeles-3d/free_-_mclaren_p1_mso.glb \
@@ -434,7 +434,7 @@ node tools/voiture/rendu.mjs ~/PP/modeles-3d/free_-_mclaren_p1_mso.glb \
   --dest=$SCRATCH/seq-source
 ```
 
-Attendu en fin de course : `160 images dans … — ~4 Mo`. Le `cadrage commun` imprimé doit être **identique** à celui du Step 4 de la Tâche 1 (même modèle, mêmes réglages, SwiftShader déterministe).
+Attendu en fin de course : `160 images dans …, ~4 Mo`. Le `cadrage commun` imprimé doit être **identique** à celui du Step 4 de la Tâche 1 (même modèle, mêmes réglages, SwiftShader déterministe).
 
 - [ ] **Step 3 : chiffrer le plancher de bruit**
 
@@ -442,7 +442,7 @@ Attendu en fin de course : `160 images dans … — ~4 Mo`. Le `cadrage commun` 
 node tools/voiture/compare.mjs public/voiture $SCRATCH/seq-source --planche=$SCRATCH/plancher-bruit.png
 ```
 
-Attendu : un RMSE faible (la production a été rendue sous Windows/ffmpeg, ce re-rendu sous Linux — l'écart mesuré ICI est le bruit de plateforme + encodage, pas un défaut). **Consigner moyenne et max** : c'est la bande dans laquelle l'optimisé devra rester (Tâche 4). Regarder la planche : si un écart se VOIT déjà entre source et production, s'arrêter et enquêter (studio.mjs a changé quelque chose) avant toute optimisation.
+Attendu : un RMSE faible (la production a été rendue sous Windows/ffmpeg, ce re-rendu sous Linux: l'écart mesuré ICI est le bruit de plateforme + encodage, pas un défaut). **Consigner moyenne et max** : c'est la bande dans laquelle l'optimisé devra rester (Tâche 4). Regarder la planche : si un écart se VOIT déjà entre source et production, s'arrêter et enquêter (studio.mjs a changé quelque chose) avant toute optimisation.
 
 - [ ] **Step 4 : commit**
 
@@ -453,7 +453,7 @@ git commit -m "Le pipeline se re-prouve : l'outil de comparaison chiffre ce que 
 
 ---
 
-### Tâche 3 : le `.glb` optimisé — mesuré à chaque levier
+### Tâche 3 : le `.glb` optimisé, mesuré à chaque levier
 
 **Files:**
 - Candidats dans `$SCRATCH/glb/` (hors dépôt)
@@ -461,7 +461,7 @@ git commit -m "Le pipeline se re-prouve : l'outil de comparaison chiffre ce que 
 **Interfaces:**
 - Produces: `$SCRATCH/glb/candidat.glb` retenu + tableau des poids par étape (pour l'issue et CREDIT.txt).
 
-- [ ] **Step 1 : l'inventaire d'abord — savoir où vivent les 67 Mio**
+- [ ] **Step 1 : l'inventaire d'abord, savoir où vivent les 67 Mio**
 
 ```bash
 mkdir -p $SCRATCH/glb
@@ -470,7 +470,7 @@ npx -y @gltf-transform/cli@4.4.2 inspect ~/PP/modeles-3d/free_-_mclaren_p1_mso.g
 
 Lire la sortie : part de la géométrie contre part des 34 textures. Toute affirmation « les textures dominent » sans cet inventaire serait un fait inventé. **Consigner les 3-4 postes les plus lourds.**
 
-- [ ] **Step 2 : premier candidat — le moins destructeur**
+- [ ] **Step 2 : premier candidat, le moins destructeur**
 
 `optimize` de gltf-transform enchaîne dedup/prune/weld/join à défaut ; on coupe `simplify` (la décimation attaque la silhouette, on ne la paie que si le poids l'exige) :
 
@@ -498,7 +498,7 @@ npx -y @gltf-transform/cli@4.4.2 optimize \
   --compress meshopt --texture-compress webp --texture-size 512 --simplify true --simplify-error 0.0001
 ```
 
-Si les noms de commandes/drapeaux diffèrent dans la CLI installée : `npx -y @gltf-transform/cli@4.4.2 optimize --help` fait foi — les leviers restent les mêmes (compression meshopt, textures WebP redimensionnées, simplification en dernier).
+Si les noms de commandes/drapeaux diffèrent dans la CLI installée : `npx -y @gltf-transform/cli@4.4.2 optimize --help` fait foi: les leviers restent les mêmes (compression meshopt, textures WebP redimensionnées, simplification en dernier).
 
 - [ ] **Step 4 : contrôle que les retouches trouveront leurs matériaux**
 
@@ -506,22 +506,22 @@ Si les noms de commandes/drapeaux diffèrent dans la CLI installée : `npx -y @g
 node tools/voiture/rendu.mjs $SCRATCH/glb/<candidat-retenu>.glb --nb=8 --materiaux | grep -E "WhitePaintjob|Blue|Glass"
 ```
 
-Attendu : les trois noms présents. `optimize` dédoublonne et fusionne — si un des trois noms a disparu, la livrée ne s'appliquera plus : descendre d'un cran d'optimisation ou passer les étapes une à une (`dedup`, `prune`, `weld`, `meshopt`…) pour isoler celle qui mange les noms.
+Attendu : les trois noms présents. `optimize` dédoublonne et fusionne: si un des trois noms a disparu, la livrée ne s'appliquera plus : descendre d'un cran d'optimisation ou passer les étapes une à une (`dedup`, `prune`, `weld`, `meshopt`…) pour isoler celle qui mange les noms.
 
 Pas de commit : rien n'entre au dépôt avant la vérification de la Tâche 4.
 
 ---
 
-### Tâche 4 : la vérification qui ne pardonne pas — et le verdict de poids
+### Tâche 4 : la vérification qui ne pardonne pas, et le verdict de poids
 
 **Files:**
 - Rendus dans `$SCRATCH/seq-optimisee/` (hors dépôt)
 
 **Interfaces:**
 - Consumes: le candidat de la Tâche 3, le plancher de bruit de la Tâche 2.
-- Produces: le verdict — candidat validé (et son poids), ou remontée à Hugo.
+- Produces: le verdict, candidat validé (et son poids), ou remontée à Hugo.
 
-- [ ] **Step 1 : re-rendre les 160 vues depuis le candidat** (long — arrière-plan)
+- [ ] **Step 1 : re-rendre les 160 vues depuis le candidat** (long: arrière-plan)
 
 ```bash
 node tools/voiture/rendu.mjs $SCRATCH/glb/<candidat>.glb \
@@ -529,7 +529,7 @@ node tools/voiture/rendu.mjs $SCRATCH/glb/<candidat>.glb \
   --dest=$SCRATCH/seq-optimisee
 ```
 
-Le `cadrage commun` imprimé doit rester celui des Tâches 1/2 — s'il bouge, l'optimisation a déplacé la boîte englobante (élagage trop gourmand) et le raccord client serait faux : candidat rejeté, cran précédent.
+Le `cadrage commun` imprimé doit rester celui des Tâches 1/2: s'il bouge, l'optimisation a déplacé la boîte englobante (élagage trop gourmand) et le raccord client serait faux : candidat rejeté, cran précédent.
 
 - [ ] **Step 2 : diff chiffré + contrôle à l'œil**
 
@@ -537,7 +537,7 @@ Le `cadrage commun` imprimé doit rester celui des Tâches 1/2 — s'il bouge, l
 node tools/voiture/compare.mjs public/voiture $SCRATCH/seq-optimisee --planche=$SCRATCH/verdict.png
 ```
 
-Gate : moyenne et max **dans la bande du plancher de bruit** (Tâche 2) — un dépassement léger se juge à l'œil sur la planche, un dépassement net rejette le candidat. Regarder `verdict.png` dans tous les cas : le chiffre dit qu'il y a un écart, l'œil dit s'il se voit.
+Gate : moyenne et max **dans la bande du plancher de bruit** (Tâche 2): un dépassement léger se juge à l'œil sur la planche, un dépassement net rejette le candidat. Regarder `verdict.png` dans tous les cas : le chiffre dit qu'il y a un écart, l'œil dit s'il se voit.
 
 - [ ] **Step 3 : le verdict de poids**
 
@@ -566,7 +566,7 @@ Attendu : `binary: set` (la règle `*.glb binary` existe depuis le commit du 202
 Ajouter après la section « Fabrication » (adapter les chiffres mesurés, la commande exacte du candidat retenu, et le cadre relevé en Tâche 1) :
 
 ```
-Le modèle optimisé distribué — modele-web.glb
+Le modèle optimisé distribué: modele-web.glb
 ---------------------------------------------
 modele-web.glb est le même modèle, optimisé pour le régime drag de la
 page d'accueil (chantier #12) : géométrie compressée meshopt, textures
@@ -585,7 +585,7 @@ les comparant aux images de ce dossier : RMSE normalisé max X,XXXXX,
 pour un plancher de bruit du pipeline de X,XXXXX (mesuré en re-rendant
 depuis la source le 2026-08-11).
 
-Le cadre de recadrage commun aux 160 vues, relevé le 2026-08-11 —
+Le cadre de recadrage commun aux 160 vues, relevé le 2026-08-11:
 fractions du rendu carré, IRREJOUABLE au client qui l'applique au
 viewport de sa caméra (components/proto/voiture-drag.ts) :
     x=0.XXXX  y=0.XXXX  c=0.XXXX
@@ -595,12 +595,12 @@ viewport de sa caméra (components/proto/voiture-drag.ts) :
 
 ```bash
 git add public/voiture/modele-web.glb public/voiture/CREDIT.txt
-git commit -m "Le dérivé web entre au dépôt — X,X Mo mesurés, vérifiés contre les 160 vues de production"
+git commit -m "Le dérivé web entre au dépôt: X,X Mo mesurés, vérifiés contre les 160 vues de production"
 ```
 
 ---
 
-### Tâche 6 : three entre au runtime, épinglé — et le bundle ne bouge pas
+### Tâche 6 : three entre au runtime, épinglé, et le bundle ne bouge pas
 
 **Files:**
 - Modify: `package.json`
@@ -615,21 +615,21 @@ Consigner le First Load JS de `/`.
 
 - [ ] **Step 2 : épingler**
 
-Dans `dependencies` : `"three": "0.169.0"` (exact, **sans caret** — la version de l'importmap `scene.html:13`). Dans `devDependencies` : `"@types/three": "0.169.0"`. Puis `npm install`.
+Dans `dependencies` : `"three": "0.169.0"` (exact, **sans caret**, la version de l'importmap `scene.html:13`). Dans `devDependencies` : `"@types/three": "0.169.0"`. Puis `npm install`.
 
-- [ ] **Step 3 : relevé APRÈS — identique**
+- [ ] **Step 3 : relevé APRÈS, identique**
 
 ```bash
 npx next build 2>&1 | grep -A4 "First Load JS"
 ```
 
-Attendu : First Load JS de `/` **inchangé à l'octet** — une dépendance jamais importée ne pèse rien. C'est la moitié du gate de la décision 7 ; l'autre moitié (toujours identique une fois le code client écrit) se rejoue en Tâche 10.
+Attendu : First Load JS de `/` **inchangé à l'octet**: une dépendance jamais importée ne pèse rien. C'est la moitié du gate de la décision 7 ; l'autre moitié (toujours identique une fois le code client écrit) se rejoue en Tâche 10.
 
 - [ ] **Step 4 : commit**
 
 ```bash
 git add package.json package-lock.json
-git commit -m "three entre au runtime, épinglé à l'importmap — et le First Load JS n'a pas bougé d'un octet"
+git commit -m "three entre au runtime, épinglé à l'importmap: et le First Load JS n'a pas bougé d'un octet"
 ```
 
 ---
@@ -641,7 +641,7 @@ git commit -m "three entre au runtime, épinglé à l'importmap — et le First 
 - Create: `tools/voiture/geste.test.mjs`
 
 **Interfaces:**
-- Produces: `mod(i, nb)`, `azimutVersIndex(azimutDeg, nb)`, `offsetAuRelachement(azimutDeg, v, {nb, pose, tours})` — consommées par voiture.tsx (Tâche 9).
+- Produces: `mod(i, nb)`, `azimutVersIndex(azimutDeg, nb)`, `offsetAuRelachement(azimutDeg, v, {nb, pose, tours})`: consommées par voiture.tsx (Tâche 9).
 
 - [ ] **Step 1 : écrire le test qui échoue**
 
@@ -689,32 +689,32 @@ test("offsetAuRelachement : l'angle laissé par la main persiste", () => {
 node --test tools/voiture/geste.test.mjs
 ```
 
-Attendu : ÉCHEC — `Cannot find module … geste.mjs`.
+Attendu : ÉCHEC, `Cannot find module … geste.mjs`.
 
 - [ ] **Step 3 : écrire `components/proto/geste.mjs`**
 
 ```js
 /* ==================================================================
-   L'ARITHMÉTIQUE DU GESTE (#12) — pur, sans DOM, testable au
+   L'ARITHMÉTIQUE DU GESTE (#12): pur, sans DOM, testable au
    node --test (tools/voiture/geste.test.mjs). nb et pose arrivent en
    paramètres : les constantes vivent dans voiture.tsx avec leur
    doctrine, ce module ne fait que compter juste.
    ================================================================== */
 
 /* Le second `+ nb` couvre les valeurs négatives, que le `%` de
-   JavaScript propagerait — le même garde structurel que l'index du
+   JavaScript propagerait: le même garde structurel que l'index du
    scroll dans voiture.tsx. */
 export const mod = (i, nb) => ((i % nb) + nb) % nb
 
 /* L'image la plus proche d'un azimut continu : l'aimantation au cran
-   de 2,25°, ajustement ≤ 1,125° — sous ce que le ticket 18 a montré
+   de 2,25°, ajustement ≤ 1,125°: sous ce que le ticket 18 a montré
    invisible en mouvement. */
 export const azimutVersIndex = (azimutDeg, nb) => mod(Math.round(azimutDeg / (360 / nb)), nb)
 
 /* L'offset en crans qui fait persister l'angle laissé par la main :
    le delta entre le cran du relâchement et le cran que le scroll
    dicte à cet instant (v = valeur courante du ressort). Absorbe aussi
-   un scroll survenu pendant le geste — on recalcule contre v, rien
+   un scroll survenu pendant le geste: on recalcule contre v, rien
    d'autre. */
 export const offsetAuRelachement = (azimutDeg, v, { nb, pose, tours }) =>
   mod(Math.round(azimutDeg / (360 / nb)) - pose - Math.round(v * tours * nb), nb)
@@ -732,31 +732,31 @@ Attendu : 3 tests PASS.
 
 ```bash
 git add components/proto/geste.mjs tools/voiture/geste.test.mjs
-git commit -m "L'arithmétique du geste, extraite et prouvée — le modulo négatif ne mordra pas deux fois"
+git commit -m "L'arithmétique du geste, extraite et prouvée: le modulo négatif ne mordra pas deux fois"
 ```
 
 ---
 
-### Tâche 8 : le module du régime drag — chargé au geste, jamais avant
+### Tâche 8 : le module du régime drag, chargé au geste, jamais avant
 
 **Files:**
 - Create: `components/proto/voiture-drag.ts`
 
 **Interfaces:**
 - Consumes: `tools/voiture/studio.mjs` (Tâche 1), `public/voiture/modele-web.glb` (Tâche 5), le cadre consigné (Tâche 1 Step 4).
-- Produces: `creeScene(toile: HTMLCanvasElement, surPerte?: () => void): Promise<SceneDrag | null>` avec `SceneDrag = { rend(azimutDeg, elevationDeg), taille(l, h), info(), estPerdu(), detruit() }` — consommé par voiture.tsx (Tâche 9) via `import("./voiture-drag")`.
+- Produces: `creeScene(toile: HTMLCanvasElement, surPerte?: () => void): Promise<SceneDrag | null>` avec `SceneDrag = { rend(azimutDeg, elevationDeg), taille(l, h), info(), estPerdu(), detruit() }`: consommé par voiture.tsx (Tâche 9) via `import("./voiture-drag")`.
 
 - [ ] **Step 1 : écrire le module** (remplacer `CADRE` par les valeurs consignées à la Tâche 1) :
 
 ```ts
 /* ==================================================================
-   RÉGIME DRAG (#12) — la scène WebGL de la voiture, chargée
+   RÉGIME DRAG (#12): la scène WebGL de la voiture, chargée
    DYNAMIQUEMENT au premier geste avéré, jamais avant : le visiteur
    qui ne saisit pas ne paie ni three, ni ce module, ni le modèle.
 
    Le studio, les retouches et la caméra viennent du module PARTAGÉ
    avec le pipeline (tools/voiture/studio.mjs) : il n'y a pas deux
-   studios, donc pas de teinte nouvelle par construction — le client
+   studios, donc pas de teinte nouvelle par construction: le client
    réaffiche les mêmes couleurs, sur fond alpha.
 
    Le rendu est À LA DEMANDE : rend() n'est appelé que par l'événement
@@ -769,7 +769,7 @@ import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js"
 import { studio, retouches, regleRenderer, prepareModele, appliqueRetouches, placeCamera,
          FOV, FLOU_PMREM, INTENSITE_ENV } from "../../tools/voiture/studio.mjs"
 
-/* Le cadre de recadrage de la séquence en production — l'union des
+/* Le cadre de recadrage de la séquence en production: l'union des
    pixels opaques sur les 160 vues, IRREJOUABLE ici (CREDIT.txt,
    campagne du 2026-08-11). Appliqué au viewport de la caméra : sans
    lui la voiture serait à la bonne pose mais pas à la bonne place
@@ -788,7 +788,7 @@ export type SceneDrag = {
 
 export async function creeScene(toile: HTMLCanvasElement, surPerte?: () => void): Promise<SceneDrag | null> {
   /* Chaque échec rend null, sans un message : le drag azimut-seul sur
-     la séquence reste, et c'est le repli permanent — le même
+     la séquence reste, et c'est le repli permanent: le même
      renoncement propre que le composant applique à sa séquence. */
   let renderer: THREE.WebGLRenderer
   try {
@@ -831,7 +831,7 @@ export async function creeScene(toile: HTMLCanvasElement, surPerte?: () => void)
   })
 
   /* Échauffement HORS du geste : compile les shaders, téléverse les
-     34 textures et la géométrie — la première saisie ne paiera que le
+     34 textures et la géométrie: la première saisie ne paiera que le
      rendu. C'est aussi ce qui rend info() honnête. */
   placeCamera(THREE, camera, rayon, 30)
   renderer.render(scene, camera)
@@ -868,12 +868,12 @@ Attendu : zéro erreur (`allowJs: true` couvre l'import du `.mjs`).
 
 ```bash
 git add components/proto/voiture-drag.ts
-git commit -m "Le régime drag a son module — chargé au geste, rendu par événement, repli silencieux"
+git commit -m "Le régime drag a son module: chargé au geste, rendu par événement, repli silencieux"
 ```
 
 ---
 
-### Tâche 9 : la voiture se saisit — geste, bascule, réconciliation
+### Tâche 9 : la voiture se saisit, geste, bascule, réconciliation
 
 **Files:**
 - Modify: `components/proto/voiture.tsx`
@@ -881,9 +881,9 @@ git commit -m "Le régime drag a son module — chargé au geste, rendu par év�
 
 **Interfaces:**
 - Consumes: `geste.mjs` (Tâche 7), `voiture-drag.ts` (Tâche 8).
-- Produces: attributs `data-regime="gl"`, `data-gl-geometries`, `data-gl-textures` sur `.voiture` — relevés par le banc (Tâche 11) ; classes `voiture-survol`/`voiture-saisie` sur `<html>` — stylées ici même.
+- Produces: attributs `data-regime="gl"`, `data-gl-geometries`, `data-gl-textures` sur `.voiture`: relevés par le banc (Tâche 11) ; classes `voiture-survol`/`voiture-saisie` sur `<html>`: stylées ici même.
 
-- [ ] **Step 1 : `voiture.tsx` — imports et constantes**
+- [ ] **Step 1 : `voiture.tsx`, imports et constantes**
 
 Après l'import de motion, ajouter :
 
@@ -898,28 +898,28 @@ Après le bloc `FLOT`/`TAU`, ajouter :
    La doctrine anti-3D de l'en-tête ne tombe pas, elle se précise :
    c'est un argument de RÉGIME. Pendant un drag la page ne défile pas,
    la parallaxe est immobile, la respiration est suspendue, et le rendu
-   3D est déclenché par l'événement de pointeur — au plus un rendu par
+   3D est déclenché par l'événement de pointeur: au plus un rendu par
    frame quand la main bouge, ZÉRO quand elle ne bouge pas. Le même
    motif marche/arrêt que la respiration ci-dessous.
 
    Rien ne se télécharge sans un geste de saisie : mousedown sur un
    pixel opaque + déplacement au-delà du seuil. Pendant que le modèle
    arrive, le geste pilote la SÉQUENCE en azimut (zéro octet nouveau) ;
-   la promotion WebGL attend le relâchement — jamais de changement de
+   la promotion WebGL attend le relâchement: jamais de changement de
    régime en cours de geste. Ce mode séquence est aussi le repli
-   permanent : contexte refusé, perdu, chargement en échec — le drag
+   permanent : contexte refusé, perdu, chargement en échec: le drag
    azimut-seul reste, sans un message. */
 const DRAG_LIVRE = true  // retirer le régime drag sans toucher au reste
 const ELEV_REPOS = 30    // l'élévation de la séquence (CREDIT.txt) : la seule où elle existe
-const ELEV_MIN = 18      // bornes de l'axe d'élévation — PROPOSÉES, à régler à l'œil par Hugo
+const ELEV_MIN = 18      // bornes de l'axe d'élévation: PROPOSÉES, à régler à l'œil par Hugo
 const ELEV_MAX = 42      //   (décision n°2 du spec) : trop d'amplitude montre le dessous et le toit
-const SENS_AZIMUT = 0.45 // °/px — un tour en ~800 px de glissement, à régler à l'œil
+const SENS_AZIMUT = 0.45 // °/px: un tour en ~800 px de glissement, à régler à l'œil
 const SENS_ELEV = 0.12   // °/px vertical
 const CRAN = 360 / NB    // 2,25°
-const SEUIL_DRAG = 4     // px avant qu'un mousedown ne devienne un drag avéré — un clic reste un clic
+const SEUIL_DRAG = 4     // px avant qu'un mousedown ne devienne un drag avéré: un clic reste un clic
 const SEUIL_ALPHA = 32   // alpha minimal d'un pixel « saisissable » : le halo anti-aliasé ne compte pas
 const SEUIL_FONDU = 0.05 // sous ce fondu la voiture est invisible : rien à saisir
-const AMORTI = 0.94      // décroissance de l'inertie par frame — coupée sous reduce
+const AMORTI = 0.94      // décroissance de l'inertie par frame: coupée sous reduce
 const RETOUR_ELEV = 0.8  // fraction d'écart d'élévation restante par frame au retour
 const INTERACTIFS = "a,button,input,textarea,select,summary,label,[contenteditable],[role=button]"
 ```
@@ -945,7 +945,7 @@ Après `const lisse = useSpring(p, RESSORT)`, ajouter :
    changement qui déclenche la repeinture au relâchement. */
 const decalage = useMotionValue(0)
 /* 1 pendant la prise : la respiration s'arrête (une chose que la main
-   tient ne flotte pas) et la peinture au fil de l'index se suspend —
+   tient ne flotte pas) et la peinture au fil de l'index se suspend:
    pendant le geste c'est la main qui peint, pas le scroll. */
 const saisie = useMotionValue(0)
 ```
@@ -976,7 +976,7 @@ par :
 ```tsx
     /* Deux raisons de s'arrêter, une seule règle : la respiration ne
        tourne que si la voiture se voit ET que la main ne la tient pas
-       — une chose tenue ne flotte pas (spec #12, décision 3). */
+       une chose tenue ne flotte pas (spec #12, décision 3). */
     const evalue = () => ((fondu.get() > 0 && !saisie.get()) ? marche() : arret())
     evalue()
     const stopF = fondu.on("change", evalue)
@@ -998,15 +998,15 @@ Dans le `useMotionValueEvent(index …)`, la garde devient :
 if (reduit || !pretes || tenue.current) return
 ```
 
-(un commentaire d'une ligne : `/* pendant le geste, la main peint — voir l'effet du drag */`).
+(un commentaire d'une ligne : `/* pendant le geste, la main peint, voir l'effet du drag */`).
 
-- [ ] **Step 5 : l'effet du geste** — ajouter après le `useMotionValueEvent`, avant `if (absente)` :
+- [ ] **Step 5 : l'effet du geste**, ajouter après le `useMotionValueEvent`, avant `if (absente)` :
 
 ```tsx
   /* ── LA SAISIE (#12) ──────────────────────────────────────────────
      Écoutée au DOCUMENT : `pointer-events: none` de la couche ne bouge
      pas (c'est ce qui protège le texte que la voiture traverse), donc
-     c'est la page qu'on écoute et la géométrie qui décide — cible non
+     c'est la page qu'on écoute et la géométrie qui décide: cible non
      interactive ET pixel opaque de la toile. Desktop au pointeur fin
      seulement : au tactile, le drag se disputerait la page avec le
      scroll, le contraire d'une bascule invisible. */
@@ -1021,7 +1021,7 @@ if (reduit || !pretes || tenue.current) return
        subit l'assiette : on passe par le CENTRE (invariant par
        rotation) puis on tourne le vecteur de -assiette ; la dérive
        verticale est déjà dans le rect, et offsetWidth donne la taille
-       CSS non transformée. Un getImageData d'un pixel — pas de coût
+       CSS non transformée. Un getImageData d'un pixel: pas de coût
        mesurable, et jamais plus d'un par frame (voir survole). */
     const surVoiture = (x: number, y: number) => {
       if (fondu.get() <= SEUIL_FONDU) return false // invisible = insaisissable
@@ -1051,7 +1051,7 @@ if (reduit || !pretes || tenue.current) return
     const chargeRegime = () => {
       if (chargementGl.current) return
       /* Le premier geste avéré est le SEUL déclencheur du chunk et du
-         modèle — jamais le survol (tout le monde survole le centre de
+         modèle: jamais le survol (tout le monde survole le centre de
          l'écran), jamais l'idle, jamais le clic nu. */
       chargementGl.current = import("./voiture-drag")
         .then(async (m) => {
@@ -1059,7 +1059,7 @@ if (reduit || !pretes || tenue.current) return
           if (!t) return
           const s = await m.creeScene(t, () => {
             /* Perte de contexte : retour SILENCIEUX au mode séquence,
-               jamais un écran vide — le renoncement propre de
+               jamais un écran vide: le renoncement propre de
                l'en-tête, appliqué au WebGL. */
             delete cont.dataset.regime
             if (tenue.current && enGl) {
@@ -1072,7 +1072,7 @@ if (reduit || !pretes || tenue.current) return
           if (!s) return // contexte refusé ou modèle en échec : le drag azimut-seul reste
           sceneGl.current = s
           /* Relevés par le banc (--drag) : le régime et l'empreinte
-             GPU réelle — des chiffres mesurés, pas estimés. */
+             GPU réelle: des chiffres mesurés, pas estimés. */
           cont.dataset.regime = "gl"
           const inf = s.info()
           cont.dataset.glGeometries = String(inf.geometries)
@@ -1098,7 +1098,7 @@ if (reduit || !pretes || tenue.current) return
       chargeRegime()
       if (inertie) {
         /* Reprise en pleine décrue : la main récupère la voiture LÀ OÙ
-           ELLE EST — azimut et élévation gardent leurs valeurs. */
+           ELLE EST: azimut et élévation gardent leurs valeurs. */
         cancelAnimationFrame(inertie)
         inertie = 0
       } else {
@@ -1109,8 +1109,8 @@ if (reduit || !pretes || tenue.current) return
       dernierX = x
       dernierY = y
       /* La promotion s'est décidée ENTRE les gestes : si le modèle est
-         arrivé, ce geste-ci est WebGL — bascule sèche, au même azimut,
-         même cadre. Sinon, séquence — et jamais de changement en cours
+         arrivé, ce geste-ci est WebGL: bascule sèche, au même azimut,
+         même cadre. Sinon, séquence: et jamais de changement en cours
          de geste : une main qui découvre un axe de plus au milieu d'un
          mouvement, c'est une surprise, pas une bascule invisible. */
       enGl = !!sceneGl.current && !sceneGl.current.estPerdu()
@@ -1141,7 +1141,7 @@ if (reduit || !pretes || tenue.current) return
     }
 
     /* Réconciliation au relâchement : inertie (coupée sous reduce),
-       retour d'élévation vers ELEV_REPOS (instantané sous reduce — la
+       retour d'élévation vers ELEV_REPOS (instantané sous reduce: la
        séquence n'existe qu'à cette élévation), aimantation au cran,
        et L'ANGLE LAISSÉ PAR LA MAIN PERSISTE via l'offset. */
     const pose = () => {
@@ -1159,7 +1159,7 @@ if (reduit || !pretes || tenue.current) return
       }
       if (reduit) {
         /* Sous reduce, rien ne continue après la main : pas d'inertie,
-           élévation reposée d'un coup. Le drag lui-même reste — c'est
+           élévation reposée d'un coup. Le drag lui-même reste: c'est
            de l'interaction, pas une animation. */
         elevation = ELEV_REPOS
         if (enGl) sceneGl.current?.rend(azimut, elevation)
@@ -1197,7 +1197,7 @@ if (reduit || !pretes || tenue.current) return
       if (!surVoiture(e.clientX, e.clientY)) return
       /* Pas le mousedown nu : un clic pour poser le focus ou dissiper
          une sélection ne doit pas coûter des mégaoctets. Candidat
-         seulement — le drag est avéré au-delà du seuil. */
+         seulement: le drag est avéré au-delà du seuil. */
       candidat = { x: e.clientX, y: e.clientY }
     }
 
@@ -1243,7 +1243,7 @@ if (reduit || !pretes || tenue.current) return
   }, [pretes, absente, reduit])
 ```
 
-- [ ] **Step 6 : le JSX — la seconde toile**
+- [ ] **Step 6 : le JSX, la seconde toile**
 
 ```tsx
     <motion.div
@@ -1255,18 +1255,18 @@ if (reduit || !pretes || tenue.current) return
     >
       <canvas ref={canvas} className="voiture-toile" />
       {/* La toile du régime drag : même cadre, même dosage, échangée
-          SEC avec la 2D à la saisie. Toujours dans le DOM — un canvas
+          SEC avec la 2D à la saisie. Toujours dans le DOM: un canvas
           sans contexte ne coûte rien, et serveur et client écrivent
           le même HTML. */}
       <canvas ref={toileGl} className="voiture-toile-gl" />
     </motion.div>
 ```
 
-- [ ] **Step 7 : `planche.css` — après le bloc `.voiture-toile`, ajouter**
+- [ ] **Step 7 : `planche.css`, après le bloc `.voiture-toile`, ajouter**
 
 ```css
 /* La seconde toile du régime drag (#12) : même cadre, même dosage,
-   échangée SEC avec la toile 2D à la saisie — le fondu croisé a été
+   échangée SEC avec la toile 2D à la saisie: le fondu croisé a été
    rejeté au côte-à-côte du 2026-08-10, il dédouble les arêtes.
    `visibility` et non `display` : l'échange ne doit pas invalider la
    mise en page en plein geste. Jamais montrée sans pointeur fin. */
@@ -1281,7 +1281,7 @@ if (reduit || !pretes || tenue.current) return
 }
 
 /* L'affordance du drag, et rien d'autre : le curseur. Les classes
-   sont posées sur <html> par le composant — la couche voiture garde
+   sont posées sur <html> par le composant: la couche voiture garde
    pointer-events: none, la saisie s'écoute au document. Pendant la
    prise, la sélection ne doit pas se dessiner sous la main : le
    mousedown n'est pas neutralisé (un clic doit rester un clic), c'est
@@ -1311,7 +1311,7 @@ Vérifier au navigateur (souris réelle) : saisir tourne la séquence pendant le
 
 ```bash
 git add components/proto/voiture.tsx app/planche.css
-git commit -m "La voiture se saisit — la séquence pendant le chargement, le WebGL à la prise suivante, et l'angle de la main persiste"
+git commit -m "La voiture se saisit: la séquence pendant le chargement, le WebGL à la prise suivante, et l'angle de la main persiste"
 ```
 
 ---
@@ -1325,7 +1325,7 @@ git commit -m "La voiture se saisit — la séquence pendant le chargement, le W
 
 ```js
 /* ==================================================================
-   GATE RÉSEAU (#12) — le visiteur qui ne drague pas ne paie RIEN.
+   GATE RÉSEAU (#12): le visiteur qui ne drague pas ne paie RIEN.
    Rechargement + défilement complet sans drag : zéro requête vers le
    chunk du régime drag et le .glb. Sous --reduce : le montage ne
    charge qu'UNE image de la séquence (voiture.tsx, veille).
@@ -1370,7 +1370,7 @@ try {
   const avant = await cdp.evalue('performance.getEntriesByType("resource").length')
 
   if (!opt.reduce) {
-    /* Défilement complet à la molette — Lenis n'écoute que ça. */
+    /* Défilement complet à la molette: Lenis n'écoute que ça. */
     const h = await cdp.evalue("Math.max(0, document.documentElement.scrollHeight - innerHeight)")
     const pas = Math.max(1, Math.min(500, Math.ceil(h / 120)))
     for (const sens of [1, -1]) {
@@ -1394,13 +1394,13 @@ try {
   const sequence = toutes.filter((u) => /\/voiture\/\d{3}\.webp/.test(u))
 
   let echec = false
-  if (glb.length) { console.log(`✗ ${glb.length} requête(s) vers le .glb sans drag — ${glb[0]}`); echec = true }
+  if (glb.length) { console.log(`✗ ${glb.length} requête(s) vers le .glb sans drag: ${glb[0]}`); echec = true }
   else console.log("✓ zéro requête vers le .glb")
   if (opt.reduce) {
     if (sequence.length === 1) console.log("✓ sous reduce : une seule image de la séquence au montage")
     else { console.log(`✗ sous reduce : ${sequence.length} images chargées au lieu d'une`); echec = true }
   } else {
-    if (chunks.length) { console.log(`✗ ${chunks.length} chunk(s) JS déclenché(s) par le défilement — ${chunks.join(", ")}`); echec = true }
+    if (chunks.length) { console.log(`✗ ${chunks.length} chunk(s) JS déclenché(s) par le défilement: ${chunks.join(", ")}`); echec = true }
     else console.log("✓ aucun chunk JS déclenché par le défilement")
     console.log(`  ${sequence.length} images de séquence, ${toutes.length} requêtes en tout`)
   }
@@ -1428,23 +1428,23 @@ Comparer la sortie du build au relevé de la Tâche 6 : identique. Consigner les
 
 ```bash
 git add tools/voiture/reseau.mjs
-git commit -m "Le gate réseau est un outil, pas une promesse — zéro octet sans geste, une image sous reduce"
+git commit -m "Le gate réseau est un outil, pas une promesse: zéro octet sans geste, une image sous reduce"
 ```
 
 ---
 
-### Tâche 11 : le banc apprend le drag — gates 1 et 3
+### Tâche 11 : le banc apprend le drag, gates 1 et 3
 
 **Files:**
 - Modify: `tools/banc/frame.mjs` (fonction `drague`, branche `--drag` dans `passe()`, bilan)
 
-- [ ] **Step 1 : la fonction `drague`** — après `defile()` :
+- [ ] **Step 1 : la fonction `drague`**, après `defile()` :
 
 ```js
 /* ── scénario drag (#12) ─────────────────────────────────────────────
    Mousedown au centre de la voiture en haut de page (fondu = 1),
    balayage en azimut sur plusieurs tours avec une sinusoïde
-   d'élévation — les deux axes travaillent — puis relâchement. Même
+   d'élévation (les deux axes travaillent) puis relâchement. Même
    sonde, même unité que le défilement. L'injection CDP ne traverse
    pas le compositeur comme une vraie souris (#11) : le POURCENTAGE
    au-dessus du seuil à plancher égal reste comparable, la cadence
@@ -1474,14 +1474,14 @@ async function drague(cdp, mesurer = true) {
 }
 ```
 
-- [ ] **Step 2 : la branche `--drag` de `passe()`** — remplacer les deux lignes `const repos = …` / `const scroll = …` par :
+- [ ] **Step 2 : la branche `--drag` de `passe()`**, remplacer les deux lignes `const repos = …` / `const scroll = …` par :
 
 ```js
     await pause(1500)                       // échauffement : polices, images, hydratation
     const repos = await mesure(cdp, 1500)
 
     if (opt.drag) {
-      /* Premier geste : l'AMORCE — déclenche le chunk et le .glb, pilote
+      /* Premier geste : l'AMORCE, déclenche le chunk et le .glb, pilote
          la séquence. Non mesurée : c'est le régime WebGL qu'on juge. */
       await drague(cdp, false)
       await attends(async () =>
@@ -1494,7 +1494,7 @@ async function drague(cdp, mesurer = true) {
         geometries: document.querySelector('.voiture')?.dataset.glGeometries ?? null,
         textures: document.querySelector('.voiture')?.dataset.glTextures ?? null,
       })`))
-      console.log(`  passe ${n} — plancher ${r2(plancher)} ms${melange ? " (MÉLANGE)" : ""} · drag ${drag.couts.length} frames · scroll après drag ${scroll.couts.length} frames`)
+      console.log(`  passe ${n}: plancher ${r2(plancher)} ms${melange ? " (MÉLANGE)" : ""} · drag ${drag.couts.length} frames · scroll après drag ${scroll.couts.length} frames`)
       console.log(`            écran ${env.ecran} · ${env.webgl} · GPU ${gpu.geometries} géométries, ${gpu.textures} textures`)
       console.log(`            intervalles du plancher : ${histo}`)
       return { plancher, melange, env, repos, scroll, drag, gpu }
@@ -1503,7 +1503,7 @@ async function drague(cdp, mesurer = true) {
     const scroll = await defile(cdp)
 ```
 
-- [ ] **Step 3 : le bilan** — dans `main()`, après le calcul de `depassent`, ajouter :
+- [ ] **Step 3 : le bilan**, dans `main()`, après le calcul de `depassent`, ajouter :
 
 ```js
   const drags = bonnes.flatMap((b) => b.drag?.couts ?? [])
@@ -1527,14 +1527,14 @@ et après le bloc `console.log` du bilan scroll :
 ```js
   if (drags.length) {
     console.log(`
-  drag — coût p50 / p90   ${r2(bilan.dragCoutP50)} / ${r2(bilan.dragCoutP90)} ms
-  drag — frames > ${SEUIL} ms  ${r2(bilan.dragPartAuDessusDuSeuilPct)} %   (${dragDepassent}/${drags.length})
+  drag: coût p50 / p90   ${r2(bilan.dragCoutP50)} / ${r2(bilan.dragCoutP90)} ms
+  drag: frames > ${SEUIL} ms  ${r2(bilan.dragPartAuDessusDuSeuilPct)} %   (${dragDepassent}/${drags.length})
   GPU après promotion     ${bilan.gpu.geometries} géométries · ${bilan.gpu.textures} textures
-  (en mode --drag, le bloc scroll ci-dessus est le défilement APRÈS le premier drag — gate 3)`)
+  (en mode --drag, le bloc scroll ci-dessus est le défilement APRÈS le premier drag: gate 3)`)
   }
 ```
 
-- [ ] **Step 4 : usage dans l'en-tête** — ajouter `--drag` à la ligne Options du commentaire d'en-tête de frame.mjs.
+- [ ] **Step 4 : usage dans l'en-tête**, ajouter `--drag` à la ligne Options du commentaire d'en-tête de frame.mjs.
 
 - [ ] **Step 5 : la campagne des trois gates** (`--tete` obligatoire ; les fenêtres headed doivent rester au premier plan)
 
@@ -1545,7 +1545,7 @@ node tools/banc/frame.mjs http://localhost:3210/ accueil-drag --tete --drag     
 ```
 
 Verdicts, dans les termes de SEUIL.md (à plancher égal entre les deux campagnes) :
-1. **Gate 1** : `drag — frames > 8,3 ms` ≤ 10 %.
+1. **Gate 1** : `drag, frames > 8,3 ms` ≤ 10 %.
 2. **Gate 2** : `frames > 8,3 ms` de `accueil-sans-drag` dans la bande de bruit connue (2,72–7,07 %) du témoin d'avant-chantier.
 3. **Gate 3** : le bloc scroll de `accueil-drag` (défilement après premier drag) ne régresse pas au-delà de la même bande.
 
@@ -1555,20 +1555,20 @@ Verdicts, dans les termes de SEUIL.md (à plancher égal entre les deux campagne
 
 ```bash
 git add tools/banc/frame.mjs
-git commit -m "Le banc apprend le drag — l'amorce puis la mesure, et le défilement d'après compte aussi"
+git commit -m "Le banc apprend le drag: l'amorce puis la mesure, et le défilement d'après compte aussi"
 ```
 
 ---
 
-### Tâche 12 : clôture — les chiffres sur la table de Hugo
+### Tâche 12 : clôture, les chiffres sur la table de Hugo
 
 - [ ] **Step 1 : commenter l'issue #12** avec : poids final du `.glb` (et les crans essayés), RMSE plancher/verdict, First Load JS avant/après, les trois verdicts du banc, l'empreinte GPU, et **ce qui reste à l'œil de Hugo** :
-  1. les bornes d'élévation (18–42° proposées — se règlent dans `voiture.tsx` : `ELEV_MIN`/`ELEV_MAX`) ;
-  2. le raccord saisie/relâchement sur build de production, écran 120 Hz (gate humain — si l'œil voit la bascule, ça ne sort pas) ;
-  3. l'affordance : curseur seul (livré) ou indice écrit (décision n°4 — si oui : `dict.ts`, FR+EN) ;
-  4. le test d'une minute à la vraie souris (consigné au #11) — l'injection CDP ne traverse pas le compositeur.
+  1. les bornes d'élévation (18–42° proposées: se règlent dans `voiture.tsx` : `ELEV_MIN`/`ELEV_MAX`) ;
+  2. le raccord saisie/relâchement sur build de production, écran 120 Hz (gate humain: si l'œil voit la bascule, ça ne sort pas) ;
+  3. l'affordance : curseur seul (livré) ou indice écrit (décision n°4: si oui : `dict.ts`, FR+EN) ;
+  4. le test d'une minute à la vraie souris (consigné au #11): l'injection CDP ne traverse pas le compositeur.
 - [ ] **Step 2 : mettre à jour la mémoire** (`chantiers-arbitrages-en-attente.md`) : #12 implémenté en attente des réglages à l'œil ; #13 et #4 toujours ouverts.
-- [ ] **Step 3 : ne PAS fermer l'issue** — elle se ferme après le gate humain de Hugo.
+- [ ] **Step 3 : ne PAS fermer l'issue**, elle se ferme après le gate humain de Hugo.
 
 ---
 

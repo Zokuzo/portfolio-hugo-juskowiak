@@ -1,4 +1,4 @@
-# McLaren P1 — remplacement du modèle et arbitrage 120/160 — design
+# McLaren P1. remplacement du modèle et arbitrage 120/160 : design
 
 Date : 2026-08-07
 Statut : validé en discussion, en attente de relecture écrite
@@ -8,21 +8,21 @@ Statut : validé en discussion, en attente de relecture écrite
 Remplacer la Toyota GT86 de la page d'accueil par la McLaren P1 MSO, en
 livrée **carbone sombre** conforme au système mono-accent actuel, et trancher
 par comparaison in situ la question du ticket 18 : la densification de la
-séquence de 120 à 160 images se voit-elle à l'œil ? Si non, on garde 120 —
+séquence de 120 à 160 images se voit-elle à l'œil ? Si non, on garde 120 :
 « doubler le poids pour rien serait le pire résultat ».
 
 Ce chantier ferme le ticket 18 (dont le seul blocage était le `.glb`,
 désormais fourni) et débloque le ticket 17 (garde-fou de budget).
 
 Hors périmètre : le bi-thème clair/sombre (chantier ultérieur, dossier
-d'instruction constitué le 2026-08-07 — les deux rapports d'exploration
+d'instruction constitué le 2026-08-07 : les deux rapports d'exploration
 pipeline et jetons), la livrée MSO blanche/bleue (réservée au thème clair),
 le décor, la plaque, la 3D temps réel (exclue par `voiture.tsx:10-15` et par
 la carte : une séquence d'images coûte un décodage et un `drawImage` au
 changement d'index, un canvas WebGL coûterait une passe de rendu par frame
 contre une marge mesurée de 0,90 ms sur l'accueil).
 
-## 1 — Le modèle et sa licence
+## 1. Le modèle et sa licence
 
 - Fichier : « FREE - McLaren P1 MSO » par bohmerang
   (`sketchfab.com/3d-models/free-mclaren-p1-mso-c7687064e08c4be9a0af88e98bcf0a8e`),
@@ -41,10 +41,10 @@ contre une marge mesurée de 0,90 ms sur l'accueil).
   `~/PP/modeles-3d/`, chemin documenté dans `CREDIT.txt` avec la commande de
   régénération.
 
-## 2 — Outillage : deux changements dans `scene.html`
+## 2. Outillage : deux changements dans `scene.html`
 
 - **Correctif texture** : aujourd'hui, `scene.html:223` fait `mat.map = null`
-  dès qu'une retouche donne une couleur — écrit pour la GT86 qui n'avait
+  dès qu'une retouche donne une couleur : écrit pour la GT86 qui n'avait
   aucune texture, destructeur sur un modèle qui en a 34. Le vidage de texture
   devient opt-in : une retouche ne vide `mat.map` que si elle porte
   `sansTexture: true`. Une ligne.
@@ -55,19 +55,19 @@ contre une marge mesurée de 0,90 ms sur l'accueil).
   - `Blue` (l'accent MSO, teinte étrangère au système mono-accent) → carbone,
     lui aussi sans texture ;
   - `Glass` : vitrage teinté conservé ;
-  - le reste (carbones, pneus, freins, jantes, intérieur — texturés) ajusté
+  - le reste (carbones, pneus, freins, jantes, intérieur : texturés) ajusté
     à l'essai, textures intactes.
   - Point de vigilance : les `Decals` MSO (texturés) sur carrosserie sombre.
     S'ils jurent, leurs meshes sont masqués par retouche. Décision à l'essai,
     à l'œil.
 
-## 3 — La campagne de rendu
+## 3. La campagne de rendu
 
-Élévation 30° et pose de départ conservées (solidaires d'`INCLINAISON` — le
+Élévation 30° et pose de départ conservées (solidaires d'`INCLINAISON` : le
 piège est documenté dans `CREDIT.txt`). Dans l'ordre :
 
 1. `node tools/voiture/rendu.mjs ~/PP/modeles-3d/free_-_mclaren_p1_mso.glb --materiaux`
-   — inventaire réel avant toute retouche.
+   inventaire réel avant toute retouche.
 2. Essai `--nb=8 --dest=.scratch/planche-profonde/rendus/p1-essai` : réglage
    des retouches ; si le nez de la P1 ne pointe pas comme celui de la GT86,
    `--depart` compense (la convention tient : image 000 = plongée de face,
@@ -84,12 +84,12 @@ piège est documenté dans `CREDIT.txt`). Dans l'ordre :
 4. Plafond de poids : la P1 est plus détaillée que la GT86. Si la dichotomie
    descend la qualité jusqu'à des artefacts visibles sur l'image la plus
    lourde, la décision (relever le plafond ou accepter) remonte à Hugo avec
-   les chiffres — elle n'est pas prise en chemin.
+   les chiffres : elle n'est pas prise en chemin.
 
-## 4 — Le côte-à-côte et la promotion
+## 4. Le côte-à-côte et la promotion
 
 Comparaison **en conditions réelles** : build de production, Chrome de la
-machine, écran 120 Hz, au scroll sur le vrai site — pas de page témoin. Un
+machine, écran 120 Hz, au scroll sur le vrai site : pas de page témoin. Un
 script jetable bascule le contenu de `public/voiture/` entre les deux
 candidates ; pour la passe 160, `NB=160` / `POSE=140` basculent avec, en
 non-committé. Hugo tranche à l'œil.
@@ -105,7 +105,7 @@ non-committé. Hugo tranche à l'œil.
 
 Dans les deux cas : `CREDIT.txt` réécrit (attribution, fabrication, chemin
 du modèle, commande, poids relevés), crédit visible `dict.ts` FR/EN, ajout
-git **fichier par fichier** — jamais `git add -A` (règle de la carte : un
+git **fichier par fichier** : jamais `git add -A` (règle de la carte : un
 add global trancherait le ticket 26 sans décision).
 
 ## Fichiers touchés
@@ -123,7 +123,7 @@ add global trancherait le ticket 26 sans décision).
 
 - `node tools/banc/frame.mjs <url> p1 --tete` sur l'accueil, build de
   production, comparé au relevé de référence (p90 7,40 ms du 2026-08-06)
-  **à plancher de cadence égal seulement** — leçon du ticket 32 : préférer
+  **à plancher de cadence égal seulement** : leçon du ticket 32 : préférer
   le % de frames au-dessus de 8,3 ms aux millisecondes brutes.
 - `prefers-reduced-motion` : une seule image chargée (la pose), vérifié avec
   la nouvelle séquence.

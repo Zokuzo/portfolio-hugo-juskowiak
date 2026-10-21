@@ -1,5 +1,5 @@
 /* ==================================================================
-   FICHE Y2K — le gabarit « affiche publicitaire » (#38), d'après la
+   FICHE Y2K : le gabarit « affiche publicitaire » (#38), d'après la
    moisson du feed Pinterest de Hugo (.scratch/moisson-pinterest-38/,
    synthèse au ticket) : la grammaire des PUBS AUTO d'époque (l'objet
    plein cadre en héros, l'accroche italique, le pavé de texte dense en
@@ -7,7 +7,7 @@
    FIRMWARE) pour les métadonnées, les étiquettes noires pour le parc.
 
    LOI DE DIMENSIONNEMENT (leçon du gate #36, l'ultra-large a tué les
-   essais pub) : tout plafond est en PX — les vw ne servent qu'entre
+   essais pub) : tout plafond est en PX, les vw ne servent qu'entre
    deux bornes, le héros plafonne à 860px de haut, le contenu à 1240px
    de large. Sondé 320 → 2560 avant gate.
 
@@ -23,13 +23,13 @@
      l'éclaircissement de /home) : elles montent ou descendent ENSEMBLE,
      un « plus clair » demandé à l'œil se règle ICI et pas dans cinq
      déclarations éparpillées. Même famille de valeurs que la chambre
-     de /home — les deux pièces du monde s'éclairent au même cran. */
+     de /home : les deux pièces du monde s'éclairent au même cran. */
   --fy-panneau: #211a40; /* contraintes et décisions */
   --fy-lcd: #281f4c; /* le readout du résultat */
 }
 
 /* LE FOND DE PAGE quitte le noir : `.y2k` pose la nuit plate du monde,
-   la fiche lui substitue un dégradé violet — le corps sous l'affiche
+   la fiche lui substitue un dégradé violet, le corps sous l'affiche
    tombait dans un noir mort, et depuis que la chambre de /home est
    éclaircie, l'écart entre les deux pièces se voyait.
    SCOPÉ `.y2k.fy` : le hub /work garde sa nuit, il n'était pas dans la
@@ -38,13 +38,13 @@
   /* LES MÊMES VALEURS QUE LA CHAMBRE DE /home, au caractère près : les
      deux pièces du monde s'éclairent au même cran, sinon la fiche
      ouverte depuis un hub clair paraît retomber dans la cave. Quand
-     l'une monte, l'autre monte — c'est la seule règle qui tienne sur
+     l'une monte, l'autre monte : c'est la seule règle qui tienne sur
      plusieurs retours de gate. */
   background: linear-gradient(180deg, #342b66 0px, #2e2659 700px, #292152 1600px);
 }
 
 /* ------------------------------------------------------------------
-   LE HÉROS — l'affiche : atmosphère à l'accent, rayons, halo,
+   LE HÉROS, l'affiche : atmosphère à l'accent, rayons, halo,
    trame halftone qui s'évanouit. Pleine largeur, hauteur PLAFONNÉE.
    ------------------------------------------------------------------ */
 .fy-hero {
@@ -58,7 +58,7 @@
   overflow: hidden;
   text-align: center;
   /* l'AFFICHE de la moisson (MAGIA NEGRA, cassette brutalist) : noir
-     profond, BLOOM d'accent saturé, grille graphique — les rayons
+     profond, BLOOM d'accent saturé, grille graphique, les rayons
      coniques du premier essai sont MORTS (« ignobles », gate) */
   background:
     radial-gradient(90% 70% at 18% 12%, color-mix(in srgb, var(--acc) 52%, transparent), transparent 62%),
@@ -81,7 +81,7 @@
   -webkit-mask-image: linear-gradient(115deg, #000 14%, transparent 52%);
 }
 /* le CADRE pixel-UI du player SYSTEM : la fiche est une façade, pas un
-   fond — liseré d'accent + coches de coins */
+   fond, liseré d'accent + coches de coins */
 .fy-hero::after {
   content: "";
   position: absolute;
@@ -95,17 +95,17 @@
 .fy-hero > * { position: relative; }
 /* sous 640px les cartouches de coin s'étrécissent et POUSSENT vers le
    bas : à 420 le coin gauche mordait l'étoile de 22px (sonde du
-   re-gate) — le plafond monte pour que le contenu centré reste dessous */
+   re-gate), le plafond monte pour que le contenu centré reste dessous */
 @media (max-width: 640px) { .fy-hero { padding-top: 132px; } }
 /* sans vitrine de captures, l'affiche n'a pas à tenir 860px : le vide
    mort de l'ultra-large est exactement ce que le gate #36 a payé */
 .fy-hero--court { min-height: min(60vh, 620px); }
 
-/* coins mono — la voix des affiches */
+/* coins mono, la voix des affiches */
 .fy-coin {
   position: absolute;
   /* bornés à 42 % chacun : à 320px les deux coins se chevauchaient en
-     plein glyphe (mesuré en EN par la revue) — bornés, ils replient */
+     plein glyphe (mesuré en EN par la revue), bornés, ils replient */
   max-width: 42%;
   font-family: var(--f-mono), monospace;
   font-size: 13px;
@@ -142,9 +142,9 @@
    (21px de chevauchement à 768 sur Prédiction, sonde du re-gate) :
    l'ornement s'efface tant que la marge ne lui revient pas */
 @media (max-width: 980px) { .fy-vertical { display: none; } }
-/* la GRANDE étoile chrome de MAGIA NEGRA — l'ornement de l'affiche */
+/* la GRANDE étoile chrome de MAGIA NEGRA, l'ornement de l'affiche */
 /* NI text-shadow NI filter sur un texte-dégradé (cause racine du
-   « néon noir », voir l'exemption sur .y2k dans y2k.css) — l'étoile
+   « néon noir », voir l'exemption sur .y2k dans y2k.css), l'étoile
    perd son halo propre, le bloom du héros l'éclaire déjà */
 .fy-etoile {
   font-family: var(--f-display), sans-serif;
@@ -163,12 +163,12 @@
   text-transform: uppercase;
   color: color-mix(in srgb, var(--acc) 55%, #fff);
 }
-/* LE NOM — chrome LIQUIDE et penché comme les lettrages de la moisson.
+/* LE NOM, chrome LIQUIDE et penché comme les lettrages de la moisson.
    Chrome CLAIR de bout en bout : la coupe sombre à mi-fût mesurait
-   1,0:1 au pire point (audit AA — « accessibilité AA minimum » est la
+   1,0:1 au pire point (audit AA, « accessibilité AA minimum » est la
    commande) ; l'identité chrome tient par l'iris teinté, le skew, le
    trait et l'ombre portée dure. Plafonné 104px. */
-/* le porteur du nom : le SKEW seul — les drop-shadows qui vivaient sur
+/* le porteur du nom : le SKEW seul, les drop-shadows qui vivaient sur
    le h1 clippé ne faisaient que masquer, au hasard du rasteriseur, la
    cause racine du « néon noir » (le halo hérité de `.proto-root`, voir
    y2k.css) ; l'ombre dure et le halo vivent sur le ::after plein */
@@ -179,7 +179,7 @@
   margin: 0;
   position: relative;
   /* PAS d'isolation ici : l'élément clippé reste NU (la bissection du
-     re-gate a montré isolation+::after re-noircissant le remplissage) —
+     re-gate a montré isolation+::after re-noircissant le remplissage),
      le contexte d'empilement du double en z-index -1, c'est le WRAPPER
      .fy-nom-halo (sa transform le crée), pas le h1 */
   /* 84vw, pas 94 : à 1100 de large, 94vw ne laissait que 33px de marge
@@ -198,7 +198,7 @@
   -webkit-text-stroke: 1px rgba(255 255 255 / 0.3);
 }
 /* l'ombre portée dure + le halo d'accent de l'affiche : un DOUBLE du
-   nom (texte plein → text-shadow sûr), même recette que le wordmark —
+   nom (texte plein → text-shadow sûr), même recette que le wordmark,
    première déclaration = repli Safari <17.4 (le « / "" » soustrait le
    double aux lecteurs d'écran) */
 .fy-nom::after {
@@ -214,7 +214,7 @@
   color: rgba(11 8 23 / 0.95);
   text-shadow: 0 0 22px color-mix(in srgb, var(--acc) 60%, transparent), 0 0 52px color-mix(in srgb, var(--acc) 35%, transparent);
 }
-/* l'ACCROCHE de pub — l'italique sous l'objet, en VRAIE taille */
+/* l'ACCROCHE de pub, l'italique sous l'objet, en VRAIE taille */
 .fy-claim {
   margin: 6px 0 0;
   max-width: min(92vw, 760px);
@@ -225,7 +225,7 @@
   color: #ffffff;
 }
 
-/* le panneau SYSTEM — les trois méta en pixel-UI de player */
+/* le panneau SYSTEM, les trois méta en pixel-UI de player */
 .fy-system {
   display: flex;
   flex-wrap: wrap;
@@ -243,7 +243,7 @@
   text-align: left;
 }
 /* replié en colonne, chaque paire centrée gardait SA largeur : les
-   bords gauches dansaient (re-gate mobile) — en pleine largeur, tout
+   bords gauches dansaient (re-gate mobile), en pleine largeur, tout
    s'aligne sur le retrait du panneau */
 @media (max-width: 560px) { .fy-system div { width: 100%; } }
 .fy-system dt {
@@ -251,7 +251,7 @@
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  /* 0,8 : le 0,55 initial mesurait 4,07:1 sur le LCD — sous le seuil
+  /* 0,8 : le 0,55 initial mesurait 4,07:1 sur le LCD, sous le seuil
      AA que le gate exige sur tout le site */
   color: rgba(255 179 220 / 0.8);
 }
@@ -261,9 +261,9 @@
   font-size: 15px;
   color: var(--y2k-lcd-txt);
 }
-/* les CAPTURES — l'objet de la pub : vitres chromées, la seconde
+/* les CAPTURES, l'objet de la pub : vitres chromées, la seconde
    glissée derrière, inclinée. `isolation` : le z-index:-1 de l'arrière
-   plongeait sous le fond du desktop SANS contexte d'empilement propre —
+   plongeait sous le fond du desktop SANS contexte d'empilement propre,
    le piège du wordmark (88d3daf), payé une seconde fois et attrapé par
    la revue (diff de captures : 0 pixel rendu). `margin` vit ICI : un
    style inline sur la figure l'écrasait. */
@@ -293,19 +293,19 @@
   font-size: 13.5px;
   color: #efeaff;
   /* cartouche : la légende chevauchait la tranche CLAIRE de l'image
-     inclinée — 1,9:1 au pire point (audit AA) */
+     inclinée, 1,9:1 au pire point (audit AA) */
   background: rgba(11 8 23 / 0.85);
   padding: 4px 10px;
 }
 
 /* ------------------------------------------------------------------
-   LE PAVÉ — le texte dense au pied de la pub : le contexte.
+   LE PAVÉ, le texte dense au pied de la pub : le contexte.
    ------------------------------------------------------------------ */
 .fy-colonne {
   max-width: var(--fy-largeur);
   margin: 0 auto;
   /* resserré : les fiches maigres (Octo) lisaient « pas finies » avec
-     leurs déserts — la moisson est DENSE */
+     leurs déserts, la moisson est DENSE */
   padding: 48px 20px 64px;
   display: grid;
   gap: 34px;
@@ -360,7 +360,7 @@
   /* Le noir profond de la moisson (revue de fidélité du #38) monte d'un
      cran avec le fond : sur un sol violet, un panneau presque noir se
      lit comme un trou découpé, pas comme une carte. Il reste PLUS
-     SOMBRE que le sol — c'est cet écart qui le fait exister. */
+     SOMBRE que le sol : c'est cet écart qui le fait exister. */
   background: var(--fy-panneau);
   box-shadow: var(--bev-creux);
   font-size: 15.5px;
@@ -386,7 +386,7 @@
   color: #ffffff;
 }
 
-/* le RÉSULTAT — un readout LCD, la seule ligne qui brille */
+/* le RÉSULTAT, un readout LCD, la seule ligne qui brille */
 .fy-resultat {
   padding: 18px 22px;
   background: var(--fy-lcd);
@@ -397,7 +397,7 @@
   color: var(--y2k-lcd-txt);
 }
 
-/* le PARC — les étiquettes noires du feed */
+/* le PARC, les étiquettes noires du feed */
 .fy-parc {
   display: flex;
   flex-wrap: wrap;
@@ -448,28 +448,28 @@
    POURQUOI SUR `.fy-etn` ET PAS SUR `.fy`. Le gabarit du #38 est gaté
    au pixel ; `.fy-resultat` et `.fy-parc` lisent `--f-mono`, et le
    corps entier lirait `--paper` s'il était repointé plus haut. Le
-   repointage est donc enfermé dans les trois blocs qui l'appellent —
+   repointage est donc enfermé dans les trois blocs qui l'appellent,
    aucun pixel validé ne bouge.
    ================================================================== */
 .y2k.fy .fy-etn {
   display: grid;
   gap: 14px;
 
-  /* le LIT — le même panneau que les contraintes et les décisions :
+  /* le LIT, le même panneau que les contraintes et les décisions :
      sur le sol violet, un presque-noir se lirait comme un
      trou découpé, pas comme une carte (leçon du 4e retour du #37) */
   --ink-2: var(--fy-panneau);
   /* RATIOS MESURÉS au navigateur contre le panneau #211a40 (et contre
-     le sol #342b66 pour ce qui peut s'y poser), pas estimés — la loi du
+     le sol #342b66 pour ce qui peut s'y poser), pas estimés, la loi du
      dépôt vaut aussi pour les chiffres qu'on écrit en commentaire.
      Chaque token est annoté de ce qu'il PORTE VRAIMENT ici, relevé par
      extraction de leurs règles (plus bas) : les blocs empruntés ne
      rendent ni .dim-2 ni .jp, les nommer serait un faux repère. */
-  --paper: #f4efff; /* 14,49:1 — .fp-cote-val, .fp-code-m (l'encre du corps, à l'identique) */
-  --g-100: #e9e4ff; /* 13,22:1 — .etn-bus, .etn-t-titre, .fp-code code */
-  --g-300: var(--y2k-chrome); /* 10,18:1 — .etn-t, .etn-t-cote, .fp-cote-nom, .fp-code-note */
-  --g-500: #a49dc9; /* 6,41:1 panneau · 4,90:1 sol — .dim, .etn-boite, les libellés hors boîte, .fp-code-c */
-  --g-700: rgba(205 201 230 / 0.34); /* .etn-puce, .etn-attache, .etn-cote — FILET, jamais un glyphe */
+  --paper: #f4efff; /* 14,49:1, .fp-cote-val, .fp-code-m (l'encre du corps, à l'identique) */
+  --g-100: #e9e4ff; /* 13,22:1, .etn-bus, .etn-t-titre, .fp-code code */
+  --g-300: var(--y2k-chrome); /* 10,18:1, .etn-t, .etn-t-cote, .fp-cote-nom, .fp-code-note */
+  --g-500: #a49dc9; /* 6,41:1 panneau · 4,90:1 sol, .dim, .etn-boite, les libellés hors boîte, .fp-code-c */
+  --g-700: rgba(205 201 230 / 0.34); /* .etn-puce, .etn-attache, .etn-cote, FILET, jamais un glyphe */
   --line: rgba(205 201 230 / 0.16);
   --line-2: rgba(205 201 230 / 0.28);
   --line-3: rgba(205 201 230 / 0.44);
@@ -495,16 +495,16 @@
    `fill`. Le lit du bloc passait donc
    au Canvas BLANC du système pendant que le bus, les 28 arêtes, leurs
    pointes, les trois cadres de bande et la cote gardaient leur rgba
-   lavande — mesuré : trait rgba(205,201,230,0.44) sur blanc, 1,22:1.
+   lavande, mesuré : trait rgba(205,201,230,0.44) sur blanc, 1,22:1.
    Le schéma devenait huit boîtes sans un seul lien entre elles.
 
    La règle générale : QUI PINE UN TOKEN HÉRITE DE SES VARIANTES.
    Ces trois blocs sont le premier contenu du monde Y2K à peindre en
-   stroke/fill — le reste du monde survit au contraste forcé parce
+   stroke/fill, le reste du monde survit au contraste forcé parce
    qu'il ne peint qu'en color/background-color. */
 @media (forced-colors: active) {
   .y2k.fy .fy-etn {
-    /* on rend la main au système, palette ENTIÈRE — un demi-repointage
+    /* on rend la main au système, palette ENTIÈRE, un demi-repointage
        laisserait exactement le trou qu'on vient de boucher */
     --ink-2: Canvas;
     --paper: CanvasText;
@@ -540,10 +540,10 @@
   }
 }
 
-/* LE LIT — un seul, pour les trois blocs. C'est la correction d'une
+/* LE LIT : un seul, pour les trois blocs. C'est la correction d'une
    faute AA attrapée par la sonde : la légende de source du code et la
    note des cotes sont des enfants DIRECTS du bloc (le composant rend un
-   fragment), elles flottaient donc sur le SOL — que le halo violet de
+   fragment), elles flottaient donc sur le SOL, que le halo violet de
    `.y2k::before` éclaircit à #4f3f82 en haut de page, où le texte
    secondaire ne mesurait plus que 3,49:1. Poser le bloc ENTIER sur son
    panneau règle la cause et pas le symptôme : chaque bloc de cette
@@ -555,18 +555,18 @@
   display: grid;
   gap: 12px;
 }
-/* LA SEULE RÈGLE DE LARGEUR DE CE BLOC, et elle est porteuse — les
+/* LA SEULE RÈGLE DE LARGEUR DE CE BLOC, et elle est porteuse, les
    trois autres qu'on avait posées par réflexe sont tombées à la mesure.
    Ce qui déborde n'est PAS le cadre de défilement : `.fp-code-cadre` et
    `.fp-cotes-cadre` portent `overflow-x: auto` (plus bas), et la taille minimale automatique ne s'applique pas à un
-   conteneur de défilement — ils se contiennent seuls. C'est leur PARENT
+   conteneur de défilement, ils se contiennent seuls. C'est leur PARENT
    qui déborde : `figure.fp-code` est un enfant de grille ordinaire, il
    prend donc la largeur intrinsèque du code (1035px), pousse la colonne,
    et `.y2k { overflow: hidden }` ROGNE le tout en silence.
 
    Mesuré par build réel, sonde à l'appui : sans cette ligne, la légende
    de source part 766px hors cadre à 320px ; avec elle seule, zéro rogné
-   sur neuf largeurs. Le test « rogné » de la sonde existe pour ça — il
+   sur neuf largeurs. Le test « rogné » de la sonde existe pour ça : il
    est né de cette règle, et il la garde. */
 .y2k.fy .fy-etn-lit > * {
   min-width: 0;

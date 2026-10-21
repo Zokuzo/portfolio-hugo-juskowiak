@@ -2,7 +2,7 @@ import { t, type Lang } from "./dict"
 import { Planche, type Plan } from "./schema"
 
 /* ==================================================================
-   SCHÉMA D'ARCHITECTURE — ETERNAL
+   SCHÉMA D'ARCHITECTURE: ETERNAL
 
    CE QU'IL DIT, ET POURQUOI CE DÉCOUPAGE. Le relevé du ticket 02
    compte 23 nœuds et 28 arêtes, mais il conclut aussi que la lecture
@@ -10,12 +10,12 @@ import { Planche, type Plan } from "./schema"
    23 nœuds donnerait une carte exacte que personne ne lit ; ce sont
    les trois lignes qui sont dessinées :
 
-     1. une CHAÎNE D'ÉCRITURE — un interrupteur, un contrat, une
+     1. une CHAÎNE D'ÉCRITURE: un interrupteur, un contrat, une
         matière première, un rédacteur, et deux fichiers déposés ;
-     2. un TRANSPORT qui n'est que du git — d'où le BUS : le dépôt est
+     2. un TRANSPORT qui n'est que du git: d'où le BUS : le dépôt est
         à la fois la base de données, le canal entre machines et
         l'hébergement, donc une seule pièce, pas trois flèches ;
-     3. un RUNTIME À DEUX VUES ET UN SEUL MOTEUR — et la seule cote du
+     3. un RUNTIME À DEUX VUES ET UN SEUL MOTEUR: et la seule cote du
         schéma mesure l'écart entre ces deux vues : zéro règle
         dupliquée (`monde.html:1005-1006`, `grep -c setItem monde.html`
         → 0).
@@ -26,14 +26,14 @@ import { Planche, type Plan } from "./schema"
 
    AUCUNE COORDONNÉE ICI. Ce fichier ne déclare que des ancres :
    une colonne, une rangée, des identifiants. Toute la géométrie est
-   calculée par `schema.tsx` — donc traduire le schéma, rallonger un
+   calculée par `schema.tsx`: donc traduire le schéma, rallonger un
    libellé ou ajouter un nœud ne peut pas décaler une flèche.
 
    POURQUOI CES COLONNES-LÀ. La colonne d'un nœud n'est pas un choix
    graphique, c'est ce qui garantit que deux embranchements du bus ne
    se superposent pas : `moteur` et `manifeste` occupent des colonnes
    distinctes parce qu'ils se raccordent au même tronc. `manifeste` et
-   `vue` partagent la colonne 3 EXPRÈS — la traversée qu'on lit alors
+   `vue` partagent la colonne 3 EXPRÈS: la traversée qu'on lit alors
    est vraie, `monde.html` va bien chercher le manifeste
    (`recherches/02-eternal.md` E23).
 
@@ -49,14 +49,14 @@ export function SchemaEternal({ lang }: { lang: Lang }) {
 
   const plan: Plan = {
     noeuds: [
-      // bande 1 — la chaîne d'écriture
+      // bande 1: la chaîne d'écriture
       { id: "etat", col: 0, rang: 0, lignes: lignes("etat") },
       { id: "projet", col: 0, rang: 1, lignes: lignes("projet") },
       { id: "contrat", col: 0, rang: 2, lignes: lignes("contrat") },
       { id: "agent", col: 1, rang: 1, lignes: lignes("agent"), accent: true },
       { id: "fragment", col: 2, rang: 0, lignes: lignes("fragment") },
       { id: "manifeste", col: 3, rang: 2, lignes: lignes("manifeste") },
-      // bande 3 — le runtime
+      // bande 3: le runtime
       { id: "moteur", col: 0, rang: 4, lignes: lignes("moteur"), accent: true },
       { id: "vue", col: 3, rang: 4, lignes: lignes("vue") },
     ],

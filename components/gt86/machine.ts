@@ -1,4 +1,4 @@
-/* LA MACHINE À ÉTATS de l'expérience GT86 — ticket #27 de la carte #15.
+/* LA MACHINE À ÉTATS de l'expérience GT86 : ticket #27 de la carte #15.
    La forme est celle arrêtée par la spec d'architecture (#25) :
 
      CIEL ──clic──▶ ATTERRISSAGE ──▶ SEUIL ──▶ HABITACLE ──▶ {GPS, MUSIQUES}
@@ -7,7 +7,7 @@
 
    CE FICHIER EST PUR : pas un import de React, de three ni du DOM. C'est ce
    qui permet à `tools/gt86/verifie.mjs` de l'exécuter dans node et d'assérer
-   la table de transitions sans navigateur — et c'est le seul endroit où
+   la table de transitions sans navigateur, et c'est le seul endroit où
    l'enchaînement des scènes est écrit. Les composants ne décident rien : ils
    émettent des signaux.
 
@@ -27,7 +27,7 @@ export type Etat =
   | "DEPART"
 
 /* Les destinations sont une VALEUR et pas seulement un type : le harnais
-   asserte que chacune a sa route sur le disque (garde de dépôt du #37 —
+   asserte que chacune a sa route sur le disque (garde de dépôt du #37 :
    la fin de la cinématique est un `router.push(dest)` qu'aucune passe
    navigateur n'exerce, une faute de frappe la rendrait 404 en silence). */
 export const DESTS = ["/work", "/home"] as const
@@ -58,7 +58,7 @@ export const ETATS: readonly Etat[] = [
   "DEPART",
 ]
 
-/* Les trois états où le bouton « passer » s'affiche — la spec le veut
+/* Les trois états où le bouton « passer » s'affiche : la spec le veut
    présent de CIEL à SEUIL, et nulle part ailleurs. */
 export const INTRO: readonly Etat[] = ["CIEL", "ATTERRISSAGE", "SEUIL"]
 
@@ -69,7 +69,7 @@ export const RAILS: Partial<Record<Etat, Etat>> = {
   SEUIL: "HABITACLE",
 }
 
-/* Les états EN POSE, où la caméra ne bouge pas — les autres sont des
+/* Les états EN POSE, où la caméra ne bouge pas : les autres sont des
    transitions. La boucle de rendu tourne désormais en continu (3e retour
    de gate #31, « au moins 100 fps ») : ce classement ne pilote plus le
    frameloop, il reste la SÉMANTIQUE de la machine, assertée par le bloc A
@@ -113,14 +113,14 @@ export function suivant(s: Scene, g: Signal): Scene {
       return s
 
     case "retour":
-      /* DÉPART est TERMINAL : la suite est un `router.push`, pas un état —
+      /* DÉPART est TERMINAL : la suite est un `router.push`, pas un état :
          revenir en arrière depuis un départ en cours raturerait la
          navigation (le piège exact corrigé au #26 sur `gps()`). */
       if (s.etat === "HABITACLE" || s.etat === "DEPART") return s
       return { etat: "HABITACLE", dest: null }
 
     case "rejoue":
-      /* Revoir la scène — depuis l'habitacle SEUL (des écrans plus
+      /* Revoir la scène : depuis l'habitacle SEUL (des écrans plus
          profonds, ‹ rassoit d'abord) : retour au CIEL, la boucle complète
          (vol, seuil) se rejoue ; la marque de session reste posée, le
          rejeu est un geste explicite, pas un état de session. */
@@ -148,6 +148,6 @@ export function marqueVue(): void {
   try {
     globalThis.sessionStorage?.setItem(CLE, "vu")
   } catch {
-    /* idem — l'écriture est un confort, jamais une condition */
+    /* idem : l'écriture est un confort, jamais une condition */
   }
 }

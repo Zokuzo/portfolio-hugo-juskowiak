@@ -29,7 +29,7 @@ next-env.d.ts
 .playwright-mcp
 
 # les assets sources bruts (GLB Sketchfab avant optimisation) : lourds,
-# hors dépôt (carte #15) — et hors du scan Tailwind oxide, qui avale les
+# hors dépôt (carte #15), et hors du scan Tailwind oxide, qui avale les
 # binaires non-gitignorés jusqu'à l'OOM (débogué au gate #22)
 /ressources/
 

@@ -7,22 +7,22 @@ import { ALLUME, ASSISE, type Cockpit } from "./habitacle"
 import { CAM_FINALE, enMondeRepos } from "./rue"
 import { lanceDemarrage } from "./demarrage"
 
-/* LE SEUIL — ticket #31, la mise en scène gravée au #24 : « la mise sous
+/* LE SEUIL : ticket #31, la mise en scène gravée au #24 : « la mise sous
    contact et la plongée dans le verre ». Sur la recette du vol (#30/#26) :
    course à DURÉE FIXE en courbe douce, delta plafonné à 1/12 s,
-   initialisation DANS useFrame (première frame, drapeau — jamais dans un
+   initialisation DANS useFrame (première frame, drapeau : jamais dans un
    effet : React les diffère, une frame courrait avant), c'est LUI qui
    envoie le vrai `{t:"fini"}`, l'horloge de scene.tsx n'est qu'un filet.
 
    Quatre actes SUR UNE SEULE COURBE (2e retour de gate, « pas assez
-   fluide » : la version en segments s'arrêtait NET à chaque jonction —
+   fluide » : la version en segments s'arrêtait NET à chaque jonction,
    glissé, stop, tenue, stop, plongée. La caméra suit désormais une
    Catmull-Rom paramétrée en longueur d'arc, et un profil de vitesse
    Hermite C1 dont les nœuds intérieurs portent une pente NON NULLE : du
    départ au verre, elle ne s'arrête jamais) :
-   1. l'approche — du ¾ arrière d'arrivée, large autour du flanc, jusqu'au
+   1. l'approche : du ¾ arrière d'arrivée, large autour du flanc, jusqu'au
       ¾ avant, en décélérant SANS s'arrêter ;
-   2. la mise sous contact en cascade pendant l'approche — le combiné
+   2. la mise sous contact en cascade pendant l'approche : le combiné
       s'éveille (surtension d'aiguille : le GLB n'offre aucun pivot, le
       balayage est une lueur qui monte, dépasse et se pose), puis écrans,
       rétroéclairage et néons, l'habitacle luisant à travers le verre ;
@@ -30,30 +30,30 @@ import { lanceDemarrage } from "./demarrage"
       DOM), la caméra en lent travelling avant constant ;
    4. le nom s'efface, la course ré-accélère par-dessus le capot,
       TRAVERSE le pare-brise conducteur sous une impulsion de voile
-      (#161b21 : le verre emplit le cadre, son noir devient l'obscurité
-      — un battement, pas un rideau) et vient mourir sur l'œil du
+      (#161b21 : le verre emplit le cadre, son noir devient l'obscurité :
+      un battement, pas un rideau) et vient mourir sur l'œil du
       conducteur : on s'assied DANS le mouvement, le regard se lève de la
       planche vers la route, la focale glisse vers celle de l'habitacle.
 
    Le repère des poses est celui de la VOITURE (brut GLB : nez +z,
-   conducteur +x — conduite à droite) converti en monde à l'initialisation
+   conducteur +x : conduite à droite) converti en monde à l'initialisation
    via la pose de repos (enMondeRepos) : les chiffres restent lisibles et
    la pose de la rue peut bouger sans rien casser ici. */
 
 /* PARTITION RESSERRÉE au retour de gate #31 (« ni correcte ni assez
-   rapide ») — diagnostiquée aux arrêts sur image CDP puis contre-vérifiée
+   rapide ») : diagnostiquée aux arrêts sur image CDP puis contre-vérifiée
    au calcul (rejeux numériques indépendants, géométrie du cône relue dans
    drei/core/SpotLight.js, GLB mesuré au sommet) :
    - le « pas assez rapidement » : 8,2 s dont ~2,5 s de plan GELÉ après le
      claquement (dérive 8 cm/s, imperceptible) → 6,1 s, cascade PENDANT le
      glissé, claquement à 2,3 s, et la tenue du nom devient un lent
-     travelling avant (~0,9 m en courbe douce) — le cadre reste vivant ;
+     travelling avant (~0,9 m en courbe douce) : le cadre reste vivant ;
    - le « pas correctement » : l'ancienne plongée par la vitre latérale
      finissait sa course à bout portant du flanc, voile encore transparent
-     (vue à travers le verre AVANT l'obscurité — capturé), et frôlait les
+     (vue à travers le verre AVANT l'obscurité : capturé), et frôlait les
      éclats d'optiques ; elle passe désormais PAR-DESSUS LE CAPOT vers le
      pare-brise conducteur, décélère à zéro sur le verre, et le voile est
-     plein avant tout contact — ce chemin passe AU-DESSUS des cônes
+     plein avant tout contact : ce chemin passe AU-DESSUS des cônes
      volumétriques et derrière leurs éclats, les faisceaux restent
      allumés (vérifié aux captures du scrubber) ;
    - les à-coups machine-rapide confirmés en revue : visée continue à
@@ -61,7 +61,7 @@ import { lanceDemarrage } from "./demarrage"
      avec cônes ET optiques synchrones, plus AUCUNE bascule de pixelRatio
      en pleine vue, et `depuis` posé sur CAM_FINALE (jamais lu de la
      caméra : le filet peut couper un vol en plein ciel). Les lumières,
-     elles, se pilotent par INTENSITÉ seule — topologie constante, voir le
+     elles, se pilotent par INTENSITÉ seule : topologie constante, voir le
      Cockpit d'habitacle.tsx (le double gel de recompilation shader était
      le premier suspect du gate). */
 const DUREE = 6.6
@@ -76,12 +76,12 @@ export const CLAQUE: [number, number] = [2.3, 2.35]
 const NOM_ENTRE: [number, number] = [2.35, 2.7]
 const NOM_SORT: [number, number] = [4.9, 5.2]
 const PLONGE_DEBUT = 5.0
-/* l'instant où la caméra TRAVERSE le pare-brise — l'entrée dans le
+/* l'instant où la caméra TRAVERSE le pare-brise : l'entrée dans le
    véhicule est continue jusqu'au siège (3e retour de gate), le voile
    n'est plus un rideau mais une IMPULSION qui couvre la traversée */
 export const VERRE_T = 5.9
 /* l'impulsion couvre TOUTE la fenêtre où le near plane peut trancher le
-   verre à l'approche ([5,84 → traversée], mesurée au GLB) — la sortie se
+   verre à l'approche ([5,84 → traversée], mesurée au GLB) : la sortie se
    fait caméra dedans, regard devant, le verre est derrière elle */
 const PULSE_MONTE: [number, number] = [5.62, 5.82]
 const PULSE_BAISSE: [number, number] = [6.0, 6.32]
@@ -90,7 +90,7 @@ const FOCALE: [number, number] = [5.9, 6.5]
 /* la surtension du réveil d'aiguille */
 const AIGUILLE_CRETE = 2.4
 
-/* LE CHEMIN, en repère voiture — la Catmull-Rom passe PAR chaque ancre :
+/* LE CHEMIN, en repère voiture : la Catmull-Rom passe PAR chaque ancre :
    vue d'arrivée (CAM_FINALE, préfixée en monde à l'init) → large autour
    du flanc → ¾ avant « B » (calé aux captures) → fin du travelling du
    nom → au-dessus du capot → le pare-brise conducteur → au-dessus du
@@ -100,7 +100,7 @@ const CHEMIN: [number, number, number][] = [
   [-3.3, 1.5, 6.8],
   [-2.8, 1.43, 6.0],
   [-0.6, 1.78, 3.5],
-  /* l'ancre du verre est SUR le pare-brise mesuré au GLB (mi-hauteur) —
+  /* l'ancre du verre est SUR le pare-brise mesuré au GLB (mi-hauteur),
      une première ancre 34 cm au-dessus déplaçait la vraie traversée à
      t≈6,17, hors de l'impulsion du voile (payé, chiffré en revue) ; le
      profil épingle cette ancre à VERRE_T, la traversée y est par
@@ -120,7 +120,7 @@ const PENTE_DEPART = 0.08
 const VITESSE_VERRE = 1.6
 
 /* les visées : la voiture pendant l'approche, la calandre pendant le nom
-   (continue — un saut de 3,8° claquait à l'image), la planche de bord
+   (continue : un saut de 3,8° claquait à l'image), la planche de bord
    pendant la plongée, puis le regard se lève vers la route en s'asseyant */
 const VISE_ARRIERE = new THREE.Vector3(0, 1.05, 0)
 const VISE_AVANT = new THREE.Vector3(0, 0.75, 1.3)
@@ -131,7 +131,7 @@ const adoucit = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 
 const lisse = (a: number, b: number, t: number) => Math.min(1, Math.max(0, (t - a) / (b - a)))
 const fenetre = ([a, b]: [number, number], t: number) => lisse(a, b, t)
 
-/* le profil de vitesse : Hermite cubique par morceaux, C1 — chaque nœud
+/* le profil de vitesse : Hermite cubique par morceaux, C1 : chaque nœud
    porte sa pente (ds/dt), les nœuds intérieurs une pente NON NULLE : la
    caméra ne s'arrête qu'au verre */
 type Cle = { t: number; s: number; m: number }
@@ -164,7 +164,7 @@ export default function Seuil({
 }: {
   etat: string
   cockpit: Cockpit
-  /* le voile de la plongée (#161b21, le verre fumé gaté) et le nom — deux
+  /* le voile de la plongée (#161b21, le verre fumé gaté) et le nom : deux
      divs du DOM pilotés image par image via leur ref, comme le voile crème
      du vol */
   voile: RefObject<HTMLDivElement | null>
@@ -190,7 +190,7 @@ export default function Seuil({
   })
 
   /* le RANGEMENT seulement (recette du vol) : un skip en pleine mise en
-     scène coupe le voile net — l'état ALLUMÉ de la voiture, lui, est posé
+     scène coupe le voile net : l'état ALLUMÉ de la voiture, lui, est posé
      par l'effet `vivant` de la rue à l'entrée de l'habitacle, pas ici.
      Au fini naturel le voile n'est PAS touché : sa dissipation douce
      (CSS) est déjà en route sur la vue assise. */
@@ -213,7 +213,7 @@ export default function Seuil({
        ne pas réécrire la caméra par-dessus l'assise posée */
     if (i.fini) return
     if (!i.lance) {
-      /* la voiture doit être montée et mesurée — sinon on attend la frame
+      /* la voiture doit être montée et mesurée : sinon on attend la frame
          suivante, le filet de scene.tsx couvre le pire */
       const voiture = cockpit.voiture
       if (!voiture) return
@@ -223,7 +223,7 @@ export default function Seuil({
       i.t = 0
       /* les ancres se posent sur la voiture AU REPOS (enMondeRepos) : si le
          filet a coupé le vol en plein ciel, les groupes de chute portent
-         encore l'altitude — la voiture, elle, sera posée dès cette frame.
+         encore l'altitude : la voiture, elle, sera posée dès cette frame.
          L'entrée est CONTRACTUELLEMENT la vue d'arrivée, jamais lue de la
          caméra (la première frame peut courir avant l'effet de pose). La
          DERNIÈRE ancre est l'œil du conducteur : la même courbe entre dans
@@ -235,7 +235,7 @@ export default function Seuil({
       ]
       i.courbe = new THREE.CatmullRomCurve3(ancres, false, "centripetal")
       /* les fractions de longueur d'arc des ancres du rythme, mesurées sur
-         la courbe réelle (600 échantillons) — puis le profil : arrivée au
+         la courbe réelle (600 échantillons) : puis le profil : arrivée au
          ¾ avant pour le claquement, travelling du nom à vitesse constante
          NON NULLE, ré-accélération, traversée du verre à ~1,6 m/s, mort
          de la course sur le siège */
@@ -287,7 +287,7 @@ export default function Seuil({
       camera.updateProjectionMatrix()
     }
     /* la traversée du verre : sous l'impulsion du voile, le pare-brise
-       passe au réglage intérieur — dehors il garde le fumé 0,8 */
+       passe au réglage intérieur : dehors il garde le fumé 0,8 */
     if (t >= VERRE_T && !i.dedans) {
       i.dedans = true
       for (const v of cockpit.verre) {
@@ -316,7 +316,7 @@ export default function Seuil({
     for (const n of cockpit.neonLums) n.lum.intensity = dedans * n.plein
     if (cockpit.neons) cockpit.neons.visible = dedans > 0.3
 
-    /* ---- le claquement des phares, en DERNIER — optiques, faisceaux et
+    /* ---- le claquement des phares, en DERNIER : optiques, faisceaux et
        cônes d'un même geste (3 frames). Le chemin par le capot passe
        AU-DESSUS des cônes et derrière leurs éclats : les faisceaux
        restent allumés pendant toute la plongée. ---- */
@@ -336,7 +336,7 @@ export default function Seuil({
     }
 
     /* ---- l'impulsion du voile : pleine autour de la traversée du verre,
-       dissipée pendant qu'on s'assied — plus de rideau final ---- */
+       dissipée pendant qu'on s'assied : plus de rideau final ---- */
     if (voile.current && !i.fini) {
       const pulse = Math.min(fenetre(PULSE_MONTE, t), 1 - fenetre(PULSE_BAISSE, t))
       voile.current.style.opacity = pulse.toFixed(3)

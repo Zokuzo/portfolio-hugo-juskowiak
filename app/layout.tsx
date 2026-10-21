@@ -21,7 +21,7 @@ const mono = JetBrains_Mono({
   display: "swap",
 })
 
-// preload:false — les glyphes kana arrivent par unicode-range, on ne bloque pas le rendu pour eux
+// preload:false : les glyphes kana arrivent par unicode-range, on ne bloque pas le rendu pour eux
 const jp = Noto_Sans_JP({
   weight: ["400", "500"],
   subsets: ["latin"],
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     "Portfolio d'un ingénieur full stack et IA au Mans : Reach-Up, Octo, UYB Store, prédiction mémoire par machine learning.",
   /* La mire porte son propre fond d'encre : elle tient sur une barre
      d'onglets claire comme sombre, donc plus de variantes par
-     `prefers-color-scheme` — deux fichiers identiques qui prétendaient
+     `prefers-color-scheme` : deux fichiers identiques qui prétendaient
      être différents. Le SVG passe en premier, les PNG sont le repli. */
   icons: {
     icon: [
@@ -71,7 +71,7 @@ export const viewport: Viewport = {
 
 /* `.proto-root` porte les tokens du système et vit ICI, à la racine :
    toutes les routes en héritent (le socle, app/globals.css).
-   ATTENTION — ce div ne doit JAMAIS recevoir transform, filter,
+   ATTENTION : ce div ne doit JAMAIS recevoir transform, filter,
    perspective, will-change ni contain:paint : les position:fixed des
    pages (surcouche 3D, menu, feuilles) prendraient cet ancêtre pour
    bloc conteneur et se mettraient à scroller avec la page. */
@@ -84,7 +84,7 @@ export default function RootLayout({
     <html lang="fr" className="dark" suppressHydrationWarning>
       <head>
         {/* AVANT LA PREMIÈRE PEINTURE (#13) : le site est statique, le
-            serveur ne connaît pas le choix de thème — sans ce script,
+            serveur ne connaît pas le choix de thème : sans ce script,
             chaque chargement en clair flasherait sombre d'abord. Le réglage
             système décide à chaque visite (demande de Hugo, 2026-10-21) ;
             la bascule ne vaut que pour la session (sessionStorage), et
@@ -92,7 +92,7 @@ export default function RootLayout({
             `suppressHydrationWarning` sur <html> : la classe posée ici
             diffère du HTML serveur, et c'est voulu. La classe `dark` reste : elle ne pilote que la
             @custom-variant Tailwind des composants importés (aucun site
-            aujourd'hui) — le thème vit sur `clair`. */}
+            aujourd'hui) : le thème vit sur `clair`. */}
         <script
           dangerouslySetInnerHTML={{
             __html: `var t=null;try{localStorage.removeItem("theme");t=sessionStorage.getItem("theme")}catch(e){}try{if(t?t==="clair":matchMedia("(prefers-color-scheme: light)").matches)document.documentElement.classList.add("clair")}catch(e){}`,

@@ -5,7 +5,7 @@ import dynamic from "next/dynamic"
 import type { Lang } from "@/components/proto/dict"
 import { leveMasque } from "./capable"
 
-/* LA SURCOUCHE — ticket #27 de la carte #15.
+/* LA SURCOUCHE, ticket #27 de la carte #15.
 
    Le serveur rend la version simple COMPLÈTE (celle du mobile) : contenu
    indexable, repli déjà dans le DOM. Ce composant vient se poser par-dessus
@@ -35,7 +35,7 @@ const Scene = dynamic(() => import("./scene"), { ssr: false, loading: () => <Voi
 
 /* React 19.2 n'a toujours PAS de boundary sous forme de hook : la classe
    reste le seul moyen d'attraper une erreur de rendu d'un sous-arbre.
-   Celle-ci couvre aussi les erreurs internes de la scène — R3F attrape les
+   Celle-ci couvre aussi les erreurs internes de la scène, R3F attrape les
    siennes dans sa propre boundary puis les re-jette côté DOM
    (`react-three-fiber.esm.js:58`, `if (error) throw error`). */
 class Filet extends Component<{ children: ReactNode; surRepli: () => void }, { mort: boolean }> {
@@ -78,7 +78,7 @@ export default function Surcouche({ lang, surRepli }: { lang: Lang; surRepli: ()
      SANS `.catch` (`react-three-fiber.esm.js:114`) : si la création du
      contexte WebGL échoue, la rejection ne traverse aucune boundary React et
      la page reste sur un voile noir. La sonde de `capable.ts` est la vraie
-     défense — ceci n'est que le filet.
+     défense, ceci n'est que le filet.
 
      Il est FILTRÉ sur le texte de l'erreur : un écouteur global qui replierait
      sur n'importe quelle rejection non rattrapée (une balise d'analytics, un

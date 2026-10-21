@@ -1,5 +1,5 @@
 /* ==================================================================
-   LE HERO « FENÊTRE » — la chambre au crépuscule, le système sur le
+   LE HERO « FENÊTRE » : la chambre au crépuscule, le système sur le
    moniteur du bureau. Peau alternative du hero de /home (#37, 2e
    retour de gate).
 
@@ -12,7 +12,7 @@
    Sans ça, le fond de page reparaît de part et d'autre de la chambre et
    la scène se lit comme une vignette collée.
    LE MUR EST ÉCLAIRCI (3e retour de gate : « faut que ce soit un peu
-   plus clair, l'ensemble ») — et il l'est PAR LA FENÊTRE : la lueur
+   plus clair, l'ensemble »), et il l'est PAR LA FENÊTRE : la lueur
    part du coin où elle se trouve et retombe vers le sol. Un mur de
    chambre au crépuscule n'est pas un aplat noir, il est peint par la
    lumière qui entre. */
@@ -23,7 +23,7 @@
     radial-gradient(120% 90% at 78% 12%, rgba(196 140 205 / 0.42), transparent 62%),
     linear-gradient(180deg, #322a63, #272052 55%, #1f1943);
   /* LE BUREAU occupe le bas : le padding réserve sa bande, si bien que
-     le bord bas de la boîte de contenu EST le plan du bureau — le
+     le bord bas de la boîte de contenu EST le plan du bureau, le
      moniteur s'y pose sans qu'aucune valeur ne soit à accorder à la
      main entre deux règles. */
   padding-bottom: 92px;
@@ -72,7 +72,7 @@
 }
 
 /* ------------------------------------------------------------------
-   LA FENÊTRE et sa lumière — décor pur, au fond de la pièce.
+   LA FENÊTRE et sa lumière, décor pur, au fond de la pièce.
    ------------------------------------------------------------------ */
 .hf-fond {
   position: absolute;
@@ -81,10 +81,10 @@
   pointer-events: none;
 }
 /* LA FENÊTRE : le panneau pixel, calé en haut à droite du mur. Sa
-   largeur est PLAFONNÉE en px — au-delà, une fenêtre de 900px de large
+   largeur est PLAFONNÉE en px : au-delà, une fenêtre de 900px de large
    dans une chambre n'est plus une fenêtre, c'est une baie vitrée. */
 /* L'ENSEMBLE FENÊTRE : le châssis pixel ET son appui, dans une boîte
-   commune — c'est elle qui porte la position, les deux pièces se calent
+   commune, c'est elle qui porte la position, les deux pièces se calent
    l'une sous l'autre par le flux. La largeur est un MULTIPLE de la
    grille (72 colonnes) : à une taille quelconque, un rect de 1 unité
    tombe entre deux pixels d'écran et `crispEdges` ne sert plus à rien.
@@ -120,7 +120,7 @@
   filter: drop-shadow(0 0 48px rgba(196, 130, 192, 0.4));
 }
 /* L'APPUI : la tablette sous la fenêtre, débordant de 12px de chaque
-   côté du châssis comme un vrai — une arête claire, deux tons */
+   côté du châssis comme un vrai, une arête claire, deux tons */
 .hf-appui {
   display: block;
   height: 14px;
@@ -128,7 +128,7 @@
   background: linear-gradient(180deg, #bcb0e0 0 3px, #60548a 3px);
   box-shadow: 0 6px 22px rgba(0, 0, 0, 0.5);
 }
-/* LA LAMPE hors champ : la flaque chaude qui pose la pièce — sans elle
+/* LA LAMPE hors champ : la flaque chaude qui pose la pièce, sans elle
    le mur est un aplat, et une chambre n'est jamais un aplat. Montée au
    3e gate : c'est la seule source CHAUDE de la scène, elle réchauffe le
    côté opposé à la fenêtre et empêche le mur gauche de tomber au noir. */
@@ -141,14 +141,14 @@
   background: radial-gradient(closest-side, rgba(255, 198, 138, 0.26), transparent 72%);
 }
 
-/* L'AFFICHE AU MUR : le kanji du foyer, encadré comme un poster — il
+/* L'AFFICHE AU MUR : le kanji du foyer, encadré comme un poster, il
    habite le pan de mur nu à gauche de la fenêtre et lui donne sa
    deuxième source claire. Décor : le glyphe passe par le dict comme
    ses frères de la planche, mais il ne dit rien de plus que le titre. */
 .hf-affiche {
   position: absolute;
   /* AU-DESSUS du moniteur, pas derrière : posée à 34px, elle se faisait
-     couper net par le capot — un poster à moitié mangé par un écran se
+     couper net par le capot, un poster à moitié mangé par un écran se
      lit comme un accident, pas comme de la profondeur */
   left: 24px;
   top: 22px;
@@ -156,7 +156,7 @@
   place-items: center;
   width: 104px;
   height: 132px;
-  /* --f-jp : Archivo et Arial n'ont aucun glyphe CJK — sans cette
+  /* --f-jp : Archivo et Arial n'ont aucun glyphe CJK, sans cette
      ligne, 家 part au repli système, voire au tofu */
   font-family: var(--f-jp), var(--f-display), sans-serif;
   font-size: 52px;
@@ -176,12 +176,12 @@
 }
 
 /* ------------------------------------------------------------------
-   LE MONITEUR — une VRAIE boîte : le texte y est du DOM, pas du dessin.
+   LE MONITEUR, une VRAIE boîte : le texte y est du DOM, pas du dessin.
    ------------------------------------------------------------------ */
 /* le moniteur EST POSÉ sur le bureau : `align-items: end` du cadre met
    son bord bas au bord de la boîte de contenu, que le padding-bottom de
    la section a fait coïncider avec le plan du bureau. Aucune valeur à
-   accorder entre deux règles — le socle touche le plan par construction. */
+   accorder entre deux règles : le socle touche le plan par construction. */
 .hf-crt {
   position: relative;
   z-index: 1;
@@ -193,7 +193,7 @@
     justify-self: center;
   }
 }
-/* LE CAPOT : plastique lavande bombé, biseau franc — la façade d'un
+/* LE CAPOT : plastique lavande bombé, biseau franc, la façade d'un
    moniteur de l'an 2000, la même famille que les fenêtres de /work. */
 .hf-crt-capot {
   position: relative;
@@ -206,19 +206,19 @@
   padding: 16px;
 }
 /* LA DALLE : un VRAI élément, pas un ::before. Le fond d'un texte doit
-   être mesurable — un audit de contraste parcourt les ANCÊTRES, et une
+   être mesurable, un audit de contraste parcourt les ANCÊTRES, et une
    dalle peinte en pseudo-élément est invisible pour lui : la sonde
    mesurait l'encre sur le capot lavande et criait cinq fautes qui
    n'existaient pas. Ce qui porte du texte est un élément. */
 .hf-crt-dalle {
   position: relative;
-  /* la dalle monte elle aussi d'un cran (3e gate) — mais elle RESTE la
+  /* la dalle monte elle aussi d'un cran (3e gate), mais elle RESTE la
      surface la plus sombre de la scène : c'est un tube allumé dans une
      pièce, l'écart avec le capot clair est ce qui le fait exister */
   background: radial-gradient(120% 130% at 50% 0%, #2e2458, #1a1436 70%);
   box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.55), inset -1px -1px 0 rgba(242, 240, 253, 0.18);
 }
-/* LES LIGNES DE BALAYAGE : le tube. Statiques — le monde a déjà son
+/* LES LIGNES DE BALAYAGE : le tube. Statiques : le monde a déjà son
    filtre CRT animé, et reduced-motion n'a rien à couper ici. */
 .hf-scan {
   position: absolute;
@@ -236,7 +236,7 @@
      dalle #120e26 au pire pixel */
   color: #9fe6c0;
 }
-/* LE WORDMARK SUR LA DALLE : le chrome redevient CLAIR — on est sur un
+/* LE WORDMARK SUR LA DALLE : le chrome redevient CLAIR, on est sur un
    fond sombre, la polarité du hero « boot » (encre sur ciel) s'inverse
    ici comme elle s'inverse entre /home et /work. Élément clippé NU :
    ni ombre, ni filter, ni isolation (cause racine du « néon noir »). */
@@ -340,7 +340,7 @@
 }
 
 /* ------------------------------------------------------------------
-   LES OBJETS DU BUREAU — ils disent la pièce, et rien d'autre.
+   LES OBJETS DU BUREAU, ils disent la pièce, et rien d'autre.
    ------------------------------------------------------------------ */
 /* posés SUR le bureau : leur base mord de 16px dans la bande du plan,
    sinon ils flottent au-dessus comme des vignettes */
@@ -373,7 +373,7 @@
   box-shadow: inset 1px 1px 0 rgba(242, 240, 253, 0.22), 2px 2px 0 rgba(0, 0, 0, 0.5);
   position: relative;
 }
-/* l'étiquette claire de la disquette — l'écho des étiquettes d'atelier */
+/* l'étiquette claire de la disquette, l'écho des étiquettes d'atelier */
 .hf-disquettes i::after {
   content: "";
   position: absolute;

@@ -30,19 +30,19 @@ import { TOURS_MAX, TOURS_ROUGE, TRAJET_MS, trajet } from "./trajet"
 import { MenuNfs, type Piste } from "@/components/nfs/menu-nfs"
 import { Compteur, Lignes, ROUTES, Volet, classeCourse } from "@/components/nfs/course"
 
-/* LES ASSETS ET LEUR CASCADE — ticket #28.
+/* LES ASSETS ET LEUR CASCADE : ticket #28.
 
    Le décodeur Draco est CHEZ NOUS : drei pointe par défaut sur gstatic.com
    (`@react-three/drei/core/Gltf.js:8`). Aucun de nos GLB n'est Draco
-   aujourd'hui (tout est meshopt, décodeur embarqué dans three-stdlib) — donc
-   zéro requête dans les deux cas — mais le chemin est armé pour le jour où un
+   aujourd'hui (tout est meshopt, décodeur embarqué dans three-stdlib) : donc
+   zéro requête dans les deux cas : mais le chemin est armé pour le jour où un
    export en produirait un. `public/voiture/draco/` est déjà dans le dépôt,
    octets identiques à ceux de three (vérifié). La sonde 7/7 de
    `tools/gt86/verifie.mjs` prouve qu'aucun octet ne part chez un tiers.
 
    La cascade (spec #25) : ce module ne charge au montage que ce que le CIEL
-   demandera — la voiture et le ciel. `RGBELoader` vient de three-stdlib comme
-   dans `<Environment>` de drei : même constructeur, donc MÊME clé de cache —
+   demandera : la voiture et le ciel. `RGBELoader` vient de three-stdlib comme
+   dans `<Environment>` de drei : même constructeur, donc MÊME clé de cache,
    les chaînes viennent de `ciel.tsx`, le préchargement d'ici sert donc son
    IBL, son dôme 4k (#46, #59) et sa voiture sans un octet de plus. Les textures de l'habitacle
    (#31) partent au même rang, depuis habitacle.tsx : elles habillent la
@@ -53,10 +53,10 @@ useGLTF.preload(VOITURE)
 useLoader.preload(RGBELoader, CIEL_HDR)
 useLoader.preload(THREE.TextureLoader, CIEL_4K)
 
-/* LA COQUILLE MONTÉE — ticket #27 de la carte #15.
+/* LA COQUILLE MONTÉE : ticket #27 de la carte #15.
 
    Les scènes sont VIDES : ce ticket ne pose pas un triangle. Ce qu'il pose,
-   c'est le squelette que #29 à #33 viendront remplir — le canvas, la machine
+   c'est le squelette que #29 à #33 viendront remplir : le canvas, la machine
    à états, les rails, le skip, le départ vers les vraies routes, et le
    démontage propre. Le critère du ticket est exactement là : « vérifiable
    sans aucun contenu 3D ».
@@ -69,7 +69,7 @@ useLoader.preload(THREE.TextureLoader, CIEL_4K)
 const NUIT = "#08070f"
 const ENCRE = "#e8dff5"
 
-/* Le fondu avant la navigation — même ordre de grandeur que le départ GPS
+/* Le fondu avant la navigation : même ordre de grandeur que le départ GPS
    du prototype #26. */
 const DEPART_MS = 650
 /* le menu Need for Speed : MAISON et WORK, puis le trajet */
@@ -79,7 +79,7 @@ const DEST: Record<Piste, Dest> = { maison: "/home", work: "/work" }
 const VERRE = "#161b21"
 
 /* Le contexte peut être perdu à chaud (onglet en arrière-plan longtemps,
-   pilote qui se réinitialise). three AVALE l'événement — `preventDefault`,
+   pilote qui se réinitialise). three AVALE l'événement : `preventDefault`,
    drapeau interne, `render()` sort sans rien dire : aucune exception ne
    remonte, la scène se fige en silence. Il faut donc l'écouter soi-même.
    Dans un effet, jamais dans `onCreated` qui n'a pas de nettoyage. */
@@ -122,12 +122,12 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
   const { etat, dest } = scene
   const boom = parametre() === "boom"
 
-  /* Le vol d'atterrissage (#30) : ses canaux vivent dans une ref — les
+  /* Le vol d'atterrissage (#30) : ses canaux vivent dans une ref : les
      scènes les consomment par frame, React ne re-rend rien. `chute: 1`
      au départ = la voiture de la rue est posée (skip, session revenante). */
   const vol = useRef<Trajectoire>({ t: 0, plonge: 0, chute: 1, ciel: poseNeutre(), rue: null })
   const voile = useRef<HTMLDivElement>(null)
-  /* le seuil (#31) : son voile verre, son nom, et le cockpit — les poignées
+  /* le seuil (#31) : son voile verre, son nom, et le cockpit : les poignées
      de la cascade, partagées entre la rue (qui les remplit) et le
      chorégraphe (qui les réveille) */
   const voileVerre = useRef<HTMLDivElement>(null)
@@ -135,21 +135,21 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
   /* les commandes du player (le moteur audio maison, 7e retour #33) */
   const commandesSpotify = useRef<CommandesSpotify | null>(null)
   const cockpit = useRef(cockpitVide()).current
-  /* L'ÉCRAN MÉDIA (#32) — une seule instance par montage (StrictMode
+  /* L'ÉCRAN MÉDIA (#32) : une seule instance par montage (StrictMode
      fabriquait deux dalles au prototype, matériau et clics séparés) */
   const ecranRef = useRef<Ecran | null>(null)
   if (!ecranRef.current) ecranRef.current = creeEcran(lang)
   const ecran = ecranRef.current
   /* la bascule FR/EN reste atteignable au clavier sous l'overlay : la
-     dalle suit (l'instance, elle, ne se recrée jamais — StrictMode) */
+     dalle suit (l'instance, elle, ne se recrée jamais : StrictMode) */
   useEffect(() => {
     ecran.langue(lang)
   }, [ecran, lang])
-  /* poignée de test (harnais CDP) — même rôle que window.__gt86 */
+  /* poignée de test (harnais CDP) : même rôle que window.__gt86 */
   useEffect(() => {
     Object.assign(window as object, { __gt86ecran: ecran, __gt86cockpit: cockpit })
   }, [ecran, cockpit])
-  /* le compteur de cadence à la demande (?fps) — pour mesurer chez Hugo ;
+  /* le compteur de cadence à la demande (?fps) : pour mesurer chez Hugo ;
      ?nodepart fige l'itinéraire à l'écran (gates visuels, recette #26) */
   const [fpsVoulu] = useState(() => new URLSearchParams(window.location.search).has("fps"))
   const [nodepart] = useState(() => new URLSearchParams(window.location.search).has("nodepart"))
@@ -176,7 +176,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
     useGLTF.preload(RUE_GLB)
   }, [])
   /* le ZOOM sur la dalle (hub/horloge/stats, machine à l'habitacle) et
-     les feux de détresse — des états d'ÉCRAN, pas de navigation : la
+     les feux de détresse : des états d'ÉCRAN, pas de navigation : la
      machine garde GPS/CHOIX/MUSIQUES/DÉPART, l'écran garde son poste */
   /* LA VERSION CRT (12e retour : « une version du site avec un filtre
      année 2000 ») : sous-pixels RVB + balayage + vignette en simple
@@ -197,7 +197,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
       /* stockage indisponible : la préférence ne survit pas, sans gravité */
     }
     /* la surcouche vit au layout racine (14e retour : tout le site, 3D
-       comprise) — la scène ne fait que diffuser la bascule */
+       comprise) : la scène ne fait que diffuser la bascule */
     window.dispatchEvent(new CustomEvent("gt86-crt", { detail: crt }))
   }, [crt])
   useEffect(() => {
@@ -207,7 +207,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
   const [warning, setWarning] = useState(false)
   const [mixCourant, setMixCourant] = useState(0)
   /* le moteur SURVIT aux changements d'écran (8e retour : « la musique
-     continue si on n'a pas appuyé sur pause ») — amorcé au premier
+     continue si on n'a pas appuyé sur pause ») : amorcé au premier
      SPOTIFY, il ne meurt qu'au rejeu (retour CIEL) ou au départ */
   const [ampVivant, setAmpVivant] = useState(false)
   useEffect(() => {
@@ -224,7 +224,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
   zoomeRef.current = zoome
 
   /* rejoindre un écran : GPS et MUSIQUES passent par la machine (deux
-     dispatchs en file — `retour` est inerte à l'habitacle), les
+     dispatchs en file : `retour` est inerte à l'habitacle), les
      accessoires (hub, horloge, stats) restent au poste */
   const versEcran = (mode: ModeEcran, direct = false) => {
     setZoome(true)
@@ -232,7 +232,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
     if (mode === "gps") envoie({ t: "va", ou: "GPS" })
     else if (mode === "musiques") {
       /* DIRECT à l'AMP (8e retour #33 : « pas d'écran intermédiaire »)
-         SEULEMENT depuis la tuile qui PORTE la mention SPOTIFY — c'est
+         SEULEMENT depuis la tuile qui PORTE la mention SPOTIFY : c'est
          elle, le clic de consentement (revue : le cycle ‹/› et MEDIA
          auto-confirmaient, des octets partaient vers le CDN sans clic
          étiqueté) ; les autres chemins gardent la façade d'un clic */
@@ -245,7 +245,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
   }
 
   /* la molette VOLUME (7e retour #33) : un cran par geste de roulette,
-     vers le haut = plus fort — vivante seulement quand le player joue */
+     vers le haut = plus fort : vivante seulement quand le player joue */
   const surMolette = (deltaY: number) => {
     /* proportionnel au delta, borné à un cran : la molette de souris
        (±120) donne son cran plein, le trackpad (petits deltas en rafale)
@@ -253,7 +253,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
     if (etat === "SPOTIFY") commandesSpotify.current?.volume(Math.max(-0.07, Math.min(0.07, -deltaY / 1200)))
   }
 
-  /* LE POSTE RÉPOND (#32) : zones calibrées remontées par la rue — la
+  /* LE POSTE RÉPOND (#32) : zones calibrées remontées par la rue : la
      dalle, les boutons de façade posés par Hugo, le dehors qui rassoit */
   const surZone = (zone: Zone) => {
     if (INTRO.includes(etat) || etat === "DEPART") return
@@ -289,7 +289,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
       }
       return
     }
-    /* un CLIC sur la molette est muet — elle se TOURNE (roulette) */
+    /* un CLIC sur la molette est muet : elle se TOURNE (roulette) */
     if (zone.type === "molette") return
     /* la dalle */
     if (mode === "eteint") return
@@ -331,7 +331,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
     }
     if (etat === "MUSIQUES") {
       /* la FAÇADE click-to-load (#33) : c'est CE clic qui autorise
-         l'embed — avant lui, pas un octet ne part chez Spotify */
+         l'embed : avant lui, pas un octet ne part chez Spotify */
       envoie({ t: "confirme" })
       return
     }
@@ -347,7 +347,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
     }
   }
 
-  /* la machine PEINT l'écran : un état, un dessin — les clics ne font
+  /* la machine PEINT l'écran : un état, un dessin : les clics ne font
      que dispatcher (sauf les accessoires locaux du poste) */
   useEffect(() => {
     if (etat === "GPS") ecran.gps()
@@ -357,7 +357,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
     else if (etat === "HABITACLE" && !zoomeRef.current) ecran.veille()
   }, [etat, dest, ecran])
 
-  /* la jauge pleine (2,6 s, horloge) confirme le départ — ?nodepart la
+  /* la jauge pleine (2,6 s, horloge) confirme le départ : ?nodepart la
      fige à l'écran pour les gates visuels */
   useEffect(() => {
     ecran.surDepart(() => {
@@ -365,7 +365,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
     })
   }, [ecran, nodepart])
 
-  /* les points de l'itinéraire avancent — 90 ms, une horloge (recette #26) */
+  /* les points de l'itinéraire avancent : 90 ms, une horloge (recette #26) */
   useEffect(() => {
     if (etat !== "GPS" && etat !== "CHOIX") return
     const h = setInterval(() => ecran.tic(), 90)
@@ -383,7 +383,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
     envoie({ t: "clic" })
   }, [])
   /* L'ÉCRAN DE CHARGEMENT (7e retour #33) : tant que ciel ET rue ne sont
-     pas décodés, un voile CHARGEMENT couvre le dôme — l'animation ne se
+     pas décodés, un voile CHARGEMENT couvre le dôme : l'animation ne se
      découvre que prête. Depuis le #44 « prête » veut dire GPU CHAUD : la
      rue ne le signale qu'une fois ses programmes compilés et ses
      textures et géométries téléversées (chauffe de rue.tsx). Il
@@ -403,7 +403,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
   const [chargeVisible, setChargeVisible] = useState(false)
   /* le RIDEAU du rejeu (11e retour : « revoir la scène doit avoir un
      chargement ») : tout est déjà décodé au ↺, mais le ciel reprenait
-     la main à l'image sèche — un battement de voile couvre la reprise */
+     la main à l'image sèche : un battement de voile couvre la reprise */
   const [rideauRejeu, setRideauRejeu] = useState(false)
   useEffect(() => {
     if (!rideauRejeu) return
@@ -426,18 +426,18 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
   const surLevee = useCallback(() => setRelaisAttendu(false), [])
   const voileDom = couvert || relaisAttendu
   const { progress: chargeProgres } = useProgress()
-  /* la bascule ciel → rue du vol, derrière le voile plein — un état React,
+  /* la bascule ciel → rue du vol, derrière le voile plein : un état React,
      pas un `visible` impératif : une seule source de vérité */
   const [enRue, setEnRue] = useState(false)
   const surBascule = useCallback(() => setEnRue(true), [])
 
-  /* LES RAILS. Un `setTimeout` — une HORLOGE, pas des images : le
+  /* LES RAILS. Un `setTimeout` : une HORLOGE, pas des images : le
      `requestAnimationFrame` est étranglé quand la scène rame, piège payé au
      #26 sur la jauge du GPS. Le nettoyage annule le rail en cours, ce qui
      rend le skip immédiat et sûr même en plein atterrissage.
      ATTERRISSAGE et SEUIL : leurs chorégraphes (vol.tsx, seuil.tsx)
      envoient le vrai « fini » au bout de leur course, toujours en phase
-     avec l'image — l'horloge ne reste qu'en FILET, large, au cas où la
+     avec l'image : l'horloge ne reste qu'en FILET, large, au cas où la
      boucle de rendu meurt. */
   useEffect(() => {
     if (!RAILS[etat]) return
@@ -446,13 +446,13 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
     return () => clearTimeout(h)
   }, [etat, montage])
 
-  /* L'intro est vue dès qu'on atteint l'habitacle — par le rail comme par le
+  /* L'intro est vue dès qu'on atteint l'habitacle : par le rail comme par le
      skip. Idempotent, donc sans danger sous StrictMode. */
   useEffect(() => {
     if (etat === "HABITACLE") marqueVue()
   }, [etat])
 
-  /* Le REJEU (4e retour de gate) : revenir au CIEL rend la main au dôme —
+  /* Le REJEU (4e retour de gate) : revenir au CIEL rend la main au dôme,
      la bascule ciel → rue doit se réarmer, sinon le ciel resterait caché
      au prochain vol (enRue n'était posé qu'une fois). L'extinction de la
      voiture, elle, vit dans la rue (effet `vivant`). */
@@ -465,7 +465,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
 
   /* LA SUITE DE LA CASCADE (#28) : chaque état télécharge ce dont le
      SUIVANT aura besoin. Depuis le #31 l'habitacle vit dans la rue déjà
-     chargée — il ne reste à précharger que la route de sortie, et c'est
+     chargée : il ne reste à précharger que la route de sortie, et c'est
      CHOIX qui la connaît : précharger les DEUX depuis l'habitacle
      jetterait la moitié de la charge à tous les coups, et le visiteur
      qui traîne à l'AMP passerait de toute façon le délai de péremption.
@@ -496,7 +496,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
     return () => clearTimeout(h)
   }, [etat, dest, router, nfs, nodepart])
 
-  /* Échap rassoit — UN SEUL chemin de sortie, le même que le ‹ de l'overlay.
+  /* Échap rassoit : UN SEUL chemin de sortie, le même que le ‹ de l'overlay.
      Le prototype #26 en avait deux, et ils ont divergé. */
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
@@ -514,7 +514,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
   if (boom) throw new Error("gt86 : échec de montage simulé (?gt86=boom)")
 
   const passer = INTRO.includes(etat)
-  /* après le seuil (habitacle et états suivants — skip et sessions
+  /* après le seuil (habitacle et états suivants : skip et sessions
      revenantes compris) : voiture vivante, caméra assise */
   const apres = !passer
 
@@ -529,13 +529,13 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
       <Canvas
         /* Boucle TOUJOURS vivante (3e retour de gate #31, « au moins
            100 fps ») : le "demand" des états de repos ne repeignait qu'au
-           clignotement de veille — ~1,5 image/s à l'habitacle, c'est ce
+           clignotement de veille : ~1,5 image/s à l'habitacle, c'est ce
            qu'un compteur y mesurait. Toute la scène vit (feux tricolores,
            veille, néons) et chaque interaction répond à la cadence de
            l'écran ; les invalidate() semés restent, inoffensifs. */
         frameloop="always"
         dpr={dpr}
-        /* alpha:false : la toile est OPAQUE (scene.background est posé) —
+        /* alpha:false : la toile est OPAQUE (scene.background est posé),
            le compositeur n'a plus à la fondre sur le DOM, c'est une frame
            moins chère sur beaucoup de GPU */
         /* antialias:false : le composer (#46, #59) porte son propre MSAA */
@@ -546,7 +546,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
           /* la brume de la rue, posée avant la première image du ciel :
              elle entre dans la clé des programmes (voir rue.tsx) */
           st.scene.fog = brume()
-          /* poignée des outils de capture CDP (télémétrie, gates visuels) —
+          /* poignée des outils de capture CDP (télémétrie, gates visuels),
            même rôle que window.__scene des prototypes ; expose caméra,
            scène et invalidate() pour poser des vues à la main */
           Object.assign(window as object, { __gt86: st })
@@ -554,7 +554,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
       >
         <Perte surRepli={surRepli} />
         <TransitionVoile couvert={couvert} relaisAttendu={relaisAttendu} surLevee={surLevee} />
-        {/* #29 a posé le ciel, #30 la rue et le vol — #31 l'habitacle, #32
+        {/* #29 a posé le ciel, #30 la rue et le vol : #31 l'habitacle, #32
             l'écran. Le ciel reste monté à vie (piège <Environment>, voir
             ciel.tsx), seul `visible` bascule ; la rue attend que le ciel
             soit décodé (ou qu'on l'ait déjà quitté) pour se monter, et
@@ -643,7 +643,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
       </div>
 
       {/* le nom du seuil (#24) : posé sur le claquement des phares, dans le
-          tiers haut pour laisser la voiture au centre — opacité pilotée
+          tiers haut pour laisser la voiture au centre : opacité pilotée
           image par image par seuil.tsx */}
       {etat === "SEUIL" && (
         <div
@@ -665,7 +665,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
 
 
       {/* L'OVERLAY. `inset: 0` par-dessus le canvas, mais transparent aux
-          clics : seuls les boutons en reçoivent — c'est ce qui laisse le
+          clics : seuls les boutons en reçoivent : c'est ce qui laisse le
           clic sur la voiture flottante (#29) atteindre le canvas et son
           raycast. */}
       <div
@@ -682,7 +682,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
         }}
       >
         {/* La consigne du gate #21 : sous la mer de nuages, encre sombre sur
-            les crêtes claires — un bouton, pas un décor : même signal que le
+            les crêtes claires : un bouton, pas un décor : même signal que le
             clic sur la carrosserie, et accessible au clavier. Elle quitte le
             centre du cadre pour ne pas voler le clic 3D à la voiture. */}
         {etat === "CIEL" && (
@@ -708,7 +708,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
           </button>
         )}
 
-        {/* Le skip, discret, présent de CIEL à SEUIL — et lui seul mène à
+        {/* Le skip, discret, présent de CIEL à SEUIL : et lui seul mène à
             l'habitacle-hub, qui EST le menu du site (spec #25). */}
         {passer && (
           <button
@@ -731,7 +731,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
         )}
 
         {/* revoir la scène (4e retour de gate) : l'habitacle rend la main
-            au CIEL, toute la boucle se rejoue — la place du ‹ est libre à
+            au CIEL, toute la boucle se rejoue : la place du ‹ est libre à
             l'habitacle, le geste y vit */}
         {etat === "HABITACLE" && !nfs && (
           <button
@@ -783,7 +783,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
         </div>
       )}
 
-      {/* le MOTEUR du player (#33, 7e retour) : plus d'iframe du tout —
+      {/* le MOTEUR du player (#33, 7e retour) : plus d'iframe du tout,
           un <audio> maison sur les préversions du CDN, gain (molette) et
           analyseur (spectre) ; il ne rend rien, il nourrit le peintre */}
       {ampVivant && <MoteurSpotify ecran={ecran} commandes={commandesSpotify} mix={mixCourant} />}
@@ -791,7 +791,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
       {ips && <CompteurIps etat={etat} pret={chargePret} />}
 
       {/* le voile CHARGEMENT (7e retour #33) : couvre le ciel tant que
-          les ressources décodent — transparent aux clics (le harnais et
+          les ressources décodent : transparent aux clics (le harnais et
           le skip passent au travers). Plus de fondu CSS : il disparaît
           d'un coup quand la transition shader prend le relais (#45) */}
       {etat === "CIEL" && (
@@ -853,11 +853,11 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
       )}
 
       {/* le voile de la plongée (#24) : le verre fumé emplit le cadre et
-          son noir devient l'obscurité — se dissout en CSS sur la vue
+          son noir devient l'obscurité : se dissout en CSS sur la vue
           assise. DERNIER-né du DOM, donc AU-DESSUS de l'overlay : sinon
           les boutons de l'habitacle claquaient à pleine opacité sur le
           noir pendant sa dissipation (retour de gate). `pointerEvents:
-          none` — le skip reste cliquable dessous. */}
+          none` : le skip reste cliquable dessous. */}
       <div
         ref={voileVerre}
         style={{
@@ -870,7 +870,7 @@ export default function Scene({ lang, surRepli }: { lang: Lang; surRepli: () => 
       />
 
       {/* le fondu du DÉPART : la jauge est pleine, on plonge dans le
-          portfolio relié (recette #26 — 600 ms, puis la navigation) */}
+          portfolio relié (recette #26 : 600 ms, puis la navigation) */}
       <div
         style={{
           position: "absolute",

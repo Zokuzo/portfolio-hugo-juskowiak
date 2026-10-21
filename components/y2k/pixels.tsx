@@ -1,7 +1,7 @@
 import { PALETTE } from "./pixel-art"
 
 /* ==================================================================
-   LE RENDU DU PIXEL ART (#37) — une grille de caractères devient un
+   LE RENDU DU PIXEL ART (#37), une grille de caractères devient un
    SVG de rectangles.
 
    POURQUOI UN SVG ET PAS UNE IMAGE : le monde s'interdit toute requête
@@ -11,7 +11,7 @@ import { PALETTE } from "./pixel-art"
    la palette du monde plutôt que par un fichier binaire opaque.
 
    `shape-rendering: crispEdges` est la ligne qui compte : sans elle, le
-   moteur anti-aliase les bords et le pixel art redevient flou — c'est
+   moteur anti-aliase les bords et le pixel art redevient flou, c'est
    exactement ce que le retour de gate reprochait au dessin lissé.
 
    Les plages horizontales de même couleur sont FUSIONNÉES en un seul

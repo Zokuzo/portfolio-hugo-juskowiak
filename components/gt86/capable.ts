@@ -2,15 +2,15 @@
 
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react"
 
-/* LA CAPACITÉ — la condition d'entrée dans l'expérience 3D. La spec #25
+/* LA CAPACITÉ : la condition d'entrée dans l'expérience 3D. La spec #25
    l'arrêtait « desktop » (pointeur fin ET ≥ 1024) ; le 15e retour de gate
    #33 (« je veux voir la version avec l'animation sur mon iPad ») ouvre
    l'entrée au TACTILE : pointeur fin OU grossier, viewport ≥ 768 (l'iPad
-   portrait fait 768-834 — les téléphones restent en version simple),
+   portrait fait 768-834 : les téléphones restent en version simple),
    WebGL2 créable, et pas de `prefers-reduced-motion`. Sous reduce,
    l'expérience est un cinématique : la version simple EST la bonne
    réponse, pas un repli. Limite tactile connue : la molette de volume vit
-   sur la roulette — sans souris, le volume reste à sa valeur.
+   sur la roulette : sans souris, le volume reste à sa valeur.
 
    CE FICHIER N'IMPORTE NI THREE NI R3F, et ne doit jamais le faire : il est
    dans le paquet de la home, donc dans le chargement de TOUS les visiteurs,
@@ -18,13 +18,13 @@ import { useCallback, useEffect, useState, useSyncExternalStore } from "react"
    `dynamic(ssr:false)` de la surcouche. `tools/gt86/verifie.mjs` monte la
    garde sur ce point. */
 
-/* Le serveur ne connaît pas la capacité du visiteur — il ne PEUT pas la
+/* Le serveur ne connaît pas la capacité du visiteur : il ne PEUT pas la
    connaître. On ne devine donc rien au rendu serveur : `useSyncExternalStore`
    n'appelle que `serveur()` au SSR ET pendant la passe d'hydratation, si bien
    que le premier rendu client est identique au HTML du serveur (aucun écart
    d'hydratation possible) et que la bascule arrive au re-rendu suivant.
    Corollaire précieux : la SONDE WEBGL ne tourne ni au serveur ni pendant
-   l'hydratation — aucun contexte GPU n'est créé avant que React ait fini. */
+   l'hydratation : aucun contexte GPU n'est créé avant que React ait fini. */
 const serveur = () => false
 
 /* Déclarées AU MODULE, jamais dans le composant : un `matchMedia()` par
@@ -47,12 +47,12 @@ function mq(): Sondes {
 
 /* La sonde WebGL2, faite UNE fois et mémoïsée au module. Deux précautions :
 
-   — le contexte de test est RELÂCHÉ tout de suite (`WEBGL_lose_context`).
+   le contexte de test est RELÂCHÉ tout de suite (`WEBGL_lose_context`).
      Un canvas jeté sans ça garde son slot jusqu'au passage du GC, et
      Chromium évince le contexte le PLUS ANCIEN quand la limite (~8-16) est
      atteinte : sonder sans relâcher, c'est se préparer à tuer sa propre
      scène plus tard ;
-   — les attributs sont CEUX QUE R3F DEMANDERA. Une sonde plus permissive
+   les attributs sont CEUX QUE R3F DEMANDERA. Une sonde plus permissive
      que le vrai contexte validerait une machine qui échouera au montage. */
 let webgl2: boolean | undefined
 function webgl2Creable(): boolean {

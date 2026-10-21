@@ -1,4 +1,4 @@
-# Cards projets, transitions au clic, fiches formation — design
+# Cards projets, transitions au clic, fiches formation : design
 
 Date : 2026-08-05
 Statut : validé en discussion, en attente de relecture écrite
@@ -8,17 +8,17 @@ Statut : validé en discussion, en attente de relecture écrite
 Trois chantiers liés sur le portfolio « jeu de plans » :
 
 1. Le clic vers une fiche `/work/[slug]` anime un **morph** (la card se prolonge
-   dans l'en-tête de la fiche) au lieu d'un chargement sec — aller et retour.
+   dans l'en-tête de la fiche) au lieu d'un chargement sec : aller et retour.
 2. Les cards de la feuille 04 (Atelier) deviennent entièrement cliquables,
    mieux hiérarchisées, et leurs schémas SVG s'animent au survol.
-3. La formation (feuille 03) reçoit **quatre fiches détaillées** — CPGE, ESTIA,
-   Hokkaido, MBDS — sur le même gabarit que les fiches projet, et ses entrées
+3. La formation (feuille 03) reçoit **quatre fiches détaillées** : CPGE, ESTIA,
+   Hokkaido, MBDS : sur le même gabarit que les fiches projet, et ses entrées
    deviennent cliquables avec le même morph.
 
 Hors périmètre : contenu supplémentaire sur les cards (métriques, badges),
 refonte des autres feuilles, changement de la mécanique de langue FR/EN.
 
-## 1 — Transition morph
+## 1. Transition morph
 
 Mécanisme : le composant React `ViewTransition` (natif dans Next 16.3,
 App Router, aucune dépendance nouvelle), branché sur la View Transitions API
@@ -45,7 +45,7 @@ pendant le morph retour. Si le rendu est laid, on retire l'animation d'entrée
 des seuls éléments porteurs d'un nom de transition. Décision à l'implémentation,
 à l'œil.
 
-## 2 — Cards feuille 04
+## 2. Cards feuille 04
 
 Tout en CSS, aucun JS nouveau.
 
@@ -64,7 +64,7 @@ Tout en CSS, aucun JS nouveau.
 - **Hiérarchie** : cartouche code/état resserré, nom plus affirmé, respiration
   accrue entre schéma et corps de texte.
 
-## 3 — Fiches formation
+## 3. Fiches formation
 
 - **Données** : les quatre fiches entrent dans `projets.ts` avec
   `genre: "formation"` (les fiches existantes restent le défaut « projet »)
@@ -78,7 +78,7 @@ Tout en CSS, aucun JS nouveau.
 - **Feuille 03** : le type `Etude` de `parcours.ts` gagne `fiche?: string` ;
   chaque entrée de la liste devient cliquable (lien « voir la fiche → »,
   même morph, même stretched link que la feuille 04).
-- **URL** : `/work/[slug]` pour tout — une route, un gabarit. Si `/work/cpge`
+- **URL** : `/work/[slug]` pour tout : une route, un gabarit. Si `/work/cpge`
   gêne à l'usage, une route `/formation/[slug]` coûte dix lignes, plus tard.
 - **Contenu** : huit textes (4 fiches × FR/EN) rédigés à partir de
   `parcours.ts`, faits à valider par Hugo à la relecture.

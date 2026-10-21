@@ -1,9 +1,9 @@
 /* ==================================================================
-   BANC DE BUDGET DE FRAME — ce que coûte une frame au fil principal.
+   BANC DE BUDGET DE FRAME : ce que coûte une frame au fil principal.
 
    La carte pose une cible de 8,3 ms par frame (120 Hz). Ce banc mesure
    si elle tient, et le fait de la même façon que la campagne du
-   ticket 04, dont il reprend le protocole — ce banc-là vivait dans un
+   ticket 04, dont il reprend le protocole : ce banc-là vivait dans un
    scratchpad de session et a été perdu. Celui-ci est versionné.
 
    CE QU'ON MESURE, ET POURQUOI CETTE DÉFINITION
@@ -19,10 +19,10 @@
    La campagne du ticket 04 chronométrait depuis l'entrée du callback de
    la sonde. Ici ce serait FAUX, et c'est mesuré : une sonde injectée
    dans une page qui tourne déjà s'inscrit après les rAF du site et y
-   reste, donc elle ne verrait que ce qui suit leur travail — 0,3 ms au
+   reste, donc elle ne verrait que ce qui suit leur travail : 0,3 ms au
    lieu de 5,0 sur une charge étalonnée. Voir le commentaire de SONDE.
    Conséquence à connaître : un coût inclut la latence entre la vsync et
-   le moment où le fil principal prend la frame. L'étalon la chiffre —
+   le moment où le fil principal prend la frame. L'étalon la chiffre :
    une charge de 5,0 ms se lit 5,8 à 6,9.
 
    DONC : LES CHIFFRES DE CE BANC NE SE COMPARENT PAS À CEUX DU
@@ -65,7 +65,7 @@
 
    CE QUE CE BANC NE FAIT PAS : isoler le décor, la voiture ou Lenis.
    La campagne du ticket 04 le faisait en coupant des composants dans
-   `app/page.tsx` — c'est une enquête ponctuelle, pas un contrôle de
+   `app/page.tsx` : c'est une enquête ponctuelle, pas un contrôle de
    routine. Il ne décompose pas non plus le GPU : la sonde ne voit que
    le fil principal.
    ================================================================== */
@@ -102,13 +102,13 @@ if (!URL_ && !opt.etalon) {
    par frame allouerait dans la boucle qu'on mesure. Les messages arrivent
    dans l'ordre d'envoi, donc la file suffit à réapparier.
 
-   L'ORIGINE DU CHRONO EST `t`, L'HORODATAGE DE rAF — pas `performance.now()`
+   L'ORIGINE DU CHRONO EST `t`, L'HORODATAGE DE rAF : pas `performance.now()`
    à l'entrée du callback, et c'est le point le plus délicat de ce fichier.
    Une sonde injectée dans une page qui tourne déjà s'inscrit APRÈS les rAF
    du site, et elle y reste : chacun se réinscrit à la fin de sa propre
    passe, donc l'ordre est figé. Chronométrer depuis l'entrée du callback
    ne mesurerait alors que ce qui reste APRÈS le travail de Lenis, de framer
-   et de la voiture — mesuré : une charge de 5 ms injectée avant la sonde se
+   et de la voiture : mesuré : une charge de 5 ms injectée avant la sonde se
    lisait 0,3 ms. `t`, lui, vaut le début de la frame et il est le MÊME pour
    tous les callbacks : on mesure donc début de frame → tâche postée après la
    mise à jour du rendu, c'est-à-dire tous les rAF + style + layout + paint.
@@ -123,7 +123,7 @@ window.__banc = {
        la boucle rAF de la première a un callback encore en vol quand la
        seconde démarre. Avec un booléen elle repartait, écrivait dans le
        NOUVEAU tableau d'échantillons, et le banc comptait deux fois ses
-       frames — 210 fps présentés sur un écran à 120 Hz, ce qui est le
+       frames : 210 fps présentés sur un écran à 120 Hz, ce qui est le
        symptôme à reconnaître si ça revient. */
     const gen = ++s.gen
     s.ech = []; s.t0 = performance.now(); s.dernier = 0
@@ -155,8 +155,8 @@ const pct = (xs, p) => {
   const t = [...xs].sort((a, b) => a - b)
   return t[Math.min(t.length - 1, Math.floor((p / 100) * t.length))]
 }
-const r1 = (x) => (x === null ? "—" : x.toFixed(1))
-const r2 = (x) => (x === null ? "—" : x.toFixed(2))
+const r1 = (x) => (x === null ? "·" : x.toFixed(1))
+const r2 = (x) => (x === null ? "·" : x.toFixed(2))
 
 async function mesure(cdp, ms) {
   await cdp.evalue("window.__banc.demarre()")
@@ -166,7 +166,7 @@ async function mesure(cdp, ms) {
 }
 
 /* Le défilement se fait à la VRAIE molette : Lenis n'écoute que ça, et un
-   `window.scrollTo` mesurerait une page sans son lissage — c'est-à-dire pas
+   `window.scrollTo` mesurerait une page sans son lissage : c'est-à-dire pas
    la page. Descente PUIS remontée : deux fois plus d'échantillons, et les
    révélations `whileInView` ne jouent qu'une fois, à la descente. */
 async function defile(cdp) {
@@ -190,7 +190,7 @@ async function defile(cdp) {
 /* ── scénario drag (#12) ─────────────────────────────────────────────
    Mousedown au centre de la voiture en haut de page (fondu = 1),
    balayage en azimut sur plusieurs tours avec une sinusoïde
-   d'élévation — les deux axes travaillent — puis relâchement. Même
+   d'élévation, les deux axes travaillent, puis relâchement. Même
    sonde, même unité que le défilement. L'injection CDP ne traverse
    pas le compositeur comme une vraie souris (#11) : le POURCENTAGE
    au-dessus du seuil à plancher égal reste comparable, la cadence
@@ -228,7 +228,7 @@ async function drague(cdp, mesurer = true) {
    et la fenêtre atterrit où le compositeur veut ; et sans entrée réelle la
    cadence présentée décroît par moitiés en quelques secondes. Un p50 seul
    ne distingue pas « vsync propre à 12 ms » d'un mélange 8,3/16,7 dont la
-   médiane tombe n'importe où — les 12,10 ms historiques étaient ce
+   médiane tombe n'importe où : les 12,10 ms historiques étaient ce
    mélange. D'où l'histogramme, et le verdict « mélange » quand deux
    classes éloignées pèsent chacune : dans ce cas le plancher publié ne
    correspond à aucune cadence réelle et ne doit pas servir d'appariement. */
@@ -237,15 +237,15 @@ async function plancherDe(cdp) {
   await pause(1000)
   const { ech } = await cdp.evalue("JSON.stringify(window.__banc.arrete())").then(JSON.parse)
   /* Zéro frame en une seconde n'est pas « un plancher très haut », c'est un
-     navigateur qui ne dessine pas — et un relevé vide se lirait comme un
+     navigateur qui ne dessine pas : et un relevé vide se lirait comme un
      résultat. Mieux vaut échouer ici. */
-  if (ech.length < 10) throw new Error(`le navigateur ne tire pas de frames (${ech.length} en 1 s) — aucun relevé n'aurait de sens`)
+  if (ech.length < 10) throw new Error(`le navigateur ne tire pas de frames (${ech.length} en 1 s) : aucun relevé n'aurait de sens`)
   const dts = ech.map((e) => e[1]).filter(Boolean)
   const classes = new Map()
   for (const d of dts) { const k = Math.round(d * 10) / 10; classes.set(k, (classes.get(k) || 0) + 1) }
   const tri = [...classes.entries()].sort((a, b) => b[1] - a[1])
   /* Mélange : deux classes qui pèsent chacune ≥ 20 % des intervalles et
-     dont l'une vaut au moins 1,5 fois l'autre — c'est la signature de la
+     dont l'une vaut au moins 1,5 fois l'autre : c'est la signature de la
      décroissance par moitiés, pas du bruit de mesure autour d'une vsync. */
   const lourdes = tri.filter(([, n]) => n >= dts.length * 0.2).map(([k]) => k)
   const melange = lourdes.length >= 2 && Math.max(...lourdes) >= Math.min(...lourdes) * 1.5
@@ -260,7 +260,7 @@ async function plancherDe(cdp) {
    Un Chrome headless ne produit une frame que s'il a quelque chose à
    redessiner : sur `about:blank` la sonde relevait 0 échantillon par seconde,
    sur un document statique entre 0 et 24 selon les lancements. Avec une
-   animation qui tourne, 61 — c'est-à-dire la cadence réelle du navigateur,
+   animation qui tourne, 61 : c'est-à-dire la cadence réelle du navigateur,
    qui est ce qu'un plancher doit mesurer. Une page témoin immobile aurait
    rendu un plancher au hasard. */
 async function temoin(cdp) {
@@ -276,7 +276,7 @@ body{margin:0;background:#111}i{display:block;width:40px;height:40px;background:
 }
 
 /* Le navigateur met un temps VARIABLE à commencer à produire des frames après
-   un démarrage à froid — un lancement sur trois rendait zéro échantillon. On
+   un démarrage à froid : un lancement sur trois rendait zéro échantillon. On
    attend donc qu'il tire vraiment avant de mesurer quoi que ce soit, au lieu
    de publier un relevé vide ou de retenter la passe entière. */
 async function attendFrames(cdp) {
@@ -303,7 +303,7 @@ async function ouvre() {
       "--disable-backgrounding-occluded-windows",
       "--disable-renderer-backgrounding",
       /* Un Chrome piloté en CDP (surtout headless) se déclare sans pointeur
-         fin, et le composant refuse alors — à raison — le régime drag qu'on
+         fin, et le composant refuse alors, à raison, le régime drag qu'on
          vient précisément mesurer. `Emulation.setEmulatedMedia` ne couvre
          pas hover/pointer (mesuré : matchMedia restait false) ; ces
          blink-settings, si. On déclare ce que le banc EST : une souris
@@ -316,7 +316,7 @@ async function ouvre() {
   await cdp.envoie("Emulation.setFocusEmulationEnabled", { enabled: true })
   if (opt.clair) {
     /* le thème clair (#13), posé comme le ferait un visiteur qui a
-       déjà choisi — avant la première peinture */
+       déjà choisi : avant la première peinture */
     await cdp.envoie("Page.addScriptToEvaluateOnNewDocument", {
       source: 'try{localStorage.setItem("theme","clair")}catch(e){}',
     })
@@ -346,8 +346,8 @@ async function etalon() {
     const ok = couts.length >= 30 && p50 !== null && p50 >= 4.5 && p50 <= 8.0
     console.log(`étalon : charge injectée 5,0 ms → sonde ${r2(p50)} ms (p50 sur ${couts.length} frames)`)
     console.log(ok
-      ? "OK — la sonde mesure bien le travail du fil principal (l'écart au-dessus de 5,0 est la latence début-de-frame + le paint)."
-      : "ÉCHEC — la sonde est fausse, ne pas se servir des relevés.")
+      ? "OK : la sonde mesure bien le travail du fil principal (l'écart au-dessus de 5,0 est la latence début-de-frame + le paint)."
+      : "ÉCHEC : la sonde est fausse, ne pas se servir des relevés.")
     process.exitCode = ok ? 0 : 1
   } finally { await ferme() }
 }
@@ -361,7 +361,7 @@ async function passe(n) {
     /* L'écran d'atterrissage et le moteur WebGL, relevés sur le témoin
        (avant navigation, donc sans toucher à la page mesurée). L'écran se
        reconnaît à sa hauteur CSS ; le moteur dit si le processus GPU rend
-       en matériel ou en SwiftShader — deux états entre lesquels les
+       en matériel ou en SwiftShader : deux états entre lesquels les
        chiffres ne se comparent pas (ticket 32). */
     const env = JSON.parse(await cdp.evalue(`JSON.stringify({
       ecran: screen.width + "×" + screen.height + " CSS, dpr " + (Math.round(devicePixelRatio * 100) / 100),
@@ -379,7 +379,7 @@ async function passe(n) {
       return { rejet: `plancher ${r2(plancher)} ms, consigne ${r2(PLANCHER)} ± ${TOLERANCE}` }
     }
     if (melange) {
-      console.log(`  passe ${n} — ⚠ plancher MÉLANGÉ (${histo}) : la médiane ${r2(plancher)} ms ne correspond à aucune cadence réelle.`)
+      console.log(`  passe ${n} : ⚠ plancher MÉLANGÉ (${histo}) : la médiane ${r2(plancher)} ms ne correspond à aucune cadence réelle.`)
     }
 
     await cdp.evalue("window.__navigue = 1")
@@ -404,7 +404,7 @@ async function passe(n) {
         textures: document.querySelector('.voiture')?.dataset.glTextures ?? null,
       })`))
       const promu = await cdp.evalue("document.querySelector('.voiture')?.dataset.regime === 'gl'")
-      console.log(`  passe ${n} — plancher ${r2(plancher)} ms${melange ? " (MÉLANGE)" : ""} · ${main.couts.length} frames à la main · régime ${promu ? "WebGL" : "séquence (pas de promotion ?)"} · GPU ${gpu.geometries} géométries, ${gpu.textures} textures`)
+      console.log(`  passe ${n} : plancher ${r2(plancher)} ms${melange ? " (MÉLANGE)" : ""} · ${main.couts.length} frames à la main · régime ${promu ? "WebGL" : "séquence (pas de promotion ?)"} · GPU ${gpu.geometries} géométries, ${gpu.textures} textures`)
       /* Les intervalles PENDANT le geste réel valent aussi relevé : ils
          disent si la vraie main tient la cadence de l'écran. */
       console.log(`            intervalle pendant le geste p50/p90 : ${r2(pct(main.intervalles, 50))} / ${r2(pct(main.intervalles, 90))} ms`)
@@ -412,7 +412,7 @@ async function passe(n) {
     }
 
     if (opt.drag) {
-      /* Premier geste : l'AMORCE — déclenche le chunk et le .glb,
+      /* Premier geste : l'AMORCE : déclenche le chunk et le .glb,
          pilote la séquence. Non mesurée : c'est le régime WebGL qu'on
          juge. La promotion se lit sur data-regime (posé par le
          composant à l'arrivée du modèle). */
@@ -427,7 +427,7 @@ async function passe(n) {
         geometries: document.querySelector('.voiture')?.dataset.glGeometries ?? null,
         textures: document.querySelector('.voiture')?.dataset.glTextures ?? null,
       })`))
-      console.log(`  passe ${n} — plancher ${r2(plancher)} ms${melange ? " (MÉLANGE)" : ""} · drag ${drag.couts.length} frames · scroll après drag ${scroll.couts.length} frames`)
+      console.log(`  passe ${n} : plancher ${r2(plancher)} ms${melange ? " (MÉLANGE)" : ""} · drag ${drag.couts.length} frames · scroll après drag ${scroll.couts.length} frames`)
       console.log(`            écran ${env.ecran} · ${env.webgl} · GPU ${gpu.geometries} géométries, ${gpu.textures} textures`)
       console.log(`            intervalles du plancher : ${histo}`)
       return { plancher, melange, env, repos, scroll, drag, gpu }
@@ -435,7 +435,7 @@ async function passe(n) {
 
     const scroll = await defile(cdp)
 
-    console.log(`  passe ${n} — plancher ${r2(plancher)} ms${melange ? " (MÉLANGE)" : ""} · ${scroll.couts.length} frames au défilement · ${scroll.pas} crans de molette`)
+    console.log(`  passe ${n} : plancher ${r2(plancher)} ms${melange ? " (MÉLANGE)" : ""} · ${scroll.couts.length} frames au défilement · ${scroll.pas} crans de molette`)
     console.log(`            écran ${env.ecran} · ${env.webgl}`)
     console.log(`            intervalles du plancher : ${histo}`)
     return { plancher, melange, env, repos, scroll }
@@ -445,12 +445,12 @@ async function passe(n) {
 async function main() {
   if (opt.etalon) return etalon()
 
-  console.log(`banc de frame — ${URL_} (${ETIQUETTE}), ${PASSES} passe(s), cible ${SEUIL} ms\n`)
+  console.log(`banc de frame : ${URL_} (${ETIQUETTE}), ${PASSES} passe(s), cible ${SEUIL} ms\n`)
   const bonnes = []
   const rejets = []
   for (let n = 1; n <= PASSES; n++) {
     const r = await passe(n)
-    if (r.rejet) { rejets.push(r.rejet); console.log(`  passe ${n} — REJETÉE : ${r.rejet}`) }
+    if (r.rejet) { rejets.push(r.rejet); console.log(`  passe ${n} : REJETÉE : ${r.rejet}`) }
     else bonnes.push(r)
   }
   if (!bonnes.length) {
@@ -502,28 +502,28 @@ async function main() {
 
   if (drags.length) {
     console.log(`
-  drag — coût p50 / p90   ${r2(bilan.dragCoutP50)} / ${r2(bilan.dragCoutP90)} ms
-  drag — frames > ${SEUIL} ms  ${r2(bilan.dragPartAuDessusDuSeuilPct)} %   (${dragDepassent}/${drags.length})
+  drag : coût p50 / p90   ${r2(bilan.dragCoutP50)} / ${r2(bilan.dragCoutP90)} ms
+  drag : frames > ${SEUIL} ms  ${r2(bilan.dragPartAuDessusDuSeuilPct)} %   (${dragDepassent}/${drags.length})
   GPU après promotion     ${bilan.gpu.geometries} géométries · ${bilan.gpu.textures} textures
-  (en mode --drag, le bloc scroll ci-dessus est le défilement APRÈS le premier drag — gate 3)`)
+  (en mode --drag, le bloc scroll ci-dessus est le défilement APRÈS le premier drag : gate 3)`)
   }
 
   console.log(bilan.coutP90 <= SEUIL
-    ? `\n  ✓ la cible tient — ${r2(SEUIL - bilan.coutP90)} ms de marge au p90.`
+    ? `\n  ✓ la cible tient : ${r2(SEUIL - bilan.coutP90)} ms de marge au p90.`
     : `\n  ✗ la cible est dépassée au p90 de ${r2(bilan.coutP90 - SEUIL)} ms.`)
 
   /* Un plancher au-dessus de la cible veut dire que l'environnement ne PEUT
-     pas présenter à la cadence visée — en headless, le compositeur est
+     pas présenter à la cadence visée : en headless, le compositeur est
      logiciel et plafonne à 60 Hz. Le coût reste lisible (c'est du travail de
      fil principal, il ne dépend pas de la cadence), la cadence non. Le dire,
      sinon un « ✓ » se lira comme une preuve qu'il n'est pas. */
   if (bilan.plancherMelange) {
     console.log(`\n  ⚠ au moins une passe a un plancher MÉLANGÉ (deux cadences dans le même relevé,
-    signature de la décroissance sans entrée réelle — ticket 32). Le COÛT reste
+    signature de la décroissance sans entrée réelle : ticket 32). Le COÛT reste
     lisible ; le plancher, les fps présentés et l'appariement « à plancher égal », non.`)
   }
   if (bonnes.some((b) => b.env.ecran !== bonnes[0].env.ecran)) {
-    console.log(`\n  ⚠ les passes n'ont pas toutes atterri sur le même écran — sous Wayland la
+    console.log(`\n  ⚠ les passes n'ont pas toutes atterri sur le même écran : sous Wayland la
     fenêtre se place où le compositeur veut, et le plancher suit l'écran (ticket 32).`)
   }
   if (bilan.plancherMs > SEUIL + TOLERANCE) {

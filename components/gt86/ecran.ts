@@ -1,10 +1,10 @@
 import * as THREE from "three"
 import { t, type Lang } from "@/components/proto/dict"
 
-/* L'ÉCRAN MÉDIA — ticket #32 : la fabrique gatée aux #23/#26, portée du
+/* L'ÉCRAN MÉDIA: ticket #32 : la fabrique gatée aux #23/#26, portée du
    prototype écran (route jetable, supprimée au #35) dans la coquille, BILINGUE par le
-   dictionnaire (doctrine #25 — les libellés passent par `t(langue, …)`,
-   les éléments décoratifs gatés — heure 23:42, ETA, stats — restent tels
+   dictionnaire (doctrine #25: les libellés passent par `t(langue, …)`,
+   les éléments décoratifs gatés (heure 23:42, ETA, stats) restent tels
    quels). La dalle 512×256 (ratio 2:1 gravé) peint sept états :
    veille (Rayquaza + CLICK HERE) · hub (tuiles GPS/MUSIQUES) · gps (carte
    façon Waze sur les bâtiments RÉELS du GLB) · musiques (maquette, le
@@ -13,7 +13,7 @@ import { t, type Lang } from "@/components/proto/dict"
    Le fichier porte AUSSI la géométrie des clics : le plan de la dalle et
    la table des boutons de façade posés par Hugo au gizmo (?edit du
    prototype). PIÈGE gravé au #26 : l'axe vertical du plan pointe vers le
-   BAS — le v du clic suit le dessin grâce au signe de `zoneDuClic`. */
+   BAS: le v du clic suit le dessin grâce au signe de `zoneDuClic`. */
 
 /* les quatre playlists arrêtées au #19 (mixes Spotify, vérifiées 200 au
    build #33) et le profil pour le lien discret */
@@ -42,9 +42,9 @@ const PLAN_NORMALE = new THREE.Vector3(0, Math.sin(ECRAN_NATIF.bascule), Math.co
 const PLAN_AXE_Y = PLAN_NORMALE.clone().cross(new THREE.Vector3(-1, 0, 0))
 const PLAN = new THREE.Plane().setFromNormalAndCoplanarPoint(PLAN_NORMALE, ECRAN_NATIF.centre)
 
-/* la vue « nez sur l'écran » du rail — RAPPROCHÉE au retour de gate #33
+/* la vue « nez sur l'écran » du rail: RAPPROCHÉE au retour de gate #33
    (« l'écran devrait être plus zoomé ») : 20 cm dans l'axe NORMAL de la
-   dalle (perpendiculaire, plus de biais) — la dalle emplit ~42 % de la
+   dalle (perpendiculaire, plus de biais): la dalle emplit ~42 % de la
    hauteur du cadre et le panneau Spotify loge DEDANS au pixel ; les
    boutons de façade restent visibles et cliquables aux bords */
 export const VUE_ECRAN = {
@@ -72,7 +72,7 @@ export type Zone =
   | { type: "molette" }
   | { type: "dehors" }
 
-/* brouillon partagé — zéro allocation par clic */
+/* brouillon partagé: zéro allocation par clic */
 const impact3 = new THREE.Vector3()
 const rayon = new THREE.Ray()
 
@@ -86,7 +86,7 @@ export function zoneDuClic(origineLocale: THREE.Vector3, pointLocal: THREE.Vecto
   if (!impact) return null
   const d = impact.sub(ECRAN_NATIF.centre)
   const dy = d.dot(PLAN_AXE_Y)
-  /* la dalle 13×7 cm — u croît vers la droite du conducteur (monde −x),
+  /* la dalle 13×7 cm: u croît vers la droite du conducteur (monde −x),
      v suit le DESSIN (0 en haut) : l'axe du plan pointe vers le bas */
   if (Math.abs(d.x) < 0.072 && Math.abs(dy) < 0.04) {
     return { type: "ecran", u: (0.065 - d.x) / 0.13, v: (dy + 0.035) / 0.07 }
@@ -94,7 +94,7 @@ export function zoneDuClic(origineLocale: THREE.Vector3, pointLocal: THREE.Vecto
   for (const [nom, bx, by] of BOUTONS) {
     if (Math.abs(d.x - bx) < 0.011 && Math.abs(dy - by) < 0.007) return { type: "bouton", nom }
   }
-  /* la molette VOLUME — le bouton rotatif gauche de la façade (7e retour
+  /* la molette VOLUME: le bouton rotatif gauche de la façade (7e retour
      de gate #33 : « tourner la molette pour baisser le son ») ; on la
      TOURNE à la roulette, le geste du bouton rotatif à la souris */
   if (Math.abs(d.x - 0.088) < 0.016 && Math.abs(dy + 0.027) < 0.016) return { type: "molette" }
@@ -204,7 +204,7 @@ export function creeEcran(lang: Lang): Ecran {
   c.height = 256
   const g = c.getContext("2d", PEINTRE_CPU)!
   /* TOUTES les cotes du peintre sont calées baseline "middle" (revue :
-     seul peintAmp la posait — le premier écran d'une session rendait
+     seul peintAmp la posait: le premier écran d'une session rendait
      décalé jusqu'au premier passage AMP) */
   g.textBaseline = "middle"
   const l = 512
@@ -228,8 +228,8 @@ export function creeEcran(lang: Lang): Ecran {
   const TRAVAIL = () => t(langue, "gt86Travail").toUpperCase()
 
   /* CONTRE LES SACCADES (5e retour de gate #31/#32) : les parties FIXES
-     du dessin — fond, cadre, carte, rubans, ombres portées (shadowBlur
-     est cher) — se peignent UNE FOIS par changement d'état dans des
+     du dessin (fond, cadre, carte, rubans, ombres portées (shadowBlur
+     est cher)) se peignent UNE FOIS par changement d'état dans des
      calques hors-écran ; chaque tic d'animation ne redessine plus que
      les points qui avancent et la jauge (~0,2 ms au lieu de la carte
      entière jusqu'à ~36×/s). */
@@ -248,7 +248,7 @@ export function creeEcran(lang: Lang): Ecran {
   ampCalque.height = h
   const ag = ampCalque.getContext("2d", PEINTRE_CPU)!
   let ampSale = true
-  /* l'état du player HJ·AMP (mode "spotify") — nourri par l'hôte de
+  /* l'état du player HJ·AMP (mode "spotify"): nourri par l'hôte de
      l'iframe invisible via majSpotify */
   const amp: EtatSpotify = {
     enLecture: false,
@@ -261,7 +261,7 @@ export function creeEcran(lang: Lang): Ecran {
     indice: 0,
     repli: false,
   }
-  /* le VRAI spectre poussé par le moteur (7e retour) — périmé après
+  /* le VRAI spectre poussé par le moteur (7e retour): périmé après
      250 ms, le peintre retombe alors en danse procédurale */
   const ampSpectre = new Array(19).fill(0)
   let ampSpectreMs = -1e9
@@ -270,10 +270,10 @@ export function creeEcran(lang: Lang): Ecran {
   /* l'état du filtre CRT, reflété par le bouton peint du bandeau AMP
      (13e retour : le badge global seul était invisible à l'œil) */
   let crtAllume = false
-  /* le DISQUE 2D (10e retour : le 3D ne prend pas) — l'angle n'avance
+  /* le DISQUE 2D (10e retour : le 3D ne prend pas), l'angle n'avance
      que quand la musique JOUE. 11e retour : la face porte les IMAGES
      fournies par Hugo (public/amp/), détourées de leur fond blanc à la
-     volée — chargées PARESSEUSEMENT à la première entrée AMP (la
+     volée: chargées PARESSEUSEMENT à la première entrée AMP (la
      cascade de la passe 7 ne les voit jamais). */
   let disqueAngle = 0
   let kirbySprite: HTMLCanvasElement | null = null
@@ -293,7 +293,7 @@ export function creeEcran(lang: Lang): Ecran {
     cg.putImageData(donnees, 0, 0)
     return cnv
   }
-  /* les icônes du hub (12e retour : les images fournies par Hugo) —
+  /* les icônes du hub (12e retour : les images fournies par Hugo):
      détourées ET adaptées à la palette : les teintes pleines glissent
      dans la bande violet→rose de l'écran, les gris/contours restent */
   let iconeGps: HTMLCanvasElement | null = null
@@ -390,7 +390,7 @@ export function creeEcran(lang: Lang): Ecran {
         fg.fillRect(0, 0, l, h)
       }
       /* le CHROME Y2K commun (8e retour : « toute l'interface au design
-         de l'AMP ») : bandeau titre à la AMP, biseau de cadre, badges —
+         de l'AMP ») : bandeau titre à la AMP, biseau de cadre, badges:
          le fond d'écran reste, c'est le bureau qui change d'OS */
       const bandeau = fg.createLinearGradient(0, 0, l, 0)
       bandeau.addColorStop(0, "#5a2378")
@@ -559,7 +559,7 @@ export function creeEcran(lang: Lang): Ecran {
     g.textAlign = "left"
   }
 
-  /* les chemins de l'itinéraire — partagés entre le calque statique
+  /* les chemins de l'itinéraire: partagés entre le calque statique
      (rubans) et la couche dynamique (points qui avancent) */
   /* un SEUL réseau : la rue de la voiture rejoint le boulevard (y = 102)
      au carrefour de l'avenue (x = 276), et les deux branches SONT des
@@ -689,7 +689,7 @@ export function creeEcran(lang: Lang): Ecran {
   }
 
   const peintGpsStatique = () => {
-    /* une carte est une SURFACE : fond opaque façon Waze nuit — et les
+    /* une carte est une SURFACE : fond opaque façon Waze nuit, et les
        bâtiments RÉELS du GLB (tools/monde/carte-quartier.mjs, 4 px/m,
        cap sud en haut) : ce qu'on voit au pare-brise EST la carte */
     g.fillStyle = "#16132a"
@@ -772,7 +772,7 @@ export function creeEcran(lang: Lang): Ecran {
     const itineraire = etat.traceFini ? etat.choix : null
     if (itineraire === "maison") ballon(100, 58, 116, CARREFOUR.y, MAISON(), "#8f5cff", true, glypheMaison)
     if (itineraire === "travail") ballon(452, 56, 436, CARREFOUR.y, TRAVAIL(), "#e561d3", true, glypheTravail)
-    /* le sélecteur : « OÙ VA-T-ON ? » + deux rangées favoris — les zones
+    /* le sélecteur : « OÙ VA-T-ON ? » + deux rangées favoris: les zones
        de clicGps sont CALQUÉES sur ce dessin */
     if (etat.choix === null) {
       const px0 = l * 0.2
@@ -824,7 +824,7 @@ export function creeEcran(lang: Lang): Ecran {
     }
     barreCarplay(0)
     /* le bandeau HJ·NAV (9e retour : le GPS rejoint le langage de l'AMP)
-       — la zone retour u<0,22 × v<0,26 couvre le ‹ inchangée */
+       la zone retour u<0,22 × v<0,26 couvre le ‹ inchangée */
     const bandeauNav = g.createLinearGradient(0, 0, l, 0)
     bandeauNav.addColorStop(0, "#5a2378")
     bandeauNav.addColorStop(0.45, "#a95fd0")
@@ -1051,7 +1051,7 @@ export function creeEcran(lang: Lang): Ecran {
   }
 
   const peintMusiques = () => {
-    /* transitoire (8e retour : MUSIQUES va DIRECT à l'AMP — la machine ne
+    /* transitoire (8e retour : MUSIQUES va DIRECT à l'AMP, la machine ne
        s'y pose plus qu'un battement) : un splash, plus une façade */
     g.textAlign = "center"
     g.font = "italic bold 22px monospace"
@@ -1069,13 +1069,13 @@ export function creeEcran(lang: Lang): Ecran {
 
   /* ---- HJ·AMP en texture (retour de gate #33 : « l'AMP doit s'intégrer
      à l'écran, pas une surcouche ») : la skin années 2000 se peint DANS
-     la dalle 512×256 comme le hub et le GPS — le grain LCD vient du même
+     la dalle 512×256 comme le hub et le GPS: le grain LCD vient du même
      coup. Calque statique (chrome, biseaux, puits, playlist) + couche
      vivante (temps, marquee, bougies, crêtes) repeinte par ticSpotify. */
   const AMP_ZONES = {
     /* v de la rangée transport, et la GRILLE PLAYLIST en pixels (7e
        retour de gate : la rangée active mordait le libellé et le bord
-       du puits) — les zones de clicSpotify sont calquées sur ce dessin */
+       du puits): les zones de clicSpotify sont calquées sur ce dessin */
     transportV: [0.875, 1.0] as const,
     playlistY0: 158,
     playlistDY: 16,
@@ -1128,11 +1128,11 @@ export function creeEcran(lang: Lang): Ecran {
       ag.fillStyle = "#33113f"
       ag.fillRect(l - 30 + k * 9, 6, 6, 6)
     }
-    /* puits du LCD (temps + marquee) — le marquee cède sa droite au CD */
+    /* puits du LCD (temps + marquee): le marquee cède sa droite au CD */
     biseau2d(ag, 6, 22, 108, 40, true)
     biseau2d(ag, 118, 22, 290, 40, true)
     /* LE BLOC CD (9e retour : « un bloc destiné au cd ») : un puits haut
-       à droite, LCD + égaliseur de haut — le disque 3D flotte devant */
+       à droite, LCD + égaliseur de haut: le disque 3D flotte devant */
     biseau2d(ag, l - 98, 22, 92, 121, true)
     ag.fillStyle = "#6a4a86"
     ag.font = "bold 6px monospace"
@@ -1250,7 +1250,7 @@ export function creeEcran(lang: Lang): Ecran {
     g.textAlign = "center"
     g.fillText(amp.enLecture ? "⏸" : "▶", 98, ty + 11)
     /* le bouton CRT du bandeau : biseau miniature, allumé quand le
-       filtre l'est — la zone de clicSpotify est calquée dessus */
+       filtre l'est: la zone de clicSpotify est calquée dessus */
     biseau2d(g, l - 64, 3, 28, 12, !crtAllume)
     g.font = "bold 7px monospace"
     if (crtAllume) {
@@ -1304,7 +1304,7 @@ export function creeEcran(lang: Lang): Ecran {
     g.fillStyle = amp.enLecture ? LCD_ENCRE_AMP : "#6a4a86"
     g.fillText("STEREO", 404, 55)
     g.textAlign = "left"
-    /* les bougies — une couleur chacune, crêtes qui retombent */
+    /* les bougies: une couleur chacune, crêtes qui retombent */
     const bx0 = 8
     const bl = 396
     const by1 = 141
@@ -1313,7 +1313,7 @@ export function creeEcran(lang: Lang): Ecran {
     const pas = bl / N
     const volActif = performance.now() - ampVolMs < 1400
     if (volActif) {
-      /* la surcouche VOL — le retour de la molette, à la place de
+      /* la surcouche VOL: le retour de la molette, à la place de
          l'égaliseur le temps du geste (comme les vrais postes) */
       g.fillStyle = LCD_ENCRE_AMP
       g.shadowColor = "#ff64d2"
@@ -1334,7 +1334,7 @@ export function creeEcran(lang: Lang): Ecran {
       for (let i = 0; i < N; i++) {
         let bh1: number
         if (spectreFrais) {
-          /* le VRAI spectre (7e retour) — l'analyseur du moteur */
+          /* le VRAI spectre (7e retour): l'analyseur du moteur */
           bh1 = Math.max(1.5, ampSpectre[i] * bh)
         } else {
           const forme = 0.55 + 0.45 * Math.sin((i / N) * Math.PI * 1.4 + 0.4)
@@ -1410,7 +1410,7 @@ export function creeEcran(lang: Lang): Ecran {
   }
 
   const peintStats = () => {
-    /* les statistiques de la voiture — jauges au violet du combiné (les
+    /* les statistiques de la voiture: jauges au violet du combiné (les
        libellés font partie du dessin gaté #26) */
     peintFond()
     g.font = "italic bold 9px monospace"
@@ -1567,12 +1567,12 @@ export function creeEcran(lang: Lang): Ecran {
       crtAllume = actif
       if (etat.mode === "spotify") peint()
     },
-    /* le spectre du moteur — pas de repeinture ici : ticSpotify cadence */
+    /* le spectre du moteur: pas de repeinture ici : ticSpotify cadence */
     majSpectre(bandes: number[]) {
       for (let i = 0; i < 19; i++) ampSpectre[i] = bandes[i] ?? 0
       ampSpectreMs = performance.now()
     },
-    /* la couche vivante du player — appelée à l'image pendant SPOTIFY,
+    /* la couche vivante du player: appelée à l'image pendant SPOTIFY,
        plafonnée par l'appelant ; ne repeint QUE si le mode est là */
     ticSpotify(dt: number) {
       ampHorloge += dt
@@ -1647,7 +1647,7 @@ export function creeEcran(lang: Lang): Ecran {
     },
     /* la sélection : la planification se joue en PLANIF_MS,
        une HORLOGE, pas un rAF (le rAF est étranglé quand la scène rame,
-       piège payé au #26) — puis le départ part */
+       piège payé au #26), puis le départ part */
     choisit(dest: DestEcran) {
       if (etat.choix) return
       etat.choix = dest

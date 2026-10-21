@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react"
 
-/* LE FILTRE CRT GLOBAL — ticket #33, 14e retour de gate (« plus intense
+/* LE FILTRE CRT GLOBAL : ticket #33, 14e retour de gate (« plus intense
    et sur l'ensemble du site, scènes 3D comprises ») : la surcouche vivait
-   dans la scène GT86 — elle monte au layout RACINE, par-dessus toutes les
+   dans la scène GT86 : elle monte au layout RACINE, par-dessus toutes les
    routes et le canvas 3D (position fixed, zIndex au plafond). Gradients
    statiques composés par le GPU : zéro animation, le 100 fps tient.
 
@@ -42,7 +42,7 @@ export default function FiltreCrt() {
           "repeating-linear-gradient(90deg, rgba(255,60,90,0.13) 0px, rgba(255,60,90,0.13) 1px, rgba(60,255,140,0.10) 1px, rgba(60,255,140,0.10) 2px, rgba(80,120,255,0.13) 2px, rgba(80,120,255,0.13) 3px)",
           /* les lignes de balayage */
           "repeating-linear-gradient(0deg, rgba(6,4,12,0.34) 0px, rgba(6,4,12,0.34) 1px, transparent 1px, transparent 3px)",
-          /* l'interférence diagonale — le moiré de la photo d'écran */
+          /* l'interférence diagonale : le moiré de la photo d'écran */
           "repeating-linear-gradient(55deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 2px, transparent 2px, transparent 6px)",
           /* la vignette du tube */
           "radial-gradient(ellipse at center, transparent 52%, rgba(6,4,12,0.5) 100%)",

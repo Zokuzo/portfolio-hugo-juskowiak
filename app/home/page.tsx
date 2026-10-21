@@ -6,15 +6,15 @@ import "@/components/y2k/y2k.css"
 import "@/components/y2k/hub-maison.css"
 import "@/components/y2k/hero-fenetre.css"
 
-/* LE HUB /home (#37) — le départ GPS « MAISON » cesse de mentir ici.
+/* LE HUB /home (#37) : le départ GPS « MAISON » cesse de mentir ici.
    Le hero est LA CHAMBRE (verdict du 3e retour de gate : « j'aime
-   beaucoup la deuxième version avec la fenêtre ») — l'essai « boot »
+   beaucoup la deuxième version avec la fenêtre ») : l'essai « boot »
    plein cadre et sa route d'essai sont supprimés.
    Même construction que /work : composant client (la langue est un
-   état local) mais PRÉRENDU — le serveur sert le hub complet en FR.
+   état local) mais PRÉRENDU : le serveur sert le hub complet en FR.
 
    Les deux fontes du monde Y2K se chargent ICI et pas au layout
-   racine, comme sur /work : next/font les auto-héberge au build —
+   racine, comme sur /work : next/font les auto-héberge au build,
    zéro requête externe à l'exécution, la passe 7 du harnais reste
    vraie. */
 

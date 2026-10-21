@@ -1,20 +1,20 @@
 import type { Lang } from "./dict"
 
 /* ==================================================================
-   PARCOURS — employeurs, études, atelier personnel.
+   PARCOURS : employeurs, études, atelier personnel.
 
    TROIS SOURCES, ET ELLES NE SE VALENT PAS :
-   — le CV, pour les dates, les intitulés et les technologies ;
-   — le propriétaire, en direct, pour ce que le CV ne dit pas
+   - le CV, pour les dates, les intitulés et les technologies ;
+   - le propriétaire, en direct, pour ce que le CV ne dit pas
      (les noms internes des produits UpYourBizz, la nature réelle du
      stage Guill Corp, les projets personnels récents) ;
-   — GitHub, pour les liens : seuls les dépôts PUBLICS sont liés.
+   - GitHub, pour les liens : seuls les dépôts PUBLICS sont liés.
 
    CE QUI EST MARQUÉ « À CONFIRMER » : UpYourAds a été nommé sans
    description, et le bot de candidature aussi. UYB Store (UYB360 dans le CV) ne l'est plus :
    le CV d'octobre 2026 le décrit (une marketplace de l'offre maison). Les libellés
    ci-dessous sont volontairement courts et factuels plutôt que
-   plausibles — inventer une description crédible serait pire que d'en
+   plausibles : inventer une description crédible serait pire que d'en
    écrire une pauvre, parce qu'elle passerait inaperçue.
 
    CORRECTION DU CV : le stage Guill Corp est décrit dans le CV comme
@@ -23,7 +23,7 @@ import type { Lang } from "./dict"
    version qui fait foi.
    ================================================================== */
 
-/* `note` porte une réserve sur le lien lui-même — « desktop
+/* `note` porte une réserve sur le lien lui-même : « desktop
    uniquement », par exemple. Elle vit ICI et pas dans le paragraphe :
    quelqu'un qui scanne la page pour cliquer ne lit pas le texte avant,
    il lit le bouton. Une réserve écrite ailleurs arrive trop tard. */
@@ -35,7 +35,7 @@ export type Produit = {
   texte: string
   liens?: Lien[]
   /* Slug de la fiche détaillée en /work/[slug], quand elle existe.
-     Toutes les lignes n approfondissent pas — seules celles qui ont
+     Toutes les lignes n approfondissent pas : seules celles qui ont
      des contraintes et des décisions à raconter. */
   fiche?: string
   aConfirmer?: boolean
@@ -58,12 +58,12 @@ export type Etude = {
   nom: string
   intitule: string
   lieu?: string
-  debut: number // année décimale — porte la position sur le rail
+  debut: number // année décimale : porte la position sur le rail
   fin: number
   rail: 0 | 1 // 0 = rail principal, 1 = second rail (double diplôme)
   excursion?: boolean
   texte: string
-  /* Slug de la fiche détaillée en /work/[slug] — même mécanique que
+  /* Slug de la fiche détaillée en /work/[slug] : même mécanique que
      les produits et l'atelier. */
   fiche?: string
 }
@@ -91,7 +91,7 @@ const EMPLOYEURS_FR: Employeur[] = [
     courant: true,
     /* La thèse « une même base technique » a été confrontée aux dépôts
        (ticket 13 / issue #7) : zéro fichier commun, zéro import croisé.
-       Ce que les produits partagent est une manière de faire — et une
+       Ce que les produits partagent est une manière de faire, et une
        contrainte réelle : ils doivent se parler. C'est ce que dit le
        résumé, plus rien d'autre. */
     resume:
@@ -272,7 +272,7 @@ const EMPLOYEURS_EN: Employeur[] = [
 /* ---------------------------------------------------------------- */
 /* Le rail 1 n'existe qu'à partir de 2024.09 : c'est LE double diplôme,
    deux cursus menés en parallèle jusqu'à octobre 2025. Hokkaido est
-   marqué `excursion` — un semestre qui quitte le rail et y revient. */
+   marqué `excursion` : un semestre qui quitte le rail et y revient. */
 
 const ETUDES_FR: Etude[] = [
   {
@@ -333,7 +333,7 @@ const PERSO_FR: ProjetPerso[] = [
     texte:
       "Le code écrit avec une IA part plus vite qu'il n'est compris. Eternal le convertit en leçons interactives, dans la forme d'un jeu 2D pixel HD, déclenchées par une commande depuis l'outil de travail.",
     /* Deux liens et non un (issue #7) : l'interface est responsive, le
-       monde 3D ne l'est pas — la réserve ne vaut que pour lui, elle
+       monde 3D ne l'est pas : la réserve ne vaut que pour lui, elle
        est donc portée par SON lien et pas par l'autre. */
     liens: [
       { role: "Interface", url: "https://zokuzo.github.io/eternal/" },

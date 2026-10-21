@@ -1,18 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Hugo Juskowiak">
   <!--
-    MIRE DE REPÉRAGE — la marque de calage d'un imprimeur.
+    MIRE DE REPÉRAGE : la marque de calage d'un imprimeur.
 
     Choisie plutôt qu'un monogramme : à 16px une lettre devient une
     tache, alors qu'un cercle traversé d'une croix reste lisible. La
     forme se reconnaît par sa GÉOMÉTRIE, pas par son détail.
 
-    Elle vient du vocabulaire du site — la mire existe déjà sur la
-    plaque d'identification — et du feed Pinterest du propriétaire,
+    Elle vient du vocabulaire du site (la mire existe déjà sur la
+    plaque d'identification) et du feed Pinterest du propriétaire,
     saturé d'affiches techniques, de marques de calage et de repères
     d'impression.
 
     Le point central est le seul rouge : c'est la cible. Même loi que
-    partout ailleurs dans le système — le rouge désigne, il ne colore
+    partout ailleurs dans le système : le rouge désigne, il ne colore
     pas. Les traits sont épais (1.6) parce qu'un favicon est rendu à
     16px : à 1px le navigateur les efface à moitié.
 

@@ -1,5 +1,5 @@
 /* ==================================================================
-   CHROME PILOTÉ EN CDP — le socle commun des outils du dépôt.
+   CHROME PILOTÉ EN CDP : le socle commun des outils du dépôt.
 
    AUCUNE DÉPENDANCE npm : Chrome est déjà sur la machine et Node 22
    embarque un client WebSocket. Le pilotage se fait donc en CDP à la
@@ -8,7 +8,7 @@
    Ce fichier existe parce que `tools/voiture/rendu.mjs` et
    `tools/banc/frame.mjs` avaient besoin du MÊME savoir : où trouve-t-on
    Chrome sur cette machine-ci. Ce savoir a coûté cher (voir les
-   commentaires de `trouveChrome`) et il n'existe qu'ici — deux copies,
+   commentaires de `trouveChrome`) et il n'existe qu'ici : deux copies,
    c'est une copie qui pourrit.
    ================================================================== */
 
@@ -22,7 +22,7 @@ import path from "node:path"
 /* Le dépôt sert DEUX machines : Hugo rend sous Windows, la machine de mesure
    est sous Linux. Une liste de chemins Windows y échouait sans autre recours
    que --chrome à la main. Le chromium du cache Playwright fait un troisième
-   candidat — il est déjà installé pour les bancs de mesure et sait faire du
+   candidat : il est déjà installé pour les bancs de mesure et sait faire du
    WebGL2 en SwiftShader ; son numéro de build change à chaque mise à jour de
    Playwright, on le CHERCHE donc au lieu de l'écrire en dur. En tête de liste :
    un vrai Chrome, s'il y en a un, reste le rendu de référence. */
@@ -44,7 +44,7 @@ export function trouveChrome() {
     /* Les chromium de la distribution passent APRÈS le cache Playwright, et
        seulement sous Linux : sur Ubuntu ces trois chemins sont des shims snap,
        confinés, dont rien ne dit qu'ils savent écrire le --user-data-dir qu'on
-       pose dans tmpdir(). NON VÉRIFIÉ — aucun snap sur la machine de mesure.
+       pose dans tmpdir(). NON VÉRIFIÉ : aucun snap sur la machine de mesure.
        Le binaire Playwright, lui, n'est pas confiné et sert déjà aux bancs :
        en cas de doute c'est lui qu'on veut. Symptôme si un shim snap gagnait
        quand même : « délai dépassé : démarrage de Chrome » au bout de 30 s ;
@@ -52,7 +52,7 @@ export function trouveChrome() {
     ...(win ? [] : ["/usr/bin/chromium", "/usr/bin/chromium-browser", "/snap/bin/chromium"]),
   ].filter(Boolean)
   const t = pistes.find((p) => existsSync(p))
-  if (!t) throw new Error("Chrome introuvable — passer --chrome=<chemin>")
+  if (!t) throw new Error("Chrome introuvable : passer --chrome=<chemin>")
   return t
 }
 
@@ -139,7 +139,7 @@ export async function lanceChrome({ chrome = trouveChrome(), args = [], url = "a
     `--user-data-dir=${profil}`,
     "--no-first-run", "--no-default-browser-check", "--disable-extensions", "--mute-audio",
     /* le moteur audio du HJ·AMP (#33) doit pouvoir jouer sans geste
-       « frais » sur la mule — l'audio reste muet (--mute-audio), seul
+       « frais » sur la mule : l'audio reste muet (--mute-audio), seul
        l'état logique de lecture compte pour les passes */
     "--autoplay-policy=no-user-gesture-required",
     ...args,
@@ -163,7 +163,7 @@ export async function lanceChrome({ chrome = trouveChrome(), args = [], url = "a
      un rendu qui peut avoir coûté quarante minutes, et perdre le travail sur
      un ménage raté serait absurde. Et on attend la SORTIE du processus avant
      d'effacer le profil : tuer puis effacer aussitôt rend un
-     `ENOTEMPTY … /Default` — Chrome écrit encore pendant qu'on supprime. */
+     `ENOTEMPTY … /Default` : Chrome écrit encore pendant qu'on supprime. */
   const ferme = async () => {
     try { ws.close() } catch {}
     try {

@@ -3,12 +3,12 @@
 
    La branche de cerisier autonome a vécu : son hero « boot » a perdu le
    gate du 2026-08-27 (« j'aime beaucoup la deuxième version avec la
-   fenêtre »). Le cerisier n'a pas disparu pour autant — il est DEHORS,
+   fenêtre »). Le cerisier n'a pas disparu pour autant : il est DEHORS,
    derrière la vitre, dessiné dans la fenêtre elle-même.
 
    Pourquoi un outil et pas un fichier peint à la main : une branche et
    une skyline sont des GESTES (une polyligne épaissie, une suite de
-   hauteurs, un semis de fenêtres allumées) — les décrire est plus court
+   hauteurs, un semis de fenêtres allumées) : les décrire est plus court
    et plus modifiable que de taper 50 lignes de 72 caractères, et le
    rendu reste DÉTERMINISTE (aucune valeur tirée au sort : une skyline
    qui change à chaque build n'est pas de l'art, c'est du bruit).
@@ -45,7 +45,7 @@ const toile = (l, h) => {
     rect(x0, y0, w, ht, c) {
       for (let y = y0; y < y0 + ht; y++) for (let x = x0; x < x0 + w; x++) pose(x, y, c)
     },
-    /* polyligne épaissie — les marches franches SONT le style : aucun
+    /* polyligne épaissie : les marches franches SONT le style : aucun
        lissage, l'arrondi se fait à l'œil du lecteur */
     trait(x0, y0, x1, y1, ep, c) {
       const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0))
@@ -73,7 +73,7 @@ const BOUTON = [".p.", "pPp", ".p."]
 const ETINCELLE = [".s.", "sss", ".s."]
 
 /* ------------------------------------------------------------------ */
-/* LA FENÊTRE — un PANNEAU autonome (châssis et vue). Le mur, l'appui  */
+/* LA FENÊTRE : un PANNEAU autonome (châssis et vue). Le mur, l'appui  */
 /* et le bureau sont du CSS.                                          */
 
 function fenetre() {
@@ -88,7 +88,7 @@ function fenetre() {
   t.sprite(11, 6, ["..mmmm..", ".mmmmmm.", "mmmmmmmm", "mmmmmmmm", "mmmmmmmm", "mmmmmmmm", ".mmmmmm.", "..mmmm.."])
 
   /* LA VILLE, deux plans. Hauteurs d'une suite FIXE : de l'art, pas du
-     bruit — le rendu doit être identique à chaque build. */
+     bruit : le rendu doit être identique à chaque build. */
   let x = 0
   for (const [i, h] of [3, 7, 2, 10, 5, 8, 3, 12, 4, 6, 9, 2, 11, 5, 7, 3, 8, 4, 10, 6].entries()) {
     const w = 3 + (i % 3)
@@ -96,7 +96,7 @@ function fenetre() {
     x += w + 1
   }
   /* le plan proche : des hauteurs très contrastées, pour que la nuit
-     passe ENTRE les tours — une skyline sans trouée est un mur noir */
+     passe ENTRE les tours : une skyline sans trouée est un mur noir */
   x = 1
   for (const [i, h] of [6, 1, 11, 3, 8, 14, 2, 9, 5, 12, 1, 7, 10, 4, 13].entries()) {
     const w = 4 + (i % 2)
@@ -110,7 +110,7 @@ function fenetre() {
     x += w + 2
   }
 
-  /* LA BRANCHE DE CERISIER, dehors — repixelisée au 2e gate d'après
+  /* LA BRANCHE DE CERISIER, dehors : repixelisée au 2e gate d'après
      « Pixel by Number » et « PT » : marches franches, fleurs à lobes et
      cœur clair. C'est elle que Hugo voulait voir en pixels. */
   t.trait(71, 3, 60, 8, 2, "b")
@@ -119,7 +119,7 @@ function fenetre() {
   for (const [fx, fy] of [[64, 2], [57, 10], [50, 8], [54, 16], [46, 12]]) t.sprite(fx, fy, FLEUR)
 
   /* LE CHÂSSIS, dessiné EN DERNIER : c'est à travers lui qu'on regarde.
-     Montants, traverse, meneau — quatre carreaux. */
+     Montants, traverse, meneau : quatre carreaux. */
   const M = 3
   t.rect(0, 0, M, t.h, "F")
   t.rect(t.l - M, 0, M, t.h, "F")
@@ -139,7 +139,7 @@ function fenetre() {
 
 const FENETRE = fenetre()
 
-const src = `/* ENGENDRÉ par \`node tools/pixel/dessine.mjs\` — NE PAS ÉDITER À LA MAIN.
+const src = `/* ENGENDRÉ par \`node tools/pixel/dessine.mjs\` : NE PAS ÉDITER À LA MAIN.
    Le geste qui dessine ces grilles (polylignes, sprites, semis de
    fenêtres) vit dans l'outil ; ici ne vit que son résultat, figé et
    déterministe. Un caractère = un pixel, '.' = transparent.
@@ -149,7 +149,7 @@ const src = `/* ENGENDRÉ par \`node tools/pixel/dessine.mjs\` — NE PAS ÉDITE
 
 /* la palette : un caractère → une couleur. La ville et le ciel ont été
    REMONTÉS d'un cran au 3e gate (« faut que ce soit un peu plus clair,
-   l'ensemble ») — la vue reste une nuit, mais une nuit éclairée. */
+   l'ensemble ») : la vue reste une nuit, mais une nuit éclairée. */
 export const PALETTE: Record<string, string> = {
   b: "#2f2740", // branche
   B: "#5a4c74", // arête claire de la branche
@@ -157,12 +157,12 @@ export const PALETTE: Record<string, string> = {
   P: "#ffc2dc", // pétale clair
   y: "#ffe27a", // cœur
   s: "#fff3c4", // étincelle
-  "0": "#f4b2ca", // ciel — l'horizon chaud
+  "0": "#f4b2ca", // ciel : l'horizon chaud
   "1": "#e294be",
   "2": "#c082c0",
   "3": "#946eba",
   "4": "#7566b2",
-  "5": "#4a4084", // ciel — le zénith
+  "5": "#4a4084", // ciel : le zénith
   n: "#241c46", // la nuit sous l'horizon
   m: "#fff6d6", // la lune
   c: "#463a70", // ville, plan lointain
@@ -179,7 +179,7 @@ ${FENETRE.map((l) => `  ${JSON.stringify(l)},`).join("\n")}
 `
 const sortie = path.join(RACINE, "components/y2k/pixel-art.ts")
 writeFileSync(sortie, src)
-console.log(`écrit ${path.relative(RACINE, sortie)} — fenêtre ${FENETRE[0].length}×${FENETRE.length}`)
+console.log(`écrit ${path.relative(RACINE, sortie)} : fenêtre ${FENETRE[0].length}×${FENETRE.length}`)
 
 if (apercu) {
   const PAL = {

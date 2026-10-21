@@ -8,32 +8,32 @@ import { employeurs } from "@/components/proto/parcours"
 import { LienFiche } from "@/components/proto/lien-fiche"
 
 /* ==================================================================
-   LE HUB /work (#36) — la partition TRAVAIL du bureau Y2K.
+   LE HUB /work (#36) : la partition TRAVAIL du bureau Y2K.
 
    Six sections dans l'ordre gravé au #20 : en-tête, expérience,
    télémétrie EN VITRINE (jamais fondue dans Reach-Up), méthode,
    spécifications, contact. Le CONTENU vient des feuilles existantes
-   (dict.ts, parcours.ts) repris tels quels — ce fichier ne fait que le
+   (dict.ts, parcours.ts) repris tels quels : ce fichier ne fait que le
    mettre en fenêtres.
 
    L'ACCENT PAR EXPÉRIENCE (décision du 2026-08-26) vit ici : une
-   couleur par employeur, posée en variable CSS sur la carte — le CSS
+   couleur par employeur, posée en variable CSS sur la carte : le CSS
    ne connaît que `--acc`.
    ================================================================== */
 
-/* L'écriture sur accent est la NUIT pour TOUS — c'est le défaut de
+/* L'écriture sur accent est la NUIT pour TOUS : c'est le défaut de
    `--acc-txt` dans y2k.css (audit AA du re-gate, au pire pixel du
    vernis des barres) : l'encre #241f3d mesurait 4,15:1 sur le rose, la
    nuit tient 5,2:1 ; le cobalt d'origine #4a63e8 ne laissait passer NI
-   blanc (2,06:1 sous le vernis clair) ni encre (3,2:1) — il
+   blanc (2,06:1 sous le vernis clair) ni encre (3,2:1) : il
    s'éclaircit pour porter la nuit à 4,9:1 en gardant sa voix Nokia.
    Plus de `txt` par accent : une valeur unique se pose en token, pas
    en plombage. */
 const ACCENTS: Record<string, string> = {
-  upyourbizz: "#ff3ea5",       // le rose DesignMart — le poste courant est le chaud
-  "sophia-genetics": "#8fd0ff", // le bleu glacé Lightforce — données, santé
-  "the-guill-corp": "#6f83f0",  // le cobalt Nokia — aviation
-  legrand: "#f2a63b",           // l'ambre atelier — l'industrie
+  upyourbizz: "#ff3ea5",       // le rose DesignMart : le poste courant est le chaud
+  "sophia-genetics": "#8fd0ff", // le bleu glacé Lightforce : données, santé
+  "the-guill-corp": "#6f83f0",  // le cobalt Nokia : aviation
+  legrand: "#f2a63b",           // l'ambre atelier : l'industrie
 }
 const accVars = (c: string) => ({ "--acc": c }) as React.CSSProperties
 
@@ -72,7 +72,7 @@ export default function HubTravail() {
         </Link>
       </header>
 
-      {/* — le POST : identité système — */}
+      {/* le POST : identité système */}
       <section className="y2k-tete">
         <p className="y2k-boot">
           {t(lang, "hubOs")} &gt; {t(lang, "hubBoot")}
@@ -85,7 +85,7 @@ export default function HubTravail() {
         </p>
         <span className="y2k-statut-chip">{t(lang, "status")}</span>
         <dl className="y2k-bios">
-          {/* `spec` porte déjà la paire « En service » — pas de ligne stamp
+          {/* `spec` porte déjà la paire « En service » : pas de ligne stamp
               en plus, elle doublonnait au readout */}
           {t(lang, "spec").map(([k, v]) => (
             <div key={k}>
@@ -101,7 +101,7 @@ export default function HubTravail() {
       </div>
 
       <div className="y2k-colonne">
-        {/* — EXPERIENCE.EXE — */}
+        {/* EXPERIENCE.EXE */}
         <section className="y2k-fen" aria-labelledby="y2k-xp">
           <div className="y2k-fen-titre">
             <span className="pastille" aria-hidden="true" />
@@ -151,10 +151,10 @@ export default function HubTravail() {
           </div>
         </section>
 
-        {/* — TELEMETRIE.EXE : les voies en égaliseur — */}
-        {/* — METHODE.EXE : six TOUCHES chromées en pipeline, le banc de
-            mesure en readout LCD dessous (TELEMETRIE.EXE a vécu — gate
-            du 2026-08-26, la feuille 05 de `/` reste seule à la porter) — */}
+        {/* TELEMETRIE.EXE : les voies en égaliseur */}
+        {/* METHODE.EXE : six TOUCHES chromées en pipeline, le banc de
+            mesure en readout LCD dessous (TELEMETRIE.EXE a vécu, gate
+            du 2026-08-26, la feuille 05 de `/` reste seule à la porter) */}
         <section className="y2k-fen" aria-labelledby="y2k-methode">
           <div className="y2k-fen-titre" style={accVars("#8fd0ff")}>
             <span className="pastille" aria-hidden="true" />
@@ -175,7 +175,7 @@ export default function HubTravail() {
             </ol>
             {/* le banc s'accroche à MESURER : c'est l'étape outillée.
                 L'espace texte entre <b> et les chips est une VRAIE
-                opportunité de césure — sans lui, la ligne entière est
+                opportunité de césure : sans lui, la ligne entière est
                 insécable et déborde à 320px (revue #36) */}
             <p className="y2k-banc">
               <b>{pool[0]}</b>{" "}
@@ -196,7 +196,7 @@ export default function HubTravail() {
           </div>
         </section>
 
-        {/* — SPECS.SYS : le gestionnaire de périphériques — */}
+        {/* SPECS.SYS : le gestionnaire de périphériques */}
         <section className="y2k-fen" aria-labelledby="y2k-spec">
           <div className="y2k-fen-titre" style={accVars("#6f83f0")}>
             <span className="pastille" aria-hidden="true" />
@@ -229,7 +229,7 @@ export default function HubTravail() {
           </div>
         </section>
 
-        {/* — CONTACT.DLL : la boîte de dialogue — */}
+        {/* CONTACT.DLL : la boîte de dialogue */}
         <section className="y2k-fen y2k-dlg" aria-labelledby="y2k-contact">
           <div className="y2k-fen-titre">
             <span className="pastille" aria-hidden="true" />

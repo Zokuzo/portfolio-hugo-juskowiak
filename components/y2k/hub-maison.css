@@ -1,8 +1,8 @@
 /* ==================================================================
-   MAISON — la peau du hub /home (#37) : la CHAMBRE au crépuscule.
+   MAISON : la peau du hub /home (#37) : la CHAMBRE au crépuscule.
 
    Le miroir du bureau de nuit : /work est une session de travail sur
-   desktop nocturne, /home est la PIÈCE d'où on la regarde — la chambre
+   desktop nocturne, /home est la PIÈCE d'où on la regarde : la chambre
    au soir, le système sur le moniteur du bureau devant la fenêtre
    ouverte (hero-fenetre.css), et les sections en PANNEAUX-STICKERS
    (liseré découpé, ombre dure) au lieu des fenêtres chrome.
@@ -10,12 +10,12 @@
    L'ESSAI « BOOT » A PERDU LE GATE (3e retour, 2026-08-27 : « j'aime
    beaucoup la deuxième version avec la fenêtre ») : son écran plein
    cadre, sa branche en surcouche, ses nuages et son ciel en dégradé
-   sont SUPPRIMÉS — l'historique git les garde.
+   sont SUPPRIMÉS : l'historique git les garde.
 
    LA PIÈCE EST ÉCLAIRCIE (même retour : « faut que ce soit un peu plus
    clair, l'ensemble ») : toutes les surfaces montent d'un cran, du mur
    aux panneaux, et la lumière vient de la fenêtre. Les valeurs qui
-   suivent sont donc plus hautes qu'un simple noir — chaque montée a été
+   suivent sont donc plus hautes qu'un simple noir : chaque montée a été
    re-mesurée à l'audit AA, l'encre claire garde ses seuils.
 
    Ce fichier ne définit QUE la peau maison (préfixe m-) ; les tokens,
@@ -23,7 +23,7 @@
    y2k.css. Tout est scopé sous `.y2k.maison`.
 
    LA LOI DU DIMENSIONNEMENT (gate #36) : plafonds en px, jamais de vw
-   nu — les colonnes à 1240px, les meubles de la chambre à 1180px.
+   nu : les colonnes à 1240px, les meubles de la chambre à 1180px.
    ================================================================== */
 
 .y2k.maison {
@@ -33,32 +33,32 @@
   --m-panneau: #211a40; /* la face des panneaux-stickers */
   --m-panneau-pied: #342a5e; /* leur barre d'état */
   --m-creux: #1a1436; /* les blocs enfoncés (INI, disquette) */
-  --m-lcd: #281f4c; /* le readout de la playlist — le LCD du monde, monté */
+  --m-lcd: #281f4c; /* le readout de la playlist : le LCD du monde, monté */
 
   /* LE SOL DE LA PIÈCE, remonté une seconde fois (4e retour de gate :
      « le fond derrière dans le hub home il faut éclaircir également »).
      Il passe DEVANT les panneaux en clarté : les cartes se lisent
-     désormais comme des cartes SOMBRES posées sur un sol clair — la
+     désormais comme des cartes SOMBRES posées sur un sol clair : la
      même relation que sur les fiches, si bien que les deux pièces du
      monde se tiennent. Et il ne s'effondre plus vers le noir en 900px :
      le stop bas reste haut, une page longue ne doit pas finir en cave. */
   background: linear-gradient(180deg, #342b66 0px, #2e2659 700px, #292152 1600px);
 }
-/* LE SOL MEURT, LA GRILLE RESTE — décision de direction, pas oubli :
+/* LE SOL MEURT, LA GRILLE RESTE : décision de direction, pas oubli :
    le plancher rose en perspective (.y2k::after) est LA signature du
    bureau /work, la chambre ne l'emprunte pas ; en revanche la grille
    graphique du desktop (.y2k::before) est le chrome du monde entier et
-   vit sous les deux pièces — sur la nuit du bas de page elle donne au
+   vit sous les deux pièces : sur la nuit du bas de page elle donne au
    corps sa texture, exactement comme à /work. */
 .y2k.maison::after {
   content: none;
 }
 
 /* le marquee de la chambre roule sur le crépuscule : il garde son LCD
-   (y2k.css) — rien à surcharger, la classe m-marquee reste un ancrage */
+   (y2k.css) : rien à surcharger, la classe m-marquee reste un ancrage */
 
 /* ------------------------------------------------------------------
-   LES PANNEAUX-STICKERS — le mobilier des sections : liseré découpé
+   LES PANNEAUX-STICKERS : le mobilier des sections : liseré découpé
    crème + ombre dure, un ONGLET d'étiqueteuse en haut à gauche.
    ------------------------------------------------------------------ */
 .m-colonne {
@@ -122,7 +122,7 @@
 }
 
 /* ------------------------------------------------------------------
-   A:\ATELIER — la boîte à disquettes : volet métal, étiquette à
+   A:\ATELIER, la boîte à disquettes : volet métal, étiquette à
    bande d'accent, pied d'actions.
    ------------------------------------------------------------------ */
 .m-disqs {
@@ -139,7 +139,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  /* item de grille : sans min-width:0 son minimum est son min-content —
+  /* item de grille : sans min-width:0 son minimum est son min-content :
      le plus long nom de projet en Michroma dicterait la colonne et
      rouvrirait le gate du débordement (la leçon de .y2k-fen) */
   min-width: 0;
@@ -227,7 +227,7 @@
 }
 
 /* ------------------------------------------------------------------
-   QUALIF.M3U — la playlist HJ·AMP : readout LCD, quatre pistes, le
+   QUALIF.M3U : la playlist HJ·AMP : readout LCD, quatre pistes, le
    double diplôme marqué en lecture simultanée.
    ------------------------------------------------------------------ */
 .m-amp {
@@ -308,7 +308,7 @@
   white-space: nowrap;
   padding-top: 3px;
 }
-/* LA BARRE DE RAIL — l'axe commun sous chaque piste : les tranches qui
+/* LA BARRE DE RAIL : l'axe commun sous chaque piste : les tranches qui
    se chevauchent SE VOIENT se chevaucher (ESTIA et MBDS de 2024 à
    2025). C'est la réponse au reproche d'etuNote : « écrit en liste, ça
    se lit l'un après l'autre et l'information disparaît ». */
@@ -331,11 +331,11 @@
   background: var(--y2k-violet);
 }
 
-/* la piste du DOUBLE DIPLÔME : liseré violet + chip — deux pistes
+/* la piste du DOUBLE DIPLÔME : liseré violet + chip, deux pistes
    jouent en même temps, la liste ne doit pas le taire (etuNote).
    Le liseré est une OMBRE INTERNE, pas une bordure : une bordure
    s'ajoute à la boîte, décalait la colonne des numéros de 3px et
-   rétrécissait d'autant la barre de rail — dont l'axe doit être
+   rétrécissait d'autant la barre de rail, dont l'axe doit être
    EXACTEMENT commun, c'est ce que la section revendique. */
 .m-piste-double {
   box-shadow: inset 3px 0 0 var(--y2k-violet);
@@ -361,7 +361,7 @@
 }
 
 /* ------------------------------------------------------------------
-   PROFIL.INI — le hors-travail en fichier de config : sections entre
+   PROFIL.INI : le hors-travail en fichier de config : sections entre
    crochets, paires clé = valeur.
    ------------------------------------------------------------------ */
 .m-ini {
@@ -423,7 +423,7 @@
 }
 
 /* ------------------------------------------------------------------
-   MSGR.EXE — la messagerie : statut en ligne, bulle, trois réponses.
+   MSGR.EXE : la messagerie : statut en ligne, bulle, trois réponses.
    ------------------------------------------------------------------ */
 .m-msgr {
   max-width: 680px;
@@ -484,7 +484,7 @@
   border-right-color: #f6f3fe;
   border-left: 0;
 }
-/* les boutons de réponse — PAS la classe dlg de y2k.css : son anneau
+/* les boutons de réponse : PAS la classe dlg de y2k.css : son anneau
    de focus profond est réglé pour la face brossée claire du dialogue
    /work ; ici le fond derrière l'anneau est la NUIT du panneau, où le
    rose vif par défaut tient 5,7:1 et le profond échouerait (2,7:1) */
@@ -519,7 +519,7 @@
 }
 
 /* ------------------------------------------------------------------
-   Mobile — les retraits se resserrent, rien ne se chevauche.
+   Mobile : les retraits se resserrent, rien ne se chevauche.
    ------------------------------------------------------------------ */
 @media (max-width: 640px) {
   .m-boot {

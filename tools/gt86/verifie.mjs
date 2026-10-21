@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* LA VÉRIFICATION DE LA COQUILLE — ticket #27 de la carte #15.
+/* LA VÉRIFICATION DE LA COQUILLE : ticket #27 de la carte #15.
  *
  *   node tools/gt86/verifie.mjs          → bloc A seul (machine + gardes), instantané
  *   node tools/gt86/verifie.mjs --nav    → + bloc B : le vrai navigateur sur `next start`
@@ -9,7 +9,7 @@
  * .ts directement), plus deux gardes de dépôt.
  *
  * Bloc B est le CRITÈRE D'ACCEPTATION du ticket, mot pour mot : « la
- * surcouche monte, se démonte, ne casse jamais la version simple » — et il
+ * surcouche monte, se démonte, ne casse jamais la version simple » : et il
  * le montre sans un octet de contenu 3D.
  *
  * Zéro dépendance : `node:assert` et `tools/chrome.mjs` (CDP), déjà là.
@@ -25,7 +25,7 @@ import path from "node:path"
 const RACINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const NAV = process.argv.includes("--nav")
 
-/* ─────────────────────────── BLOC A — la machine ─────────────────────── */
+/* ─────────────────────────── BLOC A : la machine ─────────────────────── */
 
 const { suivant, depart, marqueVue, CLE, ETATS, INTRO, RAILS, REPOS, DESTS } = await import(
   path.join(RACINE, "components/gt86/machine.ts")
@@ -97,7 +97,7 @@ for (const etat of ETATS.filter((e) => e !== "HABITACLE")) {
 }
 
 /* Balayage exhaustif : tout couple (état, signal) rend un état CONNU, et
-   aucun état n'échappe au classement du frameloop — sans quoi une scène
+   aucun état n'échappe au classement du frameloop : sans quoi une scène
    ajoutée plus tard tournerait en boucle sans que personne le remarque. */
 const SIGNAUX = [
   { t: "clic" },
@@ -124,7 +124,7 @@ assert.deepEqual(
 
 /* GARDE DE DÉPÔT : chaque destination du GPS a sa route sur le disque.
    La fin de la cinématique est un `router.push(dest)` (#37) qu'AUCUNE
-   passe navigateur n'exerce — la 4d tourne sous `?nodepart`, qui fige
+   passe navigateur n'exerce : la 4d tourne sous `?nodepart`, qui fige
    justement le départ. Sans cette garde, une faute de frappe ou le
    déménagement du #39 rendrait 404 la sortie de toute l'expérience,
    tous les gates restant verts. Zéro seconde de navigateur. */
@@ -135,12 +135,12 @@ for (const dest of DESTS) {
 
 /* GARDE DE DÉPÔT : le paquet de la home ne doit contenir NI three NI R3F.
    Un import statique enverrait les 139 Ko (mesurés au #17) à tous les
-   visiteurs — mobiles et `prefers-reduced-motion` compris. C'est invisible à
+   visiteurs : mobiles et `prefers-reduced-motion` compris. C'est invisible à
    l'œil et ça ne casse aucun test : d'où cette garde. */
 for (const f of ["components/gt86/capable.ts", "components/gt86/surcouche.tsx", "components/gt86/intro-3d.tsx", "app/page.tsx"]) {
   const src = readFileSync(path.join(RACINE, f), "utf8")
   const fautif = src.match(/^\s*import[^\n]*from\s+["'](three|@react-three\/[\w-]+)["']/m)
-  assert.equal(fautif, null, `${f} importe ${fautif?.[1]} statiquement — la 3D doit rester derrière le dynamic`)
+  assert.equal(fautif, null, `${f} importe ${fautif?.[1]} statiquement : la 3D doit rester derrière le dynamic`)
 }
 
 /* LE TRAJET DU MENU NFS : la partition pure que lisent la
@@ -160,15 +160,15 @@ assert.ok(T.vitesse(T.LANCE_S + 2.5) * 3.6 < 50, "la 1re tire plus fort qu'une G
 for (const route of ["da/a/maison", "da/a/work"])
   assert.ok(existsSync(path.join(RACINE, "app", route, "page.tsx")), `le menu NFS mène à /${route}, qui n'existe pas`)
 
-/* LE RÉGIME DES ASSETS — ticket #28. Deux régressions passent inaperçues
+/* LE RÉGIME DES ASSETS : ticket #28. Deux régressions passent inaperçues
    sans ces gardes : un asset qui REGROSSIT (un ré-export qui oublie
    `tools/monde/regime.mjs`), et un NOM qui disparaît (une passe join/palette
-   fusionne les matériaux — le shader de fenêtres ne trouve plus sa façade,
+   fusionne les matériaux : le shader de fenêtres ne trouve plus sa façade,
    l'habillage de la voiture plus ses optiques). On lit le chunk JSON du GLB
    à la main : zéro dépendance, comme le reste du bloc A.
 
    Les noms listés sont EXACTEMENT ceux que le code compare (`mat.name ===`),
-   relevés par grep — pas la liste complète des matériaux. Les budgets sont en
+   relevés par grep : pas la liste complète des matériaux. Les budgets sont en
    octets, calés ~7 % au-dessus du poids mesuré après régime (`ls -lh` affiche
    des Mio : 8,3 Mo s'y lit « 7,9M », ce n'est pas une régression). */
 const ASSETS = {
@@ -199,11 +199,11 @@ const ASSETS = {
      tools/monde/carte-quartier.mjs) */
   "public/prototype/carte-quartier.png": { max: 1_600 },
   /* la face du disque de l'AMP (#33, 11e retour : les images fournies
-     par Hugo) — chargées paresseusement à la première entrée AMP, donc
+     par Hugo) : chargées paresseusement à la première entrée AMP, donc
      HORS de la cascade de la passe 7 */
   "public/amp/kirby-sprite.jpg": { max: 22_000 },
   "public/amp/kirby-logo.jpg": { max: 29_000 },
-  /* les icônes du hub (12e retour, fournies par Hugo — recolorées à la
+  /* les icônes du hub (12e retour, fournies par Hugo : recolorées à la
      volée dans la palette de l'écran) */
   "public/amp/icone-gps.jpg": { max: 43_000 },
   "public/amp/icone-musiques.jpg": { max: 21_000 },
@@ -215,7 +215,7 @@ for (const [f, budget] of Object.entries(ASSETS)) {
   const buf = readFileSync(path.join(RACINE, f))
   assert.ok(
     buf.length <= budget.max,
-    `${f} pèse ${buf.length} o (budget ${budget.max}) — repasser tools/monde/regime.mjs`,
+    `${f} pèse ${buf.length} o (budget ${budget.max}) : repasser tools/monde/regime.mjs`,
   )
   if (!f.endsWith(".glb")) continue
   const g = jsonDuGlb(buf)
@@ -226,17 +226,17 @@ for (const [f, budget] of Object.entries(ASSETS)) {
   /* un GLB basisu jetterait au chargement : useGLTF ne pose aucun KTX2Loader */
   assert.ok(
     !(g.extensionsRequired ?? []).includes("KHR_texture_basisu"),
-    `${f} exige KHR_texture_basisu — useGLTF n'a pas de transcodeur, le chargement jetterait`,
+    `${f} exige KHR_texture_basisu : useGLTF n'a pas de transcodeur, le chargement jetterait`,
   )
 }
 
-console.log("bloc A — machine + gardes + assets : OK")
+console.log("bloc A, machine + gardes + assets : OK")
 if (!NAV) {
-  console.log("(bloc B navigateur non lancé — ajouter --nav)")
+  console.log("(bloc B navigateur non lancé : ajouter --nav)")
   process.exit(0)
 }
 
-/* ────────────────────── BLOC B — le vrai navigateur ───────────────────── */
+/* ────────────────────── BLOC B : le vrai navigateur ───────────────────── */
 
 const { lanceChrome, pause, attends } = await import(path.join(RACINE, "tools/chrome.mjs"))
 
@@ -313,15 +313,15 @@ assert.equal(await compte("canvas"), 1, "il devrait rester exactement un canvas 
 console.log("  2/6 surcouche montée, un seul contexte WebGL")
 
 /* 3. Le clic sur la VOITURE lance l'atterrissage (#29) : un VRAI événement
-      souris CDP au centre du cadre — la pose du gate #21 y met la
+      souris CDP au centre du cadre : la pose du gate #21 y met la
       carrosserie, la consigne DOM a quitté le centre exprès, et l'overlay
       est `pointerEvents:none` : seul le raycast R3F peut réagir. On
-      réessaie tant que la Suspense décode le GLB — un clic dans le vide est
+      réessaie tant que la Suspense décode le GLB : un clic dans le vide est
       inerte. Puis le skip rassoit, même en plein rail, et la session
       retient que l'intro est vue. */
 assert.equal(await etat(), "CIEL", "l'expérience devrait s'ouvrir au CIEL")
 /* le voile CHARGEMENT (7e retour #33) est OPAQUE ET BLOQUANT tant que la
-   rue décode — comme pour l'œil, le clic n'existe qu'une fois le voile
+   rue décode : comme pour l'œil, le clic n'existe qu'une fois le voile
    levé (data-pret) ; budget mule : décodage meshopt + compiles */
 await attends(
   async () => (await sonde(`document.querySelector("[data-etat]")?.dataset.pret`)) === "1",
@@ -347,7 +347,7 @@ console.log("  3/6 le clic sur la voiture lance l'atterrissage, le skip rassoit"
 
 await va(base + "/")
 /* budget MULE : la passe 3 attend désormais le voile CHARGEMENT (rue
-   décodée + compiles) AVANT ses clics — la navigation repart donc sur un
+   décodée + compiles) AVANT ses clics : la navigation repart donc sur un
    renderer en pleine tempête de compilation, le remontage peut traîner */
 await attends(async () => await etat(), 30000, "remontage")
 assert.equal(await etat(), "HABITACLE", "l'intro s'est rejouée dans la même session")
@@ -355,7 +355,7 @@ console.log("  4/6 intro une seule fois par session")
 
 /* 4 bis. Le rail complet s'achève DE LUI-MÊME (#30, #31) : session vierge,
       clic sur la consigne, et vol PUIS seuil doivent mener à l'habitacle
-      sans skip — les chorégraphes envoient le vrai « fini », les horloges
+      sans skip : les chorégraphes envoient le vrai « fini », les horloges
       de scene.tsx ne sont que des filets. Large : vol 4,6 s + seuil 6,6 s
       + chargement rue, filets compris (VOL_MS+4 s puis SEUIL_MS+4 s sur
       machine gelée). */
@@ -364,7 +364,7 @@ await sonde(`sessionStorage.clear()`)
 await va(base + "/?menu=ancien")
 await attends(async () => (await etat()) === "CIEL", 8000, "retour au CIEL en session vierge")
 await sonde(`document.querySelector('[data-gt86="demarrer"]').click()`)
-/* budget MULE : la topologie de lumières constante (#31, retour de gate —
+/* budget MULE : la topologie de lumières constante (#31, retour de gate,
    15 lumières toujours collectées) fait ramer SwiftShader à ~0,65 fps et
    affame même les filets ; mesuré au CDP : rail complet ~60 s sur la
    machine de test, 10,7 s sur une vraie. La passe prouve l'ABOUTISSEMENT,
@@ -372,11 +372,11 @@ await sonde(`document.querySelector('[data-gt86="demarrer"]').click()`)
 await attends(async () => (await etat()) === "HABITACLE", 120000, "vol + seuil jusqu'à l'habitacle")
 /* …et la mise sous contact a bien eu lieu (#31) : phares à l'intensité
    gatée, dalle allumée, caméra ASSISE (à moins de 2 m du poste de
-   conduite — la vue d'arrivée du #30 en est à 7). La voiture du ciel
+   conduite : la vue d'arrivée du #30 en est à 7). La voiture du ciel
    traîne ses propres matériaux homonymes : on cherche DES exemplaires
    aux valeurs du réveil, pas l'unicité. On ATTEND l'état final au lieu
    de le lire au vol : `data-etat` bascule au commit, mais l'allumage vit
-   dans des effets passifs que React diffère — sur machine affamée
+   dans des effets passifs que React diffère : sur machine affamée
    (SwiftShader ~1 fps) la sonde les doublait (payé : « LightsFront à
    1 » alors que l'état final était bon, relevé au CDP). */
 const contact = await attends(async () => {
@@ -404,10 +404,10 @@ console.log(
 
 /* 4 ter. LE REJEU (4e retour de gate #31) : « revoir la scène » rend la
       main au CIEL, la voiture de rue REDEVIENT MORTE (l'extinction est
-      l'inverse exact de l'allumage), et un skip la rallume — le cycle est
+      l'inverse exact de l'allumage), et un skip la rallume : le cycle est
       réversible autant de fois qu'on veut. Les matériaux de la voiture de
       rue se reconnaissent à leur préparation (toneMapped:false sur
-      LightsFront, CanvasTexture sur Display) — la voiture du ciel garde
+      LightsFront, CanvasTexture sur Display) : la voiture du ciel garde
       les siens d'usine. */
 await sonde(`document.querySelector('[data-gt86="rejouer"]').click()`)
 await attends(async () => (await etat()) === "CIEL", 8000, "le rejeu rend la main au CIEL")
@@ -443,7 +443,7 @@ await attends(async () => {
 }, 8000, "le rallumage après le rejeu")
 console.log("  4c/6 le rejeu rend au ciel voiture morte, et le skip rallume tout")
 
-/* 4 quater. LE POSTE RÉPOND (#32) : au vrai clic souris — la dalle zoome
+/* 4 quater. LE POSTE RÉPOND (#32) : au vrai clic souris : la dalle zoome
       (le rail vole vers l'écran), le hub part au GPS, la rangée MAISON
       lance l'itinéraire (CHOIX), ?nodepart le fige, Échap rassoit. Les
       pixels sont calculés en projetant le PLAN calibré de la dalle. */
@@ -462,7 +462,7 @@ await attends(async () => {
   return v >= 7.9
 }, 15000, "le réveil avant le poste")
 /* le pixel d'un point (u, v) de la dalle, via le plan calibré (#26 : les
-   axes du plan — le vertical pointe vers le BAS, le u suit −x) */
+   axes du plan : le vertical pointe vers le BAS, le u suit −x) */
 const pixelDalle = async (u, v) =>
   JSON.parse(
     await sonde(`(() => {
@@ -489,7 +489,7 @@ const clicPoste = async (u, v) => {
 }
 await clicPoste(0.5, 0.5)
 /* le rail vole vers l'écran (1,1 s) : la caméra doit finir au nez de la
-   dalle — l'écran passe en hub au même clic */
+   dalle : l'écran passe en hub au même clic */
 await attends(async () => {
   const d = await sonde(`(() => {
     const st = window.__gt86
@@ -501,7 +501,7 @@ await attends(async () => {
   })()`)
   return d < 0.05
 }, 90000, "le rail jusqu'au nez de la dalle")
-/* budget MULE encore : le rail de 1,1 s avance d'1/12 s par frame rendue —
+/* budget MULE encore : le rail de 1,1 s avance d'1/12 s par frame rendue,
    à ~0,5 fps SwiftShader, c'est ~26 s de mur (mesuré au CDP). Et on laisse
    la caméra SE POSER avant de viser la tuile : un pixel projeté en plein
    vol tombait à côté (payé : clic sur MUSIQUES au lieu de GPS). */
@@ -517,9 +517,9 @@ await attends(async () => (await etat()) === "HABITACLE", 8000, "Échap rassoit 
 console.log("  4d/6 le poste répond : dalle → hub → GPS → MAISON, ?nodepart fige, Échap rassoit")
 
 /* 4 quinquies. SPOTIFY EN FAÇADE (#33) : l'écran MUSIQUES ne fait AUCUNE
-      requête tierce — c'est le clic sur la dalle (click-to-load, doctrine
+      requête tierce : c'est le clic sur la dalle (click-to-load, doctrine
       RGPD du #18) qui démarre le MOTEUR maison (7e retour : plus
-      d'iframe — notre API sert les pistes, le CDN l'audio). Le ‹ du
+      d'iframe : notre API sert les pistes, le CDN l'audio). Le ‹ du
       player revient au hub. Budgets mule : chaque vol de rail ≈ 26 s. */
 const distanceA = (lx, ly, lz) => sonde(`(() => {
   const st = window.__gt86
@@ -535,13 +535,13 @@ await clicPoste(0.5, 0.5)
 await attends(async () => (await distanceA(-0.075, 0.8403, 0.1358)) < 0.05, 90000, "le rail vers la dalle (Spotify)")
 await pause(1500)
 /* le consentement est LE CLIC DE TUILE (8e retour : direct à l'AMP, la
-   tuile porte la mention SPOTIFY) — zéro octet ne doit précéder CE clic */
+   tuile porte la mention SPOTIFY) : zéro octet ne doit précéder CE clic */
 const tiersAvantClic = JSON.parse(
   await sonde(
     `JSON.stringify(performance.getEntriesByType("resource").map((e) => e.name).filter((u) => u.includes("spotify") || u.includes("scdn.co") || u.includes("/api/gt86/mix")))`,
   ),
 )
-assert.deepEqual(tiersAvantClic, [], `la façade a fui : requêtes Spotify AVANT le clic — ${tiersAvantClic}`)
+assert.deepEqual(tiersAvantClic, [], `la façade a fui : requêtes Spotify AVANT le clic (${tiersAvantClic})`)
 await clicPoste(0.75, 0.5)
 await attends(async () => (await etat()) === "SPOTIFY", 20000, "la tuile MUSIQUES ouvre l'AMP direct")
 await attends(
@@ -553,7 +553,7 @@ await attends(
   "le moteur appelle notre API des pistes (réseau Spotify lent sur la mule)",
 )
 /* la MOLETTE (7e retour) : trois crans de roulette sur le bouton rotatif
-   gauche (zone plan étendue u ≈ −0,18) → le volume du moteur baisse —
+   gauche (zone plan étendue u ≈ −0,18) → le volume du moteur baisse,
    lu à la poignée __gt86ecran (etatDebug porte amp.volume) */
 const volumeLu = async () => JSON.parse(await sonde(`window.__gt86ecran.etatDebug()`)).volume
 const volAvant = await volumeLu()
@@ -594,9 +594,9 @@ assert.equal(
 console.log("  6/6 le repli démonte proprement : la fusion, zéro toile, le défilement rendu")
 
 /* 7. AUCUN OCTET NE PART CHEZ UN TIERS (#28). Grepper le bundle ne prouve
-      rien — l'URL gstatic vit dans le module drei, override ou pas. La seule
+      rien : l'URL gstatic vit dans le module drei, override ou pas. La seule
       preuve est RUNTIME : on traverse l'intro (les preload en cascade se
-      déclenchent — voiture, ciel, ville) puis on relit le journal réseau de
+      déclenchent : voiture, ciel, ville) puis on relit le journal réseau de
       la page. Couvre d'un coup le décodeur Draco (gstatic), les presets
       drei (jsdelivr), les HDRI distants et les polices tierces. */
 await va(base + "/")
@@ -608,7 +608,7 @@ const ressources = JSON.parse(
 )
 const externes = ressources.filter((u) => !u.startsWith(base))
 assert.deepEqual(externes, [], `des requêtes partent chez un tiers : ${externes}`)
-/* …et la cascade tire RÉELLEMENT ses octets — sans ça, une cascade débranchée
+/* …et la cascade tire RÉELLEMENT ses octets : sans ça, une cascade débranchée
    passerait la sonde d'externes haut la main. Voiture, ciel et textures
    d'habitacle partent au chargement du module, la rue au montage. */
 for (const asset of [
@@ -625,7 +625,7 @@ for (const asset of [
 ])
   assert.ok(
     ressources.some((u) => u.endsWith(asset)),
-    `la cascade n'a pas demandé ${asset} — préchargement débranché ?`,
+    `la cascade n'a pas demandé ${asset} : préchargement débranché ?`,
   )
 console.log("  7/7 zéro requête externe, et la cascade tire voiture + ciel + rue + habitacle")
 
@@ -654,10 +654,10 @@ for (const [route, vue, feuille] of [["/", "Accueil", 0], ["/work", "Work", 0], 
 await cdp.envoie("Emulation.clearDeviceMetricsOverride", {})
 console.log("  8/8 téléphone : la fusion dans la vue de l'URL, zéro toile, la fiche partagée s'ouvre")
 
-console.log("bloc B — navigateur : OK")
+console.log("bloc B, navigateur : OK")
 
 /* Sortie EXPLICITE : le Chrome piloté et `next start` gardent la boucle
-   d'événements vivante, et le script resterait suspendu sur un succès —
+   d'événements vivante, et le script resterait suspendu sur un succès,
    indiscernable d'un blocage pour qui le lance en intégration. */
 rangement()
 process.exit(0)

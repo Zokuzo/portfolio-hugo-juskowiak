@@ -76,8 +76,8 @@ dire(
    EN MÉMOIRE (`t()` rend le tableau du dictionnaire par référence), puis
    remises. Le dépôt n'est pas touché : l'expérience se rejoue telle quelle. */
 const LONGUES = [
-  "monde.html — la vue trois dimensions",
-  "la vue — three.js r160, scene camera renderer",
+  "monde.html, la vue trois dimensions",
+  "la vue, three.js r160, scene camera renderer",
   "aucune règle métier ici : 0 setItem, 0 décision",
 ]
 const { t } = await jiti.import("../../components/proto/dict.ts")

@@ -14,19 +14,19 @@ import { poseDessous } from "./dessous"
 import { poseLeds } from "./leds"
 import { LueursDuCiel } from "./lueurs"
 
-/* LE CIEL — ticket #29 : le verdict « Pellicule » du gate #21, porté du
+/* LE CIEL, ticket #29 : le verdict « Pellicule » du gate #21, porté du
    prototype (route jetable, supprimée au #35) dans la coquille.
 
-   HDRI qwantani_dusk_2_puresky (Poly Haven, CC0, 1k) auto-hébergée — un
+   HDRI qwantani_dusk_2_puresky (Poly Haven, CC0, 1k) auto-hébergée, un
    crépuscule lavande au soleil bas, monté sur dôme (en 4k depuis les #46
    et #59, voir CIEL_4K) et teinté chaud
    (multiply) : aucun puresky n'est rosé-orangé une fois tone-mappé, la
    teinte EST le concept. L'IBL reste la photo brute (reflets vrais).
    L'aura divine est SUPPRIMÉE au gate (l'additif `depthTest:false`
-   découpait la carrosserie) — ne pas la réintroduire. */
+   découpait la carrosserie), ne pas la réintroduire. */
 
 /* Les chaînes de chargement sont importées par `scene.tsx` pour sa cascade :
-   la clé du cache suspend-react est (constructeur, chaîne) — l'égalité par
+   la clé du cache suspend-react est (constructeur, chaîne), l'égalité par
    construction garantit que le préchargement sert le dôme et la voiture
    sans un octet de plus. */
 export const VOITURE = "/prototype/gt86.glb"
@@ -47,7 +47,7 @@ export const CIEL_4K = "/prototype/ciel-4k.avif"
 const ECHELLE_4K = 11
 const TEINTE_DOME = new THREE.Color("#d8927a").multiplyScalar(ECHELLE_4K)
 
-/* le soleil de la pellicule — il sculpte les crêtes des nuages par le dessus */
+/* le soleil de la pellicule, il sculpte les crêtes des nuages par le dessus */
 const SOLEIL = new THREE.Vector3(0.25, 0.6, -1.0)
 /* rotation du ciel : 0,25π retenu après balayage en captures (gate #21) */
 const ROT = Math.PI * 0.25
@@ -73,7 +73,7 @@ const PLONGEE = 9
 export const PIQUE = 1.0
 export const CAP = -Math.PI / 5 - (55 * Math.PI) / 180
 
-/* La GT86 flottante. Le clic sur la carrosserie EST le démarrage — le
+/* La GT86 flottante. Le clic sur la carrosserie EST le démarrage, le
    raycast R3F reçoit le geste parce que l'overlay DOM est
    `pointerEvents:none` partout sauf sur ses boutons ; la consigne en bas
    d'écran fait la même chose au clavier. */
@@ -92,7 +92,7 @@ function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<
 
   const modele = useMemo(() => {
     /* Le GLB embarque un disque de sol semi-transparent (matériau `Floor`,
-       recherche #16) qui n'a rien à faire dans le ciel — et qui fausse la
+       recherche #16) qui n'a rien à faire dans le ciel : et qui fausse la
        bbox. On le retire avant de centrer. */
     const morts: THREE.Object3D[] = []
     scene.traverse((o) => {
@@ -100,7 +100,7 @@ function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<
       const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
       if (mats.some((m) => m?.name === "Floor")) morts.push(o)
       /* l'effet glass : on jette la texture du verre (elle portait le
-         bandeau Rocket Bunny — neutralisé au gate) et on pose un vrai
+         bandeau Rocket Bunny, neutralisé au gate) et on pose un vrai
          verre fumé poli, miroir du couchant, l'habitacle en transparence */
       for (const m of mats) {
         if (m?.name === "Glass") {
@@ -146,7 +146,7 @@ function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<
 
   /* la robe (carrosserie.tsx) : peinture vernie, jantes chrome.
      Le nom "Paint" est porteur : la voiture de la RUE (#30) se clone
-     depuis ce même GLB déjà mué — son rhabillage retrouve la peinture
+     depuis ce même GLB déjà mué, son rhabillage retrouve la peinture
      par ce nom. */
   const robe = useMemo(robeDuCiel, [])
 
@@ -163,7 +163,7 @@ function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<
     })
   }, [modele, robe, scene3, gl3])
 
-  /* la respiration — amplitude couplée au sommet du banc (-2,6) : le nez
+  /* la respiration, amplitude couplée au sommet du banc (-2,6) : le nez
      piqué descend à ~-2,1 au creux de la houle, plus bas le banc mange la
      carrosserie. Le canal `plonge` du vol (#30) s'y ajoute : au clic, la
      voiture s'enfonce dans les nuages avant la bascule vers la rue. */
@@ -216,7 +216,7 @@ function Ciel({
   visible: boolean
   surClic: () => void
   /* signale que voiture + ciel sont décodés : la coquille monte alors la
-     rue en sourdine (cascade #30 — le décodage meshopt est synchrone,
+     rue en sourdine (cascade #30, le décodage meshopt est synchrone,
      jamais pendant le rail) */
   surPret: () => void
   vol: MutableRefObject<Trajectoire>
@@ -244,7 +244,7 @@ function Ciel({
     [],
   )
 
-  /* ce rendu n'existe qu'une fois les loaders résolus — le signal est là */
+  /* ce rendu n'existe qu'une fois les loaders résolus, le signal est là */
   useEffect(() => surPret(), [surPret])
 
   /* LA CHAUFFE DU CIEL CACHÉ (#42) : une session qui a déjà vu l'intro
@@ -256,7 +256,7 @@ function Ciel({
   const groupe = useRef<THREE.Group>(null)
   useChauffeEnSolo(groupe)
 
-  /* la pose d'ouverture, tenue tant que le ciel est à l'écran — le vol
+  /* la pose d'ouverture, tenue tant que le ciel est à l'écran : le vol
      d'atterrissage (vol.tsx) prend la caméra ici au clic. Elle se REJOUE
      au retour du rejeu (dépendance `visible`), et en LAYOUT : un effet
      passif laissait peindre une frame de dôme depuis le siège (fov 45)
@@ -300,7 +300,7 @@ function Ciel({
           />
         </mesh>
         {/* 12e retour (« la lumière n'est pas dirigée vers la voiture ») :
-            la directionnelle vivait DERRIÈRE la voiture — le flanc que la
+            la directionnelle vivait DERRIÈRE la voiture, le flanc que la
             caméra regarde (POSE −4.2, −0.4, 7.8) n'était éclairé que par
             l'hémisphère. Elle passe côté caméra : même lumière, même
             topologie, juste braquée sur la robe. */}

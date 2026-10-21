@@ -3,18 +3,18 @@
 import { t, type Lang } from "./dict"
 
 /* ==================================================================
-   VOCABULAIRE DE BLOCS — les deux blocs qu'une fiche EMPRUNTE.
+   VOCABULAIRE DE BLOCS : les deux blocs qu'une fiche EMPRUNTE.
 
    CE QUI A CHANGÉ AU #39. Ce fichier servait la coque planche
    (`fiche-projet.tsx`) et son vocabulaire de mise en page libre. Les
-   neuf fiches sont passées au gabarit « affiche Y2K » — trois au
-   bureau, six à la chambre — et la coque a été supprimée avec son
+   neuf fiches sont passées au gabarit « affiche Y2K » (trois au
+   bureau, six à la chambre) et la coque a été supprimée avec son
    corps sur mesure : leur contenu vit désormais dans
    `components/y2k/fiche-y2k.tsx`.
 
    NE RESTE QUE CE QUI EST ENCORE APPELÉ : les COTES et le CODE
    ANNOTÉ, les deux blocs de la fiche Eternal. `Bloc` et `monte()`
-   sont partis avec la coque — et avec eux la dépendance à `motion`,
+   sont partis avec la coque, et avec eux la dépendance à `motion`,
    qui n'a plus rien à animer ici.
 
    LE CONTRAT DE CONTENU NE BOUGE PAS : aucune chaîne visible dans ce
@@ -70,13 +70,13 @@ export function Cotes({ lang, lignes, note }: { lang: Lang; lignes: string[][]; 
    propose douze fois le même bloc à coloration syntaxique avec bouton
    copier. Le filtre du ticket 06 tranche le point :
 
-     R-10.1 — un thème de coloration est une palette (six à dix
+     R-10.1 : un thème de coloration est une palette (six à dix
        teintes) ; le système des blocs en interdit UNE. Refusé.
-     R-10.2 — le code se différencie par la graisse et par le gris.
+     R-10.2, le code se différencie par la graisse et par le gris.
        Trois niveaux : mise en évidence sur --paper, corps sur
        --g-100, commentaire sur --g-500.
-     R-10.3 — aucun moteur de coloration installé. Ici : des <span>.
-     R-10.4 — la mise en évidence passe par le RAIL géométrique
+     R-10.3, aucun moteur de coloration installé. Ici : des <span>.
+     R-10.4, la mise en évidence passe par le RAIL géométrique
        (`inset 2px 0 0 var(--sig-hot)`, trois précédents dans le
        dépôt), jamais par un fond coloré.
 
@@ -86,7 +86,7 @@ export function Cotes({ lang, lignes, note }: { lang: Lang; lignes: string[][]; 
    pour deux mots ; le rail de R-10.4 porte déjà l'emphase.
 
    LE CODE NE SE TRADUIT PAS. Les deux langues rendent les mêmes
-   lignes — c'est du code source, il n'en existe qu'une version.
+   lignes, c'est du code source, il n'en existe qu'une version.
    Seules la source et la note changent de langue.
    ------------------------------------------------------------------ */
 export function CodeAnnote({
@@ -109,7 +109,7 @@ export function CodeAnnote({
             {lignes.map((l, i) => {
               /* Une ligne dont le numéro n'est pas un nombre est
                  l'ÉLISION. Le glyphe « ⋯ » vit dans la colonne des
-                 numéros, et cette colonne est aria-hidden — sinon
+                 numéros, et cette colonne est aria-hidden : sinon
                  chaque ligne se ferait annoncer son numéro. Un lecteur
                  d'écran entendrait donc un bloc CONTIGU. Le compte de
                  lignes sautées se déduit des numéros voisins : il ne

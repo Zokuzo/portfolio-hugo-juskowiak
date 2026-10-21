@@ -1,19 +1,19 @@
 import { useId } from "react"
 
 /* ==================================================================
-   PRIMITIVES DE SCHÉMA — la géométrie se CALCULE, elle ne se pose pas.
+   PRIMITIVES DE SCHÉMA : la géométrie se CALCULE, elle ne se pose pas.
 
    POURQUOI CE MODULE EXISTE. Les trois schémas qui tiennent déjà dans
    ce document (`experience.tsx` et son objet G, `telemetrie.tsx` et ses
    BASE/BANDES, `etudes.tsx` et sa fonction x()) partagent une seule
    discipline : aucune coordonnée n'est écrite à la main, tout descend
    de constantes nommées. Chacun l'a réinventée dans son coin, et
-   `atelier.tsx` — le seul qui pose ses chiffres à la main — est aussi
+   `atelier.tsx`, le seul qui pose ses chiffres à la main, est aussi
    le seul dont un libellé plus long casserait le dessin. Ce module
    donne la discipline une fois pour toutes.
 
-   LA RÈGLE DU MODULE : un auteur de schéma déclare des ANCRES —
-   une colonne, une rangée, un identifiant de nœud — jamais un x ni un
+   LA RÈGLE DU MODULE : un auteur de schéma déclare des ANCRES,
+   une colonne, une rangée, un identifiant de nœud : jamais un x ni un
    y. Toute coordonnée est dérivée. Changer un libellé, ajouter un
    nœud ou traduire le schéma ne peut donc pas décaler une flèche.
 
@@ -24,7 +24,7 @@ import { useId } from "react"
    magicui (besoin 4), qui vise les centres et laisse la pointe flotter
    dans la boîte.
 
-   PIÈGE MAISON — collision CSS/SVG. En SVG2 les propriétés CSS
+   PIÈGE MAISON : collision CSS/SVG. En SVG2 les propriétés CSS
    width/height/x/y/r battent les attributs de présentation : une règle
    HTML homonyme réécrit la géométrie d'un <rect>. Le piège est déjà
    documenté deux fois dans le dépôt (`ortho.tsx:19-23`,
@@ -43,7 +43,7 @@ import { useId } from "react"
 
    Le seul endroit du module qui SUPPOSE quelque chose du rendu. La
    police mono du document (JetBrains Mono) a une avance constante, donc
-   la largeur d'un libellé est calculable — mais une valeur fausse
+   la largeur d'un libellé est calculable : mais une valeur fausse
    ferait déborder le texte de sa boîte sans prévenir. Ces trois
    nombres sont donc MESURÉS au navigateur, police chargée, et non
    supposés : voir `.scratch/planche-profonde/recherches/10-primitives-svg.md`
@@ -69,9 +69,9 @@ const PAD_X = 10 // air horizontal dans une boîte
 const PAD_Y = 7 // air vertical dans une boîte
 /* Interligne : il DOIT dépasser la hauteur mesurée d'une ligne
    (1,39 em = 12,5 px à 9 px) sinon deux lignes d'une même boîte se
-   touchent — le défaut que `etudes.tsx:122-124` a payé une fois. */
+   touchent : le défaut que `etudes.tsx:122-124` a payé une fois. */
 const LH = 14
-const GOUT = 46 // gouttière entre deux colonnes — doit loger une flèche + sa pointe
+const GOUT = 46 // gouttière entre deux colonnes : doit loger une flèche + sa pointe
 const INTERRANG = 26 // entre deux rangées d'une même bande
 const SAUT = 26 // supplément entre deux bandes, pour loger le titre de groupe
 const MARGE = 14 // air autour du dessin dans le viewBox
@@ -85,7 +85,7 @@ const RECUL_COTE = 22 // sous la boîte la plus basse, la ligne de cote
 const BUS_H = 2 * LH + 4
 
 /* `Math.max(...[])` rend -Infinity, et le viewBox émis contient alors
-   Infinity ou NaN : le SVG sort VIDE, pas faux — rien ne lève, rien ne
+   Infinity ou NaN : le SVG sort VIDE, pas faux : rien ne lève, rien ne
    le dit, `next build` passe. Une rangée sans nœud, une colonne sans
    nœud (« sauter une colonne pour espacer deux blocs ») ou un nœud sans
    ligne sont des erreurs d'auteur : on refuse de dessiner, comme pour
@@ -101,7 +101,7 @@ const maxi = (vals: number[], quoi: string) => {
 const n = (v: number) => Math.round(v * 100) / 100
 
 /* ------------------------------------------------------------------
-   3. TYPES — ce que l'auteur d'un schéma déclare
+   3. TYPES : ce que l'auteur d'un schéma déclare
    ------------------------------------------------------------------ */
 export type Rect = { x: number; y: number; l: number; h: number }
 export type Pt = { x: number; y: number }
@@ -134,7 +134,7 @@ export type Plan = {
 }
 
 /* ------------------------------------------------------------------
-   4. TYPES — ce que le module rend
+   4. TYPES : ce que le module rend
    ------------------------------------------------------------------ */
 export type Texte = { texte: string; x: number; y: number; ancrage: "start" | "middle" }
 export type Boite = { id: string; rect: Rect; lignes: Texte[]; accent: boolean }
@@ -162,7 +162,7 @@ const cy = (r: Rect) => r.y + r.h / 2
 
 /** LE point d'accrochage : intersection du rayon (dx,dy) partant du
  *  centre de `r` avec le bord de `r`. Exact pour toute direction, y
- *  compris les diagonales d'un faisceau convergent — c'est ce qui
+ *  compris les diagonales d'un faisceau convergent : c'est ce qui
  *  interdit à une pointe de flotter dans la boîte. */
 function bord(r: Rect, dx: number, dy: number): Pt {
   const tx = dx === 0 ? Number.POSITIVE_INFINITY : r.l / 2 / Math.abs(dx)
@@ -200,7 +200,7 @@ const union = (a: Rect, b: Rect): Rect => {
    6. LE CALCUL
 
    Ordre imposé : les boîtes d'abord (elles fixent la grille), puis ce
-   qui s'y accroche, et les étiquettes libres en DERNIER — elles sont
+   qui s'y accroche, et les étiquettes libres en DERNIER : elles sont
    les seules à pouvoir se déplacer, donc les seules à céder.
    ------------------------------------------------------------------ */
 export function dessiner(plan: Plan): Dessin {
@@ -232,7 +232,7 @@ export function dessiner(plan: Plan): Dessin {
   }
   /* Une bande commence par un saut : c'est là que se pose son titre.
      Sans ce supplément le titre du groupe tomberait sur la rangée
-     précédente — exactement le piège documenté par `etudes.tsx:122-124`
+     précédente : exactement le piège documenté par `etudes.tsx:122-124`
      (« deux textes à 10px d'écart, illisibles »). */
   const debutsDeBande = new Set((plan.groupes ?? []).slice(1).map((g) => g.rangs[0]))
   const rangY: number[] = []
@@ -284,7 +284,7 @@ export function dessiner(plan: Plan): Dessin {
     const branche = (id: string, sens: "entree" | "sortie"): Branche => {
       const r = rectDe(id)
       const x = cx(r)
-      // l'embranchement part du bord, pas du centre — même règle que les flèches
+      // l'embranchement part du bord, pas du centre : même règle que les flèches
       const depuis = sens === "entree" ? r.y + r.h : y
       const vers = sens === "entree" ? y : r.y
       const uy = Math.sign(vers - depuis)
@@ -300,14 +300,14 @@ export function dessiner(plan: Plan): Dessin {
     /* Deux embranchements du MÊME CÔTÉ sur la même verticale se
        superposeraient et le schéma mentirait sans qu'on le voie : on
        refuse de dessiner plutôt que de dessiner faux. Une entrée et une
-       sortie alignées, en revanche, se lisent comme une traversée —
+       sortie alignées, en revanche, se lisent comme une traversée,
        elles sont de part et d'autre du tronc. */
     for (const s of ["entree", "sortie"] as const) {
       const xs = branches.filter((br) => br.sens === s).map((br) => br.bout.x)
       if (new Set(xs).size !== xs.length) throw new Error(`schema : deux embranchements « ${s} » sur la même verticale`)
     }
 
-    // le tronc s'arrête au DERNIER raccordement — un bus qui continue
+    // le tronc s'arrête au DERNIER raccordement : un bus qui continue
     // dans le vide annonce une suite qui n'existe pas (`experience.tsx:42-44`)
     const x1 = Math.min(...branches.map((br) => br.bout.x))
     const x2 = Math.max(...branches.map((br) => br.bout.x))
@@ -384,7 +384,7 @@ export function dessiner(plan: Plan): Dessin {
     let etiquette: Texte | null = null
     if (li.etiquette) {
       /* PLACEMENT PAR FORMULE, puis PREMIER LIBRE. Le milieu du trait
-         décalé perpendiculairement — au-dessus d'abord, en dessous
+         décalé perpendiculairement : au-dessus d'abord, en dessous
          ensuite, puis plus loin. On essaie, on mesure, on garde la
          première position qui ne recoupe rien. Une intention de ne pas
          chevaucher n'est pas une règle ; celle-ci se vérifie.
@@ -458,7 +458,7 @@ export function Planche({ plan, prefixe, titre }: { plan: Plan; prefixe: string;
   const p = prefixe
   /* L'identifiant du <title> ne peut PAS descendre du seul préfixe :
      deux instances du même schéma sur une page (FR + EN, par exemple)
-     donneraient deux `id` identiques — HTML invalide, et les deux <svg>
+     donneraient deux `id` identiques : HTML invalide, et les deux <svg>
      seraient étiquetés par le premier titre, donc le schéma anglais
      annoncé en français au lecteur d'écran. `useId` rend un identifiant
      par instance, stable entre serveur et client. */

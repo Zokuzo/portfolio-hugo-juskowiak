@@ -8,7 +8,7 @@ import { Cotes, CodeAnnote } from "@/components/proto/fiche-blocs"
 import { SchemaEternal } from "@/components/proto/schema-eternal"
 
 /* ==================================================================
-   FICHE Y2K — le gabarit « affiche publicitaire » (#38). La grammaire
+   FICHE Y2K : le gabarit « affiche publicitaire » (#38). La grammaire
    vient de la moisson du feed Pinterest de Hugo (synthèse au ticket) :
    HÉROS de pub auto (le produit plein cadre, le nom en chrome liquide,
    l'accroche italique), panneau SYSTEM pixel-UI pour les méta, pavé
@@ -20,10 +20,10 @@ import { SchemaEternal } from "@/components/proto/schema-eternal"
    L'EN-TÊTE porte le ViewTransition `fiche-<slug>` (share="morph").
    ================================================================== */
 
-/* un accent PAR PROJET (décision du 2026-08-26) — le rose au produit
+/* un accent PAR PROJET (décision du 2026-08-26) : le rose au produit
    courant, le vert acide du feed à Octo, le glacé Sophia à la
    prédiction mémoire. Plus de `txt` par accent : `--acc-txt` a un
-   défaut AUDITÉ dans y2k.css (la nuit) et rien ici ne le consomme —
+   défaut AUDITÉ dans y2k.css (la nuit) et rien ici ne le consomme :
    l'encre morte qu'on posait quand même n'était PAS auditée (revue du
    re-gate). */
 /* CETTE TABLE DOIT COUVRIR LES DIX SLUGS, SLUGS_TRAVAIL ET
@@ -33,38 +33,38 @@ import { SchemaEternal } from "@/components/proto/schema-eternal"
 
    ELLE NE PEUT PAS ÊTRE LA SOURCE DE VÉRITÉ DE LA SCISSION : ce fichier
    est un module « use client », et une liste exportée d'ici n'arrive au
-   serveur que comme référence opaque — payé au build du #38, sur un
+   serveur que comme référence opaque : payé au build du #38, sur un
    `.includes is not a function` côté serveur. D'où la scission dans
    projets.ts, qui n'est pas un module client. */
 const ACCENTS: Record<string, string> = {
-  /* — le BUREAU (#38) — */
+  /* le BUREAU (#38) */
   "reach-up": "#ff3ea5",
   octo: "#9be05a",
   "uyb-store": "#ff8a3d", // l'orange UpYourBizz, celui du store
   "prediction-memoire": "#8fd0ff",
-  /* — la CHAMBRE (#39) — les deux premiers ne sont pas choisis ici :
+  /*, la CHAMBRE (#39), les deux premiers ne sont pas choisis ici :
      ils sont RECOPIÉS des disquettes du hub /home (ACCENTS_ATELIER de
      hub-maison.tsx). La couleur d'une disquette est une promesse ; une
      affiche d'une autre teinte que l'objet cliqué la trahirait. */
-  eternal: "#a06bff", // le violet du monde — disquette A1
-  "trading-agent": "#9be05a", // le vert acide — disquette A2
+  eternal: "#a06bff", // le violet du monde : disquette A1
+  "trading-agent": "#9be05a", // le vert acide : disquette A2
   /* Les quatre cursus vivent dans UNE playlist violette : le hub ne
      leur donne pas d'accent individuel, la fiche doit donc l'inventer.
      Chacun prend la teinte de ce qu'il est, dans la palette du monde. */
-  cpge: "#5fe3d0", // aqua — le socle formel, froid, avant la première ligne de code
-  estia: "#ffb02e", // ambre — le rail principal, le long fût chaud du parcours
-  hokkaido: "#ff9ec7", // rose sakura — le cerisier qui est derrière la vitre de /home
-  mbds: "#6f83f0", // cobalt — la teinte déjà ÉCLAIRCIE et auditée AA au re-gate du #38
+  cpge: "#5fe3d0", // aqua : le socle formel, froid, avant la première ligne de code
+  estia: "#ffb02e", // ambre : le rail principal, le long fût chaud du parcours
+  hokkaido: "#ff9ec7", // rose sakura : le cerisier qui est derrière la vitre de /home
+  mbds: "#6f83f0", // cobalt : la teinte déjà ÉCLAIRCIE et auditée AA au re-gate du #38
 }
 
 /* LA FICHE SUIT SA PARTITION (#39). Une fiche maison qui renverrait au
-   bureau éjecterait de la chambre — c'était la dette léguée par le #37,
+   bureau éjecterait de la chambre : c'était la dette léguée par le #37,
    en pire : elle renvoyait à la PLANCHE. La route passe son monde, la
    fiche ne le devine pas.
 
    DEUX LIBELLÉS ET PAS UN : le retour ET le pied. Le pied disait
    « session TRAVAIL » sous une fiche de la chambre (attrapé à l'œil sur
-   la capture d'ESTIA) — même faute que le retour, même cause, donc même
+   la capture d'ESTIA) : même faute que le retour, même cause, donc même
    table. Tout ce qui nomme le monde passe par ICI ; un troisième
    libellé oublié se verrait comme les deux premiers. */
 const MONDE = {
@@ -105,10 +105,10 @@ export function FicheY2k({ slug, retour = "/work" }: { slug: string; retour?: ke
         </Link>
       </header>
 
-      {/* — l'affiche : le héros de pub — */}
+      {/* l'affiche : le héros de pub */}
       <ViewTransition name={`fiche-${p.slug}`} share="morph" default="none">
         <header className={`fy-hero${p.captures?.length ? "" : " fy-hero--court"}`}>
-          {/* les coins RÉPÈTENT les méta du panneau SYSTEM dessous —
+          {/* les coins RÉPÈTENT les méta du panneau SYSTEM dessous :
               décor de pub, soustrait aux lecteurs d'écran */}
           <span className="fy-coin hg" aria-hidden="true">{`${t(lang, "fpCadre")} · ${p.cadre}\n${t(lang, "fpPeriode")} · ${p.periode}`}</span>
           <span className="fy-coin hd" aria-hidden="true">{`${t(lang, "fpEtat")} · ${p.etat}`}</span>
@@ -120,7 +120,7 @@ export function FicheY2k({ slug, retour = "/work" }: { slug: string; retour?: ke
           </span>
           <p className="fy-fiche-type">{t(lang, p.genre === "formation" ? "fpFicheFormation" : "fpFiche")}</p>
           {/* le porteur .fy-nom-halo tient le SKEW ; l'ombre dure et le
-              halo sont le ::after du h1 (data-nom) — ni ombre ni filter
+              halo sont le ::after du h1 (data-nom) : ni ombre ni filter
               sur le texte clippé lui-même (cause racine du « néon
               noir », voir y2k.css) */}
           <div className="fy-nom-halo">
@@ -147,7 +147,7 @@ export function FicheY2k({ slug, retour = "/work" }: { slug: string; retour?: ke
           </dl>
           {p.captures && p.captures.length > 0 && (
             <figure className="fy-vitrine">
-              {/* la 2e capture glisse derrière, inclinée — elle garde
+              {/* la 2e capture glisse derrière, inclinée : elle garde
                   son alt : partiellement visible, pas un pur décor */}
               {p.captures[1] && (
                 <img
@@ -167,7 +167,7 @@ export function FicheY2k({ slug, retour = "/work" }: { slug: string; retour?: ke
       </ViewTransition>
 
       <div className="fy-colonne">
-        {/* — le pavé de pub : le contexte — */}
+        {/* le pavé de pub : le contexte */}
         <section className="fy-pave" aria-labelledby="fy-ctx">
           <h2 id="fy-ctx" className="fy-titre-bloc">
             {t(lang, "fpContexte")}
@@ -175,10 +175,10 @@ export function FicheY2k({ slug, retour = "/work" }: { slug: string; retour?: ke
           <p>{p.contexte}</p>
         </section>
 
-        {/* — LE CORPS SUR MESURE D'ETERNAL (#39, hérité du monde
+        {/* LE CORPS SUR MESURE D'ETERNAL (#39, hérité du monde
             planche). Cette fiche est la seule dont on connaît le CODE
             (recherche 02, tout sourcé) : elle MONTRE au lieu de
-            raconter — le schéma juste après le contexte parce que sa
+            raconter : le schéma juste après le contexte parce que sa
             seule phrase difficile (« deux vues, un seul moteur ») se
             lit en dessin, le pont EN CODE juste après la décision
             qu'il prouve, les cotes en fermeture avec la commande qui

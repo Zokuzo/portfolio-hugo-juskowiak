@@ -1,11 +1,11 @@
-/* Contrôle géométrique du schéma calculé — ticket 10.
+/* Contrôle géométrique du schéma calculé : ticket 10.
    Ce script échoue si la géométrie casse. Une capture qui « a l'air
    bien » n'est pas une preuve ; celui-ci en est une.
 
    node tools/controles/controle-schema.mjs [url] [tolerance] [ecartMin]
 
    L'URL par défaut date de la page d'essai du ticket 10, qui n'existe
-   plus dans app/ : passer l'URL d'une page qui REND le schéma —
+   plus dans app/ : passer l'URL d'une page qui REND le schéma :
    en pratique http://localhost:3210/work/eternal.
    CHROME=<chemin d'un Chrome/Chromium> pour un autre binaire.
 */
@@ -26,7 +26,7 @@ mkdirSync(SORTIE, { recursive: true })
    suivre. */
 const CHROME = process.env.CHROME ?? `${process.env.HOME}/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome`
 if (!existsSync(CHROME)) {
-  console.error(`Chrome introuvable (${CHROME}) — passe CHROME=<chemin du binaire>.`)
+  console.error(`Chrome introuvable (${CHROME}) : passe CHROME=<chemin du binaire>.`)
   process.exit(2)
 }
 
@@ -82,7 +82,7 @@ const rapport = await page.evaluate(
         [...svg.querySelectorAll("[data-boite]")].map((g) => [g.dataset.boite, rc(g.querySelector("rect"))]),
       )
 
-      /* 1 — police réellement employée et métriques mesurées */
+      /* 1 : police réellement employée et métriques mesurées */
       const t0 = svg.querySelector("text")
       const cs = getComputedStyle(t0)
       res.police[nom] = { famille: cs.fontFamily, taille: cs.fontSize, tracking: cs.letterSpacing }
@@ -97,7 +97,7 @@ const rapport = await page.evaluate(
         })
       }
 
-      /* 2 — ACCROCHAGE : chaque extrémité de flèche touche le bord de sa boîte */
+      /* 2 : ACCROCHAGE : chaque extrémité de flèche touche le bord de sa boîte */
       for (const g of svg.querySelectorAll("[data-de]")) {
         const a = boites.get(g.dataset.de)
         const b = boites.get(g.dataset.vers)
@@ -117,7 +117,7 @@ const rapport = await page.evaluate(
         })
       }
 
-      /* 3 — EMBRANCHEMENTS : bord de boîte d'un côté, tronc de l'autre */
+      /* 3 : EMBRANCHEMENTS : bord de boîte d'un côté, tronc de l'autre */
       const bus = svg.querySelector("line[class$='-bus']")
       for (const g of svg.querySelectorAll("[data-branche]")) {
         const r = boites.get(g.dataset.branche)
@@ -134,7 +134,7 @@ const rapport = await page.evaluate(
         })
       }
 
-      /* 4 — TEXTES. Deux règles, parce que ce ne sont pas les mêmes
+      /* 4 : TEXTES. Deux règles, parce que ce ne sont pas les mêmes
          objets : DEUX LIGNES D'UN MÊME BLOC sont un paragraphe, elles
          ont seulement interdiction de se recouvrir ; DEUX LIBELLÉS
          INDÉPENDANTS doivent en plus garder ECART_MIN d'air, sans quoi
@@ -185,7 +185,7 @@ const rapport = await page.evaluate(
         }
       }
 
-      /* 5 — VIEWBOX : rien n'est coupé */
+      /* 5 : VIEWBOX : rien n'est coupé */
       for (const el of svg.querySelectorAll("rect,line,path,text")) {
         const b = el.getBBox()
         const dehors =
@@ -194,7 +194,7 @@ const rapport = await page.evaluate(
       }
     }
 
-    /* 6 — PIÈGE MAISON : aucune règle .<prefixe>-* ne déclare width/height/x/y/r
+    /* 6 : PIÈGE MAISON : aucune règle .<prefixe>-* ne déclare width/height/x/y/r
        (la racine <svg> exceptée : c'est un élément HTML remplacé) */
     const interdits = ["width", "height", "x", "y", "r"]
     for (const f of document.styleSheets) {
@@ -277,4 +277,4 @@ if (echecs.length) {
   console.error("\nÉCHEC :\n" + echecs.map((e) => " - " + e).join("\n"))
   process.exit(1)
 }
-console.error("\nOK — géométrie conforme.")
+console.error("\nOK : géométrie conforme.")

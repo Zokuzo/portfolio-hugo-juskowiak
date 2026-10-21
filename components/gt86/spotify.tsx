@@ -5,26 +5,26 @@ import { useFrame } from "@react-three/fiber"
 import { PLAYLISTS, type Ecran } from "./ecran"
 import { contexteAudio } from "./audio"
 
-/* LE MOTEUR DU HJ·AMP — ticket #33, 7e retour de gate (« tourner la
+/* LE MOTEUR DU HJ·AMP : ticket #33, 7e retour de gate (« tourner la
    molette pour baisser le son »). L'iframe officielle de l'embed est
    MORTE ici : son protocole n'a aucune commande volume (énum vérifiée
-   dans le wrapper ET dans la page embed — play/pause/resume/toggle/
+   dans le wrapper ET dans la page embed : play/pause/resume/toggle/
    seek/ack/fullscreen, rien d'autre) et son audio est inaccessible
    cross-origin. Le son passe donc par un moteur À NOUS :
 
    - /api/gt86/mix/[id] (notre serveur) rend titres + préversions MP3
-     du mix — le client ne parle jamais à open.spotify.com ;
+     du mix : le client ne parle jamais à open.spotify.com ;
    - un <audio> maison lit les préversions (p.scdn.co, CORS ouvert) à
      travers un GainNode : la molette pilote un VRAI volume ;
    - un AnalyserNode tape le flux : les 19 bougies dansent sur le VRAI
-     spectre — la limite documentée aux gates précédents tombe ;
+     spectre : la limite documentée aux gates précédents tombe ;
    - ⏮/⏭ deviennent de VRAIS changements de piste (fini le seek à la
      dernière seconde), et le marquee affiche le VRAI titre.
 
-   Ce qu'on perd : la lecture complète pour les comptes connectés —
+   Ce qu'on perd : la lecture complète pour les comptes connectés :
    l'embed sans session ne servait déjà que ces mêmes préversions 30 s.
    La FAÇADE RGPD tient inchangée : PAS UN OCTET (ni chez nous ni chez
-   le CDN) avant le clic MUSIQUES — le moteur ne se monte qu'après. */
+   le CDN) avant le clic MUSIQUES : le moteur ne se monte qu'après. */
 
 type Piste = { titre: string; artiste: string; apercu: string }
 
@@ -34,7 +34,7 @@ export type CommandesSpotify = {
   reprend: () => void
   saute: () => void
   chargeMix: (i: number) => void
-  /* la molette : delta signé, borné [0 ; 1] — pousse `volume` au peintre */
+  /* la molette : delta signé, borné [0 ; 1] : pousse `volume` au peintre */
   volume: (delta: number) => void
 }
 
@@ -53,7 +53,7 @@ export function MoteurSpotify({
   commandes: MutableRefObject<CommandesSpotify | null>
   mix: number
 }) {
-  /* `mix` ne sert qu'au montage — changer de mix passe par chargeMix */
+  /* `mix` ne sert qu'au montage : changer de mix passe par chargeMix */
   const mixInitial = useRef(mix)
 
   useEffect(() => {
@@ -69,10 +69,10 @@ export function MoteurSpotify({
     audio.crossOrigin = "anonymous"
     audio.preload = "auto"
     /* le repli sans Web Audio (contexte refusé) : el.volume porte le
-       réglage — initialisé, sinon la lecture partait à fond */
+       réglage : initialisé, sinon la lecture partait à fond */
     audio.volume = volumeMemorise * volumeMemorise
 
-    /* le graphe Web Audio — APRÈS le premier play() (le contexte exige un
+    /* le graphe Web Audio : APRÈS le premier play() (le contexte exige un
        geste utilisateur ; le clic de façade l'a déjà donné, mais un
        navigateur têtu le refuse sans casser l'audio : gain et analyseur
        deviennent alors optionnels, el.volume prend le relais) */
@@ -80,7 +80,7 @@ export function MoteurSpotify({
     let analyseur: AnalyserNode | null = null
     let noeuds: AudioNode[] = []
     const armeGraphe = () => {
-      /* resume À CHAQUE appel — bascule() tourne dans la pile du clic,
+      /* resume À CHAQUE appel : bascule() tourne dans la pile du clic,
          c'est là que Safari accepte de sortir un contexte de 'suspended'
          (revue : le resume unique à la création laissait le son mort) */
       if (gain) {
@@ -97,7 +97,7 @@ export function MoteurSpotify({
         source.connect(gain)
         gain.connect(ctxAudio.destination)
         /* l'analyseur écoute APRÈS le gain : les bougies suivent ce qui
-           SORT — baisser la molette couche le spectre, comme la skin
+           SORT : baisser la molette couche le spectre, comme la skin
            de référence suivait la sortie, pas la source */
         gain.connect(analyseur)
         gain.gain.value = m.volume * m.volume
@@ -141,7 +141,7 @@ export function MoteurSpotify({
     audio.addEventListener("ended", () => joue(m.indice + 1))
     audio.addEventListener("error", () => {
       /* une préversion peut mourir (lien périmé) : on passe à la
-         suivante — tout le mix mort = repli */
+         suivante : tout le mix mort = repli */
       if (!vivant || !m.pistes.length) return
       m.rates += 1
       if (m.rates >= m.pistes.length) {
@@ -172,7 +172,7 @@ export function MoteurSpotify({
         .catch(() => vivant && m.mix === i && ecran.majSpotify({ repli: true }))
     }
 
-    /* le spectre — 64 bacs FFT groupés en 19 bandes géométriques ;
+    /* le spectre : 64 bacs FFT groupés en 19 bandes géométriques ;
        poussé ~25×/s, seulement quand ça joue (le peintre retombe en
        danse procédurale dès que le flux se tarit) */
     const bacs = new Uint8Array(64)
@@ -212,7 +212,7 @@ export function MoteurSpotify({
       volume: (delta: number) => {
         m.volume = Math.min(1, Math.max(0, m.volume + delta))
         volumeMemorise = m.volume
-        /* courbe quadratique — l'oreille est logarithmique */
+        /* courbe quadratique : l'oreille est logarithmique */
         if (gain) gain.gain.value = m.volume * m.volume
         else audio.volume = m.volume * m.volume
         ecran.majSpotify({ volume: m.volume })
@@ -220,7 +220,7 @@ export function MoteurSpotify({
     }
 
     /* pas de `volume` ici : l'écran garde le sien (une poussée armerait
-       la surcouche VOL sans geste de molette) — les deux mémoires ne
+       la surcouche VOL sans geste de molette) : les deux mémoires ne
        divergent jamais, chaque cran passe par majSpotify */
     ecran.majSpotify({ repli: false })
     charge(m.mix)
@@ -239,7 +239,7 @@ export function MoteurSpotify({
 }
 
 /* la couche vivante du player, cadencée à l'image (plafonnée dans
-   ticSpotify à ~30 repeints/s — bougies, crêtes, marquee, LCD) */
+   ticSpotify à ~30 repeints/s : bougies, crêtes, marquee, LCD) */
 export function RythmeAmp({ actif, ecran }: { actif: boolean; ecran: Ecran }) {
   useFrame((_, dt) => {
     if (actif) ecran.ticSpotify(Math.min(dt, 0.1))
