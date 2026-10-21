@@ -22,7 +22,7 @@ Décliner une palette = redéfinir ces tokens sur `.racine` (et sous `html.clair
 
 ## Palettes (`?palette=<nom>`, revue à /da/m/palettes)
 
-Cinq jeux de tokens, chacun en sombre et en clair (`.racine[data-palette]` dans `ab.module.css`, liste dans `palettes.ts`). Défaut : `papier-encre`.
+Cinq jeux de tokens, chacun en sombre et en clair (`.racine[data-palette]` dans `ab.module.css`, liste dans `palettes.ts`). Défaut : `silver-s13`, choisie par Hugo le 2026-10-21.
 
 - `papier-encre` : noir et blanc de magazine, un seul rouge signal. La plus sobre.
 - `silver-s13` : gris acier de la GT86 silver, bleu électrique.

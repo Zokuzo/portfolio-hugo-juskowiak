@@ -48,8 +48,8 @@ export function BasculeTheme() {
 
 const estClair = () => document.documentElement.classList.contains(CLASSE_CLAIR)
 /* le --fond de la palette par défaut (palettes.ts), comme le viewport de app/da/m/ab/page.tsx */
-const BARRE_CLAIRE = "#f5f3ef"
-const BARRE_SOMBRE = "#0d0d0d"
+const BARRE_CLAIRE = "#dfe3e8"
+const BARRE_SOMBRE = "#0f1114"
 
 /* La barre du navigateur suit le thème choisi, pas celui de l'OS : les
    balises theme-color à media query de Next perdraient sinon contre la bascule. */
