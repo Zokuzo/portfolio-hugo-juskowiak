@@ -1,5 +1,5 @@
 import type React from "react"
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Archivo, JetBrains_Mono, Michroma, Noto_Sans_JP, Saira } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import FiltreCrt from "@/components/filtre-crt"
@@ -56,6 +56,18 @@ export const metadata: Metadata = {
     ],
     apple: "/apple-icon.png",
   },
+}
+
+/* La barre du navigateur aux couleurs de la fusion mobile (#42), sur
+   téléphone seulement : le desktop garde la barre de son navigateur.
+   Le --fond de la palette par défaut (components/mobile-ab/palettes.ts) ;
+   la bascule de thème réécrit ces balises (bascule-theme.tsx). */
+const TELEPHONE = "(max-width: 767px)"
+export const viewport: Viewport = {
+  themeColor: [
+    { media: `${TELEPHONE} and (prefers-color-scheme: light)`, color: "#dfe3e8" },
+    { media: `${TELEPHONE} and (prefers-color-scheme: dark)`, color: "#0f1114" },
+  ],
 }
 
 /* `.proto-root` porte les tokens du système et vit ICI, à la racine :

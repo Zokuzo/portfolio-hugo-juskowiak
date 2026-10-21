@@ -1,7 +1,5 @@
 import type { Metadata, Viewport } from "next"
-import { projets } from "@/components/proto/projets"
-import { SLUGS_MAISON } from "@/components/proto/mondes"
-import { Fusion } from "@/components/mobile-ab/fusion"
+import { FusionDuSite } from "@/components/mobile-ab/deux-corps"
 
 export const metadata: Metadata = { title: "Mobile AB · Fusion" }
 export const viewport: Viewport = {
@@ -14,9 +12,8 @@ export const viewport: Viewport = {
   initialScale: 1,
 }
 
-/* Les fiches se trient côté serveur : le client ne reçoit que le FR. */
+/* la fusion seule, à toutes les largeurs : la revue de la DA (le site,
+   lui, ne la montre que sous 768 px, components/mobile-ab/deux-corps.tsx) */
 export default function Page() {
-  const toutes = projets("fr")
-  const estMaison = (slug: string) => SLUGS_MAISON.includes(slug)
-  return <Fusion travail={toutes.filter((p) => !estMaison(p.slug))} maison={toutes.filter((p) => estMaison(p.slug))} />
+  return <FusionDuSite />
 }

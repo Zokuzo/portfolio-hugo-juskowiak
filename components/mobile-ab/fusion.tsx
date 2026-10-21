@@ -2,11 +2,14 @@
 
 import { useEffect, useState } from "react"
 import { AnimatePresence, motion } from "motion/react"
+import { usePathname } from "next/navigation"
 import type { Projet } from "@/components/proto/projets"
+import { hrefFiche } from "@/components/proto/mondes"
 import { Accueil, Plaque, VueContact, VueMaison, VueWork } from "./vues"
 import { Fiche } from "./fiche"
 import { BasculeTheme } from "./bascule-theme"
 import { FamilleIcones, IconeApp, type CleIcone } from "./icone-app"
+import { useEcranLarge, useTelephone } from "./ecran"
 import { PALETTES, PALETTE_PAR_DEFAUT, type Palette } from "./palettes"
 import s from "./ab.module.css"
 
@@ -23,49 +26,86 @@ const DOCK: { vue: Vue; nom: string; icone: CleIcone }[] = [
 
 const TAILLE_ICONE_DOCK = 34
 const ONGLETS_PAR_DEFAUT = { work: "Projets", maison: "Atelier" }
-const VUES = DOCK.map((d) => d.vue)
 
-const adresseDe = (vue: Vue) => (vue === "accueil" ? location.pathname : `#${vue}`)
+/* L'ADRESSE PORTE L'ÉCRAN (#42), aux vraies URLs du site : /, /work,
+   /home, et /work/<slug> ou /home/<slug> pour une fiche ouverte. Contact
+   n'a pas de route : il vit sur /#contact. La recherche (?palette=) suit. */
+type Adresse = { vue: Vue; slug: string | null }
+const VUE_DU_SEGMENT: Record<string, Vue> = { work: "work", home: "maison" }
+const CHEMIN_DE: Record<Vue, string> = { accueil: "/", work: "/work", maison: "/home", contact: "/" }
+
+function lireAdresse(chemin: string, ancre = ""): Adresse {
+  const [, segment, slug] = chemin.split("/")
+  const vue = VUE_DU_SEGMENT[segment]
+  if (vue) return { vue, slug: slug || null }
+  return { vue: ancre === "#contact" ? "contact" : "accueil", slug: null }
+}
+
+const urlDeVue = (vue: Vue) => CHEMIN_DE[vue] + location.search + (vue === "contact" ? "#contact" : "")
+
+/* Le titre d'onglet suit l'adresse : pushState ne recharge pas la
+   metadata de Next. Les mêmes titres que les routes (app/layout.tsx,
+   app/work, app/home et leurs [slug]), à tenir alignés. */
+const TITRE_DE: Record<Vue, string> = {
+  accueil: "Hugo Juskowiak | Ingénieur Full Stack & IA",
+  contact: "Hugo Juskowiak | Ingénieur Full Stack & IA",
+  work: "Travail | Hugo Juskowiak",
+  maison: "Maison | Hugo Juskowiak",
+}
+const MONDE_DE: Partial<Record<Vue, string>> = { work: "Travail", maison: "Maison" }
+const titreDe = (vue: Vue, fiche: Projet | null) => (fiche ? `${fiche.nom} | ${MONDE_DE[vue]} | Hugo Juskowiak` : TITRE_DE[vue])
 
 /* La navigation de la piste A (dock, grille d'apps, feuille qui monte)
-   dans une seule DA (./DA.md). L'adresse porte l'écran : #work, et
-   #work/reach-up pour une fiche ouverte. Ouvrir une fiche empile une
-   entrée d'historique : le bouton retour du téléphone range la feuille
-   au lieu de quitter la vue. */
+   dans une seule DA (./DA.md). Chaque route du site la rend sous 768 px
+   (deux-corps.tsx) : le serveur la sert déjà dans la vue de son URL.
+   Changer d'écran ne recharge rien : `history.pushState` réécrit l'URL
+   (Next l'accepte et garde l'arbre rendu), le retour du téléphone la
+   relit. Ouvrir une fiche empile une entrée : le retour range la feuille
+   au lieu de quitter la vue, et le lien partagé rouvre la fiche. */
 export function Fusion({ travail, maison }: { travail: Projet[]; maison: Projet[] }) {
-  const [vue, setVue] = useState<Vue>("accueil")
-  const [onglets, setOnglets] = useState(ONGLETS_PAR_DEFAUT)
-  const [ouverte, setOuverte] = useState<Projet | null>(null)
+  const chemin = usePathname()
+  const [adresse, setAdresse] = useState(() => lireAdresse(chemin))
+  // une fiche de cursus ouverte par lien direct : la liste derrière la feuille est celle des cursus
+  const [onglets, setOnglets] = useState(() =>
+    maison.some((p) => p.slug === adresse.slug && p.genre === "formation") ? { ...ONGLETS_PAR_DEFAUT, maison: "Cursus" } : ONGLETS_PAR_DEFAUT,
+  )
   const palette = usePalette()
+  const telephone = useTelephone()
+  const { vue } = adresse
+  const large = useEcranLarge()
+  /* La feuille d'un lien direct est dans le HTML serveur (pas de liste
+     qui clignote avant elle) ; sur desktop, masquée, elle se retire dès
+     l'hydratation pour ne pas animer sa figure dans le vide. */
+  const ouverte = large ? null : ([...travail, ...maison].find((p) => p.slug === adresse.slug) ?? null)
 
   useEffect(() => {
-    const lireAdresse = () => {
-      const [cible, slug] = location.hash.slice(1).split("/")
-      setVue(VUES.includes(cible as Vue) ? (cible as Vue) : "accueil")
-      setOuverte([...travail, ...maison].find((p) => p.slug === slug) ?? null)
-    }
-    lireAdresse()
-    addEventListener("popstate", lireAdresse)
-    return () => removeEventListener("popstate", lireAdresse)
-  }, [travail, maison])
+    if (telephone) document.title = titreDe(vue, ouverte)
+  }, [telephone, vue, ouverte])
+
+  useEffect(() => {
+    const suivreAdresse = () => setAdresse(lireAdresse(location.pathname, location.hash))
+    suivreAdresse()
+    addEventListener("popstate", suivreAdresse)
+    return () => removeEventListener("popstate", suivreAdresse)
+  }, [])
 
   const aller: Aller = (cible, onglet) => {
-    if (cible !== vue) history.pushState(null, "", adresseDe(cible))
-    setVue(cible)
+    if (cible !== vue || adresse.slug) history.pushState(null, "", urlDeVue(cible))
+    setAdresse({ vue: cible, slug: null })
     if (onglet && (cible === "work" || cible === "maison")) setOnglets((o) => ({ ...o, [cible]: onglet }))
     window.scrollTo({ top: 0 })
   }
   const choisirOnglet = (cible: "work" | "maison") => (onglet: string) => setOnglets((o) => ({ ...o, [cible]: onglet }))
 
   const ouvrir: Ouvrir = (projet) => {
-    history.pushState({ fiche: true }, "", `#${vue}/${projet.slug}`)
-    setOuverte(projet)
+    history.pushState({ fiche: true }, "", hrefFiche(projet.slug) + location.search)
+    setAdresse({ vue, slug: projet.slug })
   }
   // arrivé par un lien direct sur une fiche, il n'y a pas d'entrée à dépiler : on remplace
   const fermer = () => {
     if (history.state?.fiche) return history.back()
-    history.replaceState(null, "", adresseDe(vue))
-    setOuverte(null)
+    history.replaceState(null, "", urlDeVue(vue))
+    setAdresse({ vue, slug: null })
   }
 
   return (

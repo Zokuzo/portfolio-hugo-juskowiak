@@ -43,3 +43,23 @@
    supprimer les deux. Une déclaration de variante n'émet aucun octet
    tant qu'aucune classe ne l'utilise. */
 @custom-variant dark (&:is(.dark *));
+
+/* LES DEUX CORPS DU SITE (#42, components/mobile-ab/deux-corps.tsx) :
+   chaque route porte sa page desktop et la fusion mobile, le seuil de
+   768 px n'en garde qu'une avant la première peinture. `display: contents`
+   pour la version gardée : l'enveloppe ne crée aucune boîte, la planche
+   et son décor en position:fixed ne voient aucun ancêtre de plus. */
+.seul-desktop,
+.seul-mobile {
+  display: contents;
+}
+@media (width < 768px) {
+  .seul-desktop {
+    display: none;
+  }
+}
+@media (width >= 768px) {
+  .seul-mobile {
+    display: none;
+  }
+}

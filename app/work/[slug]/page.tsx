@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { Michroma, Silkscreen } from "next/font/google"
+import { DeuxCorps } from "@/components/mobile-ab/deux-corps"
 import { FicheY2k } from "@/components/y2k/fiche-y2k"
 import { SLUGS_TRAVAIL, projet } from "@/components/proto/projets"
 import "@/components/y2k/y2k.css"
@@ -57,8 +58,10 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   const { slug } = await params
   if (!SLUGS_TRAVAIL.includes(slug)) notFound()
   return (
-    <div className={`${chrome.variable} ${pixel.variable}`}>
-      <FicheY2k slug={slug} retour="/work" />
-    </div>
+    <DeuxCorps>
+      <div className={`${chrome.variable} ${pixel.variable}`}>
+        <FicheY2k slug={slug} retour="/work" />
+      </div>
+    </DeuxCorps>
   )
 }

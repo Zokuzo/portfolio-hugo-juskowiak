@@ -96,7 +96,7 @@ export function FicheY2k({ slug, retour = "/work" }: { slug: string; retour?: ke
   const monde = MONDE[retour]
   /* L'ancre `carte-<slug>` existe sur les NEUF cards de la planche
      (experience.tsx, etudes.tsx, atelier.tsx) : c'est elle qui rend le
-     défilement, et `app/page.tsx` rend le focus au lien de la card. */
+     défilement, et `components/proto/planche.tsx` rend le focus au lien de la card. */
   const cible = dePlanche ? `/#carte-${slug}` : retour
   const sys = t(lang, dePlanche ? "fpDocumentSys" : monde.sys)
   /* Un cursus garde le mobilier de l'affiche mais change de grille de

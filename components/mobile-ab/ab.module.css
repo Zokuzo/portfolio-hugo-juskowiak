@@ -225,8 +225,7 @@
 .tourNom,
 .position,
 .fonction,
-.blocTitre,
-.bouton {
+.blocTitre {
   font-family: var(--f-vitesse), sans-serif;
   font-style: italic;
   font-stretch: 125%;
@@ -1009,22 +1008,6 @@
   font-size: 12px;
 }
 
-.bouton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 52px;
-  margin-top: 32px;
-  border: 0;
-  border-radius: 14px;
-  background: var(--accent);
-  color: var(--accent-encre);
-  font-weight: 700;
-  font-size: 15px;
-  letter-spacing: 0.06em;
-  text-decoration: none;
-}
 
 @media (prefers-reduced-motion: reduce) {
   .ligne,

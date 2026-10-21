@@ -137,7 +137,7 @@ for (const dest of DESTS) {
    Un import statique enverrait les 139 Ko (mesurés au #17) à tous les
    visiteurs — mobiles et `prefers-reduced-motion` compris. C'est invisible à
    l'œil et ça ne casse aucun test : d'où cette garde. */
-for (const f of ["components/gt86/capable.ts", "components/gt86/surcouche.tsx", "app/page.tsx"]) {
+for (const f of ["components/gt86/capable.ts", "components/gt86/surcouche.tsx", "app/page.tsx", "components/proto/planche.tsx"]) {
   const src = readFileSync(path.join(RACINE, f), "utf8")
   const fautif = src.match(/^\s*import[^\n]*from\s+["'](three|@react-three\/[\w-]+)["']/m)
   assert.equal(fautif, null, `${f} importe ${fautif?.[1]} statiquement — la 3D doit rester derrière le dynamic`)
@@ -573,6 +573,9 @@ console.log("  4e/6 Spotify direct : zéro octet avant le clic de tuile, l'AMP e
 /* 5. La version simple n'est JAMAIS cassée : incapable → rien ne se monte,
       le décor et la voiture sont à leur place. */
 await va(base + "/?gt86=off")
+/* depuis le #42 le décor et la voiture ne sont plus dans le HTML serveur :
+   ils se montent au rendu qui suit l'hydratation, une fois l'écran lu large */
+await attends(async () => (await compte(".voiture")) === 1, 6000, "montage de la version simple")
 assert.equal(await etat(), null, "la surcouche s'est montée malgré ?gt86=off")
 assert.equal(await compte(".voiture"), 1, "la voiture vanille manque à la version simple")
 assert.ok((await compte("canvas")) >= 2, "les toiles de la version simple manquent")
@@ -625,6 +628,31 @@ for (const asset of [
     `la cascade n'a pas demandé ${asset} — préchargement débranché ?`,
   )
 console.log("  7/7 zéro requête externe, et la cascade tire voiture + ciel + rue + habitacle")
+
+/* 8. LE TÉLÉPHONE (#42) : sous 768 px, chaque route montre la fusion
+      mobile dans la vue de son URL, la planche est masquée et AUCUNE toile
+      ne se monte (ni décor, ni voiture, ni 3D) ; une fiche ouverte par son
+      lien partagé arrive feuille levée. */
+await cdp.envoie("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 2, mobile: true })
+for (const [route, vue, feuille] of [["/", "Accueil", 0], ["/work", "Work", 0], ["/home/eternal", "Maison", 1]]) {
+  await va(base + route)
+  await pause(1500)
+  const lu = JSON.parse(
+    await sonde(`JSON.stringify({
+      vue: document.querySelector(".seul-mobile header")?.textContent ?? "",
+      visible: document.querySelector(".seul-mobile main")?.offsetParent !== null,
+      planche: getComputedStyle(document.querySelector(".seul-desktop")).display,
+      toiles: document.querySelectorAll("canvas").length,
+      feuille: document.querySelectorAll(".seul-mobile [role=dialog]").length,
+    })`),
+  )
+  assert.ok(lu.visible && lu.vue.includes(vue), `${route} au téléphone : la fusion devrait montrer ${vue} (${JSON.stringify(lu)})`)
+  assert.equal(lu.planche, "none", `${route} au téléphone : la version desktop est restée visible`)
+  assert.equal(lu.toiles, 0, `${route} au téléphone : ${lu.toiles} toile(s) montée(s)`)
+  assert.equal(lu.feuille, feuille, `${route} au téléphone : feuille de fiche attendue ${feuille}, lue ${lu.feuille}`)
+}
+await cdp.envoie("Emulation.clearDeviceMetricsOverride", {})
+console.log("  8/8 téléphone : la fusion dans la vue de l'URL, zéro toile, la fiche partagée s'ouvre")
 
 console.log("bloc B — navigateur : OK")
 

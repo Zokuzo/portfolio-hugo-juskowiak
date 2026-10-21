@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { Michroma, Silkscreen } from "next/font/google"
+import { DeuxCorps } from "@/components/mobile-ab/deux-corps"
 import HubTravail from "@/components/y2k/hub-travail"
 import "@/components/y2k/y2k.css"
 
@@ -40,8 +41,10 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <div className={`${chrome.variable} ${pixel.variable}`}>
-      <HubTravail />
-    </div>
+    <DeuxCorps>
+      <div className={`${chrome.variable} ${pixel.variable}`}>
+        <HubTravail />
+      </div>
+    </DeuxCorps>
   )
 }

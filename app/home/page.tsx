@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { Michroma, Silkscreen } from "next/font/google"
+import { DeuxCorps } from "@/components/mobile-ab/deux-corps"
 import HubMaison from "@/components/y2k/hub-maison"
 import "@/components/y2k/y2k.css"
 import "@/components/y2k/hub-maison.css"
@@ -39,8 +40,10 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <div className={`${chrome.variable} ${pixel.variable}`}>
-      <HubMaison />
-    </div>
+    <DeuxCorps>
+      <div className={`${chrome.variable} ${pixel.variable}`}>
+        <HubMaison />
+      </div>
+    </DeuxCorps>
   )
 }

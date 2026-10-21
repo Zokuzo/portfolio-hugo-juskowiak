@@ -1,4 +1,4 @@
-# DA unique de la fusion mobile (/da/m/ab)
+# DA unique de la fusion mobile (le site sous 768 px, revue seule à /da/m/ab)
 
 Une seule voix par rôle. Si un écran a besoin d'un deuxième langage, c'est l'écran qui a tort.
 

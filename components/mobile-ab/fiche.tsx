@@ -2,12 +2,12 @@
 
 import { useEffect, type ReactNode } from "react"
 import { AnimatePresence, motion, useDragControls, type PanInfo } from "motion/react"
-import { ArrowRight, X } from "reicon-react"
+import { X } from "reicon-react"
 import type { Projet } from "@/components/proto/projets"
-import { hrefFiche } from "@/components/proto/mondes"
 import { t } from "@/components/proto/dict"
 import { figureDe } from "@/components/mobile-a/figures"
 import { insecable, Spec } from "./vues"
+import { useTelephone } from "./ecran"
 import s from "./ab.module.css"
 
 // au-delà de ce glissé (px) ou de cette vitesse (px/s), la feuille se range
@@ -20,15 +20,18 @@ const VITESSE_FERMETURE = 600
    battrait avec le défilement du contenu. */
 export function Fiche({ projet, fermer }: { projet: Projet | null; fermer: () => void }) {
   const controles = useDragControls()
-  useVerrouDefilement(projet !== null)
-  useEchapFerme(projet !== null, fermer)
+  // masquée sur desktop, la feuille ne doit ni geler le défilement ni écouter Échap
+  const active = useTelephone() && projet !== null
+  useVerrouDefilement(active)
+  useEchapFerme(active, fermer)
 
   const relacher = (_: unknown, info: PanInfo) => {
     if (info.offset.y > SEUIL_FERMETURE || info.velocity.y > VITESSE_FERMETURE) fermer()
   }
 
   return (
-    <AnimatePresence>
+    // initial={false} : la feuille rendue par le serveur est déjà en place, seules les ouvertures suivantes montent
+    <AnimatePresence initial={false}>
       {projet && (
         <>
           <motion.div key="voile" className={s.voile} onClick={fermer} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} />
@@ -128,10 +131,6 @@ function CorpsFiche({ projet: p }: { projet: Projet }) {
           </ul>
         </Bloc>
       )}
-
-      <a className={s.bouton} href={hrefFiche(p.slug)}>
-        Fiche complète <ArrowRight size={18} />
-      </a>
     </div>
   )
 }
