@@ -13,6 +13,7 @@ import { poseAkrapovic } from "./echappement"
 import { poseDessous } from "./dessous"
 import { poseLeds } from "./leds"
 import { LueursDuCiel } from "./lueurs"
+import { poseReflets } from "./prototype-reflets"
 
 /* LE CIEL, ticket #29 : le verdict « Pellicule » du gate #21, porté du
    prototype (route jetable, supprimée au #35) dans la coquille.
@@ -161,6 +162,7 @@ function Voiture({ surClic, vol }: { surClic: () => void; vol: MutableRefObject<
       const piece = pieceDeRobe(robe, mats.map((m) => m?.name ?? ""))
       if (piece) mesh.material = piece
     })
+    poseReflets(modele, robe, scene3, gl3)
   }, [modele, robe, scene3, gl3])
 
   /* la respiration, amplitude couplée au sommet du banc (-2,6) : le nez
