@@ -190,17 +190,6 @@ export function mireLeCiel(robe: Robe, scene: THREE.Scene, gl: THREE.WebGLRender
     console.warn("carrosserie : pas de scene.environment au montage, la robe garde le reflet de la scène")
     return
   }
-  const propre = pmremDuCiel(scene, gl)
-  for (const m of [robe.caisse, robe.jantes]) {
-    m.envMap = propre
-    m.envMapRotation.copy(scene.environmentRotation)
-    m.envMapIntensity = REFLET.ciel
-  }
-}
-
-/* la PMREM propre du ciel, tirée une fois par renderer (voir plus haut) ;
-   à n'appeler qu'une fois scene.environment posé */
-export function pmremDuCiel(scene: THREE.Scene, gl: THREE.WebGLRenderer) {
   let propre = cielPropre.get(gl)
   if (!propre) {
     const generateur = new THREE.PMREMGenerator(gl)
@@ -208,7 +197,11 @@ export function pmremDuCiel(scene: THREE.Scene, gl: THREE.WebGLRenderer) {
     generateur.dispose()
     cielPropre.set(gl, propre)
   }
-  return propre
+  for (const m of [robe.caisse, robe.jantes]) {
+    m.envMap = propre
+    m.envMapRotation.copy(scene.environmentRotation)
+    m.envMapIntensity = REFLET.ciel
+  }
 }
 
 /* ---- l'environnement de reflet du ciel --------------------------------- */
