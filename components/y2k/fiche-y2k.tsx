@@ -29,7 +29,7 @@ import { venuDeLaPlanche } from "@/components/proto/lien-fiche"
    défaut AUDITÉ dans y2k.css (la nuit) et rien ici ne le consomme —
    l'encre morte qu'on posait quand même n'était PAS auditée (revue du
    re-gate). */
-/* CETTE TABLE DOIT COUVRIR LES NEUF SLUGS — SLUGS_TRAVAIL ET
+/* CETTE TABLE DOIT COUVRIR LES DIX SLUGS, SLUGS_TRAVAIL ET
    SLUGS_MAISON de projets.ts. Un slug absent tombe sur le rose par
    défaut : la fiche s'affiche, mais avec l'accent d'une autre. Le repli
    est là pour que la page ne casse pas, pas pour dispenser d'une entrée.
@@ -43,6 +43,7 @@ const ACCENTS: Record<string, string> = {
   /* — le BUREAU (#38) — */
   "reach-up": "#ff3ea5",
   octo: "#9be05a",
+  "uyb-store": "#ff8a3d", // l'orange UpYourBizz, celui du store
   "prediction-memoire": "#8fd0ff",
   /* — la CHAMBRE (#39) — les deux premiers ne sont pas choisis ici :
      ils sont RECOPIÉS des disquettes du hub /home (ACCENTS_ATELIER de

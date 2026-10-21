@@ -11,7 +11,7 @@ import type { Lang } from "./dict"
    — GitHub, pour les liens : seuls les dépôts PUBLICS sont liés.
 
    CE QUI EST MARQUÉ « À CONFIRMER » : UpYourAds a été nommé sans
-   description, et le bot de candidature aussi. UYB360 ne l'est plus :
+   description, et le bot de candidature aussi. UYB Store (UYB360 dans le CV) ne l'est plus :
    le CV d'octobre 2026 le décrit (une marketplace de l'offre maison). Les libellés
    ci-dessous sont volontairement courts et factuels plutôt que
    plausibles — inventer une description crédible serait pire que d'en
@@ -113,7 +113,8 @@ const EMPLOYEURS_FR: Employeur[] = [
       },
       {
         code: "P3",
-        nom: "UYB360",
+        nom: "UYB Store",
+        fiche: "uyb-store",
         texte: "Marketplace qui regroupe l'offre de produits UpYourBizz.",
       },
       {
@@ -208,7 +209,7 @@ const EMPLOYEURS_EN: Employeur[] = [
         texte:
           "DMS export segmentation for car dealerships. Taken over from a year-old mock-up and shipped to production in two months: three populations read separately (customers, leads, after-sales), a report as output rather than a dashboard, and 8 hours of manual work brought down to 15 automated minutes.",
       },
-      { code: "P3", nom: "UYB360", texte: "Marketplace bringing together the UpYourBizz product range." },
+      { code: "P3", nom: "UYB Store", fiche: "uyb-store", texte: "Marketplace bringing together the UpYourBizz product range." },
       { code: "P4", nom: "UpYourAds", texte: "Advertising side of the UpYourBizz suite.", aConfirmer: true },
     ],
     parc: ["TypeScript", "React", "Vite", "Hono", "Supabase", "PostgreSQL", "OpenRouter", "Lemlist", "Vercel"],

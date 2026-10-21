@@ -832,7 +832,7 @@ const DICT = {
     en: "Eternal architecture: a writing chain drops two files into a git repository, which two browser views read back: index.html holds every rule, monde.html holds none.",
   },
 
-  /* — l'extrait de code de la fiche U-04 —
+  /* L'extrait de code de la fiche U-05.
        Le pont : la seule surface par laquelle le monde 3D touche le
        moteur. 15 méthodes au total, 3 montrées — compté par
        `awk 'NR>=3732 && NR<=3757' index.html | grep -cE "^  [a-zA-Z]+: *"`
@@ -848,7 +848,7 @@ const DICT = {
     en: "Everything the 3D world can touch fits between those two braces: reads and calls into the engine, never the raw state, never a mutation. On the other side of the bridge, `grep -c setItem monde.html` returns 0: the view writes nothing.",
   },
 
-  /* — les cotes de la fiche U-04 —
+  /* Les cotes de la fiche U-05.
        [cote, valeur, commande]. Chaque ligne a été RELEVÉE le
        2026-08-06 à la racine de `/home/hjuskowiak/PP/Eternal`, HEAD
        `acfe5b8`, par la commande qu'elle affiche — pas recopiée d'une

@@ -2,7 +2,7 @@
    LES DEUX MONDES — quelle fiche vit sous quelle route (#39).
 
    Une fiche est un enregistrement ; sa ROUTE dit à quelle partition
-   elle appartient. Le bureau (`/work`) porte les trois fiches de
+   elle appartient. Le bureau (`/work`) porte les quatre fiches de
    métier, la chambre (`/home`) les six fiches personnelles — deux
    projets d'atelier et quatre cursus.
 
@@ -10,8 +10,8 @@
    module-ci n'a AUCUNE donnée. Les deux hubs Y2K sont des composants
    client et n'ont besoin que de savoir écrire une adresse ; s'ils
    allaient la chercher dans `projets.ts`, ils embarqueraient au
-   passage les neuf fiches en FR ET EN — ~93 Ko de chunks mesurés sur
-   /home pour six chaînes de slug. Une constante de routage n'a pas à
+   passage les dix fiches en FR ET EN (~93 Ko de chunks mesurés sur
+   /home pour six chaînes de slug). Une constante de routage n'a pas à
    traîner un catalogue derrière elle.
 
    POURQUOI PAS DANS UN COMPOSANT NON PLUS. La liste se lit au

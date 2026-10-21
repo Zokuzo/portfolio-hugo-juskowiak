@@ -3,7 +3,7 @@ import { SLUGS_MAISON } from "./mondes"
 
 /* ==================================================================
    LES FICHES — le contenu des pages /work/[slug] ET /home/[slug].
-   Depuis le #39, six des neuf fiches (les deux projets d'atelier et
+   Depuis le #39, six des dix fiches (les deux projets d'atelier et
    les quatre cursus) vivent sous la chambre ; la scission des routes
    est dans `mondes.ts`.
 
@@ -175,6 +175,80 @@ const FR: Projet[] = [
     resultat:
       "Le traitement passe de 8 h de travail manuel à 15 min automatisées. L'outil est aujourd'hui utilisé en interne et par les clients.",
   },
+  /* ÉCRITE le 2026-10-21 contre le dépôt uyb360 (UYB 360 dans le code,
+     UYB Store à l'écran) : README, CONTEXT.md, CLAUDE.md, PRESENTATION.md,
+     supabase/README.md, supabase/functions/_shared/environnement.ts et
+     le git log. Période : premier commit du propriétaire le 2026-09-09.
+     « En service » : script de déploiement vers le domaine de production
+     et signature en production depuis le 19 oct. (CLAUDE.md) ; la
+     réservation de coach est fermée aux clients depuis le 20 oct.
+     (supabase/README.md, « Pré-réservations »). Le projet est parti d'un prototype de configurateur
+     (commit initial du 2026-07-03, d'un autre auteur) ; la réservation
+     de coach a été lancée par un collègue : aucune décision ici ne
+     porte sur ce lot. Laissés de côté : l'adresse du store (connexion
+     sur invitation, domaine dit provisoire), les noms de clients et de
+     collègues, le prix du module, le nom de la plateforme de production
+     et de l'outil de tickets internes. */
+  {
+    slug: "uyb-store",
+    unite: "U-03",
+    nom: "UYB Store",
+    sousTitre: "Marketplace qui regroupe l'offre de produits UpYourBizz",
+    jp: "ユーワイビー・ストア",
+    cadre: "UpYourBizz",
+    periode: "2026.09 → présent",
+    etat: "En service",
+    contexte:
+      "La vitrine self-service d'UpYourBizz pour les concessions : le chef des ventes y commande une prestation, chaque module avec son écran, son prix et son devis. En v1, deux modules : l'analyse de sa base client, servie par Octo, et la réservation d'un coach. Le projet est parti d'un prototype de configurateur d'opérations.",
+    contraintes: [
+      "Le store fait face au client, la production d'UpYourBizz reste interne : coûts réels, rémunérations et coordonnées ne traversent jamais.",
+      "Pas d'inscription libre : un compte naît d'une invitation de l'équipe UpYourBizz ou d'un rattachement par domaine, et personne ne change son propre rôle.",
+      "Le navigateur ne porte aucun secret et ne désigne jamais le projet d'analyse qu'il lit.",
+      "Un seul projet Supabase sert la production et le poste du développeur, alors qu'une réservation bloque un vrai coach et qu'un devis signé engage.",
+    ],
+    decisions: [
+      {
+        titre: "Octo derrière des fonctions Edge",
+        texte:
+          "Rapport, projets et listes passent par des fonctions Edge Supabase qui gardent la clé d'Octo côté serveur. Le navigateur ne choisit pas le projet : il lit celui que l'équipe a rattaché à son organisation, et un rapport ne vaut que pour le projet qui l'a produit.",
+      },
+      {
+        titre: "Cloisonnement par organisation, en RLS",
+        texte:
+          "Une concession ou un groupe est l'unité de cloisonnement. Le rôle et l'organisation se lisent par des fonctions SQL côté base, jamais dans les métadonnées du compte, que le navigateur peut remplir. Les tests RLS se rejouent sur une production qui porte des données.",
+      },
+      {
+        titre: "Rattachement par domaine d'e-mail",
+        texte:
+          "À sa première connexion Google, un compte sans profil entre dans l'organisation dont le domaine est le sien. Un chef que la plateforme de production connaît entre comme chef ; les autres déclarent leur rôle, que l'équipe relit au journal des rattachements.",
+      },
+      {
+        titre: "Production ou essai, décidé par l'origine",
+        texte:
+          "Les fonctions qui réservent un coach ou font signer un devis choisissent leurs accès sur l'en-tête Origin seul : seule l'adresse du store atteint la production. Un secret d'essai absent rend une erreur, jamais un repli vers la production : mieux vaut un test qui échoue qu'une vraie réservation.",
+      },
+      {
+        titre: "Une politique de sécurité, deux hébergements",
+        texte:
+          "La CSP s'écrit une fois, dans vercel.json, où le front tournait jusqu'en septembre 2026 et où passent les préversions. Le script de déploiement la recopie dans le serveur de production et ne remplace la ligne que si elle diffère.",
+      },
+    ],
+    parc: [
+      "TypeScript",
+      "React",
+      "Vite",
+      "Tailwind CSS",
+      "React Router",
+      "Supabase",
+      "PostgreSQL : RLS",
+      "Edge Functions (Deno)",
+      "DocuSeal",
+      "Motion",
+      "Vercel",
+    ],
+    resultat:
+      "Le store est en production. La signature des devis l'est depuis le 19 octobre 2026 : un devis signé dans le store engage juridiquement. La réservation de coach reste fermée aux comptes clients tant que la plateforme de production n'a pas livré sa part : l'équipe UpYourBizz réserve pour eux.",
+  },
   /* RÉÉCRITE AU TICKET 14 (issue GitHub #2), depuis le support du tech
      talk de fin de stage fourni par le propriétaire le 2026-08-10. Le
      code est resté chez Sophia Genetics : la fiche ne publie que les
@@ -185,7 +259,7 @@ const FR: Projet[] = [
      (écarté dès la pré-analyse). */
   {
     slug: "prediction-memoire",
-    unite: "U-03",
+    unite: "U-04",
     nom: "Prédiction d'usage mémoire",
     sousTitre: "Machine learning contre la sur-allocation mémoire de pipelines bio-informatiques",
     jp: "メモリ予測",
@@ -227,7 +301,7 @@ const FR: Projet[] = [
   },
   {
     slug: "eternal",
-    unite: "U-04",
+    unite: "U-05",
     nom: "Eternal",
     sousTitre: "Plateforme d'apprentissage gamifiée",
     jp: "エターナル",
@@ -299,7 +373,7 @@ const FR: Projet[] = [
   },
   {
     slug: "trading-agent",
-    unite: "U-05",
+    unite: "U-06",
     nom: "Trading Agent",
     sousTitre: "Bot de trading multi-stratégie en paper trading",
     jp: "トレーディング",
@@ -583,12 +657,74 @@ const EN: Projet[] = [
     resultat:
       "Processing goes from 8 hours of manual work to 15 automated minutes. The tool is now used internally and by clients.",
   },
+  /* See the FR record's comment: written on 2026-10-21 against the
+     uyb360 repository, same sources, same omissions. */
+  {
+    slug: "uyb-store",
+    unite: "U-03",
+    nom: "UYB Store",
+    sousTitre: "Marketplace bringing together the UpYourBizz product range",
+    jp: "ユーワイビー・ストア",
+    cadre: "UpYourBizz",
+    periode: "2026.09 → present",
+    etat: "In service",
+    contexte:
+      "UpYourBizz's self-service storefront for dealerships: the sales manager orders a service, each module with its own screen, price and quote. In v1, two modules: the analysis of the customer base, served by Octo, and booking a coach. The project started from a prototype of an operations configurator.",
+    contraintes: [
+      "The store faces the client, UpYourBizz production stays internal: real costs, pay and contact details never cross over.",
+      "No open sign-up: an account comes from an UpYourBizz team invitation or from joining by e-mail domain, and nobody changes their own role.",
+      "The browser holds no secret and never names the analysis project it reads.",
+      "A single Supabase project serves production and the developer's machine, while a booking blocks a real coach and a signed quote is binding.",
+    ],
+    decisions: [
+      {
+        titre: "Octo behind Edge Functions",
+        texte:
+          "Report, projects and lists go through Supabase Edge Functions that keep the Octo key server-side. The browser does not choose the project: it reads the one the team linked to its organisation, and a report only holds for the project that produced it.",
+      },
+      {
+        titre: "Isolation per organisation, in RLS",
+        texte:
+          "A dealership or a group is the unit of isolation. Role and organisation are read through SQL functions in the database, never from the account's metadata, which the browser can fill. The RLS tests can be replayed against a production that holds data.",
+      },
+      {
+        titre: "Joining by e-mail domain",
+        texte:
+          "On its first Google sign-in, an account without a profile joins the organisation whose domain is its own. A manager known to the production platform comes in as manager; the others declare their role, which the team reviews in the joining log.",
+      },
+      {
+        titre: "Production or test, decided by the origin",
+        texte:
+          "The functions that book a coach or have a quote signed pick their credentials from the Origin header alone: only the store's address reaches production. A missing test secret returns an error, never a fallback to production: a failing test beats a real booking.",
+      },
+      {
+        titre: "One security policy, two hostings",
+        texte:
+          "The CSP is written once, in vercel.json, where the front ran until September 2026 and where previews still run. The deployment script copies it into the production server and only replaces the line when it differs.",
+      },
+    ],
+    parc: [
+      "TypeScript",
+      "React",
+      "Vite",
+      "Tailwind CSS",
+      "React Router",
+      "Supabase",
+      "PostgreSQL: RLS",
+      "Edge Functions (Deno)",
+      "DocuSeal",
+      "Motion",
+      "Vercel",
+    ],
+    resultat:
+      "The store is in production. Quote signing has been live since 19 October 2026: a quote signed in the store is legally binding. Coach booking stays closed to client accounts until the production platform has delivered its part: the UpYourBizz team books for them.",
+  },
   /* Voir le commentaire de la fiche FR : réécrite au ticket 14
      (issue GitHub #2) depuis le support du tech talk — agrégats seuls,
      source dite, plus de « en production ». */
   {
     slug: "prediction-memoire",
-    unite: "U-03",
+    unite: "U-04",
     nom: "Memory usage prediction",
     sousTitre: "Machine learning against memory over-allocation in bioinformatics pipelines",
     jp: "メモリ予測",
@@ -630,7 +766,7 @@ const EN: Projet[] = [
   },
   {
     slug: "eternal",
-    unite: "U-04",
+    unite: "U-05",
     nom: "Eternal",
     sousTitre: "Gamified learning platform",
     jp: "エターナル",
@@ -686,7 +822,7 @@ const EN: Projet[] = [
   },
   {
     slug: "trading-agent",
-    unite: "U-05",
+    unite: "U-06",
     nom: "Trading Agent",
     sousTitre: "Multi-strategy paper trading bot",
     jp: "トレーディング",
@@ -876,6 +1012,6 @@ const SLUGS = FR.map((p) => p.slug)
 
 /* La scission des deux mondes vit dans `mondes.ts` — un module SANS
    données, pour que les hubs client qui n'ont besoin que d'écrire une
-   adresse n'embarquent pas les neuf fiches bilingues avec. Seul
+   adresse n'embarquent pas les dix fiches bilingues avec. Seul
    SLUGS_TRAVAIL reste ici : il se DÉDUIT du catalogue. */
 export const SLUGS_TRAVAIL = SLUGS.filter((s) => !SLUGS_MAISON.includes(s))
